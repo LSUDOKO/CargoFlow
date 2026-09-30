@@ -23,6 +23,8 @@ type Verdict struct {
 	Decider    string
 	Note       string      // why the model's opinion was ignored, when it was
 	Assessment *Assessment // the validated model output, nil when there was none
+	Provider   string      // which model was consulted, empty when none was
+	Err        string      // why the model could not be used, empty otherwise
 }
 
 // severity orders actions from most permissive to strictest. Unknown actions are absent.

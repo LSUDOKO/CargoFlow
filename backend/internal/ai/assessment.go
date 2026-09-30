@@ -84,6 +84,19 @@ func ParseAssessment(raw []byte, b Brief) (Assessment, error) {
 		return bad("unexpected content after the JSON object")
 	}
 
+	if err := Validate(a, b); err != nil {
+		return Assessment{}, err
+	}
+	a.Explanation = cleanText(a.Explanation)
+	return a, nil
+}
+
+// Validate checks an assessment against the brief it answers. Providers call it through
+// ParseAssessment; the Monitor calls it again so that a faulty provider cannot bypass the schema.
+func Validate(a Assessment, b Brief) error {
+	bad := func(format string, args ...any) error {
+		return fmt.Errorf("%w: %s", ErrInvalidAssessment, fmt.Sprintf(format, args...))
+	}
 	switch {
 	case a.ShipmentID != b.ShipmentID:
 		return bad("shipmentId does not match the assessed shipment")
@@ -104,8 +117,7 @@ func ParseAssessment(raw []byte, b Brief) (Assessment, error) {
 	case utf8.RuneCountInString(a.Explanation) > maxExplanationLen:
 		return bad("explanation exceeds %d characters", maxExplanationLen)
 	}
-	a.Explanation = cleanText(a.Explanation)
-	return a, nil
+	return nil
 }
 
 // cleanText replaces control characters so model prose is safe to log and render.
