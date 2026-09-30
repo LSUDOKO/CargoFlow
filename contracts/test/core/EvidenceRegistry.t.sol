@@ -61,6 +61,16 @@ contract EvidenceRegistryTest is Test {
         assertEq(e.committedAt, block.timestamp);
     }
 
+    /// Same vector as backend/internal/proof.EpochID (computed with cast).
+    function test_epochIdMatchesTheCrossLanguageVector() public view {
+        bytes32 shipment =
+            bytes32(hex"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+        assertEq(
+            registry.epochIdFor(shipment, 2, 2),
+            bytes32(hex"80f21ea24faec5be5b03388e80a1ac49a8837425c87f0c36ea98e975013e4a4a")
+        );
+    }
+
     function test_epochIdDiffersPerSequenceAndMilestone() public view {
         assertTrue(registry.epochIdFor(SHIPMENT, 0, 1) != registry.epochIdFor(SHIPMENT, 0, 2));
         assertTrue(registry.epochIdFor(SHIPMENT, 0, 1) != registry.epochIdFor(SHIPMENT, 1, 1));

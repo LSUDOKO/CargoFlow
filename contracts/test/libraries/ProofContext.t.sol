@@ -40,6 +40,22 @@ contract ProofContextTest is Test {
         assertEq(ProofContext.SNARK_SCALAR_FIELD, FIELD);
     }
 
+    /// Same vector as backend/internal/proof (computed with cast). The raw keccak exceeds the field, so
+    /// this also pins the mod-p reduction that Go must reproduce.
+    function test_matchesTheCrossLanguageVector() public pure {
+        uint256 c = ProofContext.compute(
+            46630,
+            address(0x1111111111111111111111111111111111111111),
+            address(0x2222222222222222222222222222222222222222),
+            bytes32(hex"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+            bytes32(hex"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"),
+            bytes32(hex"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"),
+            address(0x3333333333333333333333333333333333333333),
+            1
+        );
+        assertEq(c, 20122304896471064054250705856873716212306909991156476167016505459605136080059);
+    }
+
     function test_alwaysAValidFieldElement() public pure {
         for (uint256 i; i < 200; ++i) {
             uint256 c = ProofContext.compute(
