@@ -50,6 +50,7 @@ interface IFinancingController {
     event DisputeResolved(
         bytes32 indexed shipmentId, address indexed resolvedBy, bool resumed, bytes32 resolutionRef
     );
+    event DeliveryConfirmed(bytes32 indexed shipmentId, address indexed confirmedBy);
     event DefaultDeclared(bytes32 indexed shipmentId, address indexed declaredBy, bytes32 ref);
     event MilestoneAdvanceReleased(
         bytes32 indexed shipmentId,
@@ -70,6 +71,8 @@ interface IFinancingController {
     error FacilityPaused();
     error NotAuthorizedToPause();
     error InvalidReason();
+    error MilestonesIncomplete();
+    error NotBuyer();
     error MilestoneAlreadyReleased();
     error MilestoneOutOfOrder();
     error EvidenceBelowThreshold();
@@ -115,6 +118,13 @@ interface IFinancingController {
     /// @notice Arbiter declares default from PAUSED, DISPUTED or DELIVERED (non-payment). The undrawn
     ///         commitment returns to the financier.
     function markDefaulted(bytes32 shipmentId, bytes32 ref) external;
+
+    /// @notice Buyer (or a facility manager) confirms delivery once every milestone has released.
+    ///         The exporter cannot confirm its own delivery.
+    function markDelivered(bytes32 shipmentId) external;
+
+    /// @notice Buyer pays the invoice in USDG; the vault runs the waterfall and the facility settles.
+    function settle(bytes32 shipmentId) external;
 
     function getFacility(bytes32 shipmentId) external view returns (FacilityState memory);
 

@@ -159,6 +159,31 @@ contract FinancingController is Controlled, ReentrancyGuard, IFinancingControlle
         if (p.requiresZK && !e.proofVerified) revert ProofRequired();
     }
 
+    // ------------------------------------------------------------------ delivery / settlement
+
+    /// @inheritdoc IFinancingController
+    function markDelivered(bytes32 shipmentId) external nonReentrant {
+        FacilityState storage f = _load(shipmentId);
+        if (msg.sender != f.buyer && !_hasRole(Roles.FACILITY_MANAGER_ROLE, msg.sender)) {
+            revert NotAuthorizedForShipment();
+        }
+        _requireStatus(f, Status.ACTIVE);
+        if (f.nextMilestone != f.milestoneCount) revert MilestonesIncomplete();
+
+        _setStatus(shipmentId, f, Status.DELIVERED);
+        emit DeliveryConfirmed(shipmentId, msg.sender);
+    }
+
+    /// @inheritdoc IFinancingController
+    function settle(bytes32 shipmentId) external nonReentrant {
+        FacilityState storage f = _load(shipmentId);
+        if (msg.sender != f.buyer) revert NotBuyer();
+        _requireStatus(f, Status.DELIVERED);
+
+        _setStatus(shipmentId, f, Status.SETTLED);
+        VAULT.settle(shipmentId);
+    }
+
     // ------------------------------------------------------------------ pause / dispute / default
 
     /// @inheritdoc IFinancingController
