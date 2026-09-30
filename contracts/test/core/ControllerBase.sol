@@ -56,14 +56,7 @@ abstract contract ControllerBase is Test {
         evidence = new EvidenceRegistry(address(access));
         vault = new ReceivableVault(address(access), address(usdg));
         verifier = new MockGroth16Verifier();
-        controller = new FinancingController(
-            address(access),
-            address(registry),
-            address(policies),
-            address(evidence),
-            address(vault),
-            address(verifier)
-        );
+        controller = _deployController();
 
         vm.startPrank(admin);
         access.grantRole(Roles.CONTROLLER_ROLE, address(controller));
@@ -93,7 +86,36 @@ abstract contract ControllerBase is Test {
         });
     }
 
+    /// @dev Overridable so a test can pin the controller (and a real verifier) to fixed addresses.
+    function _deployController() internal virtual returns (FinancingController) {
+        return new FinancingController(
+            address(access),
+            address(registry),
+            address(policies),
+            address(evidence),
+            address(vault),
+            address(verifier)
+        );
+    }
+
     // --- lifecycle helpers ---------------------------------------------------------------
+
+    bytes32 internal constant THERMAL = keccak256("THERMAL_EXCURSION");
+
+    /// Hero state at the moment of recovery: M1, M2 released; the M3 anomaly epoch committed; the
+    /// facility paused by the monitor; ten seconds later so recovery evidence is strictly newer.
+    function _pausedAfterAnomaly() internal {
+        _activate();
+        for (uint8 i; i < 2; ++i) {
+            _commitEvidence(i, 1, 95, 300);
+            vm.prank(exporter);
+            controller.evaluateAndReleaseMilestone(id, i, 1);
+        }
+        _commitEvidence(2, 1, 48, 7800);
+        vm.prank(monitor);
+        controller.pauseFinancing(id, THERMAL);
+        vm.warp(block.timestamp + 10);
+    }
 
     function _registerAndSetPolicy() internal {
         bytes32 commitment = policies.hashPolicy(policy);

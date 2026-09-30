@@ -8,7 +8,6 @@ import {Roles} from "../../src/libraries/Roles.sol";
 import {ControllerBase} from "./ControllerBase.sol";
 
 contract FinancingControllerPauseTest is ControllerBase {
-    bytes32 internal constant THERMAL = keccak256("THERMAL_EXCURSION");
     bytes32 internal constant BASIS = keccak256("secondary-probe-attestation");
     IFinancingController.Status internal constant ACTIVE = IFinancingController.Status.ACTIVE;
     IFinancingController.Status internal constant PAUSED = IFinancingController.Status.PAUSED;

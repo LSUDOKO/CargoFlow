@@ -4,7 +4,7 @@ FORGE ?= $(shell for p in "$$(command -v forge)" "$$HOME/.foundry/bin/forge" "$$
 	[ -n "$$p" ] && [ -x "$$p" ] && "$$p" --version 2>/dev/null | grep -q "Version:" && { echo "$$p"; break; }; done)
 CAST ?= $(dir $(FORGE))cast
 
-.PHONY: anvil deploy-local demo-local help check contracts-build contracts-test contracts-fmt contracts-fmt-check backend-test frontend-check usdg-info
+.PHONY: anvil deploy-local demo-local zk-fixture help check contracts-build contracts-test contracts-fmt contracts-fmt-check backend-test frontend-check usdg-info
 
 help: ## List commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  %-20s %s\n",$$1,$$2}'
@@ -37,6 +37,11 @@ deploy-local: ## Deploy CargoFlow to local anvil (run `make anvil` first)
 
 demo-local: ## Run the hero scenario on local anvil as real transactions
 	@cd contracts && $(FORGE) script script/RunHero.s.sol --rpc-url local --broadcast
+
+zk-fixture: ## Regenerate the real Groth16 proof fixture used by contracts/test/integration/RealProof.t.sol
+	@cd contracts && WRITE_PROOF_INPUTS=1 $(FORGE) test --match-test test_writeProofInputs
+	@cd circuits && node scripts/make-fixture.js
+	@cd contracts && $(FORGE) test --match-path test/integration/RealProof.t.sol
 
 usdg-info: ## Read USDG metadata from Robinhood testnet
 	@CAST=$(CAST) ./scripts/usdg-info.sh

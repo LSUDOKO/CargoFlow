@@ -7,7 +7,6 @@ import {ProofContext} from "../../src/libraries/ProofContext.sol";
 import {ControllerBase} from "./ControllerBase.sol";
 
 contract FinancingControllerProofTest is ControllerBase {
-    bytes32 internal constant THERMAL = keccak256("THERMAL_EXCURSION");
     uint256[2] internal a;
     uint256[2][2] internal b;
     uint256[2] internal c;
@@ -18,20 +17,6 @@ contract FinancingControllerProofTest is ControllerBase {
 
     function _hasStatus(IFinancingController.Status s) internal view returns (bool) {
         return _status() == s;
-    }
-
-    /// Hero state at the moment of recovery: M1, M2 released; M3 anomaly committed; facility paused.
-    function _pausedAfterAnomaly() internal {
-        _activate();
-        for (uint8 i; i < 2; ++i) {
-            _commitEvidence(i, 1, 95, 300);
-            vm.prank(exporter);
-            controller.evaluateAndReleaseMilestone(id, i, 1);
-        }
-        _commitEvidence(2, 1, 48, 7800);
-        vm.prank(monitor);
-        controller.pauseFinancing(id, THERMAL);
-        vm.warp(block.timestamp + 10);
     }
 
     function _recovery(uint32 seq, uint32 score, uint32 conflict) internal returns (bytes32) {
