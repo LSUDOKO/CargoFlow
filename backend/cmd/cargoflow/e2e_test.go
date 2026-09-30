@@ -89,6 +89,16 @@ func TestHeroLifecycleThroughTheRunningService(t *testing.T) {
 	out := &syncBuffer{}
 	done := make(chan error, 1)
 	go func() { done <- run(ctx, []string{"serve"}, func(k string) string { return env[k] }, out) }()
+	stopped := false
+	t.Cleanup(func() { // a failing test must not leave a service running against a dropped schema
+		if !stopped {
+			cancel()
+			select {
+			case <-done:
+			case <-time.After(20 * time.Second):
+			}
+		}
+	})
 
 	var base string
 	for i := 0; i < 100 && base == ""; i++ {
@@ -147,7 +157,7 @@ func TestHeroLifecycleThroughTheRunningService(t *testing.T) {
 	exporter, financier, buyer := chain.NewSigner(ce.Keys["exporter"]), chain.NewSigner(ce.Keys["financier"]), chain.NewSigner(ce.Keys["buyer"])
 	policy := chain.Policy{MinTempX100: 200, MaxTempX100: 800, MaxEvidenceAgeSec: 1800, MaxRouteDeviationM: 25_000, MinEvidenceScore: 75, MaxConflictBps: 3000, MaxRiskBps: 3500}
 	route := []store.RoutePoint{{LatE6: 18_950_000, LonE6: 72_950_000}, {LatE6: 1_264_000, LonE6: 103_820_000}}
-	const ref = "CF-2026-SG01-e2e"
+	ref := fmt.Sprintf("CF-2026-SG01-e2e-%d", time.Now().UnixNano()) // unique: the test chain is shared and references are one-shot
 	commitment, _ := c.HashPolicy(ctxBG, policy)
 	refHash := crypto.Keccak256Hash([]byte(ref))
 	id, _ := c.ShipmentID(ctxBG, exporter.Address(), refHash)
@@ -327,33 +337,53 @@ func TestHeroLifecycleThroughTheRunningService(t *testing.T) {
 		t.Errorf("the vault still holds %s", vault)
 	}
 
-	// the audit trail is complete and traceable
-	var audit struct {
-		Entries []struct{ Kind, Title string } `json:"entries"`
-	}
-	call("GET", "/v1/shipments/"+shipmentHex+"/audit?limit=2000", nil, nil, &audit)
-	titles := map[string]bool{}
-	for _, e := range audit.Entries {
-		titles[e.Title] = true
-	}
-	for _, want := range []string{"PAUSE_FACILITY CONFIRMED", "RESUME_WITH_PROOF CONFIRMED", "ReceivableVault.FacilitySettled", "FinancingController.FinancingPaused"} {
-		if !titles[want] {
-			t.Errorf("the audit trail is missing %q", want)
+	// The audit trail and the WebSocket stream are fed by the indexer, which runs slightly behind the chain:
+	// wait for the exact conditions being asserted instead of sleeping and hoping.
+	wantTitles := []string{"PAUSE_FACILITY CONFIRMED", "RESUME_WITH_PROOF CONFIRMED", "ReceivableVault.FacilitySettled", "FinancingController.FinancingPaused"}
+	var missing []string
+	eventually(t, 30*time.Second, func() bool {
+		var audit struct {
+			Entries []struct{ Kind, Title string } `json:"entries"`
 		}
+		call("GET", "/v1/shipments/"+shipmentHex+"/audit?limit=2000", nil, nil, &audit)
+		titles := map[string]bool{}
+		for _, e := range audit.Entries {
+			titles[e.Title] = true
+		}
+		missing = missing[:0]
+		for _, want := range wantTitles {
+			if !titles[want] {
+				missing = append(missing, want)
+			}
+		}
+		return len(missing) == 0
+	})
+	if len(missing) > 0 {
+		t.Errorf("the audit trail is missing %q", missing)
 	}
 
-	// and the dashboard client saw the story live
-	time.Sleep(500 * time.Millisecond)
+	wantEvents := map[string]int{"MILESTONE_RELEASED": 5, "FINANCING_PAUSED": 1, "PROOF_VERIFIED": 1, "FINANCING_RESUMED": 1, "DELIVERY_CONFIRMED": 1, "FACILITY_SETTLED": 1, "TELEMETRY_EPOCH_ADDED": 5}
+	satisfied := func() bool {
+		events.Lock()
+		defer events.Unlock()
+		for want, min := range wantEvents {
+			if events.n[want] < min {
+				return false
+			}
+		}
+		return true
+	}
+	eventually(t, 30*time.Second, satisfied)
 	events.Lock()
-	got := fmt.Sprint(events.n)
-	for want, min := range map[string]int{"MILESTONE_RELEASED": 5, "FINANCING_PAUSED": 1, "PROOF_VERIFIED": 1, "FINANCING_RESUMED": 1, "DELIVERY_CONFIRMED": 1, "FACILITY_SETTLED": 1, "TELEMETRY_EPOCH_ADDED": 5} {
+	for want, min := range wantEvents {
 		if events.n[want] < min {
-			t.Errorf("websocket delivered %s %d times, want at least %d (all: %s)", want, events.n[want], min, got)
+			t.Errorf("websocket delivered %s %d times, want at least %d (all: %s)", want, events.n[want], min, fmt.Sprint(events.n))
 		}
 	}
 	events.Unlock()
 
 	// graceful shutdown
+	stopped = true
 	cancel()
 	select {
 	case err := <-done:
@@ -362,5 +392,17 @@ func TestHeroLifecycleThroughTheRunningService(t *testing.T) {
 		}
 	case <-time.After(20 * time.Second):
 		t.Fatal("the service did not shut down")
+	}
+}
+
+// eventually polls cond until it holds or the deadline passes. The caller asserts the outcome.
+func eventually(t *testing.T, within time.Duration, cond func() bool) {
+	t.Helper()
+	deadline := time.Now().Add(within)
+	for time.Now().Before(deadline) {
+		if cond() {
+			return
+		}
+		time.Sleep(100 * time.Millisecond)
 	}
 }
