@@ -56,6 +56,9 @@ serve: ## Run the backend (reads .env)
 migrate: ## Apply database migrations (reads .env)
 	@set -a; [ -f .env ] && . ./.env; set +a; cd backend && go run ./cmd/cargoflow migrate
 
+ai-live: ## Smoke-test the real Groq API with synthetic data (needs GROQ_API_KEY in .env)
+	@set -a; [ -f .env ] && . ./.env; set +a; cd backend && go test -tags live -run Live -v -count=1 ./internal/ai
+
 keygen: ## Generate an Ed25519 key pair for an evidence source
 	@cd backend && go run ./cmd/cargoflow keygen
 

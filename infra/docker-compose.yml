@@ -46,6 +46,10 @@ services:
       START_BLOCK: ${START_BLOCK:-0}
       CONFIRMATIONS: ${CONFIRMATIONS:-1}
       CORS_ORIGINS: ${CORS_ORIGINS:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_MODEL: ${GROQ_MODEL:-}
+      AI_TIMEOUT: ${AI_TIMEOUT:-10s}
+      AI_MIN_CONFIDENCE: ${AI_MIN_CONFIDENCE:-0.9}
     volumes:
       - ${DEPLOYMENT_MANIFEST:-../contracts/deployments/local.json}:/deployments/manifest.json:ro
     ports:
