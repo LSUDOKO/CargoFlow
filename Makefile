@@ -4,7 +4,7 @@ FORGE ?= $(shell for p in "$$(command -v forge)" "$$HOME/.foundry/bin/forge" "$$
 	[ -n "$$p" ] && [ -x "$$p" ] && "$$p" --version 2>/dev/null | grep -q "Version:" && { echo "$$p"; break; }; done)
 CAST ?= $(dir $(FORGE))cast
 
-.PHONY: anvil deploy-local demo-local zk-fixture circuits-test help check contracts-build contracts-test contracts-fmt contracts-fmt-check backend-test frontend-check usdg-info
+.PHONY: anvil deploy-local demo-local zk-fixture circuits-test abi help check contracts-build contracts-test contracts-fmt contracts-fmt-check backend-test frontend-check usdg-info
 
 help: ## List commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  %-20s %s\n",$$1,$$2}'
@@ -45,6 +45,10 @@ zk-fixture: ## Regenerate the real Groth16 proof fixture used by contracts/test/
 	@cd contracts && WRITE_PROOF_INPUTS=1 $(FORGE) test --match-test test_writeProofInputs
 	@cd circuits && node scripts/make-fixture.js
 	@cd contracts && $(FORGE) test --match-path test/integration/RealProof.t.sol
+
+abi: ## Re-export contract ABIs into the backend (run after changing a contract)
+	@cd contracts && $(FORGE) build >/dev/null
+	@python3 scripts/export-abi.py
 
 usdg-info: ## Read USDG metadata from Robinhood testnet
 	@CAST=$(CAST) ./scripts/usdg-info.sh
