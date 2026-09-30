@@ -40,3 +40,24 @@ jobs:
       - run: test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
       - run: go vet ./...
       - run: go test -race ./...
+
+  circuits:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: circuits
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: circuits/package-lock.json
+      - run: npm ci
+      - name: Install circom 2.2.3
+        run: |
+          sudo curl -sSfL -o /usr/local/bin/circom \
+            https://github.com/iden3/circom/releases/download/v2.2.3/circom-linux-amd64
+          sudo chmod +x /usr/local/bin/circom
+          circom --version
+      - run: npm test
