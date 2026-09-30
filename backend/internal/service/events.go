@@ -1,0 +1,127 @@
+package service
+
+import (
+	"context"
+	"errors"
+	"fmt"
+
+	"github.com/LSUDOKO/CargoFlow/backend/internal/chain"
+	"github.com/LSUDOKO/CargoFlow/backend/internal/store"
+	"github.com/LSUDOKO/CargoFlow/backend/internal/ws"
+)
+
+// OnChainEvents is the indexer's sink. It mirrors on-chain facts into the store and broadcasts them to
+// WebSocket clients. Delivery is at-least-once, so every branch is idempotent: replays never overwrite the
+// first recorded release or commit, and events for shipments this backend does not track are ignored.
+// Broadcast events carry the transaction hash and log index so clients can drop a redelivered duplicate.
+func (s *Service) OnChainEvents(ctx context.Context, events []store.ChainEvent) error {
+	for _, ev := range events {
+		if err := s.onChainEvent(ctx, ev); err != nil {
+			return fmt.Errorf("%s %s#%d: %w", ev.Name, ev.TxHash, ev.LogIndex, err)
+		}
+	}
+	return nil
+}
+
+func (s *Service) onChainEvent(ctx context.Context, ev store.ChainEvent) error {
+	shipment := ev.ShipmentID
+	// EvidenceProofVerified names only the epoch: find its shipment from our own records.
+	if ev.Name == "EvidenceProofVerified" {
+		epochID, _ := ev.Args["epochId"].(string)
+		rec, err := s.o.Store.EpochByEpochID(ctx, epochID)
+		if err != nil {
+			if errors.Is(err, store.ErrNotFound) {
+				return nil
+			}
+			return err
+		}
+		shipment = rec.ShipmentID
+		if err := s.o.Store.SetEpochProofVerified(ctx, epochID); err != nil {
+			return err
+		}
+		s.publish(ws.Event{Type: ws.ProofVerified, ShipmentID: shipment, Data: withTx(ev, map[string]any{"epochId": epochID})})
+		return nil
+	}
+	if shipment == "" {
+		return nil
+	}
+	if _, err := s.o.Store.GetShipment(ctx, shipment); err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			return nil // a shipment this backend does not track
+		}
+		return err
+	}
+
+	switch ev.Name {
+	case "FacilityCreated":
+		if err := s.SyncMilestones(ctx, shipment); err != nil && !errors.Is(err, ErrNoFacility) {
+			return err
+		}
+		s.publish(ws.Event{Type: ws.ShipmentUpdated, ShipmentID: shipment, Data: withTx(ev, map[string]any{"change": "FACILITY_CREATED"})})
+
+	case "StatusChanged":
+		status := chain.StatusName(uint8(num(ev.Args["to"])))
+		if err := s.o.Store.SetShipmentStatus(ctx, shipment, status); err != nil {
+			return err
+		}
+		s.publish(ws.Event{Type: ws.ShipmentUpdated, ShipmentID: shipment, Data: withTx(ev, map[string]any{"status": status})})
+
+	case "MilestoneAdvanceReleased":
+		idx := int(num(ev.Args["milestoneIndex"]))
+		if err := s.o.Store.MarkMilestoneReleased(ctx, shipment, idx, ev.TxHash); err != nil && !errors.Is(err, store.ErrNotFound) {
+			return err
+		}
+		s.publish(ws.Event{Type: ws.MilestoneReleased, ShipmentID: shipment, Data: withTx(ev, map[string]any{
+			"milestoneIndex": idx, "amount": ev.Args["amount"], "totalDrawn": ev.Args["totalDrawn"], "epochId": ev.Args["epochId"]})})
+
+	case "EvidenceEpochCommitted":
+		if epochID, _ := ev.Args["epochId"].(string); epochID != "" {
+			if err := s.o.Store.SetEpochCommitted(ctx, epochID, ev.TxHash); err != nil && !errors.Is(err, store.ErrNotFound) {
+				return err
+			}
+		}
+
+	case "FinancingPaused":
+		s.publish(ws.Event{Type: ws.FinancingPaused, ShipmentID: shipment, Data: withTx(ev, map[string]any{
+			"reasonCode": ev.Args["reasonCode"], "pausedBy": ev.Args["pausedBy"]})})
+
+	case "FinancingResumed":
+		s.publish(ws.Event{Type: ws.FinancingResumed, ShipmentID: shipment, Data: withTx(ev, map[string]any{
+			"resumedBy": ev.Args["resumedBy"], "basis": ev.Args["basis"]})})
+
+	case "DeliveryConfirmed":
+		s.publish(ws.Event{Type: ws.DeliveryConfirmed, ShipmentID: shipment, Data: withTx(ev, map[string]any{"confirmedBy": ev.Args["confirmedBy"]})})
+
+	case "FacilitySettled":
+		s.publish(ws.Event{Type: ws.FacilitySettled, ShipmentID: shipment, Data: withTx(ev, map[string]any{
+			"principal": ev.Args["principal"], "fee": ev.Args["fee"], "residual": ev.Args["residual"], "undrawnRefund": ev.Args["undrawnRefund"]})})
+
+	case "DisputeOpened", "DisputeResolved", "DefaultDeclared":
+		s.publish(ws.Event{Type: ws.ShipmentUpdated, ShipmentID: shipment, Data: withTx(ev, map[string]any{"change": ev.Name})})
+	}
+	return nil
+}
+
+func withTx(ev store.ChainEvent, data map[string]any) map[string]any {
+	data["txHash"], data["logIndex"], data["blockNumber"] = ev.TxHash, ev.LogIndex, ev.BlockNumber
+	return data
+}
+
+// num reads a JSON-decoded or ABI-decoded number regardless of its Go type.
+func num(v any) float64 {
+	switch x := v.(type) {
+	case float64:
+		return x
+	case uint8:
+		return float64(x)
+	case uint16:
+		return float64(x)
+	case uint32:
+		return float64(x)
+	case uint64:
+		return float64(x)
+	case int:
+		return float64(x)
+	}
+	return 0
+}
