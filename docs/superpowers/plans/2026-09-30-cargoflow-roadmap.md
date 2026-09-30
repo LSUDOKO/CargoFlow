@@ -32,9 +32,9 @@ demonstrable state and stops for review before the next begins.
 **Done when:** a command moves the evidence score live; same input always yields same score.
 
 ## P3 — Pause and ZK recovery (CF-030, 032..034)
-- [ ] on-chain pause with reason code; release reverts while paused
-- [ ] Circom circuit + negative tests, trusted setup, Solidity verifier
-- [ ] context binding, `resumeWithProof`, prover worker
+- [x] on-chain pause with reason code; release reverts while paused
+- [x] Circom circuit + negative tests, trusted setup, Solidity verifier
+- [x] context binding, `resumeWithProof`, prover worker
 **Done when:** valid hidden readings resume a paused facility; wrong context cannot.
 
 ## P4 — Backend platform

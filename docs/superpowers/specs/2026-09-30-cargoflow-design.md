@@ -126,4 +126,8 @@ one-line conventional-style commits, one logical change each; no secrets in the 
 | Releases "controller-only" | Exporter, financier, or facility manager may trigger; recipient is fixed to the exporter | Lets the UI demonstrate the blocked-M3 revert; safe because release depends only on committed on-chain evidence |
 | Partial `AccessManager` | One `CargoFlowAccess` (OZ `AccessControlDefaultAdminRules`, two-step admin) | Single audited role registry |
 | Milestones released in any order | Strictly sequential cursor | Makes "release once" and monotonicity structural |
-| Pause resume via proof or verifier | Verifier path (`resumeByVerifier`) in P1; ZK `resumeWithProof` lands in P3 | Phase order |
+| Pause resume via proof or verifier | Verifier path (`resumeByVerifier`) in P1; ZK `resumeWithProof` in P3 | Phase order |
+| Poseidon context hash computed in the circuit | keccak256 of eight chain-derived fields reduced mod p, passed as a public input | Cheap on-chain; replay protection is equivalent because the verifier rejects any differing public input |
+| Proof calldata includes public signals | Contract derives all four public signals from its own state; the caller sends only `a, b, c` | The submitter cannot choose or forge a public input |
+| Recovery proof of any epoch | Only an epoch committed strictly after the pause, for the blocked milestone, that also passes the policy score/conflict/risk gates | A proof of old or weak evidence must not unfreeze capital |
+| Trusted setup via public ceremony | Single-party local setup, testnet only, loudly documented | No public ptau reachable from the build machine; must be replaced before any production use |
