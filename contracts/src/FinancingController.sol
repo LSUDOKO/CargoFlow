@@ -159,6 +159,101 @@ contract FinancingController is Controlled, ReentrancyGuard, IFinancingControlle
         if (p.requiresZK && !e.proofVerified) revert ProofRequired();
     }
 
+    // ------------------------------------------------------------------ pause / dispute / default
+
+    /// @inheritdoc IFinancingController
+    function pauseFinancing(bytes32 shipmentId, bytes32 reasonCode) external nonReentrant {
+        if (!_hasRole(Roles.MONITOR_ROLE, msg.sender) && !_hasRole(Roles.DISPUTE_ROLE, msg.sender))
+        {
+            revert NotAuthorizedToPause();
+        }
+        if (reasonCode == 0) revert InvalidReason();
+        FacilityState storage f = _load(shipmentId);
+        _requireStatus(f, Status.ACTIVE);
+
+        f.pauseReason = reasonCode;
+        f.pausedAt = uint64(block.timestamp);
+        VAULT.setPaused(shipmentId, true);
+        _setStatus(shipmentId, f, Status.PAUSED);
+
+        emit FinancingPaused(shipmentId, reasonCode, msg.sender);
+    }
+
+    /// @inheritdoc IFinancingController
+    function resumeByVerifier(bytes32 shipmentId, bytes32 basis)
+        external
+        onlyRole(Roles.DISPUTE_ROLE)
+        nonReentrant
+    {
+        if (basis == 0) revert InvalidReason();
+        FacilityState storage f = _load(shipmentId);
+        _requireStatus(f, Status.PAUSED);
+
+        _resume(shipmentId, f);
+        emit FinancingResumed(shipmentId, msg.sender, basis);
+    }
+
+    /// @inheritdoc IFinancingController
+    function openDispute(bytes32 shipmentId, bytes32 reason) external nonReentrant {
+        FacilityState storage f = _load(shipmentId);
+        if (
+            msg.sender != f.exporter && msg.sender != f.financier
+                && !_hasRole(Roles.DISPUTE_ROLE, msg.sender)
+        ) revert NotAuthorizedForShipment();
+        if (reason == 0) revert InvalidReason();
+        if (f.status != Status.ACTIVE && f.status != Status.PAUSED) revert InvalidState(f.status);
+
+        VAULT.setPaused(shipmentId, true);
+        _setStatus(shipmentId, f, Status.DISPUTED);
+
+        emit DisputeOpened(shipmentId, msg.sender, reason);
+    }
+
+    /// @inheritdoc IFinancingController
+    function resolveDispute(bytes32 shipmentId, bool resume, bytes32 resolutionRef)
+        external
+        onlyRole(Roles.DISPUTE_ROLE)
+        nonReentrant
+    {
+        FacilityState storage f = _load(shipmentId);
+        _requireStatus(f, Status.DISPUTED);
+
+        if (resume) {
+            _resume(shipmentId, f);
+        } else {
+            _default(shipmentId, f);
+        }
+        emit DisputeResolved(shipmentId, msg.sender, resume, resolutionRef);
+    }
+
+    /// @inheritdoc IFinancingController
+    function markDefaulted(bytes32 shipmentId, bytes32 ref)
+        external
+        onlyRole(Roles.DISPUTE_ROLE)
+        nonReentrant
+    {
+        FacilityState storage f = _load(shipmentId);
+        if (
+            f.status != Status.PAUSED && f.status != Status.DISPUTED && f.status != Status.DELIVERED
+        ) {
+            revert InvalidState(f.status);
+        }
+        _default(shipmentId, f);
+        emit DefaultDeclared(shipmentId, msg.sender, ref);
+    }
+
+    function _resume(bytes32 shipmentId, FacilityState storage f) internal {
+        f.pauseReason = bytes32(0);
+        f.pausedAt = 0;
+        VAULT.setPaused(shipmentId, false);
+        _setStatus(shipmentId, f, Status.ACTIVE);
+    }
+
+    function _default(bytes32 shipmentId, FacilityState storage f) internal {
+        VAULT.closeDefaulted(shipmentId);
+        _setStatus(shipmentId, f, Status.DEFAULTED);
+    }
+
     // ------------------------------------------------------------------ views
 
     /// @inheritdoc IFinancingController

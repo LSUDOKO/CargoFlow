@@ -42,6 +42,15 @@ interface IFinancingController {
         uint8 milestoneCount
     );
     event StatusChanged(bytes32 indexed shipmentId, Status from, Status to);
+    event FinancingPaused(
+        bytes32 indexed shipmentId, bytes32 indexed reasonCode, address indexed pausedBy
+    );
+    event FinancingResumed(bytes32 indexed shipmentId, address indexed resumedBy, bytes32 basis);
+    event DisputeOpened(bytes32 indexed shipmentId, address indexed openedBy, bytes32 reason);
+    event DisputeResolved(
+        bytes32 indexed shipmentId, address indexed resolvedBy, bool resumed, bytes32 resolutionRef
+    );
+    event DefaultDeclared(bytes32 indexed shipmentId, address indexed declaredBy, bytes32 ref);
     event MilestoneAdvanceReleased(
         bytes32 indexed shipmentId,
         uint8 indexed milestoneIndex,
@@ -59,6 +68,8 @@ interface IFinancingController {
     error InvalidMilestones();
     error InvalidState(Status current);
     error FacilityPaused();
+    error NotAuthorizedToPause();
+    error InvalidReason();
     error MilestoneAlreadyReleased();
     error MilestoneOutOfOrder();
     error EvidenceBelowThreshold();
@@ -87,6 +98,23 @@ interface IFinancingController {
     ///         the financier or a facility manager; the recipient is fixed regardless of caller.
     function evaluateAndReleaseMilestone(bytes32 shipmentId, uint8 milestoneIndex, uint32 seq)
         external;
+
+    /// @notice Stops all future releases. Callable by the monitor (incl. the AI) or the arbiter.
+    ///         Already released funds are never clawed back.
+    function pauseFinancing(bytes32 shipmentId, bytes32 reasonCode) external;
+
+    /// @notice Trusted-verifier recovery path: PAUSED -> ACTIVE, recording the basis (attestation hash).
+    function resumeByVerifier(bytes32 shipmentId, bytes32 basis) external;
+
+    /// @notice Exporter, financier or arbiter freezes the facility (ACTIVE|PAUSED -> DISPUTED).
+    function openDispute(bytes32 shipmentId, bytes32 reason) external;
+
+    /// @notice Arbiter outcome: resume normal operation, or default the facility.
+    function resolveDispute(bytes32 shipmentId, bool resume, bytes32 resolutionRef) external;
+
+    /// @notice Arbiter declares default from PAUSED, DISPUTED or DELIVERED (non-payment). The undrawn
+    ///         commitment returns to the financier.
+    function markDefaulted(bytes32 shipmentId, bytes32 ref) external;
 
     function getFacility(bytes32 shipmentId) external view returns (FacilityState memory);
 
