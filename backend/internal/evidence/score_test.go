@@ -223,3 +223,41 @@ func TestLessReliableSourcesLowerTheScoreSlightly(t *testing.T) {
 		t.Fatalf("unreliable sources not penalised: good=%d poor=%d", good.Score, poor.Score)
 	}
 }
+
+// The score must describe the physical event, not the sampling rate. The same excursion sampled every
+// 10 s or every 60 s has to produce the same conflict and score; a fixed alignment bucket would average
+// fast-sampled excursion readings together with healthy ones and dilute the conflict.
+func TestScoreDoesNotDependOnTheSamplingInterval(t *testing.T) {
+	score := func(interval int64) evidence.Result {
+		pts, err := simulator.Generate(simulator.Config{
+			Seed: 42, Scenario: simulator.ConflictingSensors, StartUnix: 1_800_000_000,
+			IntervalSec: interval, Steps: 40, StartStep: 0,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		var epoch []telemetry.Point
+		for _, p := range pts {
+			if (p.Timestamp-1_800_000_000)/interval >= 32 {
+				epoch = append(epoch, p)
+			}
+		}
+		return evidence.Evaluate(evidence.EpochInput{Points: epoch, Policy: heroPolicy()}) // no route: isolate the evidence maths
+	}
+	slow, fast := score(60), score(10)
+	if slow.ConflictBps != fast.ConflictBps {
+		t.Fatalf("conflict depends on the sampling interval: %d bps at 60 s vs %d bps at 10 s", slow.ConflictBps, fast.ConflictBps)
+	}
+	if slow.Score != fast.Score || slow.Compliant != fast.Compliant {
+		t.Fatalf("score depends on the sampling interval: %d vs %d", slow.Score, fast.Score)
+	}
+}
+
+func TestAnExplicitBucketStillOverridesTheInferredOne(t *testing.T) {
+	pts := epoch(t, simulator.ConflictingSensors, 32)
+	inferred := evidence.Evaluate(evidence.EpochInput{Points: pts, Policy: heroPolicy()})
+	coarse := evidence.Evaluate(evidence.EpochInput{Points: pts, Policy: heroPolicy(), BucketSec: 600})
+	if coarse.ConflictBps >= inferred.ConflictBps {
+		t.Fatalf("a deliberately coarse bucket should dilute conflict (%d vs %d)", coarse.ConflictBps, inferred.ConflictBps)
+	}
+}

@@ -10,7 +10,8 @@ import (
 // DefaultReliabilityBps is the trust placed in a sensor with no track record (95%).
 const DefaultReliabilityBps = 9500
 
-// defaultBucketSec aligns readings from different sensors into common time steps.
+// defaultBucketSec aligns readings from different sensors into common time steps when the sampling
+// interval cannot be inferred (for example a single reading).
 const defaultBucketSec = 60
 
 // Policy is the off-chain view of the shipment policy relevant to scoring.
@@ -27,7 +28,7 @@ type EpochInput struct {
 	Policy      Policy
 	Reliability map[string]int // per sensor, basis points; missing sensors get DefaultReliabilityBps
 	Route       []geo.Point    // planned route; empty disables route scoring
-	BucketSec   int64          // time-alignment bucket; defaults to 60s
+	BucketSec   int64          // time-alignment bucket; 0 infers it from the sampling interval
 }
 
 // Breakdown lists every penalty, in score points, so a score is always explainable.
@@ -66,6 +67,24 @@ const (
 	capCoverage  = 15
 )
 
+// inferBucket returns the smallest positive gap between consecutive readings of any one sensor: the
+// sampling interval. With no pair of readings to measure it falls back to defaultBucketSec.
+func inferBucket(streams map[string][]telemetry.Point, ids []string) int64 {
+	var smallest int64
+	for _, id := range ids {
+		s := streams[id]
+		for i := 1; i < len(s); i++ {
+			if gap := s[i].Timestamp - s[i-1].Timestamp; gap > 0 && (smallest == 0 || gap < smallest) {
+				smallest = gap
+			}
+		}
+	}
+	if smallest == 0 {
+		return defaultBucketSec
+	}
+	return smallest
+}
+
 // Evaluate scores one epoch. It is a pure function of its input: the same readings always give the
 // same Result, whatever order they arrive in.
 func Evaluate(in EpochInput) Result {
@@ -73,11 +92,6 @@ func Evaluate(in EpochInput) Result {
 	if len(in.Points) == 0 {
 		return res
 	}
-	bucket := in.BucketSec
-	if bucket <= 0 {
-		bucket = defaultBucketSec
-	}
-
 	streams := map[string][]telemetry.Point{}
 	for _, p := range in.Points {
 		streams[p.SensorID] = append(streams[p.SensorID], p)
@@ -89,6 +103,13 @@ func Evaluate(in EpochInput) Result {
 	}
 	sort.Strings(ids)
 	res.SensorCount = len(ids)
+
+	// Time steps are the sampling interval, so a fast-sampled excursion is not averaged away inside a
+	// wide bucket. An explicit BucketSec overrides the inferred width.
+	bucket := in.BucketSec
+	if bucket <= 0 {
+		bucket = inferBucket(streams, ids)
+	}
 
 	reliability := func(id string) int {
 		if r, ok := in.Reliability[id]; ok {
