@@ -25,3 +25,7 @@ circuits/keys/*.ptau
 .DS_Store
 .idea/
 .vscode/
+
+# local deployment artifacts
+contracts/deployments/local.json
+contracts/deployments/test-*.json
