@@ -14,12 +14,12 @@ demonstrable state and stops for review before the next begins.
 **Done when:** `make check` passes and `cast chain-id` + USDG metadata read succeed.
 
 ## P1 — Contract core (CF-010..013)
-- [ ] interfaces, errors, events, roles
-- [ ] MockUSDG (6 decimals), ShipmentRegistry, PolicyEngine, EvidenceRegistry (moved up from P2 so release is evidence-gated in P1)
-- [ ] ReceivableVault (deposit, release, settle, refund)
-- [ ] FinancingController (state machine, milestones, pause/resume)
-- [ ] unit tests, fuzz tests, invariant suite I1–I8
-- [ ] deploy script + local anvil run of `create → fund → release → settle`
+- [x] interfaces, errors, events, roles
+- [x] MockUSDG (6 decimals), ShipmentRegistry, PolicyEngine, EvidenceRegistry (moved up from P2 so release is evidence-gated in P1)
+- [x] ReceivableVault (deposit, release, settle, refund)
+- [x] FinancingController (state machine, milestones, pause/resume)
+- [x] unit tests, fuzz tests, invariant suite I1–I8
+- [x] deploy script + local anvil run of `create → fund → release → settle`
 **Done when:** `forge test` green incl. invariants; local lifecycle runs with no backend.
 
 ## P2 — Evidence engine (CF-020..024, CF-031)

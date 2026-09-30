@@ -113,3 +113,17 @@ number is published without a reproducible test.
 CI on every push (forge fmt/build/test, go vet/test, pnpm lint/typecheck/build, circuit tests);
 one-line conventional-style commits, one logical change each; no secrets in the repo (`.env` ignored,
 `.env.example` documented); each phase ends with a demonstrable, verified state before the next begins.
+
+## 10. Deviations from `docs/project/` (decided during P1)
+
+| Docs say | Implemented | Why |
+|---|---|---|
+| `PolicyEngine.freeze` after funding | Policy is write-once and must hash to the commitment fixed at shipment registration | Immutability by construction; one less privileged call |
+| `uint32` temperature bounds | `int32` (°C × 100) | Frozen cargo needs negative temperatures |
+| `ARBITRATION` state | Omitted; `DISPUTED` resolves to `ACTIVE` or `DEFAULTED` via the arbiter | Docs specify a trusted-verifier MVP; avoids an unused state |
+| `EvidenceRegistry` in P2 | Built in P1 | Milestone release must be evidence-gated from the first lifecycle test |
+| Caller-chosen shipment id | `keccak256(exporter, externalRef)` | Prevents id squatting |
+| Releases "controller-only" | Exporter, financier, or facility manager may trigger; recipient is fixed to the exporter | Lets the UI demonstrate the blocked-M3 revert; safe because release depends only on committed on-chain evidence |
+| Partial `AccessManager` | One `CargoFlowAccess` (OZ `AccessControlDefaultAdminRules`, two-step admin) | Single audited role registry |
+| Milestones released in any order | Strictly sequential cursor | Makes "release once" and monotonicity structural |
+| Pause resume via proof or verifier | Verifier path (`resumeByVerifier`) in P1; ZK `resumeWithProof` lands in P3 | Phase order |
