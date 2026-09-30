@@ -4,12 +4,12 @@ FORGE ?= $(shell for p in "$$(command -v forge)" "$$HOME/.foundry/bin/forge" "$$
 	[ -n "$$p" ] && [ -x "$$p" ] && "$$p" --version 2>/dev/null | grep -q "Version:" && { echo "$$p"; break; }; done)
 CAST ?= $(dir $(FORGE))cast
 
-.PHONY: anvil deploy-local demo-local zk-fixture help check contracts-build contracts-test contracts-fmt contracts-fmt-check backend-test frontend-check usdg-info
+.PHONY: anvil deploy-local demo-local zk-fixture circuits-test help check contracts-build contracts-test contracts-fmt contracts-fmt-check backend-test frontend-check usdg-info
 
 help: ## List commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  %-20s %s\n",$$1,$$2}'
 
-check: contracts-fmt-check contracts-build contracts-test backend-test frontend-check ## Format, build and test everything that exists
+check: contracts-fmt-check contracts-build contracts-test backend-test circuits-test frontend-check ## Format, build and test everything that exists
 
 contracts-build: ## Compile contracts
 	@cd contracts && $(FORGE) build
@@ -22,6 +22,9 @@ contracts-fmt: ## Format Solidity
 
 contracts-fmt-check: ## Check Solidity formatting
 	@cd contracts && $(FORGE) fmt --check
+
+circuits-test: ## Run circuit tests (skipped without circom or installed dependencies)
+	@if command -v circom >/dev/null && [ -d circuits/node_modules ]; then cd circuits && npm test --silent; else echo "circuits: circom or node_modules missing, skipping"; fi
 
 backend-test: ## Run Go tests (skipped until backend exists)
 	@if [ -f backend/go.mod ]; then cd backend && go vet ./... && go test ./...; else echo "backend: not initialized, skipping"; fi
