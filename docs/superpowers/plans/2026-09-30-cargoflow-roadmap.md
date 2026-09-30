@@ -48,9 +48,9 @@ demonstrable state and stops for review before the next begins.
 **Deferred to P7:** background reconciler for failed chain actions; recovery proving off the request path.
 
 ## P5 — AI monitor (CF-040..041)
-- [ ] output schema, guardrails, prompt-injection tests, LLM adapter + deterministic fallback
-- [ ] pause-only controller bridge
-**Done when:** AI can request an allowed pause and nothing else.
+- [x] output schema, guardrails, prompt-injection tests, LLM adapter (Groq) + deterministic fallback
+- [x] pause-only controller bridge (monitor key, startup-verified) with full audit of every opinion
+**Done when:** AI can request an allowed pause and nothing else. (`internal/ai`, `service/ai_test.go`)
 
 ## P6 — Frontend (CF-042..043)
 - [ ] design system, landing, wallet/network, exporter, financier, live shipment, audit drawer
