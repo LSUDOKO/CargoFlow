@@ -8,14 +8,29 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// URL returns a connection string whose search_path is a fresh, empty schema, dropped when the test ends.
+// Use it when code under test opens its own connection pool (for example the real `serve` command).
+func URL(t testing.TB) string {
+	t.Helper()
+	_, url := isolated(t)
+	return url
+}
+
 // Pool returns a pool whose search_path is a fresh, empty schema that is dropped when the test ends.
 func Pool(t testing.TB) *pgxpool.Pool {
+	t.Helper()
+	pool, _ := isolated(t)
+	return pool
+}
+
+func isolated(t testing.TB) (*pgxpool.Pool, string) {
 	t.Helper()
 	url := os.Getenv("TEST_DATABASE_URL")
 	if url == "" {
@@ -56,5 +71,9 @@ func Pool(t testing.TB) *pgxpool.Pool {
 		_, _ = admin.Exec(c, "DROP SCHEMA "+schema+" CASCADE")
 		admin.Close()
 	})
-	return pool
+	sep := "?"
+	if strings.Contains(url, "?") {
+		sep = "&"
+	}
+	return pool, url + sep + "search_path=" + schema
 }
