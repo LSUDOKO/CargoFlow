@@ -19,6 +19,7 @@ bin/
 # circuits
 circuits/build/
 circuits/keys/*.zkey
+!circuits/keys/telemetry_epoch_final.zkey
 circuits/keys/*.ptau
 
 # os / editor
