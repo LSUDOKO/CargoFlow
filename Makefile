@@ -4,7 +4,7 @@ FORGE ?= $(shell for p in "$$(command -v forge)" "$$HOME/.foundry/bin/forge" "$$
 	[ -n "$$p" ] && [ -x "$$p" ] && "$$p" --version 2>/dev/null | grep -q "Version:" && { echo "$$p"; break; }; done)
 CAST ?= $(dir $(FORGE))cast
 
-.PHONY: help check contracts-build contracts-test contracts-fmt contracts-fmt-check backend-test frontend-check usdg-info
+.PHONY: anvil deploy-local demo-local help check contracts-build contracts-test contracts-fmt contracts-fmt-check backend-test frontend-check usdg-info
 
 help: ## List commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  %-20s %s\n",$$1,$$2}'
@@ -28,6 +28,15 @@ backend-test: ## Run Go tests (skipped until backend exists)
 
 frontend-check: ## Lint, typecheck, build frontend (skipped until it exists)
 	@if [ -f frontend/package.json ]; then cd frontend && pnpm lint && pnpm typecheck && pnpm build; else echo "frontend: not initialized, skipping"; fi
+
+anvil: ## Start a local chain on :8545 (foreground)
+	@$(dir $(FORGE))anvil
+
+deploy-local: ## Deploy CargoFlow to local anvil (run `make anvil` first)
+	@cd contracts && $(FORGE) script script/Deploy.s.sol --rpc-url local --broadcast
+
+demo-local: ## Run the hero scenario on local anvil as real transactions
+	@cd contracts && $(FORGE) script script/RunHero.s.sol --rpc-url local --broadcast
 
 usdg-info: ## Read USDG metadata from Robinhood testnet
 	@CAST=$(CAST) ./scripts/usdg-info.sh
