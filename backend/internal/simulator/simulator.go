@@ -47,6 +47,9 @@ type Config struct {
 	Steps       int      // readings per sensor
 	Sensors     []string // optional subset; defaults to both probes
 	SpeedKmh    int      // cargo speed along the route; defaults to 35 (a typical container ship)
+	// StartStep is how many intervals of the journey have already happened, so a run can continue where
+	// an earlier one stopped instead of restarting at the origin. Zero for a standalone run.
+	StartStep int
 }
 
 // defaultSpeedKmh is roughly 19 knots.
@@ -205,7 +208,7 @@ func healthyPoint(cfg Config, rng *rand.Rand, sensor string, step int) telemetry
 	if !ok {
 		base = 505
 	}
-	lat, lon := position(cfg, step)
+	lat, lon := position(cfg, step+cfg.StartStep)
 	return telemetry.Point{
 		Timestamp:       cfg.StartUnix + int64(step)*cfg.IntervalSec,
 		SensorID:        sensor,

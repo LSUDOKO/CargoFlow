@@ -346,3 +346,46 @@ func TestMaliciousReplayReinjectsOldPackets(t *testing.T) {
 		}
 	}
 }
+
+// Segments of one journey must join up: the second segment starts where the first ended, so feeding them
+// back to back does not look like a teleport to the speed check.
+func TestStartStepContinuesTheJourneyAcrossSegments(t *testing.T) {
+	first := base(simulator.Normal)
+	first.Steps = 10
+	a, _ := simulator.Generate(first)
+
+	second := base(simulator.Normal)
+	second.Steps = 10
+	second.StartUnix = start + 10*60
+	second.StartStep = 10
+	b, _ := simulator.Generate(second)
+
+	lastA := bySensor(a)[simulator.PrimarySensor]
+	firstB := bySensor(b)[simulator.PrimarySensor]
+	gap := lastA[len(lastA)-1]
+	next := firstB[0]
+	speed := distanceKm(gap, next) / (float64(next.Timestamp-gap.Timestamp) / 3600)
+	if speed > 80 {
+		t.Fatalf("the join between segments implies %.0f km/h", speed)
+	}
+
+	// and without StartStep the second segment restarts at the origin, which is the bug this option fixes
+	restart := base(simulator.Normal)
+	restart.Steps = 10
+	restart.StartUnix = start + 10*60
+	c, _ := simulator.Generate(restart)
+	rs := bySensor(c)[simulator.PrimarySensor][0]
+	if d := distanceKm(gap, rs); d > 100 {
+		t.Logf("without StartStep the segments are %.0f km apart, as expected", d)
+	}
+}
+
+func TestStartStepDoesNotChangeTheReadingsOfAStandaloneRun(t *testing.T) {
+	cfg := base(simulator.Normal)
+	a, _ := simulator.Generate(cfg)
+	cfg.StartStep = 0
+	b, _ := simulator.Generate(cfg)
+	if !reflect.DeepEqual(a, b) {
+		t.Fatal("a zero StartStep must be the default behaviour")
+	}
+}
