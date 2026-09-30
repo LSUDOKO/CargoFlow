@@ -107,6 +107,3 @@ func parseID(raw string) ([32]byte, string, error) {
 func hex32(b [32]byte) string { return "0x" + hex.EncodeToString(b[:]) }
 
 func addrHex(a common.Address) string { return "0x" + hex.EncodeToString(a[:]) }
-
-// shipmentState is the in-memory evidence pipeline for one shipment, rebuilt from the store after a restart.
-type shipmentState struct{}

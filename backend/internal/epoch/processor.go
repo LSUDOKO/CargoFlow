@@ -52,6 +52,13 @@ type Epoch struct {
 // RootBytes32 is the root as the bytes32 committed to EvidenceRegistry.
 func (e *Epoch) RootBytes32() []byte { return e.tree.RootBytes32() }
 
+// RootBytes32Array is the root as a fixed-size array, the form contract calls take.
+func (e *Epoch) RootBytes32Array() [32]byte {
+	var out [32]byte
+	copy(out[:], e.tree.RootBytes32())
+	return out
+}
+
 // Leaf returns the committed leaf hash of reading i.
 func (e *Epoch) Leaf(i int) *big.Int { return new(big.Int).Set(e.leaves[i]) }
 
