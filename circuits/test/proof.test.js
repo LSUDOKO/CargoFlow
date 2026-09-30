@@ -10,6 +10,11 @@ const { sampleReadings, TEMP_OFFSET } = require('../lib/epoch');
 const CONTEXT = 987654321098765432109876543210n;
 const base = () => ({ readings: sampleReadings(), contextHash: CONTEXT, minTempX100: 200, maxTempX100: 800 });
 
+// snarkjs keeps BN254 worker threads alive; without this the test process never exits.
+test.after(async () => {
+  if (globalThis.curve_bn128) await globalThis.curve_bn128.terminate();
+});
+
 let good;
 test.before(async () => {
   assert.ok(fs.existsSync(zkeyPath), 'run `npm run setup` first');
