@@ -54,6 +54,8 @@ func (c *Client) contract(name string) (common.Address, string, error) {
 		return c.M.Vault, "ReceivableVault", nil
 	case "usdg":
 		return c.M.USDG, "ERC20", nil
+	case "access":
+		return c.M.Access, "AccessControl", nil
 	}
 	return common.Address{}, "", fmt.Errorf("chain: unknown contract %q", name)
 }

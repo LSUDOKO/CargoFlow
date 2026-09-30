@@ -126,11 +126,26 @@ func (c *Client) CheckDeployed(ctx context.Context) error {
 	return nil
 }
 
-// HasRole reports whether `who` holds the named role (for example "MONITOR_ROLE").
+// roleID resolves a role name to its on-chain identifier. Every role is keccak256 of its name except
+// OpenZeppelin's DEFAULT_ADMIN_ROLE, which is bytes32(0): hashing its name would silently identify a
+// role nobody holds and make any "is not an admin" check pass vacuously.
+func roleID(name string) [32]byte {
+	if name == "DEFAULT_ADMIN_ROLE" {
+		return [32]byte{}
+	}
+	return [32]byte(crypto.Keccak256Hash([]byte(name)))
+}
+
+// HasRole reports whether `who` holds the named role (for example "MONITOR_ROLE" or "DEFAULT_ADMIN_ROLE").
 func (c *Client) HasRole(ctx context.Context, role string, who common.Address) (bool, error) {
+	return c.HasRoleID(ctx, roleID(role), who)
+}
+
+// HasRoleID reports whether `who` holds the role with the given on-chain identifier.
+func (c *Client) HasRoleID(ctx context.Context, role [32]byte, who common.Address) (bool, error) {
 	bc := bind.NewBoundContract(c.M.Access, ABIs()["AccessControl"], c.Eth, c.Eth, c.Eth)
 	var out []any
-	if err := bc.Call(&bind.CallOpts{Context: ctx}, &out, "hasRole", [32]byte(crypto.Keccak256Hash([]byte(role))), who); err != nil {
+	if err := bc.Call(&bind.CallOpts{Context: ctx}, &out, "hasRole", role, who); err != nil {
 		return false, err
 	}
 	return out[0].(bool), nil

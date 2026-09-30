@@ -149,3 +149,31 @@ func TestDeployedRolesMatchTheLeastPrivilegeDesign(t *testing.T) {
 		}
 	}
 }
+
+// OpenZeppelin's DEFAULT_ADMIN_ROLE is bytes32(0), not keccak256("DEFAULT_ADMIN_ROLE"). A startup check
+// that hashed the name would compare against a role nobody holds and pass vacuously, so the name-based
+// lookup must resolve the admin role to its real identifier.
+func TestTheAdminRoleIsDetectableByNameAndByIdentifier(t *testing.T) {
+	c, env := dial(t)
+	ctx := context.Background()
+	deployer := crypto.PubkeyToAddress(env.Keys["deployer"].PublicKey)
+	monitor := crypto.PubkeyToAddress(env.Keys["monitor"].PublicKey)
+
+	for name, who := range map[string]struct {
+		addr common.Address
+		want bool
+	}{"deployer": {deployer, true}, "monitor": {monitor, false}} {
+		byName, err := c.HasRole(ctx, "DEFAULT_ADMIN_ROLE", who.addr)
+		if err != nil || byName != who.want {
+			t.Errorf("%s: HasRole(DEFAULT_ADMIN_ROLE) = %v, %v; want %v", name, byName, err, who.want)
+		}
+		byID, err := c.HasRoleID(ctx, [32]byte{}, who.addr)
+		if err != nil || byID != who.want {
+			t.Errorf("%s: HasRoleID(0x00) = %v, %v; want %v", name, byID, err, who.want)
+		}
+	}
+	// the trap, demonstrated: the hash of the name is a role nobody holds
+	if ok, _ := c.HasRoleID(ctx, [32]byte(crypto.Keccak256Hash([]byte("DEFAULT_ADMIN_ROLE"))), deployer); ok {
+		t.Fatal("the hash of the admin role's name identifies nothing; if this holds the assumption behind the fix is wrong")
+	}
+}
