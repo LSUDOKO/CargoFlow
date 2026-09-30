@@ -5,17 +5,17 @@ Ticket IDs refer to `docs/project/26-detailed-build-plan.md`. Each phase ends wi
 demonstrable state and stops for review before the next begins.
 
 ## P0 — Foundations (CF-001..003)
-- [ ] gitignore, docs layout, spec, roadmap
-- [ ] monorepo scaffold, `.env.example`, `.editorconfig`, Makefile
-- [ ] README, CONTRIBUTING, SECURITY, CODE_OF_CONDUCT, issue/PR templates
-- [ ] Foundry project with Robinhood Testnet profile
-- [ ] USDG discovery script (symbol, name, decimals from chain)
-- [ ] CI skeleton
+- [x] gitignore, docs layout, spec, roadmap
+- [x] monorepo scaffold, `.env.example`, `.editorconfig`, Makefile
+- [x] README, CONTRIBUTING, SECURITY, CODE_OF_CONDUCT, issue/PR templates
+- [x] Foundry project with Robinhood Testnet profile
+- [x] USDG discovery script (symbol, name, decimals from chain)
+- [x] CI skeleton
 **Done when:** `make check` passes and `cast chain-id` + USDG metadata read succeed.
 
 ## P1 — Contract core (CF-010..013)
 - [ ] interfaces, errors, events, roles
-- [ ] MockUSDG (6 decimals), ShipmentRegistry, PolicyEngine
+- [ ] MockUSDG (6 decimals), ShipmentRegistry, PolicyEngine, EvidenceRegistry (moved up from P2 so release is evidence-gated in P1)
 - [ ] ReceivableVault (deposit, release, settle, refund)
 - [ ] FinancingController (state machine, milestones, pause/resume)
 - [ ] unit tests, fuzz tests, invariant suite I1–I8
