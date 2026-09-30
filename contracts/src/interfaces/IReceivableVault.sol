@@ -29,6 +29,9 @@ interface IReceivableVault {
         bytes32 indexed shipmentId, address indexed supplier, uint256 amount, uint256 totalDrawn
     );
     event FacilityPauseSet(bytes32 indexed shipmentId, bool paused);
+    event FacilityDefaulted(
+        bytes32 indexed shipmentId, uint256 undrawnRefund, uint256 outstandingPrincipal
+    );
     event FacilitySettled(
         bytes32 indexed shipmentId,
         uint256 principal,
@@ -70,6 +73,11 @@ interface IReceivableVault {
     /// @notice Pulls the invoice from the payer and runs the waterfall:
     ///         principal + fee + undrawn commitment -> financier, the remainder -> supplier.
     function settle(bytes32 shipmentId) external;
+
+    /// @notice Stops all future draws and returns the undrawn commitment to the financier.
+    ///         `drawn` is preserved as the record of the outstanding exposure. No off-chain recovery
+    ///         claims are modelled.
+    function closeDefaulted(bytes32 shipmentId) external;
 
     function getFacility(bytes32 shipmentId) external view returns (Facility memory);
 }
