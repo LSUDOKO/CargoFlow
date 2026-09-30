@@ -1,0 +1,6 @@
+{
+  "network": "robinhood-testnet",
+  "chainId": 46630,
+  "usdg": "0x7E955252E15c84f5768B83c41a71F9eba181802F",
+  "contracts": {}
+}
