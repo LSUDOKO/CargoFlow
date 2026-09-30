@@ -126,3 +126,51 @@ func TestStringNeverRevealsSecrets(t *testing.T) {
 		}
 	}
 }
+
+func TestTheAIMonitorIsOffByDefault(t *testing.T) {
+	c, err := config.Load(env(valid()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c.AIEnabled() || c.AITimeout != 10*time.Second || c.AIMinConfidence != 0.9 || c.GroqModel != "" {
+		t.Fatalf("%+v", c)
+	}
+}
+
+func TestGroqSettingsAreParsedAndTheKeyNeverPrints(t *testing.T) {
+	e := valid()
+	e["GROQ_API_KEY"] = "gsk_super_secret_value_123"
+	e["GROQ_MODEL"] = "openai/gpt-oss-120b"
+	e["AI_TIMEOUT"] = "3s"
+	e["AI_MIN_CONFIDENCE"] = "0.75"
+	c, err := config.Load(env(e))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !c.AIEnabled() || c.GroqAPIKey.Reveal() != "gsk_super_secret_value_123" || c.GroqModel != "openai/gpt-oss-120b" ||
+		c.AITimeout != 3*time.Second || c.AIMinConfidence != 0.75 {
+		t.Fatalf("%+v", c)
+	}
+	if out := fmtSprint(c) + c.String(); strings.Contains(out, "super_secret") {
+		t.Fatalf("the Groq key was printed: %s", out)
+	}
+}
+
+func TestInvalidAISettingsAreRejected(t *testing.T) {
+	for name, kv := range map[string][2]string{
+		"timeout not a duration":  {"AI_TIMEOUT", "soon"},
+		"timeout not positive":    {"AI_TIMEOUT", "0s"},
+		"confidence not a number": {"AI_MIN_CONFIDENCE", "high"},
+		"confidence zero":         {"AI_MIN_CONFIDENCE", "0"},
+		"confidence above one":    {"AI_MIN_CONFIDENCE", "1.5"},
+		"confidence NaN":          {"AI_MIN_CONFIDENCE", "NaN"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			e := valid()
+			e[kv[0]] = kv[1]
+			if _, err := config.Load(env(e)); err == nil || !strings.Contains(err.Error(), kv[0]) {
+				t.Fatalf("accepted %s=%s: %v", kv[0], kv[1], err)
+			}
+		})
+	}
+}

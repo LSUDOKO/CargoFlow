@@ -48,7 +48,16 @@ type Config struct {
 	ManagerKey Key // releases milestones, starts transit, submits recovery proofs (FACILITY_MANAGER_ROLE)
 
 	CircuitsDir string
+
+	// AI monitor (optional). Without a Groq key the deterministic policy gate decides alone.
+	GroqAPIKey      Secret
+	GroqModel       string // empty selects the provider default
+	AITimeout       time.Duration
+	AIMinConfidence float64 // confidence a stricter model opinion needs to be honoured
 }
+
+// AIEnabled reports whether a model provider is configured.
+func (c Config) AIEnabled() bool { return c.GroqAPIKey != "" }
 
 // String renders the configuration without any secret material.
 func (c Config) String() string {
@@ -128,6 +137,27 @@ func Load(getenv func(string) string) (Config, error) {
 			fail("INDEXER_POLL", "must be a positive duration such as 2s or 500ms")
 		} else {
 			c.IndexerPoll = d
+		}
+	}
+
+	c.GroqAPIKey = Secret(strings.TrimSpace(getenv("GROQ_API_KEY")))
+	c.GroqModel = str("GROQ_MODEL", "")
+	c.AITimeout = 10 * time.Second
+	if raw := strings.TrimSpace(getenv("AI_TIMEOUT")); raw != "" {
+		d, err := time.ParseDuration(raw)
+		if err != nil || d <= 0 {
+			fail("AI_TIMEOUT", "must be a positive duration such as 10s")
+		} else {
+			c.AITimeout = d
+		}
+	}
+	c.AIMinConfidence = 0.9
+	if raw := strings.TrimSpace(getenv("AI_MIN_CONFIDENCE")); raw != "" {
+		f, err := strconv.ParseFloat(raw, 64)
+		if err != nil || !(f > 0 && f <= 1) {
+			fail("AI_MIN_CONFIDENCE", "must be a number above 0 and at most 1")
+		} else {
+			c.AIMinConfidence = f
 		}
 	}
 
