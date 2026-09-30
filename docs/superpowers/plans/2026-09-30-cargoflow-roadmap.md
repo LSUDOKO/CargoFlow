@@ -38,8 +38,14 @@ demonstrable state and stops for review before the next begins.
 **Done when:** valid hidden readings resume a paused facility; wrong context cannot.
 
 ## P4 — Backend platform
-- [ ] Postgres migrations, REST API, chain listener/indexer, tx sender, WebSocket, Dockerfile
-**Done when:** API + indexer drive a full local lifecycle against anvil.
+- [x] Postgres migrations (embedded, locked, transactional), idempotent repositories
+- [x] Ed25519 evidence-source authentication, validated config with unprintable secrets
+- [x] chain client: role-limited signers, decoded reverts, typed reads; log indexer (confirmations, reorg recovery, at-least-once)
+- [x] service: chain-verified shipment mirroring, ingestion pipeline, idempotent action outbox, ZK recovery, chain-event sink, views
+- [x] REST API + WebSocket hub, rate limiting, strict decoding, startup role verification
+- [x] Dockerfile and compose stack; CI job running the integration and end-to-end tests
+**Done when:** API + indexer drive a full local lifecycle against anvil. (`cmd/cargoflow/e2e_test.go`)
+**Deferred to P7:** background reconciler for failed chain actions; recovery proving off the request path.
 
 ## P5 — AI monitor (CF-040..041)
 - [ ] output schema, guardrails, prompt-injection tests, LLM adapter + deterministic fallback

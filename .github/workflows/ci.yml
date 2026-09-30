@@ -28,18 +28,49 @@ jobs:
 
   backend:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: cargoflow_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      # enables the database, chain (anvil) and end-to-end integration tests instead of skipping them
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/cargoflow_test?sslmode=disable
     defaults:
       run:
         working-directory: backend
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.4.2
       - uses: actions/setup-go@v5
         with:
           go-version-file: backend/go.mod
           cache-dependency-path: backend/go.sum
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: circuits/package-lock.json
+      - name: Install circom 2.2.3 and circuit dependencies (for ZK recovery tests)
+        working-directory: circuits
+        run: |
+          sudo curl -sSfL -o /usr/local/bin/circom \
+            https://github.com/iden3/circom/releases/download/v2.2.3/circom-linux-amd64
+          sudo chmod +x /usr/local/bin/circom
+          npm ci
       - run: test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
       - run: go vet ./...
-      - run: go test -race ./...
+      - run: go test -race -timeout 20m ./...
 
   circuits:
     runs-on: ubuntu-latest
