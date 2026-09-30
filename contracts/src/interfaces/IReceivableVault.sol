@@ -29,12 +29,20 @@ interface IReceivableVault {
         bytes32 indexed shipmentId, address indexed supplier, uint256 amount, uint256 totalDrawn
     );
     event FacilityPauseSet(bytes32 indexed shipmentId, bool paused);
+    event FacilitySettled(
+        bytes32 indexed shipmentId,
+        uint256 principal,
+        uint256 fee,
+        uint256 residual,
+        uint256 undrawnRefund
+    );
 
     error FacilityNotFound();
     error FacilityAlreadyExists();
     error InvalidFacility();
     error AlreadyFunded();
     error NotFunded();
+    error FacilityClosed();
     error FacilityPaused();
     error ExceedsCommittedFacility();
     error ZeroAmount();
@@ -58,6 +66,10 @@ interface IReceivableVault {
 
     /// @notice Defence-in-depth pause: a paused facility cannot release regardless of controller bugs.
     function setPaused(bytes32 shipmentId, bool paused) external;
+
+    /// @notice Pulls the invoice from the payer and runs the waterfall:
+    ///         principal + fee + undrawn commitment -> financier, the remainder -> supplier.
+    function settle(bytes32 shipmentId) external;
 
     function getFacility(bytes32 shipmentId) external view returns (Facility memory);
 }

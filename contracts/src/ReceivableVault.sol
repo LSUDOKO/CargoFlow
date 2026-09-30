@@ -81,6 +81,7 @@ contract ReceivableVault is Controlled, ReentrancyGuard, IReceivableVault {
         nonReentrant
     {
         Facility storage f = _load(shipmentId);
+        if (f.closed) revert FacilityClosed();
         if (!f.funded) revert NotFunded();
         if (f.paused) revert FacilityPaused();
         if (amount == 0) revert ZeroAmount();
@@ -91,6 +92,26 @@ contract ReceivableVault is Controlled, ReentrancyGuard, IReceivableVault {
         USDG.safeTransfer(f.supplier, amount);
 
         emit AdvanceReleased(shipmentId, f.supplier, amount, newDrawn);
+    }
+
+    /// @inheritdoc IReceivableVault
+    function settle(bytes32 shipmentId) external onlyRole(Roles.CONTROLLER_ROLE) nonReentrant {
+        Facility storage f = _load(shipmentId);
+        if (f.closed) revert FacilityClosed();
+        if (!f.funded) revert NotFunded();
+
+        f.closed = true;
+        uint256 principal = f.drawn;
+        uint256 fee = _fee(principal, f.feeBps);
+        uint256 undrawn = f.committed - principal;
+        // cannot underflow: openFacility required invoiceValue >= committed + fee(committed)
+        uint256 residual = f.invoiceValue - principal - fee;
+
+        USDG.safeTransferFrom(f.payer, address(this), f.invoiceValue);
+        USDG.safeTransfer(f.financier, principal + fee + undrawn);
+        USDG.safeTransfer(f.supplier, residual);
+
+        emit FacilitySettled(shipmentId, principal, fee, residual, undrawn);
     }
 
     /// @inheritdoc IReceivableVault
