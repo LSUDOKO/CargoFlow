@@ -25,11 +25,19 @@ interface IReceivableVault {
         uint16 feeBps
     );
     event CapitalDeposited(bytes32 indexed shipmentId, address indexed financier, uint256 amount);
+    event AdvanceReleased(
+        bytes32 indexed shipmentId, address indexed supplier, uint256 amount, uint256 totalDrawn
+    );
+    event FacilityPauseSet(bytes32 indexed shipmentId, bool paused);
 
     error FacilityNotFound();
     error FacilityAlreadyExists();
     error InvalidFacility();
     error AlreadyFunded();
+    error NotFunded();
+    error FacilityPaused();
+    error ExceedsCommittedFacility();
+    error ZeroAmount();
 
     function openFacility(
         bytes32 shipmentId,
@@ -43,6 +51,13 @@ interface IReceivableVault {
 
     /// @notice Pulls the full committed amount from the financier (who approved this vault).
     function deposit(bytes32 shipmentId) external;
+
+    /// @notice Sends `amount` to the facility's fixed supplier. Reverts if paused, unfunded, or if
+    ///         cumulative draws would exceed the commitment.
+    function release(bytes32 shipmentId, uint256 amount) external;
+
+    /// @notice Defence-in-depth pause: a paused facility cannot release regardless of controller bugs.
+    function setPaused(bytes32 shipmentId, bool paused) external;
 
     function getFacility(bytes32 shipmentId) external view returns (Facility memory);
 }

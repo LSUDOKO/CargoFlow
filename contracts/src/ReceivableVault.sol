@@ -75,6 +75,31 @@ contract ReceivableVault is Controlled, ReentrancyGuard, IReceivableVault {
     }
 
     /// @inheritdoc IReceivableVault
+    function release(bytes32 shipmentId, uint256 amount)
+        external
+        onlyRole(Roles.CONTROLLER_ROLE)
+        nonReentrant
+    {
+        Facility storage f = _load(shipmentId);
+        if (!f.funded) revert NotFunded();
+        if (f.paused) revert FacilityPaused();
+        if (amount == 0) revert ZeroAmount();
+        uint256 newDrawn = f.drawn + amount;
+        if (newDrawn > f.committed) revert ExceedsCommittedFacility();
+
+        f.drawn = newDrawn;
+        USDG.safeTransfer(f.supplier, amount);
+
+        emit AdvanceReleased(shipmentId, f.supplier, amount, newDrawn);
+    }
+
+    /// @inheritdoc IReceivableVault
+    function setPaused(bytes32 shipmentId, bool paused) external onlyRole(Roles.CONTROLLER_ROLE) {
+        _load(shipmentId).paused = paused;
+        emit FacilityPauseSet(shipmentId, paused);
+    }
+
+    /// @inheritdoc IReceivableVault
     function getFacility(bytes32 shipmentId) external view returns (Facility memory) {
         if (!_exists[shipmentId]) revert FacilityNotFound();
         return _facilities[shipmentId];
