@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -39,3 +40,6 @@ func mapErr(err error) error {
 	}
 	return err
 }
+
+// Ping checks that the database is reachable.
+func (s *Store) Ping(ctx context.Context) error { return s.pool.Ping(ctx) }
