@@ -45,6 +45,7 @@ The image compiles the circuit at build time and runs as a non-root user on a re
 | `ADMIN_API_KEY` | yes (16+ chars) | guards administrative endpoints |
 | `SALT_SECRET` | yes (16+ chars) | derives the private per-reading salts behind every committed reading |
 | `WORKER_KEY`, `MONITOR_KEY`, `MANAGER_KEY` | yes | the three role keys; **use three different wallets** |
+| `GROQ_API_KEY`, `GROQ_MODEL`, `AI_TIMEOUT`, `AI_MIN_CONFIDENCE` | no | enable and tune the [AI monitor](#ai-monitor); without a key the policy gate decides alone |
 | `HTTP_ADDR`, `LOG_LEVEL`, `CORS_ORIGINS`, `START_BLOCK`, `CONFIRMATIONS`, `INDEXER_POLL`, `CIRCUITS_DIR` | no | see `.env.example` |
 
 Every problem in the configuration is reported at once, weak secrets are rejected, and secrets cannot be
@@ -103,6 +104,35 @@ a generic 500 and never leak internals.
 and `logIndex` so a client can drop a redelivered duplicate. A client that cannot keep up is dropped with
 close code 1013 and should refetch over REST and reconnect.
 
+## AI monitor
+
+A language model (Groq, OpenAI-compatible API, default `openai/gpt-oss-20b`) reviews every evaluated epoch and
+returns a structured assessment (`shipmentId, severity, action, reasonCode, confidence, evidence,
+requestedNextStep, explanation`). It is **advisory**: the deterministic policy gate (`internal/decision`) stays
+the floor and the smart contracts decide what is legal.
+
+- **Stricter, never looser.** The model may ask for `REQUEST_SECONDARY_PROOF` or `PAUSE_FACILITY` when policy
+  passed, and only if its confidence reaches `AI_MIN_CONFIDENCE`. If it approves, downgrades, is unsure or names
+  any other action, nothing changes: it can never release capital the policy gate withheld
+  (`ai.Reconcile`, property-tested over every combination).
+- **Pause is the only on-chain effect**, sent through the `MONITOR_KEY`, which holds no other role and is
+  checked at startup. `TRIGGER_DISPUTE` is not wired to the model.
+- **Prompt-injection boundary.** The model is given a `Brief` of integers, booleans, the validated shipment id
+  and members of fixed enums. No free text that came from telemetry (sensor names, source labels, packet
+  contents) is ever copied into it, so there is nothing to inject into. Its reply is parsed strictly (one JSON
+  object, unknown fields rejected, every enum allowlisted, the echoed evidence must equal the facts supplied,
+  explanation length-capped and stripped of control characters) and is validated a second time by the monitor.
+- **Fallback.** No key, API error, timeout, panic, or invalid reply all yield the policy gate's decision, and
+  the audit record says so (`aiNote`, `aiError`). A policy-mandated pause never waits for the model: the
+  facility is paused first and the model is asked for its explanation afterwards.
+- **Audit.** Every epoch's monitoring event records the `decider` (`deterministic-policy-gate` or
+  `ai-escalation`), the provider and model, and the model's validated assessment. An AI-requested pause carries
+  the reason `AI_REQUESTED`, which is hashed into the on-chain pause reason.
+- **Privacy.** Only derived scores and enum codes leave the machine; raw readings, coordinates and sensor ids
+  do not.
+
+`make ai-live` runs an opt-in smoke test against the real API with synthetic data; it is excluded from CI.
+
 ## Operational guarantees
 
 - **Idempotent chain actions.** Every transaction goes through a Postgres outbox keyed by intent
@@ -131,6 +161,10 @@ close code 1013 and should refetch over REST and reconnect.
   memory. Run one replica per database, or shard shipments, until a distributed lock is added.
 - **Time alignment** infers the bucket from the smallest gap between a sensor's readings, so sensors sampled at
   very different rates are scored conservatively (extra coverage penalty).
+- **The model can pause a facility it should not.** A confident but wrong model opinion halts releases until a
+  verified recovery (proof or verifier). That is a liveness cost, not a fund-safety one; raise
+  `AI_MIN_CONFIDENCE` or leave `GROQ_API_KEY` unset to remove it. The model is consulted once per epoch and adds
+  its latency (seconds) to the epoch that triggers it, bounded by `AI_TIMEOUT`.
 - **Recovery proving runs inside the HTTP request** (about 2 s on a 16-core machine). Move it to a queue before
   exposing it at scale.
 - The evidence score weights are explicit design parameters, not statistically calibrated.
@@ -178,6 +212,7 @@ Runs are reproducible: the same `-seed` gives byte-identical output.
 | `internal/merkle` | Poseidon Merkle tree (circomlib-compatible), salted reading leaves |
 | `internal/epoch` | closed, committed epochs; crash-safe restore; rebuild from stored readings |
 | `internal/decision` | policy gate: approve, request secondary proof, or pause, with reason codes |
+| `internal/ai` | AI monitor: injection-safe brief, strict assessment schema, guardrails, Groq provider, fallback |
 | `internal/proof` | recovery-proof context hash (pinned to the contract) and the snarkjs prover worker |
 
 ### Tests
