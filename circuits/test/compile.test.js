@@ -41,3 +41,19 @@ test('concurrent first-time compiles all succeed and compile only once', async (
     fs.rmSync(out, { recursive: true, force: true });
   }
 });
+
+// The production image runs with a read-only filesystem. An up-to-date build must be usable there: taking the
+// compile lock when nothing needs compiling would fail with EACCES and break proving.
+test('an up-to-date build in a read-only directory is reused without writing anything', () => {
+  const out = fs.mkdtempSync(path.join(os.tmpdir(), 'cf-readonly-'));
+  try {
+    require('../scripts/compile').build({ out }); // populate it
+    fs.chmodSync(out, 0o555); // read-only, as in the container
+    const res = require('../scripts/compile').build({ out });
+    assert.equal(res.compiled, false);
+    assert.ok(fs.existsSync(res.wasm));
+  } finally {
+    fs.chmodSync(out, 0o755);
+    fs.rmSync(out, { recursive: true, force: true });
+  }
+});

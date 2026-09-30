@@ -1,0 +1,71 @@
+# Local stack: Postgres + the backend. Point the backend at a chain by setting RPC_URL, CHAIN_ID and
+# mounting a deployment manifest (see contracts/deployments). Secrets come from your shell or a .env file
+# next to this one; nothing secret is committed.
+#
+#   cp ../.env.example .env        # then fill in the keys and secrets
+#   docker compose up --build
+#
+# A throwaway local chain with the contracts deployed is available behind the `local-chain` profile:
+#   docker compose --profile local-chain up --build
+name: cargoflow
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: cargoflow
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cargoflow-local-only}
+      POSTGRES_DB: cargoflow
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cargoflow -d cargoflow"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    ports:
+      - "127.0.0.1:5432:5432"
+
+  backend:
+    build:
+      context: ..
+      dockerfile: infra/docker/backend.Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://cargoflow:${POSTGRES_PASSWORD:-cargoflow-local-only}@postgres:5432/cargoflow?sslmode=disable
+      RPC_URL: ${RPC_URL:?set RPC_URL}
+      CHAIN_ID: ${CHAIN_ID:?set CHAIN_ID}
+      DEPLOYMENT_FILE: /deployments/manifest.json
+      ADMIN_API_KEY: ${ADMIN_API_KEY:?set ADMIN_API_KEY (16+ characters)}
+      SALT_SECRET: ${SALT_SECRET:?set SALT_SECRET (16+ characters)}
+      WORKER_KEY: ${WORKER_KEY:?set WORKER_KEY}
+      MONITOR_KEY: ${MONITOR_KEY:?set MONITOR_KEY}
+      MANAGER_KEY: ${MANAGER_KEY:?set MANAGER_KEY}
+      START_BLOCK: ${START_BLOCK:-0}
+      CONFIRMATIONS: ${CONFIRMATIONS:-1}
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+    volumes:
+      - ${DEPLOYMENT_MANIFEST:-../contracts/deployments/local.json}:/deployments/manifest.json:ro
+    ports:
+      - "127.0.0.1:8080:8080"
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  # --- optional throwaway chain for local development
+  anvil:
+    profiles: ["local-chain"]
+    image: ghcr.io/foundry-rs/foundry:latest
+    entrypoint: ["anvil", "--host", "0.0.0.0"]
+    ports:
+      - "127.0.0.1:8545:8545"
+
+volumes:
+  pgdata:

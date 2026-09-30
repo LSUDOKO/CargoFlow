@@ -50,8 +50,11 @@ function acquire(lock) {
 
 /** Returns { r1cs, wasm, compiled }. `compiled` is false when an up-to-date build was reused. */
 function build({ force = false, out = defaultOut } = {}) {
-  fs.mkdirSync(out, { recursive: true });
   const lock = path.join(out, '.compile.lock');
+  // Fast path: an up-to-date build that nobody is currently rewriting needs no lock and no write access.
+  // This matters in production, where the image runs with a read-only filesystem.
+  if (!force && !fs.existsSync(lock) && isFresh(out)) return { ...paths(out), compiled: false };
+  fs.mkdirSync(out, { recursive: true });
   acquire(lock);
   try {
     if (!force && isFresh(out)) return { ...paths(out), compiled: false };

@@ -1,0 +1,14 @@
+.git
+**/node_modules
+**/out
+**/cache
+**/broadcast
+contracts/lib
+contracts/deployments/*.json
+!contracts/deployments/robinhood-testnet.json
+frontend
+docs
+.env
+.env.*
+!.env.example
+circuits/build
