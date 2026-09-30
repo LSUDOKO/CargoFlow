@@ -30,4 +30,4 @@ frontend-check: ## Lint, typecheck, build frontend (skipped until it exists)
 	@if [ -f frontend/package.json ]; then cd frontend && pnpm lint && pnpm typecheck && pnpm build; else echo "frontend: not initialized, skipping"; fi
 
 usdg-info: ## Read USDG metadata from Robinhood testnet
-	@./scripts/usdg-info.sh
+	@CAST=$(CAST) ./scripts/usdg-info.sh
