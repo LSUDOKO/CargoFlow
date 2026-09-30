@@ -86,7 +86,43 @@ func NewProcessor(cfg Config) (*Processor, error) {
 	if cfg.JitterSec < 1 {
 		cfg.JitterSec = defaultJitterSec
 	}
+	rel := make(map[string]int, len(cfg.Reliability))
+	for k, v := range cfg.Reliability {
+		rel[k] = v
+	}
+	cfg.Reliability = rel
 	return &Processor{cfg: cfg, validator: telemetry.NewValidator(cfg.JitterSec), counts: map[string]int{}}, nil
+}
+
+// SetReliability updates per-sensor reliability (basis points) for epochs closed from now on. It is a
+// scoring input only: it never changes which readings are committed or their Merkle root.
+func (p *Processor) SetReliability(rel map[string]int) {
+	for k, v := range rel {
+		p.cfg.Reliability[k] = v
+	}
+}
+
+// Restore rebuilds in-memory state after a restart from durable storage. `seen` are readings that belong
+// to epochs already closed and persisted: they only prime replay and ordering detection. `pending` are
+// accepted readings not yet in a closed epoch; they are re-ingested, and any epoch they complete (one
+// that was closed in memory but never persisted before a crash) is returned so the caller can persist it.
+func (p *Processor) Restore(seen, pending []telemetry.Point) ([]*Epoch, error) {
+	for _, pt := range seen {
+		if err := p.validator.Accept(pt); err != nil {
+			return nil, fmt.Errorf("epoch: inconsistent history: %w", err)
+		}
+	}
+	var closed []*Epoch
+	for _, pt := range pending {
+		e, err := p.Ingest(pt)
+		if err != nil {
+			return nil, fmt.Errorf("epoch: inconsistent pending readings: %w", err)
+		}
+		if e != nil {
+			closed = append(closed, e)
+		}
+	}
+	return closed, nil
 }
 
 // Rejections returns the quarantine log: every point refused at ingestion, with its reason.
@@ -142,7 +178,21 @@ func (p *Processor) closeEpoch() (*Epoch, error) {
 	pts := p.buffer
 	p.buffer = nil
 	p.counts = map[string]int{}
+	e, err := FromPoints(p.cfg, p.next, pts)
+	if err != nil {
+		return nil, err
+	}
+	p.next++
+	return e, nil
+}
 
+// FromPoints builds an epoch (sorted leaves, salted Poseidon tree, evidence score, risk) from readings.
+// It is how a stored epoch is rebuilt, for example to produce a recovery proof. The input is not modified.
+func FromPoints(cfg Config, seq uint32, points []telemetry.Point) (*Epoch, error) {
+	if len(points) == 0 {
+		return nil, errors.New("epoch: no readings")
+	}
+	pts := append([]telemetry.Point(nil), points...)
 	sort.SliceStable(pts, func(i, j int) bool {
 		if pts[i].Timestamp != pts[j].Timestamp {
 			return pts[i].Timestamp < pts[j].Timestamp
@@ -152,7 +202,7 @@ func (p *Processor) closeEpoch() (*Epoch, error) {
 	leaves := make([]*big.Int, len(pts))
 	salts := make([]*big.Int, len(pts))
 	for i, pt := range pts {
-		salt := merkle.DeriveSalt(p.cfg.SaltSecret, p.cfg.ShipmentID, pt.SensorID, pt.Timestamp)
+		salt := merkle.DeriveSalt(cfg.SaltSecret, cfg.ShipmentID, pt.SensorID, pt.Timestamp)
 		salts[i] = salt
 		leaf, err := merkle.LeafHash(pt, salt)
 		if err != nil {
@@ -164,23 +214,20 @@ func (p *Processor) closeEpoch() (*Epoch, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	res := evidence.Evaluate(evidence.EpochInput{
-		Points: pts, Policy: p.cfg.Policy, Reliability: p.cfg.Reliability, Route: p.cfg.Route,
+		Points: pts, Policy: cfg.Policy, Reliability: cfg.Reliability, Route: cfg.Route,
 	})
-	e := &Epoch{
-		ShipmentID: p.cfg.ShipmentID,
-		Sequence:   p.next,
+	return &Epoch{
+		ShipmentID: cfg.ShipmentID,
+		Sequence:   seq,
 		Points:     pts,
 		StartTime:  pts[0].Timestamp,
 		EndTime:    pts[len(pts)-1].Timestamp,
 		Root:       tree.Root(),
 		Result:     res,
-		RiskBps:    risk.Score(risk.FromEvidence(res, p.cfg.RiskContext)),
+		RiskBps:    risk.Score(risk.FromEvidence(res, cfg.RiskContext)),
 		tree:       tree,
 		leaves:     leaves,
 		salts:      salts,
-	}
-	p.next++
-	return e, nil
+	}, nil
 }
