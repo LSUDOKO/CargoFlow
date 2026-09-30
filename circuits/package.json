@@ -1,0 +1,21 @@
+{
+  "name": "cargoflow-circuits",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Circom circuit and Groth16 tooling for CargoFlow proof-of-physical-state",
+  "type": "commonjs",
+  "scripts": {
+    "compile": "node scripts/compile.js",
+    "test": "node --test test/",
+    "setup": "node scripts/setup.js",
+    "prove": "node scripts/prove.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "circomlib": "2.0.5",
+    "circomlibjs": "0.1.7",
+    "snarkjs": "0.7.6"
+  }
+}
