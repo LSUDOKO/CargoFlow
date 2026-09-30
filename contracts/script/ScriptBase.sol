@@ -29,8 +29,10 @@ abstract contract ScriptBase is Script {
         return block.chainid == LOCAL_CHAIN_ID;
     }
 
-    /// @dev Accepts `PRIVATE_KEY` or `private_key`, with or without a 0x prefix.
+    /// @dev Local chain: the funded anvil dev account. Otherwise `PRIVATE_KEY` or `private_key`
+    ///      from the environment, with or without a 0x prefix.
     function _deployerKey() internal view returns (uint256) {
+        if (_isLocal()) return _parseKey(ANVIL_KEY_0);
         string memory k = vm.envOr("PRIVATE_KEY", vm.envOr("private_key", string("")));
         if (bytes(k).length == 0) revert("set PRIVATE_KEY (or private_key) in .env");
         return _parseKey(k);
