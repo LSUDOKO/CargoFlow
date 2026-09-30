@@ -33,6 +33,7 @@ var (
 	ErrNoFacility        = errors.New("service: no facility exists on chain for this shipment")
 	ErrNotPaused         = errors.New("service: the facility is not paused")
 	ErrNotRecoverable    = errors.New("service: recovery evidence is not sufficient")
+	ErrNoProver          = errors.New("service: no ZK prover is configured")
 )
 
 // Options wires the service to its collaborators.
