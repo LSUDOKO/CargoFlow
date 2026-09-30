@@ -46,6 +46,7 @@ type Epoch struct {
 
 	tree   *merkle.Tree
 	leaves []*big.Int
+	salts  []*big.Int // private witness material: never serialise or log
 }
 
 // RootBytes32 is the root as the bytes32 committed to EvidenceRegistry.
@@ -53,6 +54,10 @@ func (e *Epoch) RootBytes32() []byte { return e.tree.RootBytes32() }
 
 // Leaf returns the committed leaf hash of reading i.
 func (e *Epoch) Leaf(i int) *big.Int { return new(big.Int).Set(e.leaves[i]) }
+
+// Salt returns the private salt behind reading i's leaf. It is witness material for the ZK prover and
+// must never be logged, stored in the database or sent to a client.
+func (e *Epoch) Salt(i int) *big.Int { return new(big.Int).Set(e.salts[i]) }
 
 // Prove returns the inclusion proof for reading i.
 func (e *Epoch) Prove(i int) ([]*big.Int, error) { return e.tree.Prove(i) }
@@ -145,8 +150,10 @@ func (p *Processor) closeEpoch() (*Epoch, error) {
 		return pts[i].SensorID < pts[j].SensorID
 	})
 	leaves := make([]*big.Int, len(pts))
+	salts := make([]*big.Int, len(pts))
 	for i, pt := range pts {
 		salt := merkle.DeriveSalt(p.cfg.SaltSecret, p.cfg.ShipmentID, pt.SensorID, pt.Timestamp)
+		salts[i] = salt
 		leaf, err := merkle.LeafHash(pt, salt)
 		if err != nil {
 			return nil, fmt.Errorf("epoch: cannot commit reading %d: %w", i, err)
@@ -172,6 +179,7 @@ func (p *Processor) closeEpoch() (*Epoch, error) {
 		RiskBps:    risk.Score(risk.FromEvidence(res, p.cfg.RiskContext)),
 		tree:       tree,
 		leaves:     leaves,
+		salts:      salts,
 	}
 	p.next++
 	return e, nil
