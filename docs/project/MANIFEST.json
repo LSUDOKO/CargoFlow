@@ -1,0 +1,11 @@
+{
+  "project": "CargoFlow",
+  "document_count": 28,
+  "primary_source": "Pasted markdown(20260929-210534).md",
+  "generated_at": "2026-09-30",
+  "notes": [
+    "Source-derived design is preserved; external facts are separated into references.",
+    "Stylus-on-Robinhood is not assumed; Solidity on Robinhood is the safe MVP path.",
+    "Gas savings are not claimed as measured until benchmarked."
+  ]
+}
