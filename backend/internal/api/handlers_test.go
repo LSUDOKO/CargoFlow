@@ -1,10 +1,15 @@
 package api_test
 
 import (
+	"context"
+	"time"
+
 	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"github.com/coder/websocket"
+	"github.com/coder/websocket/wsjson"
 	"io"
 	"net/http"
 	"strings"
@@ -386,3 +391,46 @@ func TestZKRecoveryThroughTheAPI(t *testing.T) {
 	}
 }
 
+func TestWebSocketStreamsLiveEvidenceEventsThroughTheFullMiddlewareChain(t *testing.T) {
+	e := newEnv(t, nil)
+	id := e.onChain(t, "api-ws-1", true)
+	hex := idHex(id)
+	e.do(t, "POST", "/v1/shipments", map[string]any{"shipmentId": hex, "externalRef": "api-ws-1", "route": testRoute, "maxGapSec": 1800, "minSensors": 2}, admin(), nil)
+	e.registerSource(t, "carrier-1", "sensor-1", "sensor-2")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	conn, _, err := websocket.Dial(ctx, "ws"+strings.TrimPrefix(e.srv.URL, "http")+"/v1/ws?shipment="+hex, nil)
+	if err != nil {
+		t.Fatalf("the websocket upgrade failed behind the middleware chain: %v", err)
+	}
+	defer conn.CloseNow()
+	deadline := time.Now().Add(3 * time.Second)
+	for e.hub.Subscribers() == 0 && time.Now().Before(deadline) {
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	now, _ := e.chain.BlockTime(ctxBG())
+	e.signedTelemetry(t, "carrier-1", hex, segment(t, e, simulator.Normal, int64(now)-300, 0, 8), nil)
+
+	seen := map[string]bool{}
+	for len(seen) < 3 {
+		var ev struct {
+			Type       string `json:"type"`
+			ShipmentID string `json:"shipmentId"`
+			Seq        uint64 `json:"seq"`
+		}
+		if err := wsjson.Read(ctx, conn, &ev); err != nil {
+			t.Fatalf("read (saw %v): %v", seen, err)
+		}
+		if ev.ShipmentID != hex || ev.Seq == 0 {
+			t.Fatalf("event = %+v", ev)
+		}
+		seen[ev.Type] = true
+	}
+	for _, want := range []string{"TELEMETRY_EPOCH_ADDED", "EVIDENCE_UPDATED", "RISK_UPDATED"} {
+		if !seen[want] {
+			t.Errorf("never received %s (got %v)", want, seen)
+		}
+	}
+}
