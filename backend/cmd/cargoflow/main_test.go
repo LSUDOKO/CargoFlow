@@ -6,11 +6,14 @@ import (
 	"crypto/ed25519"
 	"encoding/base64"
 	"encoding/json"
+	"io"
+	"log/slog"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/LSUDOKO/CargoFlow/backend/internal/auth"
+	"github.com/LSUDOKO/CargoFlow/backend/internal/config"
 )
 
 func TestKeygenProducesAUsableEd25519KeyPair(t *testing.T) {
@@ -72,4 +75,15 @@ func TestUnknownCommandPrintsUsage(t *testing.T) {
 		t.Fatal("no command succeeded")
 	}
 	_ = time.Second
+}
+
+func TestTheAIMonitorExistsOnlyWhenAModelKeyIsConfigured(t *testing.T) {
+	log := slog.New(slog.NewTextHandler(io.Discard, nil))
+	if m := aiMonitor(config.Config{}, log); m != nil {
+		t.Fatal("a monitor was built without a key")
+	}
+	m := aiMonitor(config.Config{GroqAPIKey: "gsk_x", AITimeout: time.Second, AIMinConfidence: 0.9}, log)
+	if !m.Enabled() {
+		t.Fatal("no monitor although a key is configured")
+	}
 }

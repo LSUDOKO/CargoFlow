@@ -29,6 +29,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/LSUDOKO/CargoFlow/backend/internal/ai"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/api"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/auth"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/chain"
@@ -158,7 +159,7 @@ func serve(ctx context.Context, getenv func(string) string, out io.Writer) error
 
 	hub := ws.NewHub(256)
 	svc := service.New(service.Options{
-		Store: st, Chain: client, Hub: hub, Prover: prover(cfg, log),
+		Store: st, Chain: client, Hub: hub, Prover: prover(cfg, log), AI: aiMonitor(cfg, log),
 		Worker: worker, Monitor: monitor, Manager: manager, SaltSecret: []byte(cfg.SaltSecret.Reveal()), Log: log,
 	})
 
@@ -275,4 +276,16 @@ func prover(cfg config.Config, log *slog.Logger) proof.Prover {
 		}
 	}
 	return &proof.SnarkjsProver{CircuitsDir: dir}
+}
+
+// aiMonitor returns the model-backed monitor when a Groq key is configured and nil otherwise, in which
+// case the deterministic policy gate decides alone.
+func aiMonitor(cfg config.Config, log *slog.Logger) *ai.Monitor {
+	if !cfg.AIEnabled() {
+		log.Info("AI monitor disabled: GROQ_API_KEY is not set; the deterministic policy gate decides alone")
+		return nil
+	}
+	provider := ai.NewGroq(ai.GroqConfig{APIKey: cfg.GroqAPIKey, Model: cfg.GroqModel})
+	log.Info("AI monitor enabled", "provider", provider.Name(), "timeout", cfg.AITimeout, "minConfidence", cfg.AIMinConfidence)
+	return ai.NewMonitor(provider, ai.MonitorOptions{MinConfidence: cfg.AIMinConfidence, Timeout: cfg.AITimeout})
 }
