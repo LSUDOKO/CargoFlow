@@ -1,0 +1,27 @@
+# secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# deps / build
+node_modules/
+out/
+cache/
+broadcast/
+dist/
+.next/
+target/
+bin/
+*.log
+
+# circuits
+circuits/build/
+circuits/keys/*.zkey
+circuits/keys/*.ptau
+
+# os / editor
+.DS_Store
+.idea/
+.vscode/
