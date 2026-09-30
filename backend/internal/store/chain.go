@@ -94,6 +94,27 @@ func (s *Store) LastBlock(ctx context.Context, name string) (block uint64, ok bo
 	return uint64(n), true, nil
 }
 
+// Cursor is the indexer's position: the last fully processed block and that block's hash, which lets the
+// indexer notice when the chain underneath it was reorganised.
+type Cursor struct {
+	Block uint64
+	Hash  string // empty when unknown (for example right after a rewind)
+}
+
+// Cursor returns the stored cursor. found is false when it has never been set.
+func (s *Store) Cursor(ctx context.Context, name string) (c Cursor, found bool, err error) {
+	var n int64
+	err = s.pool.QueryRow(ctx, "SELECT last_block, COALESCE(block_hash,'') FROM sync_state WHERE name = $1", name).Scan(&n, &c.Hash)
+	if err != nil {
+		if errors.Is(mapErr(err), ErrNotFound) {
+			return Cursor{}, false, nil
+		}
+		return Cursor{}, false, err
+	}
+	c.Block = uint64(n)
+	return c, true, nil
+}
+
 // SetLastBlock advances (or sets) the indexer cursor.
 func (s *Store) SetLastBlock(ctx context.Context, name string, block uint64, blockHash string) error {
 	_, err := s.pool.Exec(ctx, `

@@ -202,3 +202,26 @@ func TestActionsAreListedPerShipment(t *testing.T) {
 		t.Fatalf("%+v %v", got, err)
 	}
 }
+
+func TestCursorExposesTheStoredBlockHashForReorgDetection(t *testing.T) {
+	s := newStore(t)
+	ctx := context.Background()
+	if _, found, err := s.Cursor(ctx, "indexer"); err != nil || found {
+		t.Fatalf("fresh cursor: found=%v err=%v", found, err)
+	}
+	if err := s.SetLastBlock(ctx, "indexer", 77, hex64('a')); err != nil {
+		t.Fatal(err)
+	}
+	c, found, err := s.Cursor(ctx, "indexer")
+	if err != nil || !found || c.Block != 77 || c.Hash != hex64('a') {
+		t.Fatalf("cursor = %+v found=%v err=%v", c, found, err)
+	}
+	// a rewind clears the hash: it no longer describes the block the cursor points at
+	if err := s.RewindTo(ctx, "indexer", 60); err != nil {
+		t.Fatal(err)
+	}
+	c, _, _ = s.Cursor(ctx, "indexer")
+	if c.Block != 60 || c.Hash != "" {
+		t.Fatalf("after rewind: %+v", c)
+	}
+}
