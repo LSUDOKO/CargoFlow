@@ -42,6 +42,13 @@ interface IFinancingController {
         uint8 milestoneCount
     );
     event StatusChanged(bytes32 indexed shipmentId, Status from, Status to);
+    event MilestoneAdvanceReleased(
+        bytes32 indexed shipmentId,
+        uint8 indexed milestoneIndex,
+        bytes32 epochId,
+        uint256 amount,
+        uint256 totalDrawn
+    );
 
     error FacilityNotFound();
     error FacilityAlreadyCreated();
@@ -51,6 +58,15 @@ interface IFinancingController {
     error InvalidCounterparty();
     error InvalidMilestones();
     error InvalidState(Status current);
+    error FacilityPaused();
+    error MilestoneAlreadyReleased();
+    error MilestoneOutOfOrder();
+    error EvidenceBelowThreshold();
+    error EvidenceNotCompliant();
+    error EvidenceConflictTooHigh();
+    error EvidenceRiskTooHigh();
+    error EvidenceStale();
+    error ProofRequired();
 
     /// @notice Exporter proposes the facility: the nominated financier, fee, and milestone schedule.
     function createFacility(
@@ -65,6 +81,12 @@ interface IFinancingController {
 
     /// @notice Exporter or facility manager opens the transit phase so milestones can clear.
     function startTransit(bytes32 shipmentId) external;
+
+    /// @notice Releases the next milestone's tranche to the exporter if the committed evidence epoch
+    ///         `(shipmentId, milestoneIndex, seq)` satisfies the policy. Callable by the exporter,
+    ///         the financier or a facility manager; the recipient is fixed regardless of caller.
+    function evaluateAndReleaseMilestone(bytes32 shipmentId, uint8 milestoneIndex, uint32 seq)
+        external;
 
     function getFacility(bytes32 shipmentId) external view returns (FacilityState memory);
 

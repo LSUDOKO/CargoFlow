@@ -111,6 +111,54 @@ contract FinancingController is Controlled, ReentrancyGuard, IFinancingControlle
         _setStatus(shipmentId, f, Status.ACTIVE);
     }
 
+    // ------------------------------------------------------------------ release
+
+    /// @inheritdoc IFinancingController
+    function evaluateAndReleaseMilestone(bytes32 shipmentId, uint8 milestoneIndex, uint32 seq)
+        external
+        nonReentrant
+    {
+        FacilityState storage f = _load(shipmentId);
+        if (
+            msg.sender != f.exporter && msg.sender != f.financier
+                && !_hasRole(Roles.FACILITY_MANAGER_ROLE, msg.sender)
+        ) revert NotAuthorizedForShipment();
+        if (f.status == Status.PAUSED) revert FacilityPaused();
+        _requireStatus(f, Status.ACTIVE);
+
+        if (milestoneIndex >= f.milestoneCount) revert InvalidMilestones();
+        if (milestoneIndex < f.nextMilestone) revert MilestoneAlreadyReleased();
+        if (milestoneIndex > f.nextMilestone) revert MilestoneOutOfOrder();
+
+        bytes32 epochId = EVIDENCE.epochIdFor(shipmentId, milestoneIndex, seq);
+        IEvidenceRegistry.EvidenceEpoch memory e = EVIDENCE.getEpoch(epochId);
+        MilestoneSpec storage m = _milestones[shipmentId][milestoneIndex];
+        _requireEvidencePasses(POLICIES.getPolicy(shipmentId), m, e);
+
+        f.nextMilestone = milestoneIndex + 1;
+        VAULT.release(shipmentId, m.allocation);
+
+        emit MilestoneAdvanceReleased(
+            shipmentId, milestoneIndex, epochId, m.allocation, VAULT.getFacility(shipmentId).drawn
+        );
+    }
+
+    function _requireEvidencePasses(
+        IPolicyEngine.Policy memory p,
+        MilestoneSpec storage m,
+        IEvidenceRegistry.EvidenceEpoch memory e
+    ) internal view {
+        if (e.score < m.evidenceThreshold) revert EvidenceBelowThreshold();
+        if (!e.compliant) revert EvidenceNotCompliant();
+        if (e.conflictBps > p.maxConflictBps) revert EvidenceConflictTooHigh();
+        if (e.riskBps > p.maxRiskBps) revert EvidenceRiskTooHigh();
+        if (p.maxEvidenceAgeSec != 0 && block.timestamp > uint256(e.endTime) + p.maxEvidenceAgeSec)
+        {
+            revert EvidenceStale();
+        }
+        if (p.requiresZK && !e.proofVerified) revert ProofRequired();
+    }
+
     // ------------------------------------------------------------------ views
 
     /// @inheritdoc IFinancingController
