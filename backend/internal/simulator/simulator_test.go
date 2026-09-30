@@ -106,3 +106,95 @@ func TestSensorSubsetSelection(t *testing.T) {
 		t.Fatalf("subset ignored: %v", got)
 	}
 }
+
+func temps(pts []telemetry.Point) []int32 {
+	out := make([]int32, len(pts))
+	for i, p := range pts {
+		out[i] = p.TemperatureX100
+	}
+	return out
+}
+
+func tail5(pts []telemetry.Point) []telemetry.Point { return pts[len(pts)-5:] }
+
+func TestConflictingSensorsReproducesTheDemoExcursion(t *testing.T) {
+	pts, err := simulator.Generate(base(simulator.ConflictingSensors))
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := bySensor(pts)
+	// docs/project/18-demo-script.md scene 4: 5.2 -> 6.8 -> 8.9 -> 10.4 -> 11.7 C on the primary probe
+	if got, want := temps(tail5(s[simulator.PrimarySensor])), []int32{520, 680, 890, 1040, 1170}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("primary excursion = %v, want %v", got, want)
+	}
+	// the secondary core probe stays cool (4.5-4.7 C) and inside the 2-8 C band
+	if got, want := temps(tail5(s[simulator.SecondarySensor])), []int32{450, 460, 460, 470, 470}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("secondary = %v, want %v", got, want)
+	}
+	for _, p := range s[simulator.SecondarySensor] {
+		if p.TemperatureX100 < 200 || p.TemperatureX100 > 800 {
+			t.Fatalf("secondary left the band: %d", p.TemperatureX100)
+		}
+	}
+}
+
+func TestThermalExcursionHeatsBothSensors(t *testing.T) {
+	pts, err := simulator.Generate(base(simulator.ThermalExcursion))
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := bySensor(pts)
+	for _, id := range []string{simulator.PrimarySensor, simulator.SecondarySensor} {
+		last := s[id][len(s[id])-1]
+		if last.TemperatureX100 <= 800 {
+			t.Fatalf("%s did not exceed 8 C: %d", id, last.TemperatureX100)
+		}
+	}
+}
+
+func TestExcursionScenariosOnlyChangeTheTail(t *testing.T) {
+	normal, _ := simulator.Generate(base(simulator.Normal))
+	for _, sc := range []simulator.Scenario{simulator.ThermalExcursion, simulator.ConflictingSensors} {
+		got, err := simulator.Generate(base(sc))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(got) != len(normal) {
+			t.Fatalf("%s: length changed", sc)
+		}
+		// everything before the last five steps (2 sensors x 35 steps) is untouched
+		if !reflect.DeepEqual(got[:70], normal[:70]) {
+			t.Fatalf("%s altered readings before the excursion", sc)
+		}
+		// within the tail only temperature is overwritten; time, position and the rest stay realistic
+		for i := 70; i < len(got); i++ {
+			g, n := got[i], normal[i]
+			g.TemperatureX100, n.TemperatureX100 = 0, 0
+			if g != n {
+				t.Fatalf("%s changed non-temperature fields at %d", sc, i)
+			}
+		}
+	}
+}
+
+func TestExcursionScenariosAreStillWellFormedTelemetry(t *testing.T) {
+	for _, sc := range []simulator.Scenario{simulator.ThermalExcursion, simulator.ConflictingSensors} {
+		pts, _ := simulator.Generate(base(sc))
+		v := telemetry.NewValidator(30)
+		for _, p := range pts {
+			if err := v.Accept(p); err != nil {
+				t.Fatalf("%s: %v", sc, err)
+			}
+		}
+	}
+}
+
+func TestExcursionScenariosNeedAtLeastFiveSteps(t *testing.T) {
+	for _, sc := range []simulator.Scenario{simulator.ThermalExcursion, simulator.ConflictingSensors} {
+		cfg := base(sc)
+		cfg.Steps = 4
+		if _, err := simulator.Generate(cfg); err == nil {
+			t.Fatalf("%s accepted 4 steps", sc)
+		}
+	}
+}

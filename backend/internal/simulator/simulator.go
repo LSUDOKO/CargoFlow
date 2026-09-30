@@ -15,7 +15,9 @@ import (
 type Scenario string
 
 const (
-	Normal Scenario = "normal"
+	Normal             Scenario = "normal"
+	ThermalExcursion   Scenario = "thermal_excursion"   // both probes overheat: a real physical failure
+	ConflictingSensors Scenario = "conflicting_sensors" // primary overheats, core probe stays cool (demo hero case)
 )
 
 // Sensor identifiers used by the simulator.
@@ -49,10 +51,42 @@ type stream struct {
 	points []telemetry.Point
 }
 
-type mutator func(cfg Config, streams []*stream) []telemetry.Point
+type mutator func(cfg Config, streams []*stream) ([]telemetry.Point, error)
 
 var scenarios = map[Scenario]mutator{
-	Normal: func(_ Config, streams []*stream) []telemetry.Point { return flatten(streams) },
+	Normal: func(_ Config, streams []*stream) ([]telemetry.Point, error) { return flatten(streams), nil },
+	ThermalExcursion: excursion(map[string][]int32{
+		PrimarySensor:   primaryExcursion,
+		SecondarySensor: {540, 700, 900, 1060, 1200},
+	}),
+	ConflictingSensors: excursion(map[string][]int32{
+		PrimarySensor:   primaryExcursion,
+		SecondarySensor: {450, 460, 460, 470, 470}, // demo script scene 5: core probe 4.5-4.7 C
+	}),
+}
+
+// primaryExcursion is the demo script's sensor sequence: 5.2 -> 6.8 -> 8.9 -> 10.4 -> 11.7 C.
+var primaryExcursion = []int32{520, 680, 890, 1040, 1170}
+
+// excursion overwrites the temperature of the last len(seq) steps of each listed sensor, leaving
+// time, position and every other field as the healthy baseline produced.
+func excursion(seqs map[string][]int32) mutator {
+	return func(cfg Config, streams []*stream) ([]telemetry.Point, error) {
+		for _, s := range streams {
+			seq, ok := seqs[s.id]
+			if !ok {
+				continue
+			}
+			if len(s.points) < len(seq) {
+				return nil, fmt.Errorf("simulator: %s needs at least %d steps, got %d", cfg.Scenario, len(seq), len(s.points))
+			}
+			off := len(s.points) - len(seq)
+			for i, t := range seq {
+				s.points[off+i].TemperatureX100 = t
+			}
+		}
+		return flatten(streams), nil
+	}
 }
 
 // Generate returns the telemetry for cfg in emission order (step-major, sensors in config order).
@@ -82,7 +116,7 @@ func Generate(cfg Config) ([]telemetry.Point, error) {
 			s.points = append(s.points, healthyPoint(cfg, rng, s.id, i))
 		}
 	}
-	return mut(cfg, streams), nil
+	return mut(cfg, streams)
 }
 
 func healthyPoint(cfg Config, rng *rand.Rand, sensor string, step int) telemetry.Point {
