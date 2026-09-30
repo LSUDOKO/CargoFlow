@@ -24,6 +24,8 @@ const (
 	ConflictTooHigh     Reason = "CONFLICT_TOO_HIGH"
 	RiskTooHigh         Reason = "RISK_TOO_HIGH"
 	FraudSignals        Reason = "FRAUD_SIGNALS"
+	// AIRequested marks a stricter outcome that the AI monitor asked for and the guardrails accepted.
+	AIRequested Reason = "AI_REQUESTED"
 )
 
 // Limits mirror the policy fields the controller checks.
