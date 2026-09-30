@@ -23,12 +23,12 @@ demonstrable state and stops for review before the next begins.
 **Done when:** `forge test` green incl. invariants; local lifecycle runs with no backend.
 
 ## P2 — Evidence engine (CF-020..024, CF-031)
-- [ ] telemetry schema + validation, fixed-point
-- [ ] deterministic simulator (7 scenarios)
-- [ ] evidence scoring, Dempster-Shafer fusion + property tests
-- [ ] fraud detection (replay, GPS jump, stale, frozen sensor)
-- [ ] Poseidon Merkle epochs, six-factor risk
-- [ ] EvidenceRegistry contract
+- [x] telemetry schema + validation, fixed-point
+- [x] deterministic simulator (7 scenarios)
+- [x] evidence scoring, Dempster-Shafer fusion + property tests
+- [x] fraud detection (replay, GPS jump, stale, frozen sensor)
+- [x] Poseidon Merkle epochs, six-factor risk
+- [x] EvidenceRegistry contract (delivered in P1)
 **Done when:** a command moves the evidence score live; same input always yields same score.
 
 ## P3 — Pause and ZK recovery (CF-030, 032..034)
