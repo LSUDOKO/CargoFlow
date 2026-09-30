@@ -11,6 +11,7 @@ import {FinancingController} from "../../src/FinancingController.sol";
 import {IFinancingController} from "../../src/interfaces/IFinancingController.sol";
 import {IPolicyEngine} from "../../src/interfaces/IPolicyEngine.sol";
 import {MockUSDG} from "../../src/mocks/MockUSDG.sol";
+import {MockGroth16Verifier} from "../../src/mocks/MockGroth16Verifier.sol";
 import {Roles} from "../../src/libraries/Roles.sol";
 
 /// @dev Full protocol fixture wired exactly like the deploy script, with the hero shipment
@@ -23,6 +24,7 @@ abstract contract ControllerBase is Test {
     ReceivableVault internal vault;
     FinancingController internal controller;
     MockUSDG internal usdg;
+    MockGroth16Verifier internal verifier;
 
     address internal admin = makeAddr("admin");
     address internal exporter = makeAddr("exporter");
@@ -39,6 +41,8 @@ abstract contract ControllerBase is Test {
     uint256 internal constant INVOICE = 100_000e6;
     uint256 internal constant TRANCHE = 8_000e6;
     uint16 internal constant FEE_BPS = 300;
+    uint256 internal constant FIELD =
+        21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
     bytes32 internal id;
     IPolicyEngine.Policy internal policy;
@@ -51,8 +55,14 @@ abstract contract ControllerBase is Test {
         policies = new PolicyEngine(address(registry));
         evidence = new EvidenceRegistry(address(access));
         vault = new ReceivableVault(address(access), address(usdg));
+        verifier = new MockGroth16Verifier();
         controller = new FinancingController(
-            address(access), address(registry), address(policies), address(evidence), address(vault)
+            address(access),
+            address(registry),
+            address(policies),
+            address(evidence),
+            address(vault),
+            address(verifier)
         );
 
         vm.startPrank(admin);
@@ -134,7 +144,8 @@ abstract contract ControllerBase is Test {
             id,
             milestone,
             seq,
-            keccak256(abi.encode("root", milestone, seq)),
+            // a valid BN254 field element, as a real Poseidon root always is
+            bytes32(uint256(keccak256(abi.encode("root", milestone, seq))) % FIELD),
             uint64(block.timestamp - 600),
             uint64(block.timestamp - 60),
             score,

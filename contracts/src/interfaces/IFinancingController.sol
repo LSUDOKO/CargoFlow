@@ -31,6 +31,7 @@ interface IFinancingController {
         uint8 nextMilestone; // milestones release strictly in order, so this is the release cursor
         bytes32 pauseReason;
         uint64 pausedAt;
+        uint32 pauseCount; // how many times the facility has been paused; bound into every proof context
     }
 
     event FacilityCreated(
@@ -81,6 +82,9 @@ interface IFinancingController {
     error EvidenceRiskTooHigh();
     error EvidenceStale();
     error ProofRequired();
+    error InvalidProof();
+    error InvalidProofContext();
+    error StaleRecoveryEvidence();
 
     /// @notice Exporter proposes the facility: the nominated financier, fee, and milestone schedule.
     function createFacility(
@@ -108,6 +112,27 @@ interface IFinancingController {
 
     /// @notice Trusted-verifier recovery path: PAUSED -> ACTIVE, recording the basis (attestation hash).
     function resumeByVerifier(bytes32 shipmentId, bytes32 basis) external;
+
+    /// @notice Zero-knowledge recovery: PAUSED -> ACTIVE when a Groth16 proof shows that the committed
+    ///         recovery epoch (shipment, milestone, seq) holds readings all inside the policy range.
+    ///         The caller supplies only the proof; every public signal is derived from chain state, so the
+    ///         proof is bound to this facility, epoch, policy, pause, contract, chain and submitter.
+    ///         Callable by the exporter or a facility manager.
+    function resumeWithProof(
+        bytes32 shipmentId,
+        uint8 milestoneIndex,
+        uint32 seq,
+        uint256[2] calldata a,
+        uint256[2][2] calldata b,
+        uint256[2] calldata c
+    ) external;
+
+    /// @notice The context hash a proof for (shipmentId, epochId) must be generated against when
+    ///         submitted by `submitter` during the current pause.
+    function proofContext(bytes32 shipmentId, bytes32 epochId, address submitter)
+        external
+        view
+        returns (uint256);
 
     /// @notice Exporter, financier or arbiter freezes the facility (ACTIVE|PAUSED -> DISPUTED).
     function openDispute(bytes32 shipmentId, bytes32 reason) external;

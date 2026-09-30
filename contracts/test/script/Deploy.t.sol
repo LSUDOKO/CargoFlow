@@ -7,6 +7,7 @@ import {CargoFlowAccess} from "../../src/access/CargoFlowAccess.sol";
 import {FinancingController} from "../../src/FinancingController.sol";
 import {ReceivableVault} from "../../src/ReceivableVault.sol";
 import {MockUSDG} from "../../src/mocks/MockUSDG.sol";
+import {Groth16Verifier} from "../../generated/Groth16Verifier.sol";
 import {Roles} from "../../src/libraries/Roles.sol";
 
 contract DeployScriptTest is Test {
@@ -52,6 +53,17 @@ contract DeployScriptTest is Test {
         assertEq(address(c.EVIDENCE()), d.evidence);
         assertEq(address(c.REGISTRY()), d.registry);
         assertEq(address(c.POLICIES()), d.policies);
+        assertEq(address(c.VERIFIER()), d.verifier);
+    }
+
+    function test_deploysTheRealGeneratedGroth16Verifier() public view {
+        assertTrue(d.verifier.code.length > 0);
+        // a verifier for the wrong circuit or an all-zero proof must not verify
+        uint256[2] memory a;
+        uint256[2][2] memory b;
+        uint256[2] memory c;
+        uint256[4] memory signals;
+        assertFalse(Groth16Verifier(d.verifier).verifyProof(a, b, c, signals));
     }
 
     function test_localChainDeploysAMockUsdgWith6Decimals() public view {
@@ -70,6 +82,7 @@ contract DeployScriptTest is Test {
         string memory json = vm.readFile(FILE);
         assertEq(vm.parseJsonAddress(json, ".contracts.financingController"), d.controller);
         assertEq(vm.parseJsonAddress(json, ".contracts.receivableVault"), d.vault);
+        assertEq(vm.parseJsonAddress(json, ".contracts.groth16Verifier"), d.verifier);
         assertEq(vm.parseJsonAddress(json, ".usdg"), d.usdg);
         assertEq(vm.parseJsonUint(json, ".chainId"), block.chainid);
     }

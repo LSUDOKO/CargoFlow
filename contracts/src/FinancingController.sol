@@ -7,7 +7,9 @@ import {IEvidenceRegistry} from "./interfaces/IEvidenceRegistry.sol";
 import {IFinancingController} from "./interfaces/IFinancingController.sol";
 import {IPolicyEngine} from "./interfaces/IPolicyEngine.sol";
 import {IReceivableVault} from "./interfaces/IReceivableVault.sol";
+import {IGroth16Verifier} from "./interfaces/IGroth16Verifier.sol";
 import {IShipmentRegistry} from "./interfaces/IShipmentRegistry.sol";
+import {ProofContext} from "./libraries/ProofContext.sol";
 import {Roles} from "./libraries/Roles.sol";
 
 /// @title FinancingController
@@ -22,21 +24,28 @@ contract FinancingController is Controlled, ReentrancyGuard, IFinancingControlle
     IPolicyEngine public immutable POLICIES;
     IEvidenceRegistry public immutable EVIDENCE;
     IReceivableVault public immutable VAULT;
+    IGroth16Verifier public immutable VERIFIER;
 
     mapping(bytes32 shipmentId => FacilityState) private _facilities;
     mapping(bytes32 shipmentId => MilestoneSpec[]) private _milestones;
 
-    constructor(address access, address registry, address policies, address evidence, address vault)
-        Controlled(access)
-    {
+    constructor(
+        address access,
+        address registry,
+        address policies,
+        address evidence,
+        address vault,
+        address verifier
+    ) Controlled(access) {
         if (
             registry == address(0) || policies == address(0) || evidence == address(0)
-                || vault == address(0)
+                || vault == address(0) || verifier == address(0)
         ) revert ZeroAddress();
         REGISTRY = IShipmentRegistry(registry);
         POLICIES = IPolicyEngine(policies);
         EVIDENCE = IEvidenceRegistry(evidence);
         VAULT = IReceivableVault(vault);
+        VERIFIER = IGroth16Verifier(verifier);
     }
 
     // ------------------------------------------------------------------ setup
@@ -80,7 +89,8 @@ contract FinancingController is Controlled, ReentrancyGuard, IFinancingControlle
             milestoneCount: uint8(count),
             nextMilestone: 0,
             pauseReason: bytes32(0),
-            pausedAt: 0
+            pausedAt: 0,
+            pauseCount: 0
         });
 
         VAULT.openFacility(
@@ -133,7 +143,9 @@ contract FinancingController is Controlled, ReentrancyGuard, IFinancingControlle
         bytes32 epochId = EVIDENCE.epochIdFor(shipmentId, milestoneIndex, seq);
         IEvidenceRegistry.EvidenceEpoch memory e = EVIDENCE.getEpoch(epochId);
         MilestoneSpec storage m = _milestones[shipmentId][milestoneIndex];
-        _requireEvidencePasses(POLICIES.getPolicy(shipmentId), m, e);
+        IPolicyEngine.Policy memory policy = POLICIES.getPolicy(shipmentId);
+        _requireEvidencePasses(policy, m, e);
+        if (policy.requiresZK && !e.proofVerified) revert ProofRequired();
 
         f.nextMilestone = milestoneIndex + 1;
         VAULT.release(shipmentId, m.allocation);
@@ -156,7 +168,87 @@ contract FinancingController is Controlled, ReentrancyGuard, IFinancingControlle
         {
             revert EvidenceStale();
         }
-        if (p.requiresZK && !e.proofVerified) revert ProofRequired();
+    }
+
+    // ------------------------------------------------------------------ zero-knowledge recovery
+
+    /// @inheritdoc IFinancingController
+    function resumeWithProof(
+        bytes32 shipmentId,
+        uint8 milestoneIndex,
+        uint32 seq,
+        uint256[2] calldata a,
+        uint256[2][2] calldata b,
+        uint256[2] calldata c
+    ) external nonReentrant {
+        FacilityState storage f = _load(shipmentId);
+        if (msg.sender != f.exporter && !_hasRole(Roles.FACILITY_MANAGER_ROLE, msg.sender)) {
+            revert NotAuthorizedForShipment();
+        }
+        _requireStatus(f, Status.PAUSED);
+        if (milestoneIndex >= f.milestoneCount) revert InvalidMilestones();
+        if (milestoneIndex != f.nextMilestone) revert MilestoneOutOfOrder();
+
+        bytes32 epochId = EVIDENCE.epochIdFor(shipmentId, milestoneIndex, seq);
+        IEvidenceRegistry.EvidenceEpoch memory e = EVIDENCE.getEpoch(epochId);
+        // the recovery evidence must have been committed strictly after this pause began
+        if (e.committedAt <= f.pausedAt) revert StaleRecoveryEvidence();
+
+        IPolicyEngine.Policy memory policy = POLICIES.getPolicy(shipmentId);
+        _requireEvidencePasses(policy, _milestones[shipmentId][milestoneIndex], e);
+
+        uint256[4] memory signals =
+            _publicSignals(shipmentId, epochId, e.merkleRoot, policy, f.pauseCount);
+        if (!VERIFIER.verifyProof(a, b, c, signals)) revert InvalidProof();
+
+        EVIDENCE.markProofVerified(epochId);
+        _resume(shipmentId, f);
+        emit FinancingResumed(shipmentId, msg.sender, epochId);
+    }
+
+    /// @inheritdoc IFinancingController
+    function proofContext(bytes32 shipmentId, bytes32 epochId, address submitter)
+        external
+        view
+        returns (uint256)
+    {
+        return _context(shipmentId, epochId, submitter, _load(shipmentId).pauseCount);
+    }
+
+    /// @dev [contextHash, merkleRoot, minTemp, maxTemp]: derived entirely from chain state.
+    function _publicSignals(
+        bytes32 shipmentId,
+        bytes32 epochId,
+        bytes32 root,
+        IPolicyEngine.Policy memory policy,
+        uint32 pauseCount
+    ) internal view returns (uint256[4] memory s) {
+        uint256 r = uint256(root);
+        if (r >= ProofContext.SNARK_SCALAR_FIELD) revert InvalidProofContext();
+        (uint256 lo, bool loOk) = ProofContext.offsetTemp(policy.minTempX100);
+        (uint256 hi, bool hiOk) = ProofContext.offsetTemp(policy.maxTempX100);
+        if (!loOk || !hiOk) revert InvalidProofContext();
+        s[0] = _context(shipmentId, epochId, msg.sender, pauseCount);
+        s[1] = r;
+        s[2] = lo;
+        s[3] = hi;
+    }
+
+    function _context(bytes32 shipmentId, bytes32 epochId, address submitter, uint32 pauseCount)
+        internal
+        view
+        returns (uint256)
+    {
+        return ProofContext.compute(
+            block.chainid,
+            address(VERIFIER),
+            address(this),
+            shipmentId,
+            epochId,
+            REGISTRY.getShipment(shipmentId).policyCommitment,
+            submitter,
+            pauseCount
+        );
     }
 
     // ------------------------------------------------------------------ delivery / settlement
@@ -198,6 +290,7 @@ contract FinancingController is Controlled, ReentrancyGuard, IFinancingControlle
 
         f.pauseReason = reasonCode;
         f.pausedAt = uint64(block.timestamp);
+        f.pauseCount += 1;
         VAULT.setPaused(shipmentId, true);
         _setStatus(shipmentId, f, Status.PAUSED);
 

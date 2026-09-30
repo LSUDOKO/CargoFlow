@@ -8,6 +8,7 @@ import {EvidenceRegistry} from "../src/EvidenceRegistry.sol";
 import {ReceivableVault} from "../src/ReceivableVault.sol";
 import {FinancingController} from "../src/FinancingController.sol";
 import {MockUSDG} from "../src/mocks/MockUSDG.sol";
+import {Groth16Verifier} from "../generated/Groth16Verifier.sol";
 import {Roles} from "../src/libraries/Roles.sol";
 import {ScriptBase} from "./ScriptBase.sol";
 
@@ -27,6 +28,7 @@ contract Deploy is ScriptBase {
         address evidence;
         address vault;
         address controller;
+        address verifier;
         address usdg;
     }
 
@@ -47,8 +49,16 @@ contract Deploy is ScriptBase {
         PolicyEngine policies = new PolicyEngine(address(registry));
         EvidenceRegistry evidence = new EvidenceRegistry(address(access));
         ReceivableVault vault = new ReceivableVault(address(access), usdg);
+        // the snarkjs-generated verifier for circuits/telemetry_epoch.circom, unless one is supplied
+        address verifier = vm.envOr("VERIFIER_ADDRESS", address(0));
+        if (verifier == address(0)) verifier = address(new Groth16Verifier());
         FinancingController controller = new FinancingController(
-            address(access), address(registry), address(policies), address(evidence), address(vault)
+            address(access),
+            address(registry),
+            address(policies),
+            address(evidence),
+            address(vault),
+            verifier
         );
 
         // The controller is the only contract that may drive the vault or mark proofs verified.
@@ -68,6 +78,7 @@ contract Deploy is ScriptBase {
             evidence: address(evidence),
             vault: address(vault),
             controller: address(controller),
+            verifier: verifier,
             usdg: usdg
         });
         _writeManifest(d, deployer);
@@ -106,6 +117,7 @@ contract Deploy is ScriptBase {
         vm.serializeAddress(c, "policyEngine", d.policies);
         vm.serializeAddress(c, "evidenceRegistry", d.evidence);
         vm.serializeAddress(c, "receivableVault", d.vault);
+        vm.serializeAddress(c, "groth16Verifier", d.verifier);
         string memory contractsJson = vm.serializeAddress(c, "financingController", d.controller);
 
         string memory root = "manifest";
