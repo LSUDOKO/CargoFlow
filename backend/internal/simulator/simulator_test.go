@@ -1,6 +1,7 @@
 package simulator_test
 
 import (
+	"errors"
 	"math"
 	"reflect"
 	"testing"
@@ -232,5 +233,116 @@ func TestSpeedIsConfigurable(t *testing.T) {
 	speed := distanceKm(s[0], s[len(s)-1]) / (float64(s[len(s)-1].Timestamp-s[0].Timestamp) / 3600)
 	if speed < 60 || speed > 80 {
 		t.Fatalf("configured 70 km/h, measured %.1f", speed)
+	}
+}
+
+func TestSensorDetachedStopsTheSecondaryProbeHalfwayThrough(t *testing.T) {
+	pts, err := simulator.Generate(base(simulator.SensorDetached))
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := bySensor(pts)
+	if got := len(s[simulator.PrimarySensor]); got != 40 {
+		t.Fatalf("primary kept reporting? got %d points, want 40", got)
+	}
+	sec := s[simulator.SecondarySensor]
+	if len(sec) != 20 {
+		t.Fatalf("secondary has %d points, want 20 (goes silent at step 20)", len(sec))
+	}
+	if last := sec[len(sec)-1].Timestamp; last != start+19*60 {
+		t.Fatalf("secondary last seen at %d, want %d", last, start+19*60)
+	}
+	v := telemetry.NewValidator(30)
+	for _, p := range pts {
+		if err := v.Accept(p); err != nil {
+			t.Fatalf("a silent sensor must not produce malformed data: %v", err)
+		}
+	}
+}
+
+func TestGPSJumpTeleportsTheCargoOnce(t *testing.T) {
+	pts, err := simulator.Generate(base(simulator.GPSJump))
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := bySensor(pts)[simulator.PrimarySensor]
+	jumps := 0
+	for i := 1; i < len(s); i++ {
+		speed := distanceKm(s[i-1], s[i]) / (float64(s[i].Timestamp-s[i-1].Timestamp) / 3600)
+		if speed > 1000 {
+			jumps++
+			if i != 20 {
+				t.Fatalf("jump at step %d, want step 20", i)
+			}
+			if d := distanceKm(s[i-1], s[i]); d < 500 {
+				t.Fatalf("jump only %.0f km", d)
+			}
+		} else if speed > 80 {
+			t.Fatalf("step %d: %.0f km/h outside the jump", i, speed)
+		}
+	}
+	if jumps != 1 {
+		t.Fatalf("want exactly one jump, got %d", jumps)
+	}
+}
+
+func TestGPSJumpAffectsEverySensorTogether(t *testing.T) {
+	pts, _ := simulator.Generate(base(simulator.GPSJump))
+	s := bySensor(pts)
+	a, b := s[simulator.PrimarySensor][25], s[simulator.SecondarySensor][25]
+	if distanceKm(a, b) > 1 {
+		t.Fatalf("sensors in one container disagree by %.0f km after the jump", distanceKm(a, b))
+	}
+}
+
+func TestStalePacketsLeaveAnHourLongSilence(t *testing.T) {
+	pts, err := simulator.Generate(base(simulator.StalePackets))
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := bySensor(pts)[simulator.PrimarySensor]
+	big := 0
+	for i := 1; i < len(s); i++ {
+		gap := s[i].Timestamp - s[i-1].Timestamp
+		switch {
+		case gap == 60:
+		case gap == 60+3600 && i == 20:
+			big++
+		default:
+			t.Fatalf("unexpected gap %ds at step %d", gap, i)
+		}
+	}
+	if big != 1 {
+		t.Fatalf("want one 1h gap, got %d", big)
+	}
+	v := telemetry.NewValidator(30)
+	for _, p := range pts {
+		if err := v.Accept(p); err != nil {
+			t.Fatalf("stale data is late, not malformed: %v", err)
+		}
+	}
+}
+
+func TestMaliciousReplayReinjectsOldPackets(t *testing.T) {
+	pts, err := simulator.Generate(base(simulator.MaliciousReplay))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(pts) != 80+10 {
+		t.Fatalf("got %d points, want 80 honest + 10 replays", len(pts))
+	}
+	v := telemetry.NewValidator(30)
+	for i, p := range pts {
+		err := v.Accept(p)
+		if i < 80 {
+			if err != nil {
+				t.Fatalf("honest point %d rejected: %v", i, err)
+			}
+			continue
+		}
+		var rej *telemetry.Rejection
+		if !errors.As(err, &rej) || rej.Reason != telemetry.ReasonReplay {
+			t.Fatalf("replayed point %d: want REPLAYED_PACKET, got %v", i, err)
+		}
 	}
 }

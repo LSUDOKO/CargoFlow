@@ -19,6 +19,17 @@ const (
 	Normal             Scenario = "normal"
 	ThermalExcursion   Scenario = "thermal_excursion"   // both probes overheat: a real physical failure
 	ConflictingSensors Scenario = "conflicting_sensors" // primary overheats, core probe stays cool (demo hero case)
+	SensorDetached     Scenario = "sensor_detached"     // the core probe falls off and goes silent halfway
+	GPSJump            Scenario = "gps_jump"            // position teleports ~550 km in one interval
+	StalePackets       Scenario = "stale_packets"       // a one hour gap in all reporting
+	MaliciousReplay    Scenario = "malicious_replay"    // old valid packets are re-injected after the run
+)
+
+const (
+	gpsJumpE6     = 5_000_000 // 5 degrees of latitude, about 556 km
+	staleGapSec   = 3600
+	replaySteps   = 5
+	minFaultSteps = 8
 )
 
 // Sensor identifiers used by the simulator.
@@ -68,6 +79,71 @@ var scenarios = map[Scenario]mutator{
 		PrimarySensor:   primaryExcursion,
 		SecondarySensor: {450, 460, 460, 470, 470}, // demo script scene 5: core probe 4.5-4.7 C
 	}),
+	SensorDetached:  sensorDetached,
+	GPSJump:         gpsJump,
+	StalePackets:    stalePackets,
+	MaliciousReplay: maliciousReplay,
+}
+
+// sensorDetached silences the secondary probe from the midpoint onward.
+func sensorDetached(cfg Config, streams []*stream) ([]telemetry.Point, error) {
+	if err := needSteps(cfg, 2); err != nil {
+		return nil, err
+	}
+	for _, s := range streams {
+		if s.id == SecondarySensor {
+			s.points = s.points[:cfg.Steps/2]
+		}
+	}
+	return flatten(streams), nil
+}
+
+// gpsJump teleports every sensor ~556 km north at the midpoint and keeps them there.
+func gpsJump(cfg Config, streams []*stream) ([]telemetry.Point, error) {
+	if err := needSteps(cfg, 2); err != nil {
+		return nil, err
+	}
+	for _, s := range streams {
+		for i := cfg.Steps / 2; i < len(s.points); i++ {
+			s.points[i].LatitudeE6 += gpsJumpE6
+		}
+	}
+	return flatten(streams), nil
+}
+
+// stalePackets inserts a one hour reporting gap at the midpoint for every sensor.
+func stalePackets(cfg Config, streams []*stream) ([]telemetry.Point, error) {
+	if err := needSteps(cfg, 2); err != nil {
+		return nil, err
+	}
+	for _, s := range streams {
+		for i := cfg.Steps / 2; i < len(s.points); i++ {
+			s.points[i].Timestamp += staleGapSec
+		}
+	}
+	return flatten(streams), nil
+}
+
+// maliciousReplay appends exact copies of early packets (steps Steps/4 .. +5) after the honest run.
+func maliciousReplay(cfg Config, streams []*stream) ([]telemetry.Point, error) {
+	if err := needSteps(cfg, minFaultSteps); err != nil {
+		return nil, err
+	}
+	out := flatten(streams)
+	from := cfg.Steps / 4
+	for i := from; i < from+replaySteps; i++ {
+		for _, s := range streams {
+			out = append(out, s.points[i])
+		}
+	}
+	return out, nil
+}
+
+func needSteps(cfg Config, n int) error {
+	if cfg.Steps < n {
+		return fmt.Errorf("simulator: %s needs at least %d steps, got %d", cfg.Scenario, n, cfg.Steps)
+	}
+	return nil
 }
 
 // primaryExcursion is the demo script's sensor sequence: 5.2 -> 6.8 -> 8.9 -> 10.4 -> 11.7 C.
