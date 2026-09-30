@@ -4,7 +4,7 @@ FORGE ?= $(shell for p in "$$(command -v forge)" "$$HOME/.foundry/bin/forge" "$$
 	[ -n "$$p" ] && [ -x "$$p" ] && "$$p" --version 2>/dev/null | grep -q "Version:" && { echo "$$p"; break; }; done)
 CAST ?= $(dir $(FORGE))cast
 
-.PHONY: anvil deploy-local demo-local zk-fixture circuits-test abi help check contracts-build contracts-test contracts-fmt contracts-fmt-check backend-test frontend-check usdg-info
+.PHONY: anvil deploy-local demo-local zk-fixture circuits-test abi serve migrate keygen help check contracts-build contracts-test contracts-fmt contracts-fmt-check backend-test frontend-check usdg-info
 
 help: ## List commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  %-20s %s\n",$$1,$$2}'
@@ -49,6 +49,15 @@ zk-fixture: ## Regenerate the real Groth16 proof fixture used by contracts/test/
 abi: ## Re-export contract ABIs into the backend (run after changing a contract)
 	@cd contracts && $(FORGE) build >/dev/null
 	@python3 scripts/export-abi.py
+
+serve: ## Run the backend (reads .env)
+	@set -a; [ -f .env ] && . ./.env; set +a; cd backend && go run ./cmd/cargoflow serve
+
+migrate: ## Apply database migrations (reads .env)
+	@set -a; [ -f .env ] && . ./.env; set +a; cd backend && go run ./cmd/cargoflow migrate
+
+keygen: ## Generate an Ed25519 key pair for an evidence source
+	@cd backend && go run ./cmd/cargoflow keygen
 
 usdg-info: ## Read USDG metadata from Robinhood testnet
 	@CAST=$(CAST) ./scripts/usdg-info.sh
