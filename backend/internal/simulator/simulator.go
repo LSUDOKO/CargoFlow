@@ -6,6 +6,7 @@ package simulator
 
 import (
 	"fmt"
+	"math"
 	"math/rand/v2"
 
 	"github.com/LSUDOKO/CargoFlow/backend/internal/telemetry"
@@ -34,7 +35,11 @@ type Config struct {
 	IntervalSec int64    // seconds between readings
 	Steps       int      // readings per sensor
 	Sensors     []string // optional subset; defaults to both probes
+	SpeedKmh    int      // cargo speed along the route; defaults to 35 (a typical container ship)
 }
+
+// defaultSpeedKmh is roughly 19 knots.
+const defaultSpeedKmh = 35
 
 // route endpoints in degrees x 1e6: Nhava Sheva (IN) -> Singapore (SG).
 const (
@@ -124,7 +129,7 @@ func healthyPoint(cfg Config, rng *rand.Rand, sensor string, step int) telemetry
 	if !ok {
 		base = 505
 	}
-	lat, lon := position(cfg.Steps, step)
+	lat, lon := position(cfg, step)
 	return telemetry.Point{
 		Timestamp:       cfg.StartUnix + int64(step)*cfg.IntervalSec,
 		SensorID:        sensor,
@@ -136,16 +141,27 @@ func healthyPoint(cfg Config, rng *rand.Rand, sensor string, step int) telemetry
 	}
 }
 
-// position interpolates linearly along the route.
-func position(steps, step int) (latE6, lonE6 int32) {
-	if steps <= 1 {
-		return originLatE6, originLonE6
+// routeLengthKm is the straight-line length of the simulated lane (about 3,900 km).
+var routeLengthKm = func() float64 {
+	const kmPerDeg = 111.32
+	dLat := float64(destLatE6-originLatE6) / 1e6
+	midLat := float64(originLatE6+destLatE6) / 2e6
+	dLon := float64(destLonE6-originLonE6) / 1e6 * math.Cos(midLat*math.Pi/180)
+	return math.Hypot(dLat, dLon) * kmPerDeg
+}()
+
+// position places the cargo along the route after `step` intervals at the configured speed. The
+// cargo stops at the destination rather than overshooting it.
+func position(cfg Config, step int) (latE6, lonE6 int32) {
+	speed := cfg.SpeedKmh
+	if speed <= 0 {
+		speed = defaultSpeedKmh
 	}
-	f := int64(step)
-	d := int64(steps - 1)
-	lat := int64(originLatE6) + (int64(destLatE6)-int64(originLatE6))*f/d
-	lon := int64(originLonE6) + (int64(destLonE6)-int64(originLonE6))*f/d
-	return int32(lat), int32(lon)
+	km := float64(speed) * float64(int64(step)*cfg.IntervalSec) / 3600
+	f := math.Min(1, km/routeLengthKm)
+	lat := float64(originLatE6) + float64(destLatE6-originLatE6)*f
+	lon := float64(originLonE6) + float64(destLonE6-originLonE6)*f
+	return int32(math.Round(lat)), int32(math.Round(lon))
 }
 
 func flatten(streams []*stream) []telemetry.Point {

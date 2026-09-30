@@ -1,6 +1,7 @@
 package simulator_test
 
 import (
+	"math"
 	"reflect"
 	"testing"
 
@@ -196,5 +197,40 @@ func TestExcursionScenariosNeedAtLeastFiveSteps(t *testing.T) {
 		if _, err := simulator.Generate(cfg); err == nil {
 			t.Fatalf("%s accepted 4 steps", sc)
 		}
+	}
+}
+
+// distanceKm is an equirectangular approximation, accurate enough for speed plausibility checks.
+func distanceKm(a, b telemetry.Point) float64 {
+	const kmPerDeg = 111.32
+	dLat := float64(a.LatitudeE6-b.LatitudeE6) / 1e6
+	midLat := float64(a.LatitudeE6+b.LatitudeE6) / 2e6
+	dLon := float64(a.LongitudeE6-b.LongitudeE6) / 1e6 * math.Cos(midLat*math.Pi/180)
+	return math.Hypot(dLat, dLon) * kmPerDeg
+}
+
+func TestNormalMovementIsPhysicallyPlausible(t *testing.T) {
+	pts, _ := simulator.Generate(base(simulator.Normal))
+	s := bySensor(pts)[simulator.PrimarySensor]
+	for i := 1; i < len(s); i++ {
+		speedKmh := distanceKm(s[i-1], s[i]) / (float64(s[i].Timestamp-s[i-1].Timestamp) / 3600)
+		if speedKmh > 80 {
+			t.Fatalf("step %d implies %.0f km/h; a ship or truck cannot do that", i, speedKmh)
+		}
+	}
+	// and it still makes visible progress along the lane
+	if d := distanceKm(s[0], s[len(s)-1]); d < 5 {
+		t.Fatalf("cargo moved only %.1f km in the whole run", d)
+	}
+}
+
+func TestSpeedIsConfigurable(t *testing.T) {
+	cfg := base(simulator.Normal)
+	cfg.SpeedKmh = 70
+	pts, _ := simulator.Generate(cfg)
+	s := bySensor(pts)[simulator.PrimarySensor]
+	speed := distanceKm(s[0], s[len(s)-1]) / (float64(s[len(s)-1].Timestamp-s[0].Timestamp) / 3600)
+	if speed < 60 || speed > 80 {
+		t.Fatalf("configured 70 km/h, measured %.1f", speed)
 	}
 }
