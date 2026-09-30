@@ -78,8 +78,9 @@ func LoadManifest(path string) (Manifest, error) {
 
 // Client is a connection to the chain with the deployed contract addresses.
 type Client struct {
-	Eth *ethclient.Client
-	M   Manifest
+	Eth           *ethclient.Client
+	M             Manifest
+	Confirmations uint64 // blocks to wait after a transaction is mined; 0 or 1 means just mined
 }
 
 // Dial connects and refuses to continue if the RPC reports a different chain than the manifest, so a
