@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 
+	"github.com/LSUDOKO/CargoFlow/backend/internal/ai"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/chain"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/decision"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/epoch"
@@ -212,11 +213,13 @@ func (s *Service) IngestTelemetry(ctx context.Context, shipmentID, sourceID stri
 // remaining readings in a batch are still processed.
 func (s *Service) handleEpoch(ctx context.Context, sh store.Shipment, e *epoch.Epoch) EpochOutcome {
 	id, canon, _ := parseID(sh.ID)
-	dec := decision.Decide(e.Result, e.RiskBps, limitsOf(sh))
+	det := decision.Decide(e.Result, e.RiskBps, limitsOf(sh))
+	dec := det
 	out := EpochOutcome{
 		Root: hex32(e.RootBytes32Array()), Score: e.Result.Score, ConflictBps: e.Result.ConflictBps, RiskBps: e.RiskBps,
 		Compliant: e.Result.Compliant, Pass: dec.Pass, Action: string(dec.Action), Reasons: reasonStrings(dec),
 	}
+	brief := ai.NewBrief(canon, e.Result, e.RiskBps, limitsOf(sh), det)
 
 	f, err := s.o.Chain.Facility(ctx, id)
 	skip := ""
@@ -237,6 +240,15 @@ func (s *Service) handleEpoch(ctx context.Context, sh store.Shipment, e *epoch.E
 		out.Skipped, out.MilestoneIndex = skip, unassignedMilestone
 		s.recordUnassigned(ctx, canon, id, e, dec, &out)
 		return out
+	}
+
+	// The model is consulted before acting unless the policy gate already demands a pause: that safety
+	// action never waits on a network call, and the model is asked for its explanation afterwards.
+	verdict := ai.Reconcile(det, nil, 0)
+	if det.Action != decision.PauseFacility {
+		verdict = s.o.AI.Review(ctx, brief, det)
+		dec = verdict.Decision
+		out.Pass, out.Action, out.Reasons = dec.Pass, string(dec.Action), reasonStrings(dec)
 	}
 
 	milestone := int(f.NextMilestone)
@@ -301,7 +313,10 @@ func (s *Service) handleEpoch(ctx context.Context, sh store.Shipment, e *epoch.E
 		}
 	}
 
-	s.recordAI(ctx, canon, hex32(epochID), dec, e, paused || released, firstNonEmpty(pauseTx, releaseTx, out.CommitTx))
+	if det.Action == decision.PauseFacility {
+		verdict = s.o.AI.Review(ctx, brief, det) // explanation only: the pause has already happened
+	}
+	s.recordAI(ctx, canon, hex32(epochID), dec, verdict, e, paused || released, firstNonEmpty(pauseTx, releaseTx, out.CommitTx))
 	return out
 }
 
@@ -362,7 +377,7 @@ func (s *Service) runAction(ctx context.Context, shipmentID, kind, key string, f
 	return res, nil
 }
 
-func (s *Service) recordAI(ctx context.Context, canon, epochID string, dec decision.Decision, e *epoch.Epoch, onchain bool, tx string) {
+func (s *Service) recordAI(ctx context.Context, canon, epochID string, dec decision.Decision, v ai.Verdict, e *epoch.Epoch, onchain bool, tx string) {
 	severity, reason := "INFO", "OK"
 	switch dec.Action {
 	case decision.PauseFacility:
@@ -373,14 +388,29 @@ func (s *Service) recordAI(ctx context.Context, canon, epochID string, dec decis
 	if len(dec.Reasons) > 0 {
 		reason = string(dec.Reasons[0])
 	}
+	data := map[string]any{
+		"score": e.Result.Score, "conflictBps": e.Result.ConflictBps, "riskBps": e.RiskBps, "compliant": e.Result.Compliant,
+		"reasons": reasonStrings(dec), "penalties": penaltyMap(e.Result.Penalties), "fraudSignals": len(e.Result.Fraud),
+		"decider": v.Decider,
+	}
+	if v.Provider != "" {
+		data["aiProvider"] = v.Provider
+	}
+	if v.Note != "" {
+		data["aiNote"] = v.Note
+	}
+	if v.Err != "" {
+		data["aiError"] = v.Err
+	}
+	if a := v.Assessment; a != nil {
+		data["ai"] = map[string]any{
+			"severity": a.Severity, "action": string(a.Action), "reasonCode": a.ReasonCode, "confidence": a.Confidence,
+			"requestedNextStep": a.RequestedNextStep, "explanation": a.Explanation,
+		}
+	}
 	_, err := s.o.Store.InsertAIEvent(ctx, store.AIEvent{
 		ShipmentID: canon, EpochID: epochID, Severity: severity, ActionType: string(dec.Action), ReasonCode: reason,
-		Data: map[string]any{
-			"score": e.Result.Score, "conflictBps": e.Result.ConflictBps, "riskBps": e.RiskBps, "compliant": e.Result.Compliant,
-			"reasons": reasonStrings(dec), "penalties": penaltyMap(e.Result.Penalties), "fraudSignals": len(e.Result.Fraud),
-			"decider": "deterministic-policy-gate",
-		},
-		OnchainActionTriggered: onchain, TxHash: tx,
+		Data: data, OnchainActionTriggered: onchain, TxHash: tx,
 	})
 	if err != nil {
 		s.o.Log.Error("record monitoring event", "err", err)

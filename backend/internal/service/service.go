@@ -15,6 +15,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/LSUDOKO/CargoFlow/backend/internal/ai"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/chain"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/evidence"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/proof"
@@ -42,6 +43,7 @@ type Options struct {
 	Chain  *chain.Client
 	Hub    *ws.Hub
 	Prover proof.Prover // nil disables ZK recovery
+	AI     *ai.Monitor  // nil disables the model; the deterministic policy gate then decides alone
 
 	Worker  *chain.Signer // commits evidence (EVIDENCE_VERIFIER_ROLE)
 	Monitor *chain.Signer // requests pauses (MONITOR_ROLE); no other authority

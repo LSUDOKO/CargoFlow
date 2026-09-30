@@ -8,6 +8,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/crypto"
 
+	"github.com/LSUDOKO/CargoFlow/backend/internal/ai"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/chain"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/chain/chaintest"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/proof"
@@ -32,7 +33,9 @@ func usdg(n int64) *big.Int { return new(big.Int).Mul(big.NewInt(n), big.NewInt(
 
 func idHex(id [32]byte) string { return "0x" + hex.EncodeToString(id[:]) }
 
-func newEnv(t *testing.T, prover proof.Prover) *env {
+func newEnv(t *testing.T, prover proof.Prover) *env { return newEnvWithAI(t, prover, nil) }
+
+func newEnvWithAI(t *testing.T, prover proof.Prover, monitor *ai.Monitor) *env {
 	t.Helper()
 	ce := chaintest.Start(t)
 	m, err := chain.LoadManifest(ce.ManifestPath)
@@ -58,7 +61,7 @@ func newEnv(t *testing.T, prover proof.Prover) *env {
 		worker: sg("worker"), monitor: sg("monitor"), mgr: sg("deployer"),
 	}
 	e.svc = service.New(service.Options{
-		Store: st, Chain: c, Hub: hub, Prover: prover,
+		Store: st, Chain: c, Hub: hub, Prover: prover, AI: monitor,
 		Worker: e.worker, Monitor: e.monitor, Manager: e.mgr,
 		SaltSecret: []byte("service test operator secret"),
 	})
