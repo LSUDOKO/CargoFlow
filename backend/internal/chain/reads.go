@@ -197,3 +197,31 @@ func (c *Client) BlockTime(ctx context.Context) (uint64, error) {
 	}
 	return h.Time, nil
 }
+
+// VaultFacility mirrors IReceivableVault.Facility: the custody-side view of a facility.
+type VaultFacility struct {
+	Financier    common.Address
+	Supplier     common.Address
+	Payer        common.Address
+	Committed    *big.Int
+	Drawn        *big.Int
+	InvoiceValue *big.Int
+	FeeBps       uint16
+	Funded       bool
+	Paused       bool
+	Closed       bool
+}
+
+// VaultFacility reads the vault's record of a facility (committed, drawn, fixed parties, flags).
+func (c *Client) VaultFacility(ctx context.Context, id [32]byte) (VaultFacility, error) {
+	var v VaultFacility
+	err := c.callInto(ctx, &v, "vault", "getFacility", id)
+	return v, err
+}
+
+// Milestone reads milestone `index` of a facility.
+func (c *Client) Milestone(ctx context.Context, id [32]byte, index uint8) (MilestoneSpec, error) {
+	var m MilestoneSpec
+	err := c.callInto(ctx, &m, "controller", "getMilestone", id, index)
+	return m, err
+}

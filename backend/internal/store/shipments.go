@@ -159,3 +159,39 @@ func (s *Store) MarkMilestoneReleased(ctx context.Context, shipmentID string, in
 	}
 	return nil // already released: keep the original record
 }
+
+// UpsertMilestones writes milestone terms, for example after reading a facility from the chain. Existing
+// release records (is_released, release_tx_hash, released_at) are never touched, so re-syncing is safe.
+func (s *Store) UpsertMilestones(ctx context.Context, shipmentID string, ms []Milestone) error {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	for _, m := range ms {
+		_, err := tx.Exec(ctx, `
+			INSERT INTO financing_milestones (shipment_id, milestone_index, description, allocated_usdg,
+				evidence_threshold, checkpoint_commitment)
+			VALUES ($1,$2,$3,$4::numeric,$5,$6)
+			ON CONFLICT (shipment_id, milestone_index) DO UPDATE
+			SET description = EXCLUDED.description, allocated_usdg = EXCLUDED.allocated_usdg,
+			    evidence_threshold = EXCLUDED.evidence_threshold, checkpoint_commitment = EXCLUDED.checkpoint_commitment`,
+			shipmentID, m.Index, m.Description, m.AllocatedUSDG, m.EvidenceThreshold, m.CheckpointCommitment)
+		if err != nil {
+			return fmt.Errorf("milestone %d: %w", m.Index, mapErr(err))
+		}
+	}
+	return mapErr(tx.Commit(ctx))
+}
+
+// SetShipmentFinancier records the financier named by the on-chain facility.
+func (s *Store) SetShipmentFinancier(ctx context.Context, id, financier string) error {
+	tag, err := s.pool.Exec(ctx, "UPDATE shipments SET financier = $2, updated_at = now() WHERE shipment_id = $1", id, financier)
+	if err != nil {
+		return mapErr(err)
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}

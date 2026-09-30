@@ -217,3 +217,56 @@ func TestEvidenceSources(t *testing.T) {
 		t.Fatal("a source with no sensors was accepted")
 	}
 }
+
+func TestUpsertMilestonesSyncsTermsWithoutLosingReleaseRecords(t *testing.T) {
+	s := newStore(t)
+	ctx := context.Background()
+	sh := sampleShipment(hex64('f'))
+	if err := s.CreateShipment(ctx, sh, nil); err != nil { // shipment first, facility (and so milestones) later
+		t.Fatal(err)
+	}
+	if ms, _ := s.Milestones(ctx, sh.ID); len(ms) != 0 {
+		t.Fatalf("expected no milestones yet, got %d", len(ms))
+	}
+
+	if err := s.UpsertMilestones(ctx, sh.ID, sampleMilestones()); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.MarkMilestoneReleased(ctx, sh.ID, 1, hex64('7')); err != nil {
+		t.Fatal(err)
+	}
+
+	// the chain is re-read (for example after a restart) and the terms are re-upserted
+	changed := sampleMilestones()
+	changed[1].AllocatedUSDG = "9000000000"
+	if err := s.UpsertMilestones(ctx, sh.ID, changed); err != nil {
+		t.Fatal(err)
+	}
+	ms, _ := s.Milestones(ctx, sh.ID)
+	if len(ms) != 5 {
+		t.Fatalf("%d milestones", len(ms))
+	}
+	if !ms[1].IsReleased || ms[1].ReleaseTxHash != hex64('7') {
+		t.Fatalf("re-syncing terms erased a release record: %+v", ms[1])
+	}
+	if ms[1].AllocatedUSDG != "9000000000" {
+		t.Fatalf("terms were not updated: %s", ms[1].AllocatedUSDG)
+	}
+}
+
+func TestSetShipmentFinancier(t *testing.T) {
+	s := newStore(t)
+	ctx := context.Background()
+	sh := sampleShipment(hex64('f'))
+	_ = s.CreateShipment(ctx, sh, nil)
+	if err := s.SetShipmentFinancier(ctx, sh.ID, hex40('3')); err != nil {
+		t.Fatal(err)
+	}
+	got, _ := s.GetShipment(ctx, sh.ID)
+	if got.Financier != hex40('3') {
+		t.Fatalf("financier = %q", got.Financier)
+	}
+	if err := s.SetShipmentFinancier(ctx, hex64('0'), hex40('3')); !errors.Is(err, store.ErrNotFound) {
+		t.Fatalf("unknown shipment: %v", err)
+	}
+}

@@ -195,3 +195,31 @@ func TestRevertsAreDecodedForEveryErrorShape(t *testing.T) {
 	}
 	_ = common.Address{}
 }
+
+func TestMilestoneAndVaultReads(t *testing.T) {
+	a := setup(t)
+	ctx := context.Background()
+	id := newFacility(t, a, "client-reads-1")
+
+	m, err := a.c.Milestone(ctx, id, 2)
+	if err != nil || m.Allocation.Cmp(usdg(8_000)) != 0 || m.EvidenceThreshold != 75 || m.CheckpointCommitment != [32]byte{3} {
+		t.Fatalf("milestone = %+v, %v", m, err)
+	}
+	if _, err := a.c.Milestone(ctx, id, 9); !chain.IsRevert(err, "InvalidMilestones") {
+		t.Fatalf("an out-of-range milestone must revert InvalidMilestones, got %v", err)
+	}
+
+	v, err := a.c.VaultFacility(ctx, id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if v.Committed.Cmp(usdg(40_000)) != 0 || v.Drawn.Sign() != 0 || !v.Funded || v.Paused || v.Closed {
+		t.Fatalf("vault facility = %+v", v)
+	}
+	if v.Supplier != a.exporter.Address() || v.Payer != a.buyer.Address() || v.Financier != a.financier.Address() {
+		t.Fatalf("the vault's fixed parties are wrong: %+v", v)
+	}
+	if v.FeeBps != 300 || v.InvoiceValue.Cmp(usdg(100_000)) != 0 {
+		t.Fatalf("terms = %+v", v)
+	}
+}
