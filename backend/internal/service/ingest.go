@@ -450,8 +450,10 @@ func reasonStrings(d decision.Decision) []string {
 }
 
 // reasonHash is the bytes32 pause reason recorded on-chain: the hash of the joined reason codes.
-func reasonHash(d decision.Decision) [32]byte {
-	return [32]byte(crypto.Keccak256Hash([]byte(strings.Join(reasonStrings(d), ","))))
+func reasonHash(d decision.Decision) [32]byte { return reasonHashOf(reasonStrings(d)) }
+
+func reasonHashOf(reasons []string) [32]byte {
+	return [32]byte(crypto.Keccak256Hash([]byte(strings.Join(reasons, ","))))
 }
 
 func joinErr(a, b string) string {

@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/LSUDOKO/CargoFlow/backend/internal/ai"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/chain"
@@ -21,6 +22,7 @@ import (
 // env is a service wired to a real anvil chain and a real Postgres schema, exactly as in production.
 type env struct {
 	svc                                              *service.Service
+	pool                                             *pgxpool.Pool
 	store                                            *store.Store
 	chain                                            *chain.Client
 	hub                                              *ws.Hub
@@ -56,7 +58,7 @@ func newEnvWithAI(t *testing.T, prover proof.Prover, monitor *ai.Monitor) *env {
 	hub := ws.NewHub(256)
 	sg := func(n string) *chain.Signer { return chain.NewSigner(ce.Keys[n]) }
 	e := &env{
-		store: st, chain: c, hub: hub,
+		store: st, pool: pool, chain: c, hub: hub,
 		exporter: sg("exporter"), financier: sg("financier"), buyer: sg("buyer"),
 		worker: sg("worker"), monitor: sg("monitor"), mgr: sg("deployer"),
 	}

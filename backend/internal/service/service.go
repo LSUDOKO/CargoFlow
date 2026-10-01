@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 
@@ -52,6 +53,10 @@ type Options struct {
 	SaltSecret  []byte
 	RiskContext risk.Context // defaults to 10% counterparty and corridor risk
 	Log         *slog.Logger
+
+	// Reconciler tuning (zero values select the defaults).
+	ReconcileMaxAttempts int           // retries of one failed action before giving up (default 5)
+	ReconcileBackoff     time.Duration // base wait between retries, multiplied by the attempt number (default 30s)
 }
 
 // Service is the orchestrator. It is safe for concurrent use; work on one shipment is serialised.
@@ -70,6 +75,12 @@ func New(o Options) *Service {
 	}
 	if o.RiskContext == (risk.Context{}) {
 		o.RiskContext = risk.Context{CounterpartyBps: 1000, CorridorBps: 1000, MinReliabilityBps: evidence.DefaultReliabilityBps}
+	}
+	if o.ReconcileMaxAttempts <= 0 {
+		o.ReconcileMaxAttempts = 5
+	}
+	if o.ReconcileBackoff <= 0 {
+		o.ReconcileBackoff = 30 * time.Second
 	}
 	return &Service{o: o, locks: map[string]*sync.Mutex{}, state: map[string]*shipmentState{}}
 }
