@@ -92,3 +92,23 @@ jobs:
           sudo chmod +x /usr/local/bin/circom
           circom --version
       - run: npm test
+
+  stylus:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: stylus
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the pinned Rust toolchain
+        run: rustup show active-toolchain || rustup toolchain install
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            stylus/target
+          key: stylus-${{ hashFiles('stylus/Cargo.lock', 'stylus/rust-toolchain.toml') }}
+      - name: Rust engine reproduces the Go vectors
+        run: cargo test -p cargoflow-engine --locked
+      - name: Stylus contract compiles to WASM
+        run: cargo build --release --target wasm32-unknown-unknown --locked
