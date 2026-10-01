@@ -43,3 +43,6 @@ frontend/.env.local
 
 # design references (third-party screenshots, not ours to redistribute)
 assests/
+
+# browser automation scratch
+.playwright-mcp/
