@@ -59,6 +59,14 @@ migrate: ## Apply database migrations (reads .env)
 ai-live: ## Smoke-test the real Groq API with synthetic data (needs GROQ_API_KEY in .env)
 	@set -a; [ -f .env ] && . ./.env; set +a; cd backend && go test -tags live -run Live -v -count=1 ./internal/ai
 
+slither: ## Static-analyse the contracts (needs: uv tool install slither-analyzer)
+	@cd contracts && PATH="$(dir $(FORGE)):$$PATH" slither .
+
+bench: ## Measure contract gas and the ZK recovery circuit on this machine
+	@cd contracts && $(FORGE) test --match-path 'test/integration/*' --gas-report 2>&1 | grep -E 'evaluateAndReleaseMilestone|commitEpoch|createFacility|depositCapital|pauseFinancing|settle|resumeWithProof'
+	@cd contracts && $(FORGE) test --match-test test_realProofResumesTheFacilityAndUnblocksM3 -vv 2>&1 | grep 'resumeWithProof gas'
+	@cd circuits && node scripts/bench.js 5
+
 keygen: ## Generate an Ed25519 key pair for an evidence source
 	@cd backend && go run ./cmd/cargoflow keygen
 
