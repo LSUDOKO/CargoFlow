@@ -55,7 +55,7 @@ Check balances with `make usdg-info` (deployer) or
 createdb cargoflow_testnet
 export DATABASE_URL='postgres:///cargoflow_testnet?host=/run/postgresql'
 export RPC_URL=https://rpc.testnet.chain.robinhood.com CHAIN_ID=46630
-export DEPLOYMENT_FILE=contracts/deployments/robinhood-testnet.json
+export DEPLOYMENT_FILE=../contracts/deployments/robinhood-testnet.json   # relative to backend/, where make runs it
 export START_BLOCK=127123212            # the block of the first deployment transaction
 export ADMIN_API_KEY=$(openssl rand -hex 16) SALT_SECRET=$(openssl rand -hex 16)
 make serve                              # also reads WORKER_KEY / MONITOR_KEY / MANAGER_KEY / GROQ_API_KEY from .env
