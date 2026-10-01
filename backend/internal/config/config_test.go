@@ -196,3 +196,35 @@ func TestReconcileIntervalDefaultsParsesAndCanBeDisabled(t *testing.T) {
 		}
 	}
 }
+
+func TestDemoModeIsOffByDefaultAndNeedsKeysWhenOn(t *testing.T) {
+	c, err := config.Load(env(valid()))
+	if err != nil || c.DemoMode {
+		t.Fatalf("%v %v", c.DemoMode, err)
+	}
+	e := valid()
+	e["DEMO_MODE"] = "true"
+	if _, err := config.Load(env(e)); err == nil || !strings.Contains(err.Error(), "DEMO_EXPORTER_KEY") {
+		t.Fatalf("keys must be required in demo mode: %v", err)
+	}
+	e["DEMO_EXPORTER_KEY"], e["DEMO_FINANCIER_KEY"], e["DEMO_BUYER_KEY"] = key1, key2, key3
+	c, err = config.Load(env(e))
+	if err != nil || !c.DemoMode || len(c.DemoExporterKey) != 32 {
+		t.Fatalf("%v", err)
+	}
+	if c.DemoDivisor != 1 { // chain 31337 in valid(): full size, mintable mock token
+		t.Fatalf("divisor on a local chain = %d", c.DemoDivisor)
+	}
+	e["CHAIN_ID"] = "46630"
+	if c, _ = config.Load(env(e)); c.DemoDivisor != 2000 {
+		t.Fatalf("divisor on testnet = %d, want 2000 so a faucet drip is enough", c.DemoDivisor)
+	}
+	e["DEMO_DIVISOR"] = "7"
+	if _, err := config.Load(env(e)); err == nil || !strings.Contains(err.Error(), "DEMO_DIVISOR") {
+		t.Fatalf("an inexact divisor was accepted: %v", err)
+	}
+	e["DEMO_MODE"] = "maybe"
+	if _, err := config.Load(env(e)); err == nil || !strings.Contains(err.Error(), "DEMO_MODE") {
+		t.Fatalf("a non-boolean DEMO_MODE was accepted: %v", err)
+	}
+}

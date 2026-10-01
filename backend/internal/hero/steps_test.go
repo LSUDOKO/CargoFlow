@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestScenesMustRunInOrderAndRepeatIsRecognised(t *testing.T) {
@@ -38,7 +39,7 @@ func TestSceneTimesContinueTheJourneyAndJumpForwardAfterALongPause(t *testing.T)
 
 func TestBackToBackScenesNeverProduceFutureReadings(t *testing.T) {
 	now := int64(10_000)
-	last := journeyAnchor(now) // set by setup
+	last := journeyAnchor(now)           // set by setup
 	for _, n := range []int{16, 8, 16} { // healthy, excursion, finish sent within the same second
 		start := sceneStart(last, now, n)
 		end := start + int64(n-1)*stepSeconds
@@ -46,5 +47,23 @@ func TestBackToBackScenesNeverProduceFutureReadings(t *testing.T) {
 			t.Fatalf("scene of %d steps ends at %d, after now (%d)", n, end, now)
 		}
 		last = end
+	}
+}
+
+func TestStatusDoesNotWaitForARunningScene(t *testing.T) {
+	s := &Session{done: map[string]StepResult{}}
+	s.run.Lock() // a scene is in flight
+	defer s.run.Unlock()
+	done := make(chan struct{})
+	go func() {
+		_ = s.Done()
+		_ = s.Next()
+		_ = s.ShipmentID()
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("status calls blocked behind the running scene")
 	}
 }

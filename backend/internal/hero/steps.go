@@ -52,8 +52,11 @@ type StepResult struct {
 // Session runs the story one scene at a time, for callers (judge mode) that let a person pace it. Scenes run
 // strictly in order; asking for a finished scene again returns its recorded result without touching the chain.
 type Session struct {
-	mu   sync.Mutex
+	run sync.Mutex // held while a scene plays; only one scene runs at a time
+
+	mu   sync.Mutex // guards the fields below; never held across a scene, so status reads stay instant
 	r    *runner
+	id   string
 	done map[string]StepResult
 	next int
 }
@@ -71,7 +74,7 @@ func NewSession(cfg Config) (*Session, error) {
 func (s *Session) ShipmentID() string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return s.r.shipmentHex
+	return s.id
 }
 
 // Done lists the completed scenes in order.
@@ -83,16 +86,22 @@ func (s *Session) Done() []string {
 
 // Next is the scene that may run now, or "" when the story is finished.
 func (s *Session) Next() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.nextScene()
+}
+
+func (s *Session) nextScene() string {
 	if s.next >= len(Scenes) {
 		return ""
 	}
 	return Scenes[s.next]
 }
 
-// Result is the run summary so far (final once the settle scene has run).
+// Result is the run summary; call it only after the settle scene has returned.
 func (s *Session) Result() Result {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.run.Lock()
+	defer s.run.Unlock()
 	return s.r.res
 }
 
@@ -109,22 +118,29 @@ func (s *Session) checkOrder(scene string) error {
 	case idx < s.next:
 		return errAlreadyDone
 	case idx > s.next:
-		return fmt.Errorf("%w: the next scene is %q", ErrOutOfOrder, s.Next())
+		return fmt.Errorf("%w: the next scene is %q", ErrOutOfOrder, s.nextScene())
 	}
 	return nil
 }
 
 // Run performs one scene.
 func (s *Session) Run(ctx context.Context, scene string) (StepResult, error) {
+	s.run.Lock()
+	defer s.run.Unlock()
 	s.mu.Lock()
-	defer s.mu.Unlock()
-	switch err := s.checkOrder(scene); {
+	err := s.checkOrder(scene)
+	prev := s.done[scene]
+	s.mu.Unlock()
+	switch {
 	case errors.Is(err, errAlreadyDone):
-		return s.done[scene], nil
+		return prev, nil
 	case err != nil:
 		return StepResult{}, err
 	}
 	res, err := s.r.runScene(ctx, scene)
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.id = s.r.shipmentHex
 	if err != nil {
 		return res, err
 	}

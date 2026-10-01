@@ -35,6 +35,7 @@ import (
 	"github.com/LSUDOKO/CargoFlow/backend/internal/auth"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/chain"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/config"
+	demoruns "github.com/LSUDOKO/CargoFlow/backend/internal/demo"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/proof"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/service"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/store"
@@ -179,13 +180,22 @@ func serve(ctx context.Context, getenv func(string) string, out io.Writer) error
 	indexerDone := make(chan error, 1)
 	go func() { indexerDone <- idx.Run(ctx) }()
 
+	demoRuns, err := demoRegistry(cfg, client, log)
+	if err != nil {
+		return err
+	}
 	server := api.NewServer(api.Config{
 		Service: svc, Store: st, Chain: client, Hub: hub, AdminKey: cfg.AdminAPIKey.Reveal(), CORSOrigins: cfg.CORSOrigins, Log: log,
 		Verifier: &auth.Verifier{Lookup: st.GetSource, Now: time.Now, MaxSkew: 5 * time.Minute},
+		Demo:     demoRuns,
 	})
 	ln, err := net.Listen("tcp", cfg.HTTPAddr)
 	if err != nil {
 		return err
+	}
+	if demoRuns != nil {
+		// the demo scenes drive this very backend through its own API
+		demoRuns.SetAPIURL(fmt.Sprintf("http://127.0.0.1:%d", ln.Addr().(*net.TCPAddr).Port))
 	}
 	httpServer := &http.Server{
 		Handler: server.Handler(), ReadHeaderTimeout: 10 * time.Second, ReadTimeout: 30 * time.Second,
@@ -297,4 +307,36 @@ func aiMonitor(cfg config.Config, log *slog.Logger) *ai.Monitor {
 	provider := ai.NewGroq(ai.GroqConfig{APIKey: cfg.GroqAPIKey, Model: cfg.GroqModel})
 	log.Info("AI monitor enabled", "provider", provider.Name(), "timeout", cfg.AITimeout, "minConfidence", cfg.AIMinConfidence)
 	return ai.NewMonitor(provider, ai.MonitorOptions{MinConfidence: cfg.AIMinConfidence, Timeout: cfg.AITimeout})
+}
+
+// demoRegistry builds the judge-mode registry when DEMO_MODE is on, and nil otherwise.
+func demoRegistry(cfg config.Config, c *chain.Client, log *slog.Logger) (*demoruns.Registry, error) {
+	if !cfg.DemoMode {
+		return nil, nil
+	}
+	signer := func(name string, k config.Key) (*chain.Signer, error) {
+		key, err := crypto.ToECDSA(k)
+		if err != nil {
+			return nil, fmt.Errorf("%s is not a valid secp256k1 private key", name)
+		}
+		return chain.NewSigner(key), nil
+	}
+	exporter, err := signer("DEMO_EXPORTER_KEY", cfg.DemoExporterKey)
+	if err != nil {
+		return nil, err
+	}
+	financier, err := signer("DEMO_FINANCIER_KEY", cfg.DemoFinancierKey)
+	if err != nil {
+		return nil, err
+	}
+	buyer, err := signer("DEMO_BUYER_KEY", cfg.DemoBuyerKey)
+	if err != nil {
+		return nil, err
+	}
+	log.Warn("DEMO MODE is on: /v1/demo endpoints play the story with server-held wallets; never use wallets of value",
+		"exporter", exporter.Address().Hex(), "financier", financier.Address().Hex(), "buyer", buyer.Address().Hex(), "divisor", cfg.DemoDivisor)
+	return demoruns.New(demoruns.Config{
+		AdminKey: cfg.AdminAPIKey.Reveal(), Chain: c, Exporter: exporter, Financier: financier, Buyer: buyer,
+		Divisor: cfg.DemoDivisor, Mint: cfg.ChainID == 31337,
+	}), nil
 }

@@ -21,7 +21,6 @@ import (
 	"strings"
 	"time"
 
-
 	"github.com/LSUDOKO/CargoFlow/backend/internal/auth"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/chain"
 )

@@ -486,7 +486,7 @@ func TestMirrorIsPublicChainVerifiedAndIdempotent(t *testing.T) {
 }
 
 func TestMirrorIsRateLimitedPerClient(t *testing.T) {
-	e := newEnvWith(t, nil, func(c *api.Config) { c.MirrorPerMinute = 2 })
+	e := newEnvWith(t, nil, func(_ *env, c *api.Config) { c.MirrorPerMinute = 2 })
 	body := map[string]any{"shipmentId": "0x" + strings.Repeat("ab", 32), "externalRef": "x"}
 	var codes []int
 	for i := 0; i < 3; i++ {
@@ -510,5 +510,64 @@ func TestTelemetrySummaryIsPublicAndUnknownShipmentsAre404(t *testing.T) {
 	}
 	if resp := e.do(t, "GET", "/v1/shipments/0x"+strings.Repeat("d", 64)+"/telemetry", nil, nil, nil); resp.StatusCode != 404 {
 		t.Fatalf("unknown shipment = %d", resp.StatusCode)
+	}
+}
+
+func TestDemoScenesRunInOrderOnce(t *testing.T) {
+	e := newDemoEnv(t)
+	var cfg struct {
+		DemoMode bool `json:"demoMode"`
+	}
+	if e.do(t, "GET", "/v1/config", nil, nil, &cfg); !cfg.DemoMode {
+		t.Fatal("config must advertise demo mode")
+	}
+	var created struct {
+		ShipmentID string `json:"shipmentId"`
+		Status     string `json:"status"`
+	}
+	if resp := e.do(t, "POST", "/v1/demo/shipments", map[string]any{}, nil, &created); resp.StatusCode != http.StatusCreated || created.Status != "ACTIVE" {
+		t.Fatalf("create = %d %+v", resp.StatusCode, created)
+	}
+	path := "/v1/demo/shipments/" + created.ShipmentID + "/scenes/"
+	var conflict struct {
+		Next string `json:"next"`
+	}
+	if resp := e.do(t, "POST", path+"excursion", nil, nil, &conflict); resp.StatusCode != http.StatusConflict || conflict.Next != "healthy" {
+		t.Fatalf("out of order = %d %+v, want 409 naming the next scene", resp.StatusCode, conflict)
+	}
+	var first, again struct {
+		TxHashes []string `json:"txHashes"`
+		Drawn    string   `json:"drawn"`
+	}
+	e.do(t, "POST", path+"healthy", nil, nil, &first)
+	e.do(t, "POST", path+"healthy", nil, nil, &again)
+	if first.Drawn != "8000000" || len(again.TxHashes) != len(first.TxHashes) {
+		t.Fatalf("first %+v again %+v", first, again)
+	}
+	var status struct {
+		Done []string `json:"done"`
+		Next string   `json:"next"`
+	}
+	if e.do(t, "GET", "/v1/demo/shipments/"+created.ShipmentID, nil, nil, &status); status.Next != "excursion" || len(status.Done) != 2 {
+		t.Fatalf("status = %+v", status)
+	}
+	if resp := e.do(t, "POST", "/v1/demo/shipments/0x"+strings.Repeat("e", 64)+"/scenes/healthy", nil, nil, nil); resp.StatusCode != http.StatusNotFound {
+		t.Fatalf("unknown run = %d", resp.StatusCode)
+	}
+	if resp := e.do(t, "POST", path+"teleport", nil, nil, nil); resp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("unknown scene = %d", resp.StatusCode)
+	}
+}
+
+func TestDemoRoutesDoNotExistWhenDemoModeIsOff(t *testing.T) {
+	e := newEnv(t, nil)
+	if resp := e.do(t, "POST", "/v1/demo/shipments", map[string]any{}, nil, nil); resp.StatusCode != http.StatusNotFound {
+		t.Fatalf("%d", resp.StatusCode)
+	}
+	var cfg struct {
+		DemoMode bool `json:"demoMode"`
+	}
+	if e.do(t, "GET", "/v1/config", nil, nil, &cfg); cfg.DemoMode {
+		t.Fatal("demo mode advertised while off")
 	}
 }

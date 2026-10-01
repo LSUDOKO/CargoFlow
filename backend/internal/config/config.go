@@ -52,6 +52,14 @@ type Config struct {
 
 	CircuitsDir string
 
+	// Demo mode (optional, off by default): exposes /v1/demo endpoints that play the story with server-held
+	// wallets. Never enable it where those wallets hold anything of value.
+	DemoMode         bool
+	DemoExporterKey  Key
+	DemoFinancierKey Key
+	DemoBuyerKey     Key
+	DemoDivisor      int64 // scales every USDG amount; 1 on a local chain, 2000 on public networks by default
+
 	// AI monitor (optional). Without a Groq key the deterministic policy gate decides alone.
 	GroqAPIKey      Secret
 	GroqModel       string // empty selects the provider default
@@ -194,6 +202,27 @@ func Load(getenv func(string) string) (Config, error) {
 	}
 	c.SaltSecret = Secret(salt)
 
+	switch raw := strings.ToLower(strings.TrimSpace(getenv("DEMO_MODE"))); raw {
+	case "", "false", "0", "no", "off":
+	case "true", "1", "yes", "on":
+		c.DemoMode = true
+	default:
+		fail("DEMO_MODE", "must be true or false")
+	}
+	if c.DemoMode {
+		c.DemoExporterKey = key("DEMO_EXPORTER_KEY")
+		c.DemoFinancierKey = key("DEMO_FINANCIER_KEY")
+		c.DemoBuyerKey = key("DEMO_BUYER_KEY")
+		def := uint64(2000)
+		if c.ChainID == 31337 {
+			def = 1
+		}
+		c.DemoDivisor = int64(uintVal("DEMO_DIVISOR", def, false))
+		if !demoDivisorExact(c.DemoDivisor) {
+			fail("DEMO_DIVISOR", "must divide every demo amount (8,000 / 40,000 / 100,000 USDG and the 3% fee) into whole base units, e.g. 1, 1000 or 2000")
+		}
+	}
+
 	c.WorkerKey = key("WORKER_KEY")
 	c.MonitorKey = key("MONITOR_KEY")
 	c.ManagerKey = key("MANAGER_KEY")
@@ -202,4 +231,18 @@ func Load(getenv func(string) string) (Config, error) {
 		return Config{}, errors.Join(errs...)
 	}
 	return c, nil
+}
+
+// demoDivisorExact mirrors hero's divisor rule (internal/hero validDivisor) without importing it: every demo
+// amount and the 3% fee must stay a whole number of USDG base units after scaling.
+func demoDivisorExact(div int64) bool {
+	if div < 1 {
+		return false
+	}
+	for _, usdg := range []int64{8_000, 40_000, 100_000, 98_800, 41_200} {
+		if usdg*1_000_000%div != 0 {
+			return false
+		}
+	}
+	return (40_000*1_000_000/div)*300%10_000 == 0
 }

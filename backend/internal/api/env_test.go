@@ -3,6 +3,7 @@ package api_test
 import (
 	"bytes"
 	"context"
+	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/base64"
@@ -24,6 +25,7 @@ import (
 	"github.com/LSUDOKO/CargoFlow/backend/internal/auth"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/chain"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/chain/chaintest"
+	"github.com/LSUDOKO/CargoFlow/backend/internal/demo"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/proof"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/service"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/simulator"
@@ -46,6 +48,7 @@ func usdg(n int64) *big.Int { return new(big.Int).Mul(big.NewInt(n), big.NewInt(
 
 type env struct {
 	srv                             *httptest.Server
+	keys                            map[string]*ecdsa.PrivateKey
 	store                           *store.Store
 	chain                           *chain.Client
 	hub                             *ws.Hub
@@ -61,7 +64,7 @@ func newEnv(t *testing.T, prover proof.Prover, cors ...string) *env {
 }
 
 // newEnvWith is newEnv with a hook that adjusts the API configuration before the server is built.
-func newEnvWith(t *testing.T, prover proof.Prover, tune func(*api.Config), cors ...string) *env {
+func newEnvWith(t *testing.T, prover proof.Prover, tune func(*env, *api.Config), cors ...string) *env {
 	t.Helper()
 	ce := chaintest.Start(t)
 	m, err := chain.LoadManifest(ce.ManifestPath)
@@ -80,7 +83,8 @@ func newEnvWith(t *testing.T, prover proof.Prover, tune func(*api.Config), cors 
 	st := store.New(pool)
 	hub := ws.NewHub(256)
 	sg := func(n string) *chain.Signer { return chain.NewSigner(ce.Keys[n]) }
-	e := &env{store: st, chain: c, hub: hub, exporter: sg("exporter"), financier: sg("financier"), buyer: sg("buyer"), mgr: sg("deployer")}
+	keys := ce.Keys
+	e := &env{keys: keys, store: st, chain: c, hub: hub, exporter: sg("exporter"), financier: sg("financier"), buyer: sg("buyer"), mgr: sg("deployer")}
 	e.svc = service.New(service.Options{
 		Store: st, Chain: c, Hub: hub, Prover: prover,
 		Worker: sg("worker"), Monitor: sg("monitor"), Manager: e.mgr, SaltSecret: []byte("api test operator secret"),
@@ -90,7 +94,7 @@ func newEnvWith(t *testing.T, prover proof.Prover, tune func(*api.Config), cors 
 		Verifier: &auth.Verifier{Lookup: st.GetSource, Now: nowFunc, MaxSkew: 5 * 60 * 1e9},
 	}
 	if tune != nil {
-		tune(&cfg)
+		tune(e, &cfg)
 	}
 	server := api.NewServer(cfg)
 	e.srv = httptest.NewServer(server.Handler())
@@ -249,4 +253,20 @@ func (e *env) registerShipment(t *testing.T, id [32]byte, ref string) {
 	if resp := e.do(t, "POST", "/v1/shipments", body, map[string]string{"X-API-Key": adminKey}, nil); resp.StatusCode != 201 {
 		t.Fatalf("register shipment = %d", resp.StatusCode)
 	}
+}
+
+// newDemoEnv is an API environment with demo mode on, using the chaintest exporter, financier and buyer
+// wallets and a mintable mock token.
+func newDemoEnv(t *testing.T) *env {
+	t.Helper()
+	var reg *demo.Registry
+	e := newEnvWith(t, nil, func(e *env, c *api.Config) {
+		reg = demo.New(demo.Config{
+			AdminKey: adminKey, Chain: c.Chain, Divisor: 2000, Mint: true,
+			Exporter: chain.NewSigner(e.keys["exporter"]), Financier: chain.NewSigner(e.keys["financier"]), Buyer: chain.NewSigner(e.keys["buyer"]),
+		})
+		c.Demo = reg
+	})
+	reg.SetAPIURL(e.srv.URL)
+	return e
 }
