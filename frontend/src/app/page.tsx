@@ -1,9 +1,23 @@
+import { BuiltOn } from "@/components/landing/BuiltOn";
+import { ClosingBand } from "@/components/landing/ClosingBand";
+import { Faq } from "@/components/landing/Faq";
+import { Hero } from "@/components/landing/Hero";
+import { HowItWorks } from "@/components/landing/HowItWorks";
+import { StatsStrip } from "@/components/landing/StatsStrip";
+import { Verified } from "@/components/landing/Verified";
+import { Waterfall } from "@/components/landing/Waterfall";
+
 export default function Home() {
   return (
-    <div className="container-page py-24">
-      <h1 className="font-display text-6xl font-bold">
-        Capital that <span className="mark">moves</span> with your cargo
-      </h1>
-    </div>
+    <>
+      <Hero />
+      <StatsStrip />
+      <HowItWorks />
+      <Waterfall />
+      <Verified />
+      <BuiltOn />
+      <Faq />
+      <ClosingBand />
+    </>
   );
 }

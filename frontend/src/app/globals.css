@@ -58,7 +58,8 @@
   .mark {
     background: var(--color-signal);
     color: var(--color-ink);
-    padding: 0 0.14em;
+    padding: 0.02em 0.14em 0;
+    border-radius: 0.08em;
     -webkit-box-decoration-break: clone;
     box-decoration-break: clone;
   }
