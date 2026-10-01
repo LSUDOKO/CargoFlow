@@ -2,6 +2,8 @@
 .env
 .env.*
 !.env.example
+!.env.local.example
+!frontend/.env.example
 *.key
 *.pem
 
@@ -30,3 +32,14 @@ circuits/keys/*.ptau
 # local deployment artifacts
 contracts/deployments/local.json
 contracts/deployments/test-*.json
+
+# agent workspace
+.superpowers/
+
+# frontend
+frontend/test-results/
+frontend/playwright-report/
+frontend/.env.local
+
+# design references (third-party screenshots, not ours to redistribute)
+assests/
