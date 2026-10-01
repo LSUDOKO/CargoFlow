@@ -496,3 +496,19 @@ func TestMirrorIsRateLimitedPerClient(t *testing.T) {
 		t.Fatalf("codes = %v, want the third request limited", codes)
 	}
 }
+
+func TestTelemetrySummaryIsPublicAndUnknownShipmentsAre404(t *testing.T) {
+	e := newEnv(t, nil)
+	id := e.onChain(t, "api-telemetry-1", true)
+	e.registerShipment(t, id, "api-telemetry-1")
+	var sum struct {
+		Epochs   []any `json:"epochs"`
+		Position any   `json:"position"`
+	}
+	if resp := e.do(t, "GET", "/v1/shipments/"+idHex(id)+"/telemetry", nil, nil, &sum); resp.StatusCode != 200 || sum.Epochs == nil {
+		t.Fatalf("%d %+v", resp.StatusCode, sum)
+	}
+	if resp := e.do(t, "GET", "/v1/shipments/0x"+strings.Repeat("d", 64)+"/telemetry", nil, nil, nil); resp.StatusCode != 404 {
+		t.Fatalf("unknown shipment = %d", resp.StatusCode)
+	}
+}

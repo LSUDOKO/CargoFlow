@@ -60,3 +60,14 @@ func (s *Server) mirror(w http.ResponseWriter, r *http.Request) error {
 	writeJSON(w, http.StatusCreated, sh)
 	return nil
 }
+
+// telemetrySummary returns per-epoch, per-sensor temperature aggregates and the latest position, never
+// individual readings.
+func (s *Server) telemetrySummary(w http.ResponseWriter, r *http.Request) error {
+	sum, err := s.c.Service.TelemetrySummary(r.Context(), r.PathValue("id"))
+	if err != nil {
+		return err
+	}
+	writeJSON(w, http.StatusOK, sum)
+	return nil
+}

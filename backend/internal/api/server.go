@@ -77,6 +77,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /v1/shipments", s.handle(s.listShipments))
 	mux.HandleFunc("GET /v1/shipments/{id}", s.handle(s.getShipment))
 	mux.HandleFunc("POST /v1/shipments/{id}/telemetry", s.handle(s.telemetry))
+	mux.HandleFunc("GET /v1/shipments/{id}/telemetry", s.handle(s.telemetrySummary))
 	mux.HandleFunc("POST /v1/shipments/{id}/proof", s.handle(s.admin(s.proof)))
 	mux.HandleFunc("GET /v1/shipments/{id}/epochs", s.handle(s.epochs))
 	mux.HandleFunc("GET /v1/shipments/{id}/audit", s.handle(s.audit))

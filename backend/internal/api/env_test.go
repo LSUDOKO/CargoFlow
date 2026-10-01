@@ -241,3 +241,12 @@ func realProver(t *testing.T) proof.Prover {
 	}
 	return &proof.SnarkjsProver{CircuitsDir: dir}
 }
+
+// registerShipment mirrors an on-chain shipment into the backend through the admin endpoint.
+func (e *env) registerShipment(t *testing.T, id [32]byte, ref string) {
+	t.Helper()
+	body := map[string]any{"shipmentId": idHex(id), "externalRef": ref, "maxGapSec": 1800, "minSensors": 2}
+	if resp := e.do(t, "POST", "/v1/shipments", body, map[string]string{"X-API-Key": adminKey}, nil); resp.StatusCode != 201 {
+		t.Fatalf("register shipment = %d", resp.StatusCode)
+	}
+}
