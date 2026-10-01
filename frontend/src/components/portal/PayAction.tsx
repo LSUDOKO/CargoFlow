@@ -48,9 +48,19 @@ export function PayAction({ shipmentId, amount, action, label, successTitle }: P
           {chainId === 46630 ? (
             <a href="https://faucet.paxos.com" target="_blank" rel="noreferrer" className="font-semibold underline">Get testnet USDG from the Paxos faucet</a>
           ) : (
-            "On a local chain, mint test USDG from the demo page."
+            "On the local chain the test token can be minted freely."
           )}
         </p>
+        {chainId === 31337 && address && (
+          <Button
+            size="sm"
+            className="mt-3"
+            loading={pending}
+            onClick={() => send({ address: contracts.usdg, abi: usdgAbi, functionName: "mint", args: [address, needs.shortfall], label: "Mint test USDG", successTitle: `${formatUSDG(needs.shortfall)} test USDG minted` })}
+          >
+            Mint {formatUSDG(needs.shortfall)} test USDG
+          </Button>
+        )}
       </div>
     );
   }

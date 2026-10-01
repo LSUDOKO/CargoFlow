@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fundingNeeds } from "./portal";
+import { fundingNeeds, settlementPreview } from "./portal";
 
 describe("fundingNeeds", () => {
   it("reports the shortfall when the balance is too low", () => {
@@ -13,5 +13,15 @@ describe("fundingNeeds", () => {
   });
   it("treats unknown reads as not ready", () => {
     expect(fundingNeeds(undefined, undefined, 40n).ready).toBe(false);
+  });
+});
+
+describe("settlementPreview", () => {
+  it("previews the 1/2000 public testnet settlement from a facility view", () => {
+    const p = settlementPreview({ committed: "20000000", drawn: "20000000", feeBps: 300 }, "50000000");
+    expect(p).toEqual({ principal: 20000000n, fee: 600000n, undrawn: 0n, financier: 20600000n, residual: 29400000n });
+  });
+  it("returns undrawn capital to the financier when a facility settles early", () => {
+    expect(settlementPreview({ committed: "40", drawn: "16", feeBps: 0 }, "100").undrawn).toBe(24n);
   });
 });

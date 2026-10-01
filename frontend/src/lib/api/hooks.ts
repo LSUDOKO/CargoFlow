@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { apiGet } from "./client";
 import { AuditList, Config, DemoStatus, EpochList, Health, ShipmentList, ShipmentView, Stats, TelemetrySummary } from "./schemas";
 
@@ -39,3 +39,10 @@ export const useTelemetry = (id?: string) =>
 
 export const useDemoStatus = (id?: string) =>
   useQuery({ queryKey: ["demo", id], queryFn: () => apiGet(`/v1/demo/shipments/${id}`, DemoStatus), enabled: enabled(id), retry: 0 });
+
+/** Live views for many shipments at once (portals filter them by the connected wallet's role). */
+export function useShipmentViews(ids: string[]) {
+  return useQueries({
+    queries: ids.map((id) => ({ queryKey: ["shipment", id], queryFn: () => apiGet(`/v1/shipments/${id}`, ShipmentView), staleTime: 10_000 })),
+  });
+}
