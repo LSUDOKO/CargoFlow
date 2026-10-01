@@ -121,7 +121,8 @@ Every figure is reproducible with `make check`, `make bench` and `make slither`;
 | `infra/` | Hardened Dockerfile and compose stack |
 | `scripts/` | Key generation, funding, testnet deploy and explorer verification |
 | `docs/` | Architecture, runbooks, security, benchmarks, protocol knowledge base, design spec, roadmap |
-| `frontend/`, `stylus/` | Planned: dashboard and an optional Stylus evidence engine |
+| `stylus/` | Optional Rust (Stylus) evidence engine for Arbitrum Sepolia, benchmarked against a Solidity reference |
+| `frontend/` | Planned: dashboard |
 
 ## Documentation
 

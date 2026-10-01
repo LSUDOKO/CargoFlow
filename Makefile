@@ -5,7 +5,7 @@ FORGE ?= $(shell for p in "$$(command -v forge)" "$$HOME/.foundry/bin/forge" "$$
 CAST ?= $(dir $(FORGE))cast
 ENV_FILE ?= .env
 
-.PHONY: bench slither demo testnet-keys testnet-fund testnet-deploy testnet-verify ai-live anvil deploy-local demo-local zk-fixture circuits-test abi serve migrate keygen help check contracts-build contracts-test contracts-fmt contracts-fmt-check backend-test frontend-check usdg-info
+.PHONY: stylus-test stylus-check bench slither demo testnet-keys testnet-fund testnet-deploy testnet-verify ai-live anvil deploy-local demo-local zk-fixture circuits-test abi serve migrate keygen help check contracts-build contracts-test contracts-fmt contracts-fmt-check backend-test frontend-check usdg-info
 
 help: ## List commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  %-20s %s\n",$$1,$$2}'
@@ -82,6 +82,12 @@ testnet-deploy: ## Dry-run the Robinhood testnet deployment (BROADCAST=1 to send
 
 testnet-verify: ## Verify the deployed contracts on the Robinhood testnet explorer
 	@CAST=$(dir $(FORGE))cast FORGE=$(FORGE) ./scripts/verify-testnet.sh
+
+stylus-test: ## Test the Rust engine against the shared Go vectors
+	@cd stylus && cargo test -p cargoflow-engine
+
+stylus-check: ## Check the Stylus contract activates on Arbitrum Sepolia (no funds needed)
+	@cd stylus && cargo stylus check --endpoint https://arbitrum-sepolia-rpc.publicnode.com
 
 keygen: ## Generate an Ed25519 key pair for an evidence source
 	@cd backend && go run ./cmd/cargoflow keygen

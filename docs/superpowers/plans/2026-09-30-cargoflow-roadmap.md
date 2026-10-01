@@ -67,7 +67,9 @@ demonstrable state and stops for review before the next begins.
 **Blocked on:** testnet USDG for the financier (40,000) and buyer (100,000) wallets, which only the Paxos faucet can provide.
 
 ## P8 — Optional Stylus (CF-050..051)
-- [ ] Rust evidence engine on Arbitrum Sepolia + measured Solidity-vs-Stylus benchmark
+- [x] Rust (Stylus) evidence engine held to the Go vectors, Solidity reference, activation check on Arbitrum Sepolia (8.1 KB)
+- [ ] measured Solidity-vs-Stylus gas comparison: `stylus/scripts/bench.sh` is ready; waits on ~0.001 ETH of Arbitrum Sepolia for the deployer
+**Done when:** both engines are deployed on Arbitrum Sepolia and the benchmark table is published (no savings figure before that).
 
 ## P9 — Launch polish
 - [x] README with diagrams, architecture docs, runbook, changelog (screenshots wait on the frontend)

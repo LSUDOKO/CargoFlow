@@ -42,3 +42,24 @@ proof resume (0.25 to 0.34 M): roughly 1.5 M gas on top of setup, settlement and
 
 The service's recovery endpoint takes about 2 s end to end because each request starts a fresh Node process and
 loads the proving key; the proving itself is the ~1 s above.
+
+## Evidence engine: Solidity reference
+
+The Dempster-Shafer fusion kernel (`fuseEpoch`: two sensors, per-step Dempster combination, mean fused mass and
+worst conflict) as plain Solidity, `contracts/src/experimental/EvidenceEngineSol.sol`. Execution gas on the local
+EVM from `forge test --match-test test_gasByEpochSize -vv` (the call overhead of a Foundry test is included):
+
+| Readings per sensor | Gas |
+|---:|---:|
+| 8 | 51,055 |
+| 32 | 162,338 |
+| 64 | 321,534 |
+| 128 | 638,746 |
+
+Roughly 5,000 gas per aligned pair of readings. Sent as real transactions (execution only, intrinsic gas removed)
+the same call costs 40,239 / 154,025 / 307,141 / 611,945 gas, which is the figure `stylus/scripts/bench.sh`
+reports so that it is comparable with the Stylus measurement.
+
+**Stylus: not yet measured.** The Rust engine matches the same vectors and activates on Arbitrum Sepolia
+(8.1 KB), but running it needs a deployment funded with Arbitrum Sepolia ETH. Until `stylus/scripts/bench.sh` has
+produced the comparison, no savings figure is stated. See [`stylus/README.md`](../stylus/README.md).

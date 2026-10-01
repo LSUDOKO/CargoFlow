@@ -4,6 +4,10 @@ Phases follow [`docs/superpowers/plans/2026-09-30-cargoflow-roadmap.md`](docs/su
 
 ## Unreleased
 
+### P8 - Stylus (optional)
+- Rust Dempster-Shafer engine (`stylus/engine`) and Stylus contract, a Solidity reference, and shared Go-generated
+  parity vectors. Activation verified on Arbitrum Sepolia. Gas comparison harness ready; measurement pending funds.
+
 ### P7 - Testnet and hardening
 - Contracts deployed and source-verified on Robinhood Chain Testnet; per-role wallets generated and funded.
 - Reconciler that resends missing commits, pauses and releases with backoff and a retry cap; admin trigger.
