@@ -211,11 +211,12 @@ type Action struct {
 	Status     string // PENDING, SENT, CONFIRMED, FAILED
 	TxHash     string
 	Error      string
+	Attempts   int // times a FAILED action was put back in the queue
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 }
 
-const actionColumns = `id::text, shipment_id, kind, key, status, COALESCE(tx_hash,''), COALESCE(error,''), created_at, updated_at`
+const actionColumns = `id::text, shipment_id, kind, key, status, COALESCE(tx_hash,''), COALESCE(error,''), attempts, created_at, updated_at`
 
 // BeginAction registers intent to perform a chain action. The key makes it idempotent: a repeated key
 // returns the existing action with created=false, so a retry or restart never sends the transaction twice.
@@ -225,7 +226,7 @@ func (s *Store) BeginAction(ctx context.Context, shipmentID, kind, key string) (
 		INSERT INTO chain_actions (shipment_id, kind, key) VALUES ($1,$2,$3)
 		ON CONFLICT (key) DO NOTHING
 		RETURNING `+actionColumns, shipmentID, kind, key).
-		Scan(&a.ID, &a.ShipmentID, &a.Kind, &a.Key, &a.Status, &a.TxHash, &a.Error, &a.CreatedAt, &a.UpdatedAt)
+		Scan(&a.ID, &a.ShipmentID, &a.Kind, &a.Key, &a.Status, &a.TxHash, &a.Error, &a.Attempts, &a.CreatedAt, &a.UpdatedAt)
 	if err == nil {
 		return a, true, nil
 	}
@@ -240,7 +241,7 @@ func (s *Store) BeginAction(ctx context.Context, shipmentID, kind, key string) (
 func (s *Store) ActionByKey(ctx context.Context, key string) (Action, error) {
 	var a Action
 	err := s.pool.QueryRow(ctx, "SELECT "+actionColumns+" FROM chain_actions WHERE key = $1", key).
-		Scan(&a.ID, &a.ShipmentID, &a.Kind, &a.Key, &a.Status, &a.TxHash, &a.Error, &a.CreatedAt, &a.UpdatedAt)
+		Scan(&a.ID, &a.ShipmentID, &a.Kind, &a.Key, &a.Status, &a.TxHash, &a.Error, &a.Attempts, &a.CreatedAt, &a.UpdatedAt)
 	return a, mapErr(err)
 }
 
@@ -267,7 +268,7 @@ func (s *Store) FinishAction(ctx context.Context, id, status, txHash, errMsg str
 // in-flight transaction must never be sent again.
 func (s *Store) RequeueAction(ctx context.Context, id string) error {
 	tag, err := s.pool.Exec(ctx,
-		"UPDATE chain_actions SET status = 'PENDING', error = NULL, updated_at = now() WHERE id = $1::uuid AND status = 'FAILED'", id)
+		"UPDATE chain_actions SET status = 'PENDING', error = NULL, attempts = attempts + 1, updated_at = now() WHERE id = $1::uuid AND status = 'FAILED'", id)
 	if err != nil {
 		return mapErr(err)
 	}
@@ -287,7 +288,7 @@ func (s *Store) Actions(ctx context.Context, shipmentID string) ([]Action, error
 	var out []Action
 	for rows.Next() {
 		var a Action
-		if err := rows.Scan(&a.ID, &a.ShipmentID, &a.Kind, &a.Key, &a.Status, &a.TxHash, &a.Error, &a.CreatedAt, &a.UpdatedAt); err != nil {
+		if err := rows.Scan(&a.ID, &a.ShipmentID, &a.Kind, &a.Key, &a.Status, &a.TxHash, &a.Error, &a.Attempts, &a.CreatedAt, &a.UpdatedAt); err != nil {
 			return nil, err
 		}
 		out = append(out, a)

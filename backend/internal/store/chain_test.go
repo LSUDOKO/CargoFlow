@@ -225,3 +225,21 @@ func TestCursorExposesTheStoredBlockHashForReorgDetection(t *testing.T) {
 		t.Fatalf("after rewind: %+v", c)
 	}
 }
+
+func TestRequeuingCountsAttemptsAndListsRetryableActions(t *testing.T) {
+	s, id := withShipment(t)
+	ctx := context.Background()
+	a, _, _ := s.BeginAction(ctx, id, "RELEASE", "release:r")
+	if a.Attempts != 0 {
+		t.Fatalf("a new action has made no retries: %+v", a)
+	}
+	for i := 1; i <= 2; i++ {
+		_ = s.FinishAction(ctx, a.ID, "FAILED", "", "boom")
+		if err := s.RequeueAction(ctx, a.ID); err != nil {
+			t.Fatal(err)
+		}
+		if got, _ := s.ActionByKey(ctx, "release:r"); got.Attempts != i {
+			t.Fatalf("after %d requeues attempts = %d", i, got.Attempts)
+		}
+	}
+}
