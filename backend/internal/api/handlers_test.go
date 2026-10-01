@@ -448,3 +448,15 @@ func TestAdminCanTriggerAReconciliationPass(t *testing.T) {
 		t.Fatalf("%d %+v", resp.StatusCode, rep)
 	}
 }
+
+func TestStatsArePublic(t *testing.T) {
+	e := newEnv(t, nil)
+	e.onChain(t, "api-stats-1", false)
+	var st struct {
+		Total     int            `json:"total"`
+		Shipments map[string]int `json:"shipments"`
+	}
+	if resp := e.do(t, "GET", "/v1/stats", nil, nil, &st); resp.StatusCode != 200 || st.Shipments == nil {
+		t.Fatalf("%d %+v", resp.StatusCode, st)
+	}
+}

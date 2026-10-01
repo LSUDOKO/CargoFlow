@@ -65,6 +65,7 @@ func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /v1/health", s.handle(s.health))
 	mux.HandleFunc("GET /v1/config", s.handle(s.config))
+	mux.HandleFunc("GET /v1/stats", s.handle(s.stats))
 	mux.HandleFunc("POST /v1/sources", s.handle(s.admin(s.createSource)))
 	mux.HandleFunc("POST /v1/shipments", s.handle(s.admin(s.createShipment)))
 	mux.HandleFunc("POST /v1/admin/reconcile", s.handle(s.admin(s.reconcile)))
