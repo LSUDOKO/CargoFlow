@@ -3,9 +3,6 @@ package main
 import (
 	"bytes"
 	"context"
-	"crypto/ed25519"
-	"crypto/rand"
-	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -25,12 +22,9 @@ import (
 	"github.com/coder/websocket/wsjson"
 	"github.com/ethereum/go-ethereum/crypto"
 
-	"github.com/LSUDOKO/CargoFlow/backend/internal/auth"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/chain"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/chain/chaintest"
-	"github.com/LSUDOKO/CargoFlow/backend/internal/service"
-	"github.com/LSUDOKO/CargoFlow/backend/internal/simulator"
-	"github.com/LSUDOKO/CargoFlow/backend/internal/store"
+	"github.com/LSUDOKO/CargoFlow/backend/internal/hero"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/store/storetest"
 )
 
@@ -46,6 +40,13 @@ func (s *syncBuffer) Write(p []byte) (int, error) {
 	return s.b.Write(p)
 }
 func (s *syncBuffer) String() string { s.mu.Lock(); defer s.mu.Unlock(); return s.b.String() }
+
+type testLog struct{ t *testing.T }
+
+func (l testLog) Write(p []byte) (int, error) {
+	l.t.Log(strings.TrimRight(string(p), "\n"))
+	return len(p), nil
+}
 
 func usd(n int64) *big.Int { return new(big.Int).Mul(big.NewInt(n), big.NewInt(1_000_000)) }
 
@@ -116,214 +117,87 @@ func TestHeroLifecycleThroughTheRunningService(t *testing.T) {
 		t.Fatal("the service never started listening")
 	}
 
-	call := func(method, path string, body any, hdr map[string]string, dst any) int {
-		var r io.Reader
-		if body != nil {
-			b, _ := json.Marshal(body)
-			r = bytes.NewReader(b)
-		}
-		req, _ := http.NewRequest(method, base+path, r)
-		if body != nil {
-			req.Header.Set("Content-Type", "application/json")
-		}
-		for k, v := range hdr {
-			req.Header.Set(k, v)
-		}
+	exporter, financier, buyer := chain.NewSigner(ce.Keys["exporter"]), chain.NewSigner(ce.Keys["financier"]), chain.NewSigner(ce.Keys["buyer"])
+	var events struct {
+		sync.Mutex
+		n map[string]int
+	}
+	events.n = map[string]int{}
+	wsCtx, wsCancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	defer wsCancel()
+
+	exporterBefore, _ := c.USDGBalance(context.Background(), exporter.Address())
+	financierBefore, _ := c.USDGBalance(context.Background(), financier.Address())
+
+	// the demo runner is the same code `cargoflow demo` uses against any deployment
+	res, err := hero.Run(context.Background(), hero.Config{
+		APIURL: base, AdminKey: env["ADMIN_API_KEY"], Chain: c,
+		Exporter: exporter, Financier: financier, Buyer: buyer, MintTestTokens: true,
+		RefPrefix: "CF-2026-SG01-e2e", Log: testLog{t},
+		OnShipment: func(shipmentID string) { // a WebSocket client watches the whole run
+			conn, _, err := websocket.Dial(wsCtx, "ws"+strings.TrimPrefix(base, "http")+"/v1/ws?shipment="+shipmentID, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Cleanup(func() { conn.CloseNow() })
+			go func() {
+				for {
+					var ev struct{ Type string }
+					if err := wsjson.Read(wsCtx, conn, &ev); err != nil {
+						return
+					}
+					events.Lock()
+					events.n[ev.Type]++
+					events.Unlock()
+				}
+			}()
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	shipmentHex := res.ShipmentID
+	call := func(method, path string, dst any) {
+		req, _ := http.NewRequest(method, base+path, nil)
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			t.Fatal(err)
 		}
 		defer resp.Body.Close()
 		raw, _ := io.ReadAll(resp.Body)
-		if dst != nil && len(raw) > 0 {
-			if err := json.Unmarshal(raw, dst); err != nil {
-				t.Fatalf("%s %s: %v\n%s", method, path, err, raw)
-			}
+		if err := json.Unmarshal(raw, dst); err != nil {
+			t.Fatalf("%s %s: %v\n%s", method, path, err, raw)
 		}
-		if resp.StatusCode >= 400 && dst == nil {
-			t.Logf("%s %s -> %d %s", method, path, resp.StatusCode, raw)
-		}
-		return resp.StatusCode
-	}
-	adminHdr := map[string]string{"X-API-Key": env["ADMIN_API_KEY"]}
-
-	var health struct{ Status string }
-	if code := call("GET", "/v1/health", nil, nil, &health); code != 200 || health.Status != "ok" {
-		t.Fatalf("health = %d %+v", code, health)
 	}
 
-	// --- on-chain setup by the exporter and financier (their wallets, not the backend's)
-	ctxBG := context.Background()
-	exporter, financier, buyer := chain.NewSigner(ce.Keys["exporter"]), chain.NewSigner(ce.Keys["financier"]), chain.NewSigner(ce.Keys["buyer"])
-	policy := chain.Policy{MinTempX100: 200, MaxTempX100: 800, MaxEvidenceAgeSec: 1800, MaxRouteDeviationM: 25_000, MinEvidenceScore: 75, MaxConflictBps: 3000, MaxRiskBps: 3500}
-	route := []store.RoutePoint{{LatE6: 18_950_000, LonE6: 72_950_000}, {LatE6: 1_264_000, LonE6: 103_820_000}}
-	ref := fmt.Sprintf("CF-2026-SG01-e2e-%d", time.Now().UnixNano()) // unique: the test chain is shared and references are one-shot
-	commitment, _ := c.HashPolicy(ctxBG, policy)
-	refHash := crypto.Keccak256Hash([]byte(ref))
-	id, _ := c.ShipmentID(ctxBG, exporter.Address(), refHash)
-	shipmentHex := "0x" + hex.EncodeToString(id[:])
-	must := func(_ chain.TxResult, err error) {
-		t.Helper()
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-	must(c.Transact(ctxBG, exporter, "registry", "registerShipment", [32]byte(refHash), buyer.Address(),
-		[32]byte(crypto.Keccak256Hash([]byte("invoice-CF-2026-SG01.pdf"))), service.RouteCommitment(route), commitment, usd(100_000)))
-	must(c.Transact(ctxBG, exporter, "policies", "setPolicy", id, policy))
-	ms := make([]chain.MilestoneSpec, 5)
-	for i := range ms {
-		ms[i] = chain.MilestoneSpec{Allocation: usd(8_000), EvidenceThreshold: 75, CheckpointCommitment: [32]byte{byte(i + 1)}}
-	}
-	must(c.Transact(ctxBG, exporter, "controller", "createFacility", id, financier.Address(), uint16(300), ms))
-	must(c.Transact(ctxBG, financier, "usdg", "mint", financier.Address(), usd(40_000)))
-	must(c.Transact(ctxBG, financier, "usdg", "approve", c.M.Vault, usd(40_000)))
-	must(c.Transact(ctxBG, financier, "controller", "depositCapital", id))
-	must(c.Transact(ctxBG, exporter, "controller", "startTransit", id))
-	exporterBefore, _ := c.USDGBalance(ctxBG, exporter.Address())
-	financierBefore, _ := c.USDGBalance(ctxBG, financier.Address())
-
-	// --- a WebSocket client watches the whole run
-	wsCtx, wsCancel := context.WithTimeout(context.Background(), 2*time.Minute)
-	defer wsCancel()
-	conn, _, err := websocket.Dial(wsCtx, "ws"+strings.TrimPrefix(base, "http")+"/v1/ws?shipment="+shipmentHex, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer conn.CloseNow()
-	events := struct {
-		sync.Mutex
-		n map[string]int
-	}{n: map[string]int{}}
-	go func() {
-		for {
-			var ev struct{ Type string }
-			if err := wsjson.Read(wsCtx, conn, &ev); err != nil {
-				return
-			}
-			events.Lock()
-			events.n[ev.Type]++
-			events.Unlock()
-		}
-	}()
-
-	// --- register the evidence source and the shipment through the API
-	pub, priv, _ := ed25519.GenerateKey(rand.Reader)
-	if code := call("POST", "/v1/sources", map[string]any{"id": "carrier-1", "publicKey": base64.RawURLEncoding.EncodeToString(pub), "sensorIds": []string{"sensor-1", "sensor-2"}}, adminHdr, nil); code != 201 {
-		t.Fatalf("register source = %d", code)
-	}
-	if code := call("POST", "/v1/shipments", map[string]any{"shipmentId": shipmentHex, "externalRef": ref, "route": route, "maxGapSec": 1800, "minSensors": 2}, adminHdr, nil); code != 201 {
-		t.Fatalf("register shipment = %d", code)
-	}
-
-	now, _ := c.BlockTime(ctxBG)
-	t0 := int64(now) - 700
-	send := func(pts any) {
-		t.Helper()
-		body, _ := json.Marshal(map[string]any{"points": pts})
-		path := "/v1/shipments/" + shipmentHex + "/telemetry"
-		ts := time.Now().Unix()
-		req, _ := http.NewRequest("POST", base+path, bytes.NewReader(body))
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("X-Source-Id", "carrier-1")
-		req.Header.Set("X-Timestamp", strconv.FormatInt(ts, 10))
-		req.Header.Set("X-Signature", auth.Sign(priv, "POST", path, ts, body))
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode != 200 {
-			b, _ := io.ReadAll(resp.Body)
-			t.Fatalf("telemetry = %d %s", resp.StatusCode, b)
-		}
-	}
-	seg := func(sc simulator.Scenario, startStep, steps int, sensors ...string) []map[string]any {
-		pts, err := simulator.Generate(simulator.Config{Seed: 42, Scenario: sc, StartUnix: t0 + int64(startStep)*10, IntervalSec: 10, Steps: steps, StartStep: startStep, Sensors: sensors})
-		if err != nil {
-			t.Fatal(err)
-		}
-		out := make([]map[string]any, len(pts))
-		for i, p := range pts {
-			out[i] = map[string]any{"timestamp": p.Timestamp, "sensorId": p.SensorID, "temperatureX100": p.TemperatureX100, "humidityX100": p.HumidityX100,
-				"latitudeE6": p.LatitudeE6, "longitudeE6": p.LongitudeE6, "shockX100": p.ShockX100}
-		}
-		return out
-	}
-
+	// the indexer must have mirrored everything into the database and the API, without further prompting
 	type view struct {
 		Facility struct {
-			Status        string `json:"status"`
-			Drawn         string `json:"drawn"`
-			NextMilestone int    `json:"nextMilestone"`
+			Status string `json:"status"`
+			Drawn  string `json:"drawn"`
 		} `json:"facility"`
 		Milestones []struct {
 			Released      bool   `json:"released"`
 			ReleaseTxHash string `json:"releaseTxHash"`
 		} `json:"milestones"`
 	}
-	get := func() view {
-		var v view
-		call("GET", "/v1/shipments/"+shipmentHex, nil, nil, &v)
-		return v
-	}
-
-	// scenes 3 and 4: two healthy milestones, then the thermal excursion
-	send(seg(simulator.ConflictingSensors, 0, 24))
-	if v := get(); v.Facility.Status != "PAUSED" || v.Facility.Drawn != "16000000000" || v.Facility.NextMilestone != 2 {
-		t.Fatalf("after the anomaly: %+v", v.Facility)
-	}
-
-	// scene 5: the core probe keeps reporting; a zero-knowledge proof of those readings resumes the facility
-	send(seg(simulator.Normal, 24, 8, simulator.SecondarySensor))
-	var rec struct {
-		ResumeTx string `json:"resumeTx"`
-	}
-	if code := call("POST", "/v1/shipments/"+shipmentHex+"/proof", map[string]any{"sensorId": "sensor-2"}, adminHdr, &rec); code != 200 || rec.ResumeTx == "" {
-		t.Fatalf("recovery = %d %+v", code, rec)
-	}
-	if v := get(); v.Facility.Status != "ACTIVE" || v.Facility.NextMilestone != 3 {
-		t.Fatalf("after recovery: %+v", v.Facility)
-	}
-
-	// scene 6: the last two milestones
-	send(seg(simulator.Normal, 32, 16))
-	if v := get(); v.Facility.NextMilestone != 5 || v.Facility.Drawn != "40000000000" {
-		t.Fatalf("after M4 and M5: %+v", v.Facility)
-	}
-
-	// scene 7: the buyer confirms delivery and pays the invoice (their own wallet)
-	must(c.Transact(ctxBG, buyer, "controller", "markDelivered", id))
-	must(c.Transact(ctxBG, buyer, "usdg", "mint", buyer.Address(), usd(100_000)))
-	must(c.Transact(ctxBG, buyer, "usdg", "approve", c.M.Vault, usd(100_000)))
-	must(c.Transact(ctxBG, buyer, "controller", "settle", id))
-
-	// the indexer must mirror everything into the database and the API, without further prompting
 	var final view
-	deadline := time.Now().Add(20 * time.Second)
-	for time.Now().Before(deadline) {
-		final = get()
-		released := 0
+	released := 0
+	eventually(t, 30*time.Second, func() bool {
+		call("GET", "/v1/shipments/"+shipmentHex, &final)
+		released = 0
 		for _, m := range final.Milestones {
 			if m.Released && m.ReleaseTxHash != "" {
 				released++
 			}
 		}
-		if final.Facility.Status == "SETTLED" && released == 5 {
-			break
-		}
-		time.Sleep(200 * time.Millisecond)
-	}
-	released := 0
-	for _, m := range final.Milestones {
-		if m.Released && m.ReleaseTxHash != "" {
-			released++
-		}
-	}
+		return final.Facility.Status == "SETTLED" && released == 5
+	})
 	if final.Facility.Status != "SETTLED" || released != 5 {
 		t.Fatalf("the indexer did not mirror the lifecycle: status=%s released-with-tx=%d\n%+v", final.Facility.Status, released, final)
 	}
 
+	ctxBG := context.Background()
 	// the demo script's numbers, on chain
 	exporterAfter, _ := c.USDGBalance(ctxBG, exporter.Address())
 	financierAfter, _ := c.USDGBalance(ctxBG, financier.Address())
@@ -345,7 +219,7 @@ func TestHeroLifecycleThroughTheRunningService(t *testing.T) {
 		var audit struct {
 			Entries []struct{ Kind, Title string } `json:"entries"`
 		}
-		call("GET", "/v1/shipments/"+shipmentHex+"/audit?limit=2000", nil, nil, &audit)
+		call("GET", "/v1/shipments/"+shipmentHex+"/audit?limit=2000", &audit)
 		titles := map[string]bool{}
 		for _, e := range audit.Entries {
 			titles[e.Title] = true

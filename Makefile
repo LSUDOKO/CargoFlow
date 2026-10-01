@@ -4,7 +4,7 @@ FORGE ?= $(shell for p in "$$(command -v forge)" "$$HOME/.foundry/bin/forge" "$$
 	[ -n "$$p" ] && [ -x "$$p" ] && "$$p" --version 2>/dev/null | grep -q "Version:" && { echo "$$p"; break; }; done)
 CAST ?= $(dir $(FORGE))cast
 
-.PHONY: anvil deploy-local demo-local zk-fixture circuits-test abi serve migrate keygen help check contracts-build contracts-test contracts-fmt contracts-fmt-check backend-test frontend-check usdg-info
+.PHONY: bench slither demo testnet-keys testnet-fund testnet-deploy testnet-verify ai-live anvil deploy-local demo-local zk-fixture circuits-test abi serve migrate keygen help check contracts-build contracts-test contracts-fmt contracts-fmt-check backend-test frontend-check usdg-info
 
 help: ## List commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  %-20s %s\n",$$1,$$2}'
@@ -66,6 +66,21 @@ bench: ## Measure contract gas and the ZK recovery circuit on this machine
 	@cd contracts && $(FORGE) test --match-path 'test/integration/*' --gas-report 2>&1 | grep -E 'evaluateAndReleaseMilestone|commitEpoch|createFacility|depositCapital|pauseFinancing|settle|resumeWithProof'
 	@cd contracts && $(FORGE) test --match-test test_realProofResumesTheFacilityAndUnblocksM3 -vv 2>&1 | grep 'resumeWithProof gas'
 	@cd circuits && node scripts/bench.js 5
+
+demo: ## Run the hero scenario against a running backend (reads .env; ARGS="-mint" on a local mock chain, ARGS="-pace 3s" to watch live)
+	@set -a; [ -f .env ] && . ./.env; set +a; cd backend && go run ./cmd/cargoflow demo $(ARGS)
+
+testnet-keys: ## Generate a separate wallet per role into .env (never printed)
+	@CAST=$(dir $(FORGE))cast ./scripts/testnet-keys.sh
+
+testnet-fund: ## Send gas ETH from the deployer to every role wallet
+	@CAST=$(dir $(FORGE))cast ./scripts/testnet-fund.sh
+
+testnet-deploy: ## Dry-run the Robinhood testnet deployment (BROADCAST=1 to send)
+	@CAST=$(dir $(FORGE))cast FORGE=$(FORGE) ./scripts/deploy-testnet.sh
+
+testnet-verify: ## Verify the deployed contracts on the Robinhood testnet explorer
+	@CAST=$(dir $(FORGE))cast FORGE=$(FORGE) ./scripts/verify-testnet.sh
 
 keygen: ## Generate an Ed25519 key pair for an evidence source
 	@cd backend && go run ./cmd/cargoflow keygen

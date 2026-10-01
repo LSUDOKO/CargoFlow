@@ -4,6 +4,7 @@
 //	cargoflow serve     run the service (migrates the database first)
 //	cargoflow migrate   apply database migrations and exit
 //	cargoflow keygen    generate an Ed25519 key pair for an evidence source
+//	cargoflow demo      run the hero scenario against a running backend
 package main
 
 import (
@@ -54,6 +55,7 @@ const usage = `usage: cargoflow <command>
   serve     run the API, chain indexer and evidence pipeline
   migrate   apply database migrations and exit
   keygen    generate an Ed25519 key pair for an evidence source
+  demo      run the hero scenario against a running backend (flags: -mint, -pace 3s)
 `
 
 func run(ctx context.Context, args []string, getenv func(string) string, out io.Writer) error {
@@ -68,6 +70,8 @@ func run(ctx context.Context, args []string, getenv func(string) string, out io.
 		return migrate(ctx, getenv, out)
 	case "keygen":
 		return keygen(out)
+	case "demo":
+		return demo(ctx, args[1:], getenv, out)
 	default:
 		fmt.Fprint(out, usage)
 		return fmt.Errorf("unknown command %q", args[0])
