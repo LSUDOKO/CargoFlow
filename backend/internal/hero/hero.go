@@ -59,6 +59,11 @@ type Config struct {
 	// USDG the wallets must already hold 40,000 and 100,000 (from the Paxos faucet).
 	MintTestTokens bool
 
+	// AmountDivisor scales every USDG amount down (the facility, tranches, invoice and fee base) so the story can
+	// run with a small faucet drip: 2000 turns 40,000 / 100,000 into 20 / 50. Zero or one means full size. It must
+	// divide every amount into whole base units.
+	AmountDivisor int64
+
 	RefPrefix  string        // shipment reference prefix; a unique suffix is always added
 	Pace       time.Duration // pause between scenes so a person can watch
 	Log        io.Writer     // progress output; nil discards
@@ -78,6 +83,7 @@ type Result struct {
 }
 
 type runner struct {
+	div  int64
 	cfg  Config
 	c    *chain.Client
 	http *http.Client
@@ -86,6 +92,30 @@ type runner struct {
 }
 
 func usd(n int64) *big.Int { return new(big.Int).Mul(big.NewInt(n), big.NewInt(1_000_000)) }
+
+// amt converts a full-size whole-USDG amount to base units at the configured scale.
+func (r *runner) amt(n int64) *big.Int {
+	return new(big.Int).Div(usd(n), big.NewInt(r.div))
+}
+
+// label renders a full-size amount at the configured scale for log lines, e.g. "16,000" or "8".
+func (r *runner) label(n int64) string { return formatUSDG(r.amt(n)) }
+
+func validDivisor(div int64) error {
+	if div < 1 {
+		return fmt.Errorf("hero: amount divisor must be at least 1, got %d", div)
+	}
+	for _, n := range []int64{TrancheUSDG, CommittedUSDG, InvoiceUSDG, ExporterReceivedUSDG, FinancierReceivedUSDG} {
+		if (n*1_000_000)%div != 0 {
+			return fmt.Errorf("hero: divisor %d does not divide %d USDG into whole base units", div, n)
+		}
+	}
+	// the 3% fee must stay exact too
+	if (CommittedUSDG*1_000_000/div)*FeeBps%10_000 != 0 {
+		return fmt.Errorf("hero: divisor %d makes the fee inexact", div)
+	}
+	return nil
+}
 
 func (r *runner) say(format string, args ...any) {
 	if r.cfg.Log != nil {
@@ -109,7 +139,14 @@ func (r *runner) scene(ctx context.Context, format string, args ...any) error {
 // Run executes the hero scenario once. Every run registers a fresh shipment, so it can be repeated against
 // the same deployment (the "demo reset" is simply a new shipment).
 func Run(ctx context.Context, cfg Config) (Result, error) {
-	r := &runner{cfg: cfg, c: cfg.Chain, http: cfg.HTTP, t0: time.Now()}
+	div := cfg.AmountDivisor
+	if div == 0 {
+		div = 1
+	}
+	if err := validDivisor(div); err != nil {
+		return Result{}, err
+	}
+	r := &runner{div: div, cfg: cfg, c: cfg.Chain, http: cfg.HTTP, t0: time.Now()}
 	if r.http == nil {
 		r.http = &http.Client{Timeout: 3 * time.Minute}
 	}
@@ -165,7 +202,7 @@ func (r *runner) run(ctx context.Context) error {
 	}
 	ms := make([]chain.MilestoneSpec, 5)
 	for i := range ms {
-		ms[i] = chain.MilestoneSpec{Allocation: usd(TrancheUSDG), EvidenceThreshold: 75, CheckpointCommitment: [32]byte{byte(i + 1)}}
+		ms[i] = chain.MilestoneSpec{Allocation: r.amt(TrancheUSDG), EvidenceThreshold: 75, CheckpointCommitment: [32]byte{byte(i + 1)}}
 	}
 	steps := []struct {
 		label  string
@@ -175,9 +212,9 @@ func (r *runner) run(ctx context.Context) error {
 		args   []any
 	}{
 		{"registerShipment", r.cfg.Exporter, "registry", "registerShipment", []any{[32]byte(refHash), r.cfg.Buyer.Address(),
-			[32]byte(crypto.Keccak256Hash([]byte("invoice-" + ref + ".pdf"))), service.RouteCommitment(route), commitment, usd(InvoiceUSDG)}},
+			[32]byte(crypto.Keccak256Hash([]byte("invoice-" + ref + ".pdf"))), service.RouteCommitment(route), commitment, r.amt(InvoiceUSDG)}},
 		{"setPolicy", r.cfg.Exporter, "policies", "setPolicy", []any{id, policy}},
-		{"createFacility (5 x 8,000)", r.cfg.Exporter, "controller", "createFacility", []any{id, r.cfg.Financier.Address(), uint16(FeeBps), ms}},
+		{fmt.Sprintf("createFacility (5 x %s)", r.label(TrancheUSDG)), r.cfg.Exporter, "controller", "createFacility", []any{id, r.cfg.Financier.Address(), uint16(FeeBps), ms}},
 	}
 	for _, s := range steps {
 		if err := tx(s.label, s.signer, s.cname, s.method, s.args...); err != nil {
@@ -185,7 +222,7 @@ func (r *runner) run(ctx context.Context) error {
 		}
 	}
 	if r.cfg.MintTestTokens {
-		if err := tx("mint test USDG to financier", r.cfg.Financier, "usdg", "mint", r.cfg.Financier.Address(), usd(CommittedUSDG)); err != nil {
+		if err := tx("mint test USDG to financier", r.cfg.Financier, "usdg", "mint", r.cfg.Financier.Address(), r.amt(CommittedUSDG)); err != nil {
 			return err
 		}
 	}
@@ -196,8 +233,8 @@ func (r *runner) run(ctx context.Context) error {
 		method string
 		args   []any
 	}{
-		{"approve vault (financier)", r.cfg.Financier, "usdg", "approve", []any{c.M.Vault, usd(CommittedUSDG)}},
-		{"depositCapital 40,000 USDG", r.cfg.Financier, "controller", "depositCapital", []any{id}},
+		{"approve vault (financier)", r.cfg.Financier, "usdg", "approve", []any{c.M.Vault, r.amt(CommittedUSDG)}},
+		{fmt.Sprintf("depositCapital %s USDG", r.label(CommittedUSDG)), r.cfg.Financier, "controller", "depositCapital", []any{id}},
 		{"startTransit", r.cfg.Exporter, "controller", "startTransit", []any{id}},
 	} {
 		if err := tx(s.label, s.signer, s.cname, s.method, s.args...); err != nil {
@@ -267,7 +304,7 @@ func (r *runner) run(ctx context.Context) error {
 		}
 	}
 
-	if err := r.scene(ctx, "Scene 2-4 - two healthy milestones release 16,000 USDG, then the container overheats"); err != nil {
+	if err := r.scene(ctx, "Scene 2-4 - two healthy milestones release %s USDG, then the container overheats", r.label(2*TrancheUSDG)); err != nil {
 		return err
 	}
 	if err := send(simulator.ConflictingSensors, 0, 24); err != nil {
@@ -277,8 +314,8 @@ func (r *runner) run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if v.Facility.Drawn != usd(2*TrancheUSDG).String() || v.Facility.NextMilestone != 2 {
-		return fmt.Errorf("after the anomaly expected 16,000 USDG drawn and milestone 3 blocked, got drawn=%s next=%d", v.Facility.Drawn, v.Facility.NextMilestone)
+	if v.Facility.Drawn != r.amt(2*TrancheUSDG).String() || v.Facility.NextMilestone != 2 {
+		return fmt.Errorf("after the anomaly expected %s USDG drawn and milestone 3 blocked, got drawn=%s next=%d", r.label(2*TrancheUSDG), v.Facility.Drawn, v.Facility.NextMilestone)
 	}
 	r.res.PauseCount = v.Facility.PauseCount
 	r.say("  facility PAUSED with %s base units drawn; milestone 3 is blocked", v.Facility.Drawn)
@@ -308,23 +345,23 @@ func (r *runner) run(ctx context.Context) error {
 		return err
 	}
 	if _, err := waitView("all five tranches", func(v view) bool {
-		return v.Facility.NextMilestone == 5 && v.Facility.Drawn == usd(CommittedUSDG).String()
+		return v.Facility.NextMilestone == 5 && v.Facility.Drawn == r.amt(CommittedUSDG).String()
 	}); err != nil {
 		return err
 	}
 
-	if err := r.scene(ctx, "Scene 7 - the buyer confirms delivery and pays the 100,000 USDG invoice; the waterfall settles"); err != nil {
+	if err := r.scene(ctx, "Scene 7 - the buyer confirms delivery and pays the %s USDG invoice; the waterfall settles", r.label(InvoiceUSDG)); err != nil {
 		return err
 	}
 	if err := tx("markDelivered", r.cfg.Buyer, "controller", "markDelivered", id); err != nil {
 		return err
 	}
 	if r.cfg.MintTestTokens {
-		if err := tx("mint test USDG to buyer", r.cfg.Buyer, "usdg", "mint", r.cfg.Buyer.Address(), usd(InvoiceUSDG)); err != nil {
+		if err := tx("mint test USDG to buyer", r.cfg.Buyer, "usdg", "mint", r.cfg.Buyer.Address(), r.amt(InvoiceUSDG)); err != nil {
 			return err
 		}
 	}
-	if err := tx("approve vault (buyer)", r.cfg.Buyer, "usdg", "approve", c.M.Vault, usd(InvoiceUSDG)); err != nil {
+	if err := tx("approve vault (buyer)", r.cfg.Buyer, "usdg", "approve", c.M.Vault, r.amt(InvoiceUSDG)); err != nil {
 		return err
 	}
 	if err := tx("settle", r.cfg.Buyer, "controller", "settle", id); err != nil {
@@ -342,9 +379,9 @@ func (r *runner) run(ctx context.Context) error {
 	r.say("")
 	r.say("Settled in %.0fs. Exporter received %s USDG, financier %s USDG.", r.res.SettledAfterSeconds,
 		formatUSDG(r.res.ExporterReceived), formatUSDG(r.res.FinancierReceived))
-	if r.res.ExporterReceived.Cmp(usd(ExporterReceivedUSDG)) != 0 || r.res.FinancierReceived.Cmp(usd(FinancierReceivedUSDG)) != 0 {
-		return fmt.Errorf("settlement numbers are wrong: exporter %s (want %d), financier %s (want %d)",
-			formatUSDG(r.res.ExporterReceived), ExporterReceivedUSDG, formatUSDG(r.res.FinancierReceived), FinancierReceivedUSDG)
+	if r.res.ExporterReceived.Cmp(r.amt(ExporterReceivedUSDG)) != 0 || r.res.FinancierReceived.Cmp(r.amt(FinancierReceivedUSDG)) != 0 {
+		return fmt.Errorf("settlement numbers are wrong: exporter %s (want %s), financier %s (want %s)",
+			formatUSDG(r.res.ExporterReceived), r.label(ExporterReceivedUSDG), formatUSDG(r.res.FinancierReceived), r.label(FinancierReceivedUSDG))
 	}
 	return nil
 }
@@ -364,9 +401,9 @@ func (r *runner) preflight(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		if bal.Cmp(usd(need.amount)) < 0 {
-			return fmt.Errorf("the %s wallet %s holds %s USDG but the demo needs %d: fund it from the USDG faucet first",
-				need.who, need.s.Address().Hex(), formatUSDG(bal), need.amount)
+		if bal.Cmp(r.amt(need.amount)) < 0 {
+			return fmt.Errorf("the %s wallet %s holds %s USDG but the demo needs %s: fund it from the USDG faucet first (or run at a smaller scale with -divisor)",
+				need.who, need.s.Address().Hex(), formatUSDG(bal), r.label(need.amount))
 		}
 	}
 	return nil

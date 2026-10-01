@@ -55,7 +55,7 @@ const usage = `usage: cargoflow <command>
   serve     run the API, chain indexer and evidence pipeline
   migrate   apply database migrations and exit
   keygen    generate an Ed25519 key pair for an evidence source
-  demo      run the hero scenario against a running backend (flags: -mint, -pace 3s)
+  demo      run the hero scenario against a running backend (flags: -mint, -divisor 2000, -pace 3s)
 `
 
 func run(ctx context.Context, args []string, getenv func(string) string, out io.Writer) error {

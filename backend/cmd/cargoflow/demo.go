@@ -21,6 +21,7 @@ func demo(ctx context.Context, args []string, getenv func(string) string, out io
 	fs := flag.NewFlagSet("demo", flag.ContinueOnError)
 	fs.SetOutput(out)
 	mint := fs.Bool("mint", false, "mint test USDG to the financier and buyer (mock token on a local chain only)")
+	divisor := fs.Int64("divisor", 1, "scale every USDG amount down by this factor, e.g. 2000 for a 20 USDG facility and 50 USDG invoice")
 	pace := fs.Duration("pace", 0, "pause between scenes so the run can be followed live, e.g. 3s")
 	if err := fs.Parse(args); err != nil {
 		return err
@@ -76,7 +77,7 @@ func demo(ctx context.Context, args []string, getenv func(string) string, out io
 	res, err := hero.Run(ctx, hero.Config{
 		APIURL: apiURL, AdminKey: admin, Chain: client,
 		Exporter: keys["EXPORTER_KEY"], Financier: keys["FINANCIER_KEY"], Buyer: keys["BUYER_KEY"],
-		MintTestTokens: *mint, Pace: *pace, Log: out,
+		MintTestTokens: *mint, AmountDivisor: *divisor, Pace: *pace, Log: out,
 	})
 	if err != nil {
 		return err

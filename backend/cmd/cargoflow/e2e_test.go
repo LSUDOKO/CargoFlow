@@ -256,6 +256,20 @@ func TestHeroLifecycleThroughTheRunningService(t *testing.T) {
 	}
 	events.Unlock()
 
+	// The same story at 1/2000 scale (20 USDG facility, 50 USDG invoice), which is what a testnet wallet holding
+	// only a faucet drip can run. Every amount scales together, so the waterfall must come out proportionally.
+	small, err := hero.Run(context.Background(), hero.Config{
+		APIURL: base, AdminKey: env["ADMIN_API_KEY"], Chain: c,
+		Exporter: exporter, Financier: financier, Buyer: buyer, MintTestTokens: true,
+		AmountDivisor: 2000, RefPrefix: "CF-2026-SG01-small", Log: testLog{t},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if small.ExporterReceived.Int64() != 49_400_000 || small.FinancierReceived.Int64() != 20_600_000 {
+		t.Errorf("scaled run: exporter %s, financier %s base units; want 49,400,000 and 20,600,000", small.ExporterReceived, small.FinancierReceived)
+	}
+
 	// graceful shutdown
 	stopped = true
 	cancel()
