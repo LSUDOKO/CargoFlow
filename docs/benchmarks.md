@@ -17,12 +17,17 @@ Machine: 16 x AMD Ryzen 7 5700U, Node 22.22.2, Foundry 1.4.2 (solc 0.8.28, optim
 | `EvidenceRegistry.commitEpoch` | ~125,700 | per 8-reading epoch; stores roots and scores, never readings |
 | `FinancingController.evaluateAndReleaseMilestone` | 30,068 - 154,939 (median 120,751) | low end is a revert path |
 | `FinancingController.pauseFinancing` | 99,835 | |
-| `FinancingController.resumeWithProof` | **344,551** | real Groth16 verification, `RealProof.t.sol` |
+| `FinancingController.resumeWithProof` | **247,611** (344,551 under `--gas-report`) | real Groth16 verification, `RealProof.t.sol`; see the caveat below |
 | `FinancingController.resumeByVerifier` | 60,337 | trusted-verifier fallback path |
 | `FinancingController.settle` | 114,964 | pays financier and exporter |
 
-A full five-milestone run therefore costs roughly 5 epoch commits + 5 releases + the proof resume, about
-1.4 M gas on top of setup.
+**Caveat on method.** The table comes from `forge --gas-report`. In that mode the same `resumeWithProof` call reads
+344,551 gas, against 247,611 when measured with `gasleft()` inside the test with no report flag, so the table
+should be read as an upper bound, not a prediction. Real figures need a transaction on the target chain; the
+testnet deployment run (P7) will record them.
+
+A full five-milestone run therefore costs on the order of 5 epoch commits (~0.63 M) + 5 releases (~0.60 M) + the
+proof resume (0.25 to 0.34 M): roughly 1.5 M gas on top of setup, settlement and the pause.
 
 ## ZK recovery circuit (`circuits/scripts/bench.js`)
 
@@ -30,9 +35,9 @@ A full five-milestone run therefore costs roughly 5 epoch commits + 5 releases +
 |---|---|
 | Constraints | 13,494 |
 | Private / public inputs | 64 / 4 |
-| Proving time (5 runs, wasm prover, warm) | median 960 ms (min 932, max 995) |
-| Off-chain verification | 32 ms |
-| On-chain verification | part of the 344,551 gas above |
+| Proving time (5 runs, wasm prover, warm) | median 0.96 to 1.2 s across runs on this laptop |
+| Off-chain verification | ~35 ms |
+| On-chain verification | part of the `resumeWithProof` gas above |
 | Proof size | 8 field elements (256 bytes) calldata |
 
 The service's recovery endpoint takes about 2 s end to end because each request starts a fresh Node process and
