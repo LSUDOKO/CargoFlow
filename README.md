@@ -69,8 +69,11 @@ sequenceDiagram
 
 ## Live on Robinhood Chain Testnet
 
-All seven contracts are deployed and source-verified; see [`docs/runbooks/testnet.md`](docs/runbooks/testnet.md)
-for addresses, wallets and the scripted run.
+All seven contracts are deployed and source-verified, and the full story has been run on the public chain: fund,
+two milestones, thermal anomaly, pause, **Groth16 recovery proof verified on-chain**, remaining milestones,
+delivery, settlement, with the AI monitor consulted at every epoch. 22 transactions, 116 seconds, each linked on
+the explorer in [`docs/runbooks/testnet.md`](docs/runbooks/testnet.md#the-hero-run-on-the-public-testnet-done)
+(run at 1/2000 scale, 20 USDG against a 50 USDG invoice, because the faucet drip was 100 USDG).
 
 | Contract | Explorer |
 |---|---|
@@ -96,7 +99,7 @@ ENV_FILE=.env.local.example make serve &             # API + indexer + evidence 
 ENV_FILE=.env.local.example make demo ARGS="-mint -pace 2s"   # the whole story, real transactions, numbers checked
 ```
 
-The same `make demo` runs against the public testnet once the financier and buyer wallets hold USDG.
+The same `make demo` runs against the public testnet (`ARGS="-divisor 2000"` fits a 100 USDG faucet drip).
 
 ## Measured, not claimed
 

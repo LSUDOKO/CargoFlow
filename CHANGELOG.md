@@ -9,6 +9,8 @@ Phases follow [`docs/superpowers/plans/2026-09-30-cargoflow-roadmap.md`](docs/su
   parity vectors. Activation verified on Arbitrum Sepolia. Gas comparison harness ready; measurement pending funds.
 
 ### P7 - Testnet and hardening
+- Hero run completed on Robinhood Chain Testnet with real USDG, the on-chain Groth16 verifier and the AI monitor; scaled
+  runs via `-divisor`.
 - Contracts deployed and source-verified on Robinhood Chain Testnet; per-role wallets generated and funded.
 - Reconciler that resends missing commits, pauses and releases with backoff and a retry cap; admin trigger.
 - `cargoflow demo` and a reusable hero runner that checks the final numbers; used by the end-to-end test.
