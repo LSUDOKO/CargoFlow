@@ -45,7 +45,7 @@ demonstrable state and stops for review before the next begins.
 - [x] REST API + WebSocket hub, rate limiting, strict decoding, startup role verification
 - [x] Dockerfile and compose stack; CI job running the integration and end-to-end tests
 **Done when:** API + indexer drive a full local lifecycle against anvil. (`cmd/cargoflow/e2e_test.go`)
-**Deferred to P7:** background reconciler for failed chain actions; recovery proving off the request path.
+**Deferred to P7:** recovery proving off the request path. (The reconciler for failed chain actions landed in P7.)
 
 ## P5 — AI monitor (CF-040..041)
 - [x] output schema, guardrails, prompt-injection tests, LLM adapter (Groq) + deterministic fallback
@@ -58,6 +58,7 @@ demonstrable state and stops for review before the next begins.
 **Done when:** a judge can follow the whole lifecycle without opening code.
 
 ## P7 — Testnet and hardening (CF-060..063)
+- [x] reconciler for failed chain actions (backoff, retry cap, admin trigger)
 - [ ] deploy + explorer verification on Robinhood Testnet
 - [ ] full hero E2E script, demo reset
 - [ ] Slither, measured gas + proof benchmarks

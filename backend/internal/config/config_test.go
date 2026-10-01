@@ -174,3 +174,25 @@ func TestInvalidAISettingsAreRejected(t *testing.T) {
 		})
 	}
 }
+
+func TestReconcileIntervalDefaultsParsesAndCanBeDisabled(t *testing.T) {
+	c, err := config.Load(env(valid()))
+	if err != nil || c.ReconcileInterval != 30*time.Second {
+		t.Fatalf("default: %+v %v", c.ReconcileInterval, err)
+	}
+	e := valid()
+	e["RECONCILE_INTERVAL"] = "5s"
+	if c, err = config.Load(env(e)); err != nil || c.ReconcileInterval != 5*time.Second {
+		t.Fatalf("%v %v", c.ReconcileInterval, err)
+	}
+	e["RECONCILE_INTERVAL"] = "0s"
+	if c, err = config.Load(env(e)); err != nil || c.ReconcileInterval != 0 {
+		t.Fatalf("0s must disable the loop: %v %v", c.ReconcileInterval, err)
+	}
+	for _, bad := range []string{"soon", "-5s"} {
+		e["RECONCILE_INTERVAL"] = bad
+		if _, err := config.Load(env(e)); err == nil || !strings.Contains(err.Error(), "RECONCILE_INTERVAL") {
+			t.Fatalf("accepted %q: %v", bad, err)
+		}
+	}
+}

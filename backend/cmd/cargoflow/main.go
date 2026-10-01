@@ -167,6 +167,11 @@ func serve(ctx context.Context, getenv func(string) string, out io.Writer) error
 		C: client, Store: st, Name: "main", StartBlock: cfg.StartBlock, Confirmations: cfg.Confirmations,
 		Poll: cfg.IndexerPoll, Sink: svc.OnChainEvents, Log: log,
 	}
+	if cfg.ReconcileInterval > 0 {
+		go svc.RunReconciler(ctx, cfg.ReconcileInterval)
+	} else {
+		log.Warn("reconciler disabled: failed chain actions will not be retried automatically")
+	}
 	indexerDone := make(chan error, 1)
 	go func() { indexerDone <- idx.Run(ctx) }()
 

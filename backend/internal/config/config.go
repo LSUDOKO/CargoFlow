@@ -43,6 +43,9 @@ type Config struct {
 	Confirmations  uint64
 	IndexerPoll    time.Duration
 
+	// ReconcileInterval is how often failed chain actions are retried; zero disables the loop.
+	ReconcileInterval time.Duration
+
 	WorkerKey  Key // commits evidence epochs (EVIDENCE_VERIFIER_ROLE)
 	MonitorKey Key // requests pauses (MONITOR_ROLE); no other authority
 	ManagerKey Key // releases milestones, starts transit, submits recovery proofs (FACILITY_MANAGER_ROLE)
@@ -137,6 +140,16 @@ func Load(getenv func(string) string) (Config, error) {
 			fail("INDEXER_POLL", "must be a positive duration such as 2s or 500ms")
 		} else {
 			c.IndexerPoll = d
+		}
+	}
+
+	c.ReconcileInterval = 30 * time.Second
+	if raw := strings.TrimSpace(getenv("RECONCILE_INTERVAL")); raw != "" {
+		d, err := time.ParseDuration(raw)
+		if err != nil || d < 0 {
+			fail("RECONCILE_INTERVAL", "must be a non-negative duration such as 30s (0s disables)")
+		} else {
+			c.ReconcileInterval = d
 		}
 	}
 

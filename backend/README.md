@@ -46,6 +46,7 @@ The image compiles the circuit at build time and runs as a non-root user on a re
 | `SALT_SECRET` | yes (16+ chars) | derives the private per-reading salts behind every committed reading |
 | `WORKER_KEY`, `MONITOR_KEY`, `MANAGER_KEY` | yes | the three role keys; **use three different wallets** |
 | `GROQ_API_KEY`, `GROQ_MODEL`, `AI_TIMEOUT`, `AI_MIN_CONFIDENCE` | no | enable and tune the [AI monitor](#ai-monitor); without a key the policy gate decides alone |
+| `RECONCILE_INTERVAL` | no | how often failed chain actions are retried (default `30s`, `0s` disables) |
 | `HTTP_ADDR`, `LOG_LEVEL`, `CORS_ORIGINS`, `START_BLOCK`, `CONFIRMATIONS`, `INDEXER_POLL`, `CIRCUITS_DIR` | no | see `.env.example` |
 
 Every problem in the configuration is reported at once, weak secrets are rejected, and secrets cannot be
@@ -138,6 +139,9 @@ the floor and the smart contracts decide what is legal.
 - **Idempotent chain actions.** Every transaction goes through a Postgres outbox keyed by intent
   (`commit:<epoch>`, `release:<shipment>:<milestone>:<seq>`, `pause:<epoch>`, ...). A retry or a restart never
   sends one twice, and contract reverts that mean "already done" count as success.
+- **Self-healing.** The reconciler compares the newest evaluated epoch's recorded decision with the chain and
+  resends only what is missing (never into a paused facility, never a milestone the chain shows released), always
+  through the idempotent outbox.
 - **Safety before evidence.** A pause does not wait for the evidence commit to succeed.
 - **Nothing is evaluated for an inactive facility.** Epochs seen while the facility is not active (or is paused)
   are recorded as observations, never committed, so they cannot release capital later.
@@ -151,9 +155,10 @@ the floor and the smart contracts decide what is legal.
 
 ## Known limitations
 
-- **Failed chain actions are not retried automatically.** A failed action is recorded `FAILED` in
-  `chain_actions` with its error and is retried only if the same intent is triggered again. A background
-  reconciler is planned for the testnet-hardening phase.
+- **Failed chain actions are retried, not forever.** The reconciler (every `RECONCILE_INTERVAL`, or on demand via
+  `POST /v1/admin/reconcile`) resends a missing commit, pause or release with a growing backoff and gives up after
+  5 attempts; given-up actions are reported (`gaveUp`) and logged for an operator, who can reset one with
+  `UPDATE chain_actions SET attempts = 0 WHERE key = '...'` after fixing the cause.
 - **Reorgs rewind stored events, not everything derived from them.** `MILESTONE_RELEASED` mirrors (`released`
   flags in `financing_milestones`) are not un-set after a reorg; the milestone view reads the facility cursor
   from the chain so it stays correct regardless.
