@@ -72,7 +72,7 @@ export function ShipmentDashboard({ id, compact }: { id: string; compact?: boole
               {connected ? "Live" : "Reconnecting"}
             </span>
           </div>
-          <h1 className="mt-3 font-display text-[clamp(1.8rem,4vw,3rem)] leading-tight font-bold tracking-tight break-all">
+          <h1 className={`mt-3 font-display leading-tight font-bold tracking-tight [overflow-wrap:anywhere] ${compact ? "text-[clamp(1.6rem,2.6vw,2.2rem)]" : "text-[clamp(1.8rem,4vw,3rem)]"}`}>
             {v ? v.shipment.externalRef : <Skeleton className="h-10 w-80 bg-paper/15" />}
           </h1>
           {v && (
