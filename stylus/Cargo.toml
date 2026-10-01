@@ -1,8 +1,33 @@
-[workspace]
-resolver = "2"
-members = ["engine"]
-
-[workspace.package]
+[package]
+name = "cargoflow-evidence-stylus"
+description = "Stylus (Rust/WASM) EvidenceEngine: the Dempster-Shafer kernel as an Arbitrum contract"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
+
+[dependencies]
+cargoflow-engine = { path = "engine" }
+stylus-sdk = "0.10"
+alloy-sol-types = "1"
+
+[features]
+export-abi = ["stylus-sdk/export-abi"]
+contract-client-gen = []
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[[bin]]
+name = "export-abi"
+path = "src/main.rs"
+required-features = ["export-abi"]
+
+[profile.release]
+codegen-units = 1
+strip = true
+lto = true
+panic = "abort"
+opt-level = 3
+
+[workspace]
+members = ["engine"]

@@ -1,9 +1,9 @@
 [package]
 name = "cargoflow-engine"
 description = "Dependency-free fixed-point Dempster-Shafer kernel shared by the Stylus contract and its tests"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
 
 [dev-dependencies]
 serde = { version = "1", features = ["derive"] }
