@@ -268,6 +268,16 @@ func (s *Server) proof(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+// reconcile runs one reconciliation pass on demand and returns what it did.
+func (s *Server) reconcile(w http.ResponseWriter, r *http.Request) error {
+	rep, err := s.c.Service.Reconcile(r.Context())
+	if err != nil {
+		return err
+	}
+	writeJSON(w, http.StatusOK, rep)
+	return nil
+}
+
 func (s *Server) epochs(w http.ResponseWriter, r *http.Request) error {
 	eps, err := s.c.Service.Epochs(r.Context(), r.PathValue("id"))
 	if err != nil {

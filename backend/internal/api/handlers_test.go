@@ -59,7 +59,7 @@ func TestHealthAndPublicConfig(t *testing.T) {
 func TestAdminEndpointsRequireTheAdminKey(t *testing.T) {
 	e := newEnv(t, nil)
 	for _, tc := range []struct{ method, path string }{
-		{"POST", "/v1/sources"}, {"POST", "/v1/shipments"}, {"POST", "/v1/shipments/0x" + strings.Repeat("a", 64) + "/proof"},
+		{"POST", "/v1/sources"}, {"POST", "/v1/shipments"}, {"POST", "/v1/admin/reconcile"}, {"POST", "/v1/shipments/0x" + strings.Repeat("a", 64) + "/proof"},
 	} {
 		for name, h := range map[string]map[string]string{"no key": nil, "wrong key": {"X-API-Key": "definitely-not-the-key-0123"}} {
 			resp := e.do(t, tc.method, tc.path, map[string]any{}, h, nil)
@@ -432,5 +432,19 @@ func TestWebSocketStreamsLiveEvidenceEventsThroughTheFullMiddlewareChain(t *test
 		if !seen[want] {
 			t.Errorf("never received %s (got %v)", want, seen)
 		}
+	}
+}
+
+func TestAdminCanTriggerAReconciliationPass(t *testing.T) {
+	e := newEnv(t, nil)
+	e.onChain(t, "api-reconcile-1", true)
+	var rep struct {
+		Shipments int      `json:"shipments"`
+		Retried   []string `json:"retried"`
+		GaveUp    []string `json:"gaveUp"`
+	}
+	resp := e.do(t, "POST", "/v1/admin/reconcile", map[string]any{}, map[string]string{"X-API-Key": adminKey}, &rep)
+	if resp.StatusCode != 200 || rep.Retried == nil || rep.GaveUp == nil {
+		t.Fatalf("%d %+v", resp.StatusCode, rep)
 	}
 }
