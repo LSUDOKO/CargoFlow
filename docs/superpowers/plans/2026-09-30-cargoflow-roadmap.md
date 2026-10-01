@@ -59,15 +59,16 @@ demonstrable state and stops for review before the next begins.
 
 ## P7 — Testnet and hardening (CF-060..063)
 - [x] reconciler for failed chain actions (backoff, retry cap, admin trigger)
-- [ ] deploy + explorer verification on Robinhood Testnet
-- [ ] full hero E2E script, demo reset
-- [ ] Slither, measured gas + proof benchmarks
-- [ ] Vercel (frontend) and Railway (backend + Postgres) hosting
+- [x] deploy + explorer verification on Robinhood Testnet (7 contracts, per-role wallets, backend boots against it)
+- [x] full hero E2E script (`cargoflow demo`, shared with the e2e test), demo reset (every run is a fresh shipment)
+- [x] Slither triage, measured gas + proof benchmarks
+- [ ] Vercel (frontend) and Railway (backend + Postgres) hosting: waits on the frontend and on the operator's accounts
 **Done when:** the hero run completes on public testnet and is reproducible.
+**Blocked on:** testnet USDG for the financier (40,000) and buyer (100,000) wallets, which only the Paxos faucet can provide.
 
 ## P8 — Optional Stylus (CF-050..051)
 - [ ] Rust evidence engine on Arbitrum Sepolia + measured Solidity-vs-Stylus benchmark
 
 ## P9 — Launch polish
-- [ ] README with diagrams + screenshots, architecture docs, demo script
+- [x] README with diagrams, architecture docs, runbook, changelog (screenshots wait on the frontend)
 - [ ] tags/releases, repo topics and description, roadmap issues
