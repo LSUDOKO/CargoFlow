@@ -31,7 +31,7 @@ backend-test: ## Run Go tests (skipped until backend exists)
 	@if [ -f backend/go.mod ]; then cd backend && go vet ./... && go test ./...; else echo "backend: not initialized, skipping"; fi
 
 frontend-check: ## Lint, typecheck, build frontend (skipped until it exists)
-	@if [ -f frontend/package.json ]; then cd frontend && pnpm lint && pnpm typecheck && pnpm build; else echo "frontend: not initialized, skipping"; fi
+	@if [ -f frontend/package.json ]; then cd frontend && pnpm lint && pnpm typecheck && pnpm test && pnpm build; else echo "frontend: not initialized, skipping"; fi
 
 anvil: ## Start a local chain on :8545 (foreground)
 	@$(dir $(FORGE))anvil

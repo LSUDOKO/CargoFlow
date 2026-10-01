@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+/* CargoFlow design tokens. Tailwind exposes each colour as bg-*, text-*, border-* … */
+@theme {
+  --color-ink: #0b1b2b;
+  --color-ink-2: #13293d;
+  --color-ink-3: #1d3a55;
+  --color-paper: #f7f9f4;
+  --color-signal: #c6f432;
+  --color-signal-2: #b2e01c;
+  --color-verified: #00c46a;
+  --color-alert: #ffb020;
+  --color-danger: #e5484d;
+  --color-slate: #5b6b7b;
+  --color-line: #dce3da;
+  --color-mist: #eef2ea;
+
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+
+  --radius-card: 1.75rem;
+  --shadow-card: 0 1px 0 rgb(11 27 43 / 0.04), 0 12px 32px -12px rgb(11 27 43 / 0.18);
+  --shadow-lift: 0 2px 0 rgb(11 27 43 / 0.06), 0 24px 48px -16px rgb(11 27 43 / 0.28);
+
+  --animate-rise: rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-pulse-dot: pulse-dot 1.6s ease-in-out infinite;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(0 196 106 / 0.5); }
+  50% { box-shadow: 0 0 0 6px rgb(0 196 106 / 0); }
+}
+
+@layer base {
+  html {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+  body {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.02em; }
+  :focus-visible { outline: 3px solid var(--color-signal); outline-offset: 2px; border-radius: 8px; }
+  ::selection { background: var(--color-signal); color: var(--color-ink); }
+}
+
+@layer components {
+  /* Highlighted keyword, Robinhood-style marker */
+  .mark {
+    background: var(--color-signal);
+    color: var(--color-ink);
+    padding: 0 0.14em;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+  .tabular { font-variant-numeric: tabular-nums; }
+  .container-page { width: 100%; max-width: 80rem; margin-inline: auto; padding-inline: 1rem; }
+  @media (min-width: 768px) { .container-page { padding-inline: 2rem; } }
+  .grid-bg {
+    background-image:
+      linear-gradient(to right, rgb(11 27 43 / 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(11 27 43 / 0.06) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+}
