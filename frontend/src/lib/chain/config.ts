@@ -13,7 +13,11 @@ export const robinhoodTestnet = defineChain({
   testnet: true,
 });
 
-export const supportedChains = [robinhoodTestnet, anvil] as const;
+/** The local development chain (anvil). Its RPC is configurable so tests can run on their own port. */
+const localRpc = process.env.NEXT_PUBLIC_LOCAL_RPC_URL ?? "http://127.0.0.1:8545";
+export const localChain = defineChain({ ...anvil, rpcUrls: { default: { http: [localRpc] } } });
+
+export const supportedChains = [robinhoodTestnet, localChain] as const;
 export type SupportedChainId = (typeof supportedChains)[number]["id"];
 
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ?? "";
@@ -51,7 +55,7 @@ if (e2e) for (const a of E2E_ACCOUNTS) connectors.push(e2eConnector(a.id, a.name
 export const wagmiConfig = createConfig({
   chains: supportedChains,
   connectors,
-  transports: { [robinhoodTestnet.id]: http(), [anvil.id]: http("http://127.0.0.1:8545") },
+  transports: { [robinhoodTestnet.id]: http(), [localChain.id]: http(localRpc) },
   ssr: true,
 });
 

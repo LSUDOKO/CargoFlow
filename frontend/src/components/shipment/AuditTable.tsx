@@ -29,7 +29,8 @@ export function AuditTable({ entries, chainId }: { entries: AuditEntry[]; chainI
       <div className="overflow-x-auto pb-1">
         <Tabs label="Filter the audit trail" tabs={filters.map((x) => ({ ...x, count: counts[x.id] }))} value={f} onChange={setF} />
       </div>
-      <ul id={`panel-${f}`} role="tabpanel" aria-labelledby={`tab-${f}`} className="mt-4 divide-y divide-line">
+      <div id={`panel-${f}`} role="tabpanel" aria-labelledby={`tab-${f}`}>
+      <ul className="mt-4 divide-y divide-line">
         {rows.map((e, i) => (
           <li key={`${e.time}-${i}`} className="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:gap-4">
             <time className="w-20 shrink-0 font-mono text-xs text-slate" dateTime={e.time}>{new Date(e.time).toLocaleTimeString()}</time>
@@ -40,6 +41,7 @@ export function AuditTable({ entries, chainId }: { entries: AuditEntry[]; chainI
         ))}
         {rows.length === 0 && <li className="py-6 text-slate">Nothing recorded in this category yet.</li>}
       </ul>
+      </div>
     </div>
   );
 }

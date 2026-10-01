@@ -19,9 +19,9 @@ export function ProofCard({ epochs, audit, chainId, paused }: { epochs: EpochSum
       <p className="mt-1 text-sm text-paper/75">
         Eight hidden readings from milestone {proven.milestoneIndex + 1} were proven to sit inside the agreed band. None of them were revealed.
       </p>
-      <div className="mt-3 flex flex-wrap gap-2 [&>span]:bg-paper/10 [&>span]:text-paper">
-        <HashBadge value={proven.root} label="root" />
-        {resume?.txHash && <HashBadge value={resume.txHash} kind="tx" chainId={chainId} label="resume" />}
+      <div className="mt-3 flex flex-wrap gap-2">
+        <HashBadge value={proven.root} label="root" onDark />
+        {resume?.txHash && <HashBadge value={resume.txHash} kind="tx" chainId={chainId} label="resume" onDark />}
       </div>
     </div>
   );

@@ -32,6 +32,7 @@ circuits/keys/*.ptau
 # local deployment artifacts
 contracts/deployments/local.json
 contracts/deployments/test-*.json
+contracts/deployments/e2e.json
 
 # agent workspace
 .superpowers/

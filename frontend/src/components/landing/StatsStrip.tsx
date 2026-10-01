@@ -11,7 +11,7 @@ export function StatsStrip() {
   const items = [
     { value: data?.total, label: "shipments under watch", color: "bg-ink text-paper", rib: "bg-paper/10" },
     { value: data ? active : undefined, label: "facilities in transit", color: "bg-signal text-ink", rib: "bg-ink/10" },
-    { value: data?.epochsCommitted, label: "evidence epochs committed on-chain", color: "bg-[#0E6E8C] text-paper", rib: "bg-paper/12" },
+    { value: data?.epochsCommitted, label: "evidence epochs committed on-chain", color: "bg-[#0A5A73] text-paper", rib: "bg-paper/12" },
     { value: data?.proofsVerified, label: "recoveries proven with zero knowledge", color: "bg-alert text-ink", rib: "bg-ink/10" },
   ];
   return (
@@ -29,7 +29,7 @@ export function StatsStrip() {
                 {isError || it.value === undefined ? "—" : it.value.toLocaleString()}
               </p>
             )}
-            <p className="relative mt-2 max-w-[13rem] text-sm leading-snug font-medium opacity-85">{it.label}</p>
+            <p className="relative mt-2 max-w-[13rem] text-sm leading-snug font-medium">{it.label}</p>
           </li>
         ))}
       </ul>

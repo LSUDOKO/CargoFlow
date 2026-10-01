@@ -66,7 +66,7 @@ export function ShipmentDashboard({ id, compact }: { id: string; compact?: boole
       <div className="flex flex-col gap-5 rounded-[var(--radius-card)] bg-ink p-6 text-paper md:p-8 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3">
-            {v ? <StatusPill status={v.facility?.status ?? v.shipment.status} /> : <Skeleton className="h-6 w-20 bg-paper/15" />}
+            {v ? <StatusPill status={v.facility?.status ?? v.shipment.status} onDark /> : <Skeleton className="h-6 w-20 bg-paper/15" />}
             <span className="inline-flex items-center gap-2 text-xs font-semibold text-paper/70">
               <span className={`h-2 w-2 rounded-full ${connected ? "animate-pulse-dot bg-verified" : "bg-slate"}`} aria-hidden="true" />
               {connected ? "Live" : "Reconnecting"}
@@ -76,11 +76,11 @@ export function ShipmentDashboard({ id, compact }: { id: string; compact?: boole
             {v ? v.shipment.externalRef : <Skeleton className="h-10 w-80 bg-paper/15" />}
           </h1>
           {v && (
-            <div className="mt-3 flex flex-wrap gap-2 text-sm [&>span]:bg-paper/10 [&>span]:text-paper">
-              <HashBadge value={v.shipment.id} label="id" />
-              <HashBadge value={v.shipment.exporter} kind="address" chainId={chainId} label="exporter" />
-              {v.facility?.financier && <HashBadge value={v.facility.financier} kind="address" chainId={chainId} label="financier" />}
-              <HashBadge value={v.shipment.buyer} kind="address" chainId={chainId} label="buyer" />
+            <div className="mt-3 flex flex-wrap gap-2 text-sm">
+              <HashBadge value={v.shipment.id} label="id" onDark />
+              <HashBadge value={v.shipment.exporter} kind="address" chainId={chainId} label="exporter" onDark />
+              {v.facility?.financier && <HashBadge value={v.facility.financier} kind="address" chainId={chainId} label="financier" onDark />}
+              <HashBadge value={v.shipment.buyer} kind="address" chainId={chainId} label="buyer" onDark />
             </div>
           )}
         </div>
