@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="CargoFlow">
+  <rect width="64" height="64" rx="16" fill="#0B1B2B"/>
+  <!-- container body -->
+  <rect x="11" y="17" width="42" height="30" rx="4" fill="#13293D" stroke="#C6F432" stroke-width="2.5"/>
+  <!-- corrugation ribs -->
+  <path d="M19 22v20M45 22v20" stroke="#5B6B7B" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- the middle ribs interlock as a chain link -->
+  <rect x="23.5" y="23" width="10" height="18" rx="5" fill="none" stroke="#C6F432" stroke-width="3"/>
+  <rect x="30.5" y="23" width="10" height="18" rx="5" fill="none" stroke="#C6F432" stroke-width="3"/>
+</svg>

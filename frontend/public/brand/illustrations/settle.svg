@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="The invoice settles and the payment splits">
+  <rect x="62" y="28" width="116" height="140" rx="10" fill="#F7F9F4" stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M82 58h56M82 78h76M82 98h40" stroke="#5B6B7B" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="146" cy="132" r="20" fill="#C6F432" stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M137 132l6 6 12-12" fill="none" stroke="#0B1B2B" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M120 168v16M120 184l-48 22M120 184l48 22" fill="none" stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <g stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="66" cy="212" rx="22" ry="7" fill="#00C46A"/>
+    <ellipse cx="174" cy="212" rx="22" ry="7" fill="#FFB020"/><ellipse cx="174" cy="204" rx="22" ry="7" fill="#FFB020"/>
+  </g>
+</svg>

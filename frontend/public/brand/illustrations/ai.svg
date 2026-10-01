@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="An AI monitor watching a telemetry chart">
+  <rect x="30" y="112" width="180" height="92" rx="12" fill="#F7F9F4" stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M30 176h180" stroke="#DCE3DA" stroke-width="4"/>
+  <path d="M46 172l24-14 22 8 22-18 16 6 14-34 14 40 16-10 18 6" fill="none" stroke="#00C46A" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="144" cy="124" r="8" fill="#FFB020" stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M120 100V82" stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="78" y="30" width="84" height="54" rx="27" fill="#13293D" stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="120" cy="57" r="16" fill="#C6F432" stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="120" cy="57" r="6" fill="#0B1B2B"/>
+  <circle cx="125" cy="52" r="2.5" fill="#F7F9F4"/>
+</svg>
