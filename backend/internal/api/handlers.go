@@ -127,17 +127,26 @@ type shipmentRequest struct {
 	MinSensors  int                `json:"minSensors"`
 }
 
+// input validates the request shape and converts it for the service.
+func (req shipmentRequest) input() (service.ShipmentInput, error) {
+	if len(req.Route) > 256 {
+		return service.ShipmentInput{}, ErrBadRequest("a route may have at most 256 waypoints")
+	}
+	return service.ShipmentInput{
+		ShipmentID: req.ShipmentID, ExternalRef: req.ExternalRef, Route: req.Route, MaxGapSec: req.MaxGapSec, MinSensors: req.MinSensors,
+	}, nil
+}
+
 func (s *Server) createShipment(w http.ResponseWriter, r *http.Request) error {
 	var req shipmentRequest
 	if err := decodeJSON(r, &req); err != nil {
 		return err
 	}
-	if len(req.Route) > 256 {
-		return ErrBadRequest("a route may have at most 256 waypoints")
+	in, err := req.input()
+	if err != nil {
+		return err
 	}
-	sh, err := s.c.Service.RegisterShipment(r.Context(), service.ShipmentInput{
-		ShipmentID: req.ShipmentID, ExternalRef: req.ExternalRef, Route: req.Route, MaxGapSec: req.MaxGapSec, MinSensors: req.MinSensors,
-	})
+	sh, err := s.c.Service.RegisterShipment(r.Context(), in)
 	if err != nil {
 		return err
 	}

@@ -57,6 +57,12 @@ type env struct {
 
 func newEnv(t *testing.T, prover proof.Prover, cors ...string) *env {
 	t.Helper()
+	return newEnvWith(t, prover, nil, cors...)
+}
+
+// newEnvWith is newEnv with a hook that adjusts the API configuration before the server is built.
+func newEnvWith(t *testing.T, prover proof.Prover, tune func(*api.Config), cors ...string) *env {
+	t.Helper()
 	ce := chaintest.Start(t)
 	m, err := chain.LoadManifest(ce.ManifestPath)
 	if err != nil {
@@ -79,10 +85,14 @@ func newEnv(t *testing.T, prover proof.Prover, cors ...string) *env {
 		Store: st, Chain: c, Hub: hub, Prover: prover,
 		Worker: sg("worker"), Monitor: sg("monitor"), Manager: e.mgr, SaltSecret: []byte("api test operator secret"),
 	})
-	server := api.NewServer(api.Config{
+	cfg := api.Config{
 		Service: e.svc, Store: st, Chain: c, Hub: hub, AdminKey: adminKey, CORSOrigins: cors,
 		Verifier: &auth.Verifier{Lookup: st.GetSource, Now: nowFunc, MaxSkew: 5 * 60 * 1e9},
-	})
+	}
+	if tune != nil {
+		tune(&cfg)
+	}
+	server := api.NewServer(cfg)
 	e.srv = httptest.NewServer(server.Handler())
 	t.Cleanup(e.srv.Close)
 	e.sourcePub, e.sourcePriv, _ = ed25519.GenerateKey(rand.Reader)

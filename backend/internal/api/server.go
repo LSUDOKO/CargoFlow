@@ -37,6 +37,7 @@ type Config struct {
 
 	TelemetryPerMinute int // per authenticated source; default 600
 	AdminPerMinute     int // default 120
+	MirrorPerMinute    int // public shipment mirroring, per client address; default 30
 	Now                func() time.Time
 }
 
@@ -57,6 +58,9 @@ func NewServer(c Config) *Server {
 	if c.AdminPerMinute == 0 {
 		c.AdminPerMinute = 120
 	}
+	if c.MirrorPerMinute == 0 {
+		c.MirrorPerMinute = 30
+	}
 	return &Server{c: c, limiter: newLimiter(c.Now)}
 }
 
@@ -68,6 +72,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /v1/stats", s.handle(s.stats))
 	mux.HandleFunc("POST /v1/sources", s.handle(s.admin(s.createSource)))
 	mux.HandleFunc("POST /v1/shipments", s.handle(s.admin(s.createShipment)))
+	mux.HandleFunc("POST /v1/shipments/mirror", s.handle(s.mirror))
 	mux.HandleFunc("POST /v1/admin/reconcile", s.handle(s.admin(s.reconcile)))
 	mux.HandleFunc("GET /v1/shipments", s.handle(s.listShipments))
 	mux.HandleFunc("GET /v1/shipments/{id}", s.handle(s.getShipment))

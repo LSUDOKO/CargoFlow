@@ -15,6 +15,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/LSUDOKO/CargoFlow/backend/internal/api"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/simulator"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/telemetry"
 )
@@ -458,5 +459,40 @@ func TestStatsArePublic(t *testing.T) {
 	}
 	if resp := e.do(t, "GET", "/v1/stats", nil, nil, &st); resp.StatusCode != 200 || st.Shipments == nil {
 		t.Fatalf("%d %+v", resp.StatusCode, st)
+	}
+}
+
+func TestMirrorIsPublicChainVerifiedAndIdempotent(t *testing.T) {
+	e := newEnv(t, nil)
+	id := e.onChain(t, "api-mirror-1", true)
+	body := map[string]any{"shipmentId": idHex(id), "externalRef": "api-mirror-1", "maxGapSec": 1800, "minSensors": 2}
+	if resp := e.do(t, "POST", "/v1/shipments/mirror", body, nil, nil); resp.StatusCode != http.StatusCreated {
+		t.Fatalf("first mirror = %d", resp.StatusCode)
+	}
+	var again struct {
+		ID string `json:"id"`
+	}
+	if resp := e.do(t, "POST", "/v1/shipments/mirror", body, nil, &again); resp.StatusCode != http.StatusOK || again.ID != idHex(id) {
+		t.Fatalf("repeat mirror = %d %+v, want 200 with the existing shipment", resp.StatusCode, again)
+	}
+	other := e.onChain(t, "api-mirror-2", true)
+	bad := map[string]any{"shipmentId": idHex(other), "externalRef": "not-the-reference"}
+	if resp := e.do(t, "POST", "/v1/shipments/mirror", bad, nil, nil); resp.StatusCode < 400 || resp.StatusCode >= 500 {
+		t.Fatalf("a reference the chain does not confirm = %d, want 4xx", resp.StatusCode)
+	}
+	if resp := e.do(t, "GET", "/v1/shipments/"+idHex(other), nil, nil, nil); resp.StatusCode != http.StatusNotFound {
+		t.Fatalf("a refused mirror must store nothing, got %d", resp.StatusCode)
+	}
+}
+
+func TestMirrorIsRateLimitedPerClient(t *testing.T) {
+	e := newEnvWith(t, nil, func(c *api.Config) { c.MirrorPerMinute = 2 })
+	body := map[string]any{"shipmentId": "0x" + strings.Repeat("ab", 32), "externalRef": "x"}
+	var codes []int
+	for i := 0; i < 3; i++ {
+		codes = append(codes, e.do(t, "POST", "/v1/shipments/mirror", body, nil, nil).StatusCode)
+	}
+	if codes[2] != http.StatusTooManyRequests {
+		t.Fatalf("codes = %v, want the third request limited", codes)
 	}
 }

@@ -1,6 +1,13 @@
 package api
 
-import "net/http"
+import (
+	"errors"
+	"net"
+	"net/http"
+	"strings"
+
+	"github.com/LSUDOKO/CargoFlow/backend/internal/store"
+)
 
 // Public, unauthenticated endpoints that the web frontend needs. None of them reveals raw telemetry.
 
@@ -10,5 +17,46 @@ func (s *Server) stats(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	writeJSON(w, http.StatusOK, st)
+	return nil
+}
+
+// clientIP is the connecting address. Forwarding headers are deliberately ignored: a client could set them
+// to dodge the limit. Behind a reverse proxy, the proxy should enforce its own per-client limit.
+func clientIP(r *http.Request) string {
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
+	}
+	return host
+}
+
+// mirror lets anyone ask the backend to start tracking a shipment that already exists on-chain. It is safe to
+// expose: RegisterShipment refuses anything the chain does not confirm and stores nothing on refusal. A repeat
+// call returns the existing record.
+func (s *Server) mirror(w http.ResponseWriter, r *http.Request) error {
+	if err := s.rateLimit(w, "mirror:"+clientIP(r), s.c.MirrorPerMinute); err != nil {
+		return err
+	}
+	var req shipmentRequest
+	if err := decodeJSON(r, &req); err != nil {
+		return err
+	}
+	in, err := req.input()
+	if err != nil {
+		return err
+	}
+	existing, err := s.c.Store.GetShipment(r.Context(), strings.ToLower(strings.TrimSpace(req.ShipmentID)))
+	switch {
+	case err == nil:
+		writeJSON(w, http.StatusOK, existing)
+		return nil
+	case !errors.Is(err, store.ErrNotFound):
+		return err
+	}
+	sh, err := s.c.Service.RegisterShipment(r.Context(), in)
+	if err != nil {
+		return err
+	}
+	writeJSON(w, http.StatusCreated, sh)
 	return nil
 }
