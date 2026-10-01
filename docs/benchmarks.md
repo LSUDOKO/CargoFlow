@@ -60,6 +60,20 @@ Roughly 5,000 gas per aligned pair of readings. Sent as real transactions (execu
 the same call costs 40,239 / 154,025 / 307,141 / 611,945 gas, which is the figure `stylus/scripts/bench.sh`
 reports so that it is comparable with the Stylus measurement.
 
-**Stylus: not yet measured.** The Rust engine matches the same vectors and activates on Arbitrum Sepolia
-(8.1 KB), but running it needs a deployment funded with Arbitrum Sepolia ETH. Until `stylus/scripts/bench.sh` has
-produced the comparison, no savings figure is stated. See [`stylus/README.md`](../stylus/README.md).
+## Evidence engine: Solidity vs Stylus (Arbitrum Sepolia)
+
+Same kernel, same calldata, same chain, both deployed and measured on 2026-10-01 with `stylus/scripts/bench.sh`
+(execution gas = `gasUsed - gasUsedForL1 - intrinsic gas`; both engines returned identical results):
+
+| Readings per sensor | Solidity | Stylus (uncached) | Stylus (cached) |
+|---:|---:|---:|---:|
+| 8 | 40,239 | 29,783 | 17,378 |
+| 32 | 154,025 | 30,128 | 17,723 |
+| 64 | 307,141 | 30,590 | 18,185 |
+| 128 | 611,945 | 31,511 | 19,106 |
+
+Stylus has a fixed program-load cost (about 29.7k uncached, 17.3k cached) plus roughly 14 gas per aligned pair of
+readings; the Solidity reference spends about 4,800 per pair. So the saving is modest at one 8-reading epoch
+(26% uncached, 57% cached) and grows with batch size (19x to 32x at 128). It is one chain, one run and untuned
+Solidity, so read the ratios as indicative of the shape, not as a general Stylus-vs-Solidity claim. Method, caveats
+and contract addresses: [`stylus/README.md`](../stylus/README.md#benchmark-cf-051-measured-on-arbitrum-sepolia).

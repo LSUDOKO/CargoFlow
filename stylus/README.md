@@ -47,20 +47,49 @@ sequencer endpoint refuses activation simulation) reports the program **activate
 make stylus-check
 ```
 
-## Benchmark (CF-051): method ready, measurement pending
+## Benchmark (CF-051): measured on Arbitrum Sepolia
 
-`scripts/bench.sh` deploys the Solidity and Stylus engines to the same chain, sends `fuseEpoch` with identical
-calldata for 8, 32, 64 and 128 readings per sensor, checks both return the same result, and prints execution gas
-(`gasUsed - gasUsedForL1 - intrinsic gas`). It needs about 0.001 ETH of Arbitrum Sepolia on the deployer wallet,
-which the project key does not hold, so **no Stylus number exists yet and none is claimed**. The harness itself
-was self-tested against the Solidity engine on a local chain.
+Both engines are deployed on Arbitrum Sepolia (chain 421614) and were sent byte-identical `fuseEpoch` calldata by
+`scripts/bench.sh`. Each call returned the same result from both (checked with `eth_call`). Execution gas is
+`gasUsed - gasUsedForL1 - intrinsic gas`, which removes the L1 data component and the 21,000 + calldata cost that
+both pay identically.
+
+| Readings per sensor | Solidity | Stylus (uncached) | Stylus (cached) |
+|---:|---:|---:|---:|
+| 8 (one protocol epoch) | 40,239 | 29,783 | 17,378 |
+| 32 | 154,025 | 30,128 | 17,723 |
+| 64 | 307,141 | 30,590 | 18,185 |
+| 128 | 611,945 | 31,511 | 19,106 |
+
+Ratios (Solidity / Stylus): uncached 1.4x, 5.1x, 10.0x, 19.4x; cached 2.3x, 8.7x, 16.9x, 32.0x.
+
+How to read it:
+
+- **Fixed cost vs per-reading cost.** A Stylus call pays a roughly constant program-load cost (about 29.7k
+  uncached, 17.3k once the program is in ArbOS's cache) and then about 14 gas per aligned pair of readings.
+  Solidity pays about 4,800 gas per pair. So the advantage is small for one 8-reading epoch and large for big
+  batches, which is the usual shape for compute-heavy Stylus programs.
+- **Cached** means `cargo stylus cache bid <address> 0` succeeded for the program, as Arbitrum recommends for
+  hot contracts. Uncached is the cost for a program nobody has cached.
+- **One run each.** Gas is deterministic for the same state, so there is no spread to report, but it is one
+  chain, one date (2026-10-01), one compiler version (Rust 1.88, `opt-level = 3`, LTO, `cargo-stylus` 0.10 /
+  `stylus-sdk` 0.10; Solidity 0.8.28, optimizer 200 runs) and unoptimised Solidity written for clarity. A
+  hand-tuned Solidity kernel would narrow the gap.
+- **Not used by the core.** Production evidence scoring runs off-chain in Go and only the result is committed.
+  The 8-reading epoch costs less to fuse on-chain in Stylus (17-30k) than the 125k an `EvidenceRegistry.commitEpoch`
+  costs, which is why this stays an experiment on a chain that supports it.
+
+| Contract | Arbitrum Sepolia |
+|---|---|
+| `EvidenceEngineSol` | [`0x5Ed4f105E3c3C0a67f916c0fc339B261E3De81d7`](https://sepolia.arbiscan.io/address/0x5Ed4f105E3c3C0a67f916c0fc339B261E3De81d7) |
+| Stylus `EvidenceEngine` | [`0x2f7cac603654ec106da242cd0b16044b31f7608d`](https://sepolia.arbiscan.io/address/0x2f7cac603654ec106da242cd0b16044b31f7608d) |
+
+Reproduce (needs a little Arbitrum Sepolia ETH on the deployer; the whole run cost about 0.0004 ETH):
 
 ```bash
 PRIVATE_KEY=0x... ./stylus/scripts/bench.sh
+# or reuse deployments: SOLIDITY_ADDRESS=0x... STYLUS_ADDRESS=0x... ./stylus/scripts/bench.sh
 ```
-
-Solidity reference gas, for context, is in [`docs/benchmarks.md`](../docs/benchmarks.md#evidence-engine-solidity-reference).
-Per the project rules, no savings percentage is published until the Stylus half is measured.
 
 ## Toolchain
 

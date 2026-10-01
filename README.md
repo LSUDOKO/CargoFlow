@@ -109,6 +109,7 @@ The same `make demo` runs against the public testnet (`ARGS="-divisor 2000"` fit
 | Backend | 19 Go packages with `-race`; integration tests run a real anvil chain and Postgres; the end-to-end test drives the full story through the running service |
 | Circuit | 13,494 constraints; proves in about 1 s; 25 tests including tamper and wrong-context cases |
 | ZK resume on-chain | ~0.25 M gas (real Groth16 verification) |
+| Stylus vs Solidity (optional engine) | 128-reading epoch fusion: 611,945 vs 31,511 gas on Arbitrum Sepolia (19x; 32x cached); [method and caveats](stylus/README.md) |
 | Static analysis | Slither triaged: [`docs/security/slither-triage.md`](docs/security/slither-triage.md) |
 
 Every figure is reproducible with `make check`, `make bench` and `make slither`; method and caveats are in

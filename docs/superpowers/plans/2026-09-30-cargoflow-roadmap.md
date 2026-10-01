@@ -68,8 +68,8 @@ demonstrable state and stops for review before the next begins.
 
 ## P8 — Optional Stylus (CF-050..051)
 - [x] Rust (Stylus) evidence engine held to the Go vectors, Solidity reference, activation check on Arbitrum Sepolia (8.1 KB)
-- [ ] measured Solidity-vs-Stylus gas comparison: `stylus/scripts/bench.sh` is ready; waits on ~0.001 ETH of Arbitrum Sepolia for the deployer
-**Done when:** both engines are deployed on Arbitrum Sepolia and the benchmark table is published (no savings figure before that).
+- [x] measured Solidity-vs-Stylus gas comparison on Arbitrum Sepolia (`stylus/scripts/bench.sh`, table in `docs/benchmarks.md`)
+**Done when:** both engines are deployed on Arbitrum Sepolia and the benchmark table is published. (Done.)
 
 ## P9 — Launch polish
 - [x] README with diagrams, architecture docs, runbook, changelog (screenshots wait on the frontend)

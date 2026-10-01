@@ -6,7 +6,8 @@ Phases follow [`docs/superpowers/plans/2026-09-30-cargoflow-roadmap.md`](docs/su
 
 ### P8 - Stylus (optional)
 - Rust Dempster-Shafer engine (`stylus/engine`) and Stylus contract, a Solidity reference, and shared Go-generated
-  parity vectors. Activation verified on Arbitrum Sepolia. Gas comparison harness ready; measurement pending funds.
+  parity vectors. Both engines deployed on Arbitrum Sepolia and benchmarked on identical calldata: 8 readings cost 40,239 gas in Solidity
+  vs 29,783 (17,378 cached) in Stylus; 128 readings 611,945 vs 31,511 (19,106 cached).
 
 ### P7 - Testnet and hardening
 - Hero run completed on Robinhood Chain Testnet with real USDG, the on-chain Groth16 verifier and the AI monitor; scaled

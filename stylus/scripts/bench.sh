@@ -3,6 +3,7 @@
 # prints measured execution gas. Needs a chain that supports Stylus (Arbitrum Sepolia) and a funded key.
 #
 #   PRIVATE_KEY=0x... ./stylus/scripts/bench.sh                       # Arbitrum Sepolia via publicnode
+#   SOLIDITY_ADDRESS=0x.. STYLUS_ADDRESS=0x.. ./bench.sh              # reuse earlier deployments
 #   BENCH_SKIP_STYLUS=1 RPC_URL=http://127.0.0.1:8545 ... ./bench.sh # Solidity half only (harness self-test)
 #
 # Execution gas = receipt.gasUsed - receipt.gasUsedForL1 - intrinsic gas. Arbitrum receipts include an L1 data
@@ -19,16 +20,18 @@ SIZES="${SIZES:-8 32 64 128}"
 
 echo "chain $("$CAST" chain-id --rpc-url "$RPC"), deployer $("$CAST" wallet address --private-key "$KEY")" >&2
 
-SOL=$(cd contracts && "$FORGE" create src/experimental/EvidenceEngineSol.sol:EvidenceEngineSol \
+SOL="${SOLIDITY_ADDRESS:-}"
+[ -n "$SOL" ] || SOL=$(cd contracts && "$FORGE" create src/experimental/EvidenceEngineSol.sol:EvidenceEngineSol \
   --rpc-url "$RPC" --private-key "$KEY" --broadcast --json | python3 -c 'import json,sys; print(json.load(sys.stdin)["deployedTo"])')
 echo "solidity engine: $SOL" >&2
 
-STY=""
-if [ "${BENCH_SKIP_STYLUS:-0}" != 1 ]; then
-  STY=$(cd stylus && cargo stylus deploy --endpoint "$RPC" --private-key "$KEY" --no-verify 2>&1 | sed 's/\x1b\[[0-9;]*m//g' \
-    | grep -oE 'deployed code at address: 0x[0-9a-fA-F]{40}' | grep -oE '0x[0-9a-fA-F]{40}')
-  echo "stylus engine:   $STY" >&2
+STY="${STYLUS_ADDRESS:-}"
+if [ -z "$STY" ] && [ "${BENCH_SKIP_STYLUS:-0}" != 1 ]; then
+  deploy_log=$(cd stylus && cargo stylus deploy --endpoint "$RPC" --private-key "$KEY" --no-verify 2>&1 | sed 's/\x1b\[[0-9;]*m//g') || { echo "$deploy_log" | tail -20 >&2; exit 1; }
+  STY=$(echo "$deploy_log" | grep -oE 'deployed code at address:[[:space:]]*0x[0-9a-fA-F]{40}' | grep -oE '0x[0-9a-fA-F]{40}' | head -1)
+  [ -n "$STY" ] || { echo "could not find the deployed address in:" >&2; echo "$deploy_log" | tail -20 >&2; exit 1; }
 fi
+[ -z "$STY" ] || echo "stylus engine:   $STY" >&2
 
 arr() { # n offset-multiplier -> "[v0,v1,...]" matching contracts/test/experimental/EvidenceEngine.t.sol
   python3 -c "import sys; n,m=int(sys.argv[1]),int(sys.argv[2]); print('['+','.join(str(200+(i*m)%600) for i in range(n))+']')" "$1" "$2"
