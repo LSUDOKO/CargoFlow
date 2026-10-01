@@ -11,9 +11,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/ed25519"
-	"crypto/rand"
-	"encoding/base64"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -24,13 +21,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/LSUDOKO/CargoFlow/backend/internal/auth"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/chain"
-	"github.com/LSUDOKO/CargoFlow/backend/internal/service"
-	"github.com/LSUDOKO/CargoFlow/backend/internal/simulator"
-	"github.com/LSUDOKO/CargoFlow/backend/internal/store"
 )
 
 // The hero numbers (docs/project/12-demo-script.md): 40,000 committed against a 100,000 invoice at a 3% fee.
@@ -89,6 +82,14 @@ type runner struct {
 	http *http.Client
 	t0   time.Time
 	res  Result
+
+	// per-run state, set by the setup scene
+	id          [32]byte
+	shipmentHex string
+	sourceID    string
+	sourceKey   ed25519.PrivateKey
+	lastReading int64 // timestamp of the newest reading sent, 0 before any
+	step        int   // simulator steps sent so far, so the journey continues along the route
 }
 
 func usd(n int64) *big.Int { return new(big.Int).Mul(big.NewInt(n), big.NewInt(1_000_000)) }
@@ -136,15 +137,16 @@ func (r *runner) scene(ctx context.Context, format string, args ...any) error {
 	return nil
 }
 
-// Run executes the hero scenario once. Every run registers a fresh shipment, so it can be repeated against
-// the same deployment (the "demo reset" is simply a new shipment).
-func Run(ctx context.Context, cfg Config) (Result, error) {
+func newRunner(cfg Config) (*runner, error) {
 	div := cfg.AmountDivisor
 	if div == 0 {
 		div = 1
 	}
 	if err := validDivisor(div); err != nil {
-		return Result{}, err
+		return nil, err
+	}
+	if cfg.Chain == nil || cfg.Exporter == nil || cfg.Financier == nil || cfg.Buyer == nil {
+		return nil, errors.New("hero: chain client and exporter, financier and buyer wallets are required")
 	}
 	r := &runner{div: div, cfg: cfg, c: cfg.Chain, http: cfg.HTTP, t0: time.Now()}
 	if r.http == nil {
@@ -153,8 +155,15 @@ func Run(ctx context.Context, cfg Config) (Result, error) {
 	if cfg.RefPrefix == "" {
 		r.cfg.RefPrefix = "CF-2026-SG01"
 	}
-	if cfg.Chain == nil || cfg.Exporter == nil || cfg.Financier == nil || cfg.Buyer == nil {
-		return Result{}, errors.New("hero: chain client and exporter, financier and buyer wallets are required")
+	return r, nil
+}
+
+// Run executes the hero scenario once. Every run registers a fresh shipment, so it can be repeated against
+// the same deployment (the "demo reset" is simply a new shipment).
+func Run(ctx context.Context, cfg Config) (Result, error) {
+	r, err := newRunner(cfg)
+	if err != nil {
+		return Result{}, err
 	}
 	if err := r.run(ctx); err != nil {
 		return r.res, err
@@ -163,225 +172,10 @@ func Run(ctx context.Context, cfg Config) (Result, error) {
 }
 
 func (r *runner) run(ctx context.Context) error {
-	c := r.c
-	if err := r.preflight(ctx); err != nil {
-		return err
-	}
-
-	policy := chain.Policy{MinTempX100: 200, MaxTempX100: 800, MaxEvidenceAgeSec: 1800, MaxRouteDeviationM: 25_000,
-		MinEvidenceScore: 75, MaxConflictBps: 3000, MaxRiskBps: 3500}
-	route := []store.RoutePoint{{LatE6: 18_950_000, LonE6: 72_950_000}, {LatE6: 1_264_000, LonE6: 103_820_000}}
-	ref := fmt.Sprintf("%s-%d", r.cfg.RefPrefix, time.Now().UnixNano()/1e6)
-	commitment, err := c.HashPolicy(ctx, policy)
-	if err != nil {
-		return err
-	}
-	refHash := crypto.Keccak256Hash([]byte(ref))
-	id, err := c.ShipmentID(ctx, r.cfg.Exporter.Address(), refHash)
-	if err != nil {
-		return err
-	}
-	shipmentHex := "0x" + hex.EncodeToString(id[:])
-	r.res.ShipmentID, r.res.Ref = shipmentHex, ref
-	if r.cfg.OnShipment != nil {
-		r.cfg.OnShipment(shipmentHex)
-	}
-
-	tx := func(label string, signer *chain.Signer, contract, method string, args ...any) error {
-		res, err := c.Transact(ctx, signer, contract, method, args...)
-		if err != nil {
-			return fmt.Errorf("%s: %w", label, err)
-		}
-		r.res.TransactionHashes = append(r.res.TransactionHashes, res.Hash.Hex())
-		r.say("  tx  %-34s %s", label, res.Hash.Hex())
-		return nil
-	}
-
-	if err := r.scene(ctx, "Scene 1 - the exporter registers shipment %s and the financier funds it", ref); err != nil {
-		return err
-	}
-	ms := make([]chain.MilestoneSpec, 5)
-	for i := range ms {
-		ms[i] = chain.MilestoneSpec{Allocation: r.amt(TrancheUSDG), EvidenceThreshold: 75, CheckpointCommitment: [32]byte{byte(i + 1)}}
-	}
-	steps := []struct {
-		label  string
-		signer *chain.Signer
-		cname  string
-		method string
-		args   []any
-	}{
-		{"registerShipment", r.cfg.Exporter, "registry", "registerShipment", []any{[32]byte(refHash), r.cfg.Buyer.Address(),
-			[32]byte(crypto.Keccak256Hash([]byte("invoice-" + ref + ".pdf"))), service.RouteCommitment(route), commitment, r.amt(InvoiceUSDG)}},
-		{"setPolicy", r.cfg.Exporter, "policies", "setPolicy", []any{id, policy}},
-		{fmt.Sprintf("createFacility (5 x %s)", r.label(TrancheUSDG)), r.cfg.Exporter, "controller", "createFacility", []any{id, r.cfg.Financier.Address(), uint16(FeeBps), ms}},
-	}
-	for _, s := range steps {
-		if err := tx(s.label, s.signer, s.cname, s.method, s.args...); err != nil {
+	for _, scene := range Scenes {
+		if _, err := r.runScene(ctx, scene); err != nil {
 			return err
 		}
-	}
-	if r.cfg.MintTestTokens {
-		if err := tx("mint test USDG to financier", r.cfg.Financier, "usdg", "mint", r.cfg.Financier.Address(), r.amt(CommittedUSDG)); err != nil {
-			return err
-		}
-	}
-	for _, s := range []struct {
-		label  string
-		signer *chain.Signer
-		cname  string
-		method string
-		args   []any
-	}{
-		{"approve vault (financier)", r.cfg.Financier, "usdg", "approve", []any{c.M.Vault, r.amt(CommittedUSDG)}},
-		{fmt.Sprintf("depositCapital %s USDG", r.label(CommittedUSDG)), r.cfg.Financier, "controller", "depositCapital", []any{id}},
-		{"startTransit", r.cfg.Exporter, "controller", "startTransit", []any{id}},
-	} {
-		if err := tx(s.label, s.signer, s.cname, s.method, s.args...); err != nil {
-			return err
-		}
-	}
-	r.res.exporterBefore, _ = c.USDGBalance(ctx, r.cfg.Exporter.Address())
-	r.res.financierBef, _ = c.USDGBalance(ctx, r.cfg.Financier.Address())
-
-	// the backend learns about the shipment and the telemetry source
-	pub, priv, _ := ed25519.GenerateKey(rand.Reader)
-	sourceID := "demo-" + strconv.FormatInt(time.Now().UnixNano()/1e6, 36)
-	if err := r.api(ctx, "POST", "/v1/sources", true, map[string]any{"id": sourceID,
-		"publicKey": base64.RawURLEncoding.EncodeToString(pub), "sensorIds": []string{simulator.PrimarySensor, simulator.SecondarySensor}}, nil); err != nil {
-		return fmt.Errorf("register evidence source: %w", err)
-	}
-	if err := r.api(ctx, "POST", "/v1/shipments", true, map[string]any{"shipmentId": shipmentHex, "externalRef": ref,
-		"route": route, "maxGapSec": 1800, "minSensors": 2}, nil); err != nil {
-		return fmt.Errorf("register shipment with the backend: %w", err)
-	}
-
-	now, err := c.BlockTime(ctx)
-	if err != nil {
-		return err
-	}
-	t0 := int64(now) - 700
-	send := func(sc simulator.Scenario, startStep, n int, sensors ...string) error {
-		pts, err := simulator.Generate(simulator.Config{Seed: 42, Scenario: sc, StartUnix: t0 + int64(startStep)*stepSeconds,
-			IntervalSec: stepSeconds, Steps: n, StartStep: startStep, Sensors: sensors})
-		if err != nil {
-			return err
-		}
-		out := make([]map[string]any, len(pts))
-		for i, p := range pts {
-			out[i] = map[string]any{"timestamp": p.Timestamp, "sensorId": p.SensorID, "temperatureX100": p.TemperatureX100,
-				"humidityX100": p.HumidityX100, "latitudeE6": p.LatitudeE6, "longitudeE6": p.LongitudeE6, "shockX100": p.ShockX100}
-		}
-		return r.signedTelemetry(ctx, shipmentHex, sourceID, priv, out)
-	}
-
-	type view struct {
-		Facility struct {
-			Status        string `json:"status"`
-			Drawn         string `json:"drawn"`
-			NextMilestone int    `json:"nextMilestone"`
-			PauseCount    int    `json:"pauseCount"`
-		} `json:"facility"`
-	}
-	waitView := func(what string, ok func(view) bool) (view, error) {
-		var v view
-		deadline := time.Now().Add(90 * time.Second)
-		for {
-			if err := r.api(ctx, "GET", "/v1/shipments/"+shipmentHex, false, nil, &v); err != nil {
-				return v, err
-			}
-			if ok(v) {
-				return v, nil
-			}
-			if time.Now().After(deadline) {
-				return v, fmt.Errorf("timed out waiting for %s (status %s, next milestone %d, drawn %s)", what, v.Facility.Status, v.Facility.NextMilestone, v.Facility.Drawn)
-			}
-			select {
-			case <-time.After(300 * time.Millisecond):
-			case <-ctx.Done():
-				return v, ctx.Err()
-			}
-		}
-	}
-
-	if err := r.scene(ctx, "Scene 2-4 - two healthy milestones release %s USDG, then the container overheats", r.label(2*TrancheUSDG)); err != nil {
-		return err
-	}
-	if err := send(simulator.ConflictingSensors, 0, 24); err != nil {
-		return err
-	}
-	v, err := waitView("the anomaly pause", func(v view) bool { return v.Facility.Status == "PAUSED" })
-	if err != nil {
-		return err
-	}
-	if v.Facility.Drawn != r.amt(2*TrancheUSDG).String() || v.Facility.NextMilestone != 2 {
-		return fmt.Errorf("after the anomaly expected %s USDG drawn and milestone 3 blocked, got drawn=%s next=%d", r.label(2*TrancheUSDG), v.Facility.Drawn, v.Facility.NextMilestone)
-	}
-	r.res.PauseCount = v.Facility.PauseCount
-	r.say("  facility PAUSED with %s base units drawn; milestone 3 is blocked", v.Facility.Drawn)
-
-	if err := r.scene(ctx, "Scene 5 - the unaffected core probe keeps reporting; a zero-knowledge proof of it resumes the facility"); err != nil {
-		return err
-	}
-	if err := send(simulator.Normal, 24, 8, simulator.SecondarySensor); err != nil {
-		return err
-	}
-	var rec struct {
-		ResumeTx string `json:"resumeTx"`
-	}
-	if err := r.api(ctx, "POST", "/v1/shipments/"+shipmentHex+"/proof", true, map[string]any{"sensorId": simulator.SecondarySensor}, &rec); err != nil {
-		return fmt.Errorf("zk recovery: %w", err)
-	}
-	r.res.TransactionHashes = append(r.res.TransactionHashes, rec.ResumeTx)
-	r.say("  tx  %-34s %s", "resumeWithProof (Groth16)", rec.ResumeTx)
-	if _, err := waitView("recovery", func(v view) bool { return v.Facility.Status == "ACTIVE" && v.Facility.NextMilestone == 3 }); err != nil {
-		return err
-	}
-
-	if err := r.scene(ctx, "Scene 6 - the remaining milestones release"); err != nil {
-		return err
-	}
-	if err := send(simulator.Normal, 32, 16); err != nil {
-		return err
-	}
-	if _, err := waitView("all five tranches", func(v view) bool {
-		return v.Facility.NextMilestone == 5 && v.Facility.Drawn == r.amt(CommittedUSDG).String()
-	}); err != nil {
-		return err
-	}
-
-	if err := r.scene(ctx, "Scene 7 - the buyer confirms delivery and pays the %s USDG invoice; the waterfall settles", r.label(InvoiceUSDG)); err != nil {
-		return err
-	}
-	if err := tx("markDelivered", r.cfg.Buyer, "controller", "markDelivered", id); err != nil {
-		return err
-	}
-	if r.cfg.MintTestTokens {
-		if err := tx("mint test USDG to buyer", r.cfg.Buyer, "usdg", "mint", r.cfg.Buyer.Address(), r.amt(InvoiceUSDG)); err != nil {
-			return err
-		}
-	}
-	if err := tx("approve vault (buyer)", r.cfg.Buyer, "usdg", "approve", c.M.Vault, r.amt(InvoiceUSDG)); err != nil {
-		return err
-	}
-	if err := tx("settle", r.cfg.Buyer, "controller", "settle", id); err != nil {
-		return err
-	}
-	if _, err := waitView("settlement", func(v view) bool { return v.Facility.Status == "SETTLED" }); err != nil {
-		return err
-	}
-
-	exporterAfter, _ := c.USDGBalance(ctx, r.cfg.Exporter.Address())
-	financierAfter, _ := c.USDGBalance(ctx, r.cfg.Financier.Address())
-	r.res.ExporterReceived = new(big.Int).Sub(exporterAfter, r.res.exporterBefore)
-	r.res.FinancierReceived = new(big.Int).Sub(financierAfter, r.res.financierBef)
-	r.res.SettledAfterSeconds = time.Since(r.t0).Seconds()
-	r.say("")
-	r.say("Settled in %.0fs. Exporter received %s USDG, financier %s USDG.", r.res.SettledAfterSeconds,
-		formatUSDG(r.res.ExporterReceived), formatUSDG(r.res.FinancierReceived))
-	if r.res.ExporterReceived.Cmp(r.amt(ExporterReceivedUSDG)) != 0 || r.res.FinancierReceived.Cmp(r.amt(FinancierReceivedUSDG)) != 0 {
-		return fmt.Errorf("settlement numbers are wrong: exporter %s (want %s), financier %s (want %s)",
-			formatUSDG(r.res.ExporterReceived), r.label(ExporterReceivedUSDG), formatUSDG(r.res.FinancierReceived), r.label(FinancierReceivedUSDG))
 	}
 	return nil
 }
