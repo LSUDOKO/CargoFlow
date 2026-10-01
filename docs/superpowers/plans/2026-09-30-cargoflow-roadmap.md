@@ -64,7 +64,7 @@ demonstrable state and stops for review before the next begins.
 - [x] Slither triage, measured gas + proof benchmarks
 - [ ] Vercel (frontend) and Railway (backend + Postgres) hosting: waits on the frontend and on the operator's accounts
 **Done when:** the hero run completes on public testnet and is reproducible.
-**Blocked on:** testnet USDG for the financier (40,000) and buyer (100,000) wallets, which only the Paxos faucet can provide.
+**Done:** the scaled hero run completed on the public testnet (see `docs/runbooks/testnet.md`); the full-size run needs 140,000 USDG.
 
 ## P8 — Optional Stylus (CF-050..051)
 - [x] Rust (Stylus) evidence engine held to the Go vectors, Solidity reference, activation check on Arbitrum Sepolia (8.1 KB)
