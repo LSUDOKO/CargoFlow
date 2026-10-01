@@ -64,7 +64,7 @@ stateDiagram-v2
     FINANCED --> ACTIVE: startTransit
     ACTIVE --> ACTIVE: release milestone (evidence passes policy)
     ACTIVE --> PAUSED: pause (monitor / dispute role)
-    PAUSED --> ACTIVE: resumeWithProof (Groth16) or resumeByVerifier
+    PAUSED --> ACTIVE: resumeWithProof (Groth16, exporter or manager) or resumeByVerifier (arbiter)
     ACTIVE --> DISPUTED: openDispute
     PAUSED --> DISPUTED: openDispute
     DISPUTED --> ACTIVE: resolveDispute(resume)
@@ -89,8 +89,8 @@ Settlement is a fixed waterfall: invoice -> financier (drawn principal + fee + u
 | Buyer | confirm delivery, pay the invoice | settle on someone else's behalf (`NotBuyer`) |
 | Worker key (`EVIDENCE_VERIFIER`) | commit evidence epochs | release, pause, resume |
 | Monitor key (`MONITOR`) | request a pause | anything else; the service refuses to start if it holds another role |
-| Manager key (`FACILITY_MANAGER`) | release, submit recovery proofs, resume by verifier | change policy, move funds elsewhere |
-| Arbiter (`DISPUTE`) | pause, open and resolve disputes | release |
+| Manager key (`FACILITY_MANAGER`) | start transit, release, submit recovery proofs | resume without a proof, change policy, move funds elsewhere |
+| Arbiter (`DISPUTE`) | pause, resume by verifier (the trusted fallback), open and resolve disputes, declare default | release |
 | Admin | grant and revoke roles (two-step, delayed transfer) | touch a facility or the vault |
 | AI model | recommend a stricter outcome | hold any key or call anything: the service acts on its behalf only through the monitor key, and only to pause |
 
