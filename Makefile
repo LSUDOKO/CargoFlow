@@ -3,6 +3,7 @@
 FORGE ?= $(shell for p in "$$(command -v forge)" "$$HOME/.foundry/bin/forge" "$$HOME/.config/.foundry/bin/forge"; do \
 	[ -n "$$p" ] && [ -x "$$p" ] && "$$p" --version 2>/dev/null | grep -q "Version:" && { echo "$$p"; break; }; done)
 CAST ?= $(dir $(FORGE))cast
+ENV_FILE ?= .env
 
 .PHONY: bench slither demo testnet-keys testnet-fund testnet-deploy testnet-verify ai-live anvil deploy-local demo-local zk-fixture circuits-test abi serve migrate keygen help check contracts-build contracts-test contracts-fmt contracts-fmt-check backend-test frontend-check usdg-info
 
@@ -51,13 +52,13 @@ abi: ## Re-export contract ABIs into the backend (run after changing a contract)
 	@python3 scripts/export-abi.py
 
 serve: ## Run the backend (reads .env)
-	@set -a; [ -f .env ] && . ./.env; set +a; cd backend && go run ./cmd/cargoflow serve
+	@set -a; [ -f $(ENV_FILE) ] && . ./$(ENV_FILE); set +a; cd backend && go run ./cmd/cargoflow serve
 
 migrate: ## Apply database migrations (reads .env)
-	@set -a; [ -f .env ] && . ./.env; set +a; cd backend && go run ./cmd/cargoflow migrate
+	@set -a; [ -f $(ENV_FILE) ] && . ./$(ENV_FILE); set +a; cd backend && go run ./cmd/cargoflow migrate
 
 ai-live: ## Smoke-test the real Groq API with synthetic data (needs GROQ_API_KEY in .env)
-	@set -a; [ -f .env ] && . ./.env; set +a; cd backend && go test -tags live -run Live -v -count=1 ./internal/ai
+	@set -a; [ -f $(ENV_FILE) ] && . ./$(ENV_FILE); set +a; cd backend && go test -tags live -run Live -v -count=1 ./internal/ai
 
 slither: ## Static-analyse the contracts (needs: uv tool install slither-analyzer)
 	@cd contracts && PATH="$(dir $(FORGE)):$$PATH" slither .
@@ -68,7 +69,7 @@ bench: ## Measure contract gas and the ZK recovery circuit on this machine
 	@cd circuits && node scripts/bench.js 5
 
 demo: ## Run the hero scenario against a running backend (reads .env; ARGS="-mint" on a local mock chain, ARGS="-pace 3s" to watch live)
-	@set -a; [ -f .env ] && . ./.env; set +a; cd backend && go run ./cmd/cargoflow demo $(ARGS)
+	@set -a; [ -f $(ENV_FILE) ] && . ./$(ENV_FILE); set +a; cd backend && go run ./cmd/cargoflow demo $(ARGS)
 
 testnet-keys: ## Generate a separate wallet per role into .env (never printed)
 	@CAST=$(dir $(FORGE))cast ./scripts/testnet-keys.sh
