@@ -183,3 +183,42 @@ func mustID(t *testing.T, hex string) [32]byte {
 }
 
 var _ = telemetry.Point{}
+
+func TestPreparedRecoveryIsSubmittedByTheExportersOwnWallet(t *testing.T) {
+	prover := realProver(t)
+	e := newEnv(t, prover)
+	ctx := context.Background()
+	hex, id, tl := pausedByAnomaly(t, e, "svc-recover-prep")
+	if _, err := e.svc.IngestTelemetry(ctx, hex, "", tl.segment(t, simulator.Normal, 24, 8, simulator.SecondarySensor)); err != nil {
+		t.Fatal(err)
+	}
+
+	p, err := e.svc.PrepareRecovery(ctx, hex, simulator.SecondarySensor, e.exporter.Address())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p.Milestone != 2 || p.CommitTx == "" || len(p.A) != 2 || len(p.B) != 2 || len(p.C) != 2 {
+		t.Fatalf("prepared = %+v", p)
+	}
+	f, _ := e.chain.Facility(ctx, id)
+	if f.Status != chain.StatusPaused {
+		t.Fatal("preparing must not submit anything: the facility stays paused until the exporter sends the proof")
+	}
+
+	a, b, c, err := p.Calldata()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := e.chain.ResumeWithProof(ctx, e.exporter, id, uint8(p.Milestone), uint32(p.Sequence), a, b, c); err != nil {
+		t.Fatalf("the exporter's resumeWithProof: %v", err)
+	}
+	f, _ = e.chain.Facility(ctx, id)
+	if f.Status != chain.StatusActive {
+		t.Fatalf("after the exporter's proof the facility is %s, want ACTIVE", chain.StatusName(f.Status))
+	}
+
+	// a proof bound to the exporter is useless to anyone else: the context hash names the submitter
+	if _, err := e.svc.PrepareRecovery(ctx, hex, simulator.SecondarySensor, e.exporter.Address()); !errors.Is(err, service.ErrNotPaused) {
+		t.Fatalf("preparing again once active = %v, want ErrNotPaused", err)
+	}
+}

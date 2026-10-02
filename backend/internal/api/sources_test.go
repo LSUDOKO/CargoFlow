@@ -79,17 +79,25 @@ func TestExportersRegisterShipmentBoundGatewaysWithTheirWallet(t *testing.T) {
 		"tampered sensors": func() struct {
 			body sourceBody
 			code int
-		} { b := gatewayBody(t, e.keys["exporter"], shipment, other, now); b.SensorIDs = []string{"sensor-9"}; return struct {
-			body sourceBody
-			code int
-		}{b, http.StatusUnauthorized} }(),
+		} {
+			b := gatewayBody(t, e.keys["exporter"], shipment, other, now)
+			b.SensorIDs = []string{"sensor-9"}
+			return struct {
+				body sourceBody
+				code int
+			}{b, http.StatusUnauthorized}
+		}(),
 		"bad key": func() struct {
 			body sourceBody
 			code int
-		} { b := gatewayBody(t, e.keys["exporter"], shipment, other, now); b.PublicKey = "not-a-key"; return struct {
-			body sourceBody
-			code int
-		}{b, http.StatusBadRequest} }(),
+		} {
+			b := gatewayBody(t, e.keys["exporter"], shipment, other, now)
+			b.PublicKey = "not-a-key"
+			return struct {
+				body sourceBody
+				code int
+			}{b, http.StatusBadRequest}
+		}(),
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {

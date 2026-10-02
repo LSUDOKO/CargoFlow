@@ -40,6 +40,7 @@ type Config struct {
 	AdminPerMinute     int // default 120
 	MirrorPerMinute    int // public shipment mirroring, per client address; default 30
 	GatewayPerMinute   int // gateway registrations, per client address; default 20
+	RecoveryPerMinute  int // exporter recovery preparations, per shipment; default 3
 
 	Demo *demo.Registry // nil unless DEMO_MODE is on; registers the /v1/demo endpoints
 	Now  func() time.Time
@@ -68,6 +69,9 @@ func NewServer(c Config) *Server {
 	if c.GatewayPerMinute == 0 {
 		c.GatewayPerMinute = 20
 	}
+	if c.RecoveryPerMinute == 0 {
+		c.RecoveryPerMinute = 3
+	}
 	return &Server{c: c, limiter: newLimiter(c.Now)}
 }
 
@@ -87,6 +91,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /v1/shipments/{id}/telemetry", s.handle(s.telemetrySummary))
 	mux.HandleFunc("POST /v1/shipments/{id}/sources", s.handle(s.registerGateway))
 	mux.HandleFunc("GET /v1/shipments/{id}/sources", s.handle(s.listGateways))
+	mux.HandleFunc("POST /v1/shipments/{id}/recovery", s.handle(s.prepareRecovery))
 	mux.HandleFunc("POST /v1/shipments/{id}/proof", s.handle(s.admin(s.proof)))
 	mux.HandleFunc("GET /v1/shipments/{id}/epochs", s.handle(s.epochs))
 	mux.HandleFunc("GET /v1/shipments/{id}/audit", s.handle(s.audit))
