@@ -54,8 +54,10 @@ export async function fund(page: Page, ref: string, amount = "40,000") {
   await connectAs(page, "financier");
   const card = page.getByRole("listitem").filter({ hasText: ref });
   const mint = card.getByRole("button", { name: /Mint .* test USDG/ });
-  if (await mint.isVisible().catch(() => false)) await mint.click();
-  await card.getByRole("button", { name: new RegExp(`Approve ${amount} USDG`) }).click();
+  const approve = card.getByRole("button", { name: new RegExp(`Approve ${amount} USDG`) });
+  await expect(mint.or(approve)).toBeVisible({ timeout: 30_000 });
+  if (await mint.isVisible()) await mint.click();
+  await approve.click();
   await card.getByRole("button", { name: new RegExp(`Deposit ${amount} USDG`) }).click();
   await expect(page.getByText("Facility funded")).toBeVisible({ timeout: 60_000 });
 }

@@ -79,8 +79,10 @@ test("a shipment runs from registration to settlement through real wallets and l
   await page.getByRole("button", { name: "Confirm delivery" }).click();
   await expect(page.getByText("Delivery confirmed")).toBeVisible({ timeout: 60_000 });
   const mint = page.getByRole("button", { name: /Mint .* test USDG/ });
-  if (await mint.isVisible().catch(() => false)) await mint.click();
-  await page.getByRole("button", { name: /Approve 100,000 USDG/ }).click();
+  const approve = page.getByRole("button", { name: /Approve 100,000 USDG/ });
+  await expect(mint.or(approve)).toBeVisible({ timeout: 30_000 }); // the payment panel renders after the status updates
+  if (await mint.isVisible()) await mint.click();
+  await approve.click();
   await page.getByRole("button", { name: /Pay the 100,000 USDG invoice/ }).click();
   await expect(page.getByText("Invoice paid and settled")).toBeVisible({ timeout: 60_000 });
   await expect(page.getByTestId("status-pill").first()).toHaveText("Settled");
