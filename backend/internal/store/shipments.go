@@ -80,8 +80,9 @@ func (s *Store) GetShipment(ctx context.Context, id string) (Shipment, error) {
 
 // ShipmentFilter narrows a shipment listing. Empty fields match everything.
 type ShipmentFilter struct {
-	Party string // an address that is the exporter, buyer or financier (case-insensitive)
-	Ref   string // an exact external reference (case-insensitive)
+	Party  string   // an address that is the exporter, buyer or financier (case-insensitive)
+	Ref    string   // an exact external reference (case-insensitive)
+	Status []string // any of these mirrored statuses (upper case)
 }
 
 // ListShipments returns shipments newest first.
@@ -95,8 +96,9 @@ func (s *Store) ListShipmentsWhere(ctx context.Context, f ShipmentFilter, limit,
 		"SELECT "+shipmentColumns+` FROM shipments
 		WHERE ($3 = '' OR lower(exporter) = lower($3) OR lower(buyer) = lower($3) OR lower(coalesce(financier, '')) = lower($3))
 		  AND ($4 = '' OR lower(external_ref) = lower($4))
+		  AND (cardinality($5::text[]) = 0 OR status = ANY($5::text[]))
 		ORDER BY created_at DESC, shipment_id DESC LIMIT $1 OFFSET $2`,
-		limit, offset, f.Party, f.Ref)
+		limit, offset, f.Party, f.Ref, append([]string{}, f.Status...))
 	if err != nil {
 		return nil, err
 	}

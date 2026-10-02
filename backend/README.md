@@ -71,7 +71,7 @@ Public reads need no credentials. Everything that writes is authenticated.
 | `POST /v1/sources` | admin key | register an evidence source (Ed25519 public key, its sensors, reliability) |
 | `POST /v1/shipments` | admin key | mirror a shipment that already exists on chain |
 | `POST /v1/shipments/mirror` | none, 30/min per client | the same mirroring for the web app; safe because nothing the chain does not confirm is stored; a repeat returns the existing record |
-| `GET /v1/shipments`, `GET /v1/shipments/{id}` | none | list; combined view (store + live chain state) |
+| `GET /v1/shipments`, `GET /v1/shipments/{id}` | none | list (filters: `party=0x..`, `ref=`, `status=PAUSED,DISPUTED`; `limit` up to 200, `offset`); combined view (store + live chain state) |
 | `POST /v1/shipments/{id}/telemetry` | **signed by a source** | submit up to 500 readings |
 | `POST /v1/shipments/{id}/sources` | **the exporter's wallet signature** | register an evidence gateway (Ed25519 public key and its sensors) bound to this shipment; idempotent |
 | `GET /v1/shipments/{id}/sources` | none | the shipment's evidence gateways |

@@ -571,3 +571,29 @@ func TestShipmentListFiltersByPartyAndReference(t *testing.T) {
 		t.Fatalf("malformed party = %d", resp.StatusCode)
 	}
 }
+
+func TestShipmentListFiltersByStatus(t *testing.T) {
+	e := newEnv(t, nil)
+	id := e.onChain(t, "api-status-1", true)
+	e.registerShipment(t, id, "api-status-1")
+	var one struct {
+		Shipment struct {
+			Status string `json:"status"`
+		} `json:"shipment"`
+	}
+	e.do(t, "GET", "/v1/shipments/"+idHex(id), nil, nil, &one)
+	type list struct {
+		Shipments []struct {
+			ID string `json:"id"`
+		} `json:"shipments"`
+	}
+	var match, other list
+	e.do(t, "GET", "/v1/shipments?status=DISPUTED,"+strings.ToLower(one.Shipment.Status), nil, nil, &match)
+	e.do(t, "GET", "/v1/shipments?status=DISPUTED,DELIVERED", nil, nil, &other)
+	if len(match.Shipments) != 1 || match.Shipments[0].ID != idHex(id) || len(other.Shipments) != 0 {
+		t.Fatalf("status %q: match %+v, other %+v", one.Shipment.Status, match, other)
+	}
+	if resp := e.do(t, "GET", "/v1/shipments?status=DROP%20TABLE", nil, nil, nil); resp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("malformed status = %d", resp.StatusCode)
+	}
+}

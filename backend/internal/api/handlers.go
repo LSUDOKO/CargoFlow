@@ -64,6 +64,7 @@ func oneLine(s string) string { return strings.NewReplacer("\n", " ", "\r", " ")
 var (
 	sourceIDPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9._-]{0,63}$`)
 	sensorPattern   = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$`)
+	statusPattern   = regexp.MustCompile(`^[A-Z_]{1,32}$`)
 )
 
 type sourceRequest struct {
@@ -179,6 +180,15 @@ func (s *Server) listShipments(w http.ResponseWriter, r *http.Request) error {
 	}
 	if len(filter.Ref) > 128 {
 		return ErrBadRequest("ref is too long")
+	}
+	if raw := strings.TrimSpace(q.Get("status")); raw != "" {
+		for _, st := range strings.Split(raw, ",") {
+			st = strings.ToUpper(strings.TrimSpace(st))
+			if !statusPattern.MatchString(st) {
+				return ErrBadRequest("status is a comma-separated list such as PAUSED,DISPUTED")
+			}
+			filter.Status = append(filter.Status, st)
+		}
 	}
 	list, err := s.c.Store.ListShipmentsWhere(r.Context(), filter, limit, offset)
 	if err != nil {
