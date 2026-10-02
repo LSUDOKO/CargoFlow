@@ -4,6 +4,23 @@ Phases follow [`docs/superpowers/plans/2026-09-30-cargoflow-roadmap.md`](docs/su
 
 ## Unreleased
 
+### Real-user flows
+- Every step is done by a party from their own wallet; judge mode and the backend's server-held demo wallets are gone.
+- Exporters add sensor gateways on the shipment page: the browser generates an Ed25519 key, the exporter's wallet
+  signs the authorization (EIP-191), and the backend binds the key to that one shipment (`POST /v1/shipments/{id}/sources`).
+  A gateway's readings for any other shipment are refused.
+- Data-logger CSV exports are validated line by line in the browser, signed with the gateway key and sent in batches;
+  the result shows accepted and quarantined readings and each epoch's decision and transaction. Devices can post
+  directly through the signed API, with a complete Node example on the page.
+- Zero-knowledge recovery from the exporter's wallet: the exporter signs a request, the backend commits and proves the
+  probe's fresh readings bound to the exporter (`POST /v1/shipments/{id}/recovery`), and the exporter submits
+  `resumeWithProof` themselves.
+- Disputes from the dashboard (reason hashed with keccak256) and an arbiter console at `/arbiter`, gated by the
+  on-chain dispute role; `GET /v1/shipments?status=` feeds its queue.
+- Transactions ask the wallet to switch to the deployment's network instead of refusing.
+- A Playwright test runs one shipment from registration to settlement through wallets and generated logger CSVs,
+  including the pause and the proof-based recovery; another resolves a dispute from the arbiter console.
+
 ### P6 - Frontend
 - Next.js 16 web app: landing with a tabbed track bar, live shipment dashboard (route, milestones, telemetry,
   evidence gauges, escrow, AI monitor, ZK proof, audit trail over WebSocket), fleet view, exporter wizard, financier

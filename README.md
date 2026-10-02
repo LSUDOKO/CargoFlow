@@ -198,13 +198,13 @@ Every figure is reproducible with `make check`, `make bench` and `make slither`;
 | Path | Purpose |
 |---|---|
 | `contracts/` | Solidity core (Foundry): registry, policy, evidence, controller, vault, verifier |
-| `backend/` | Go service: ingestion, evidence engine, AI monitor, proof worker, API, indexer, reconciler, demo runner |
+| `backend/` | Go service: ingestion, evidence engine, AI monitor, proof worker, API (wallet-signed gateway registration and recovery), indexer, reconciler, CLI story runner |
 | `circuits/` | Circom telemetry-epoch circuit and Groth16 tooling |
 | `infra/` | Hardened Dockerfile and compose stack |
 | `scripts/` | Key generation, funding, testnet deploy and explorer verification |
 | `docs/` | Architecture, runbooks, security, benchmarks, protocol knowledge base, design spec, roadmap |
 | `stylus/` | Optional Rust (Stylus) evidence engine for Arbitrum Sepolia, benchmarked against a Solidity reference |
-| `frontend/` | Next.js 16 web app: landing, live dashboard, fleet, exporter / financier / buyer portals, judge mode |
+| `frontend/` | Next.js 16 web app: landing, live dashboard, fleet, exporter / financier / buyer portals, gateway onboarding and CSV upload, arbiter console |
 
 ## Documentation
 

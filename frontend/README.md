@@ -1,7 +1,8 @@
 # CargoFlow web app
 
 The dashboard for CargoFlow: track a shipment's evidence and escrow live, register and finance shipments from a
-wallet, fund facilities, settle invoices, and play the whole story in judge mode.
+wallet, add sensor gateways and upload data-logger readings, recover a paused facility with a zero-knowledge proof,
+fund facilities, settle invoices, and arbitrate disputes.
 
 ## Stack
 
@@ -49,9 +50,14 @@ pnpm lint && pnpm typecheck && pnpm test     # 54 unit tests: formatting, schema
 bash scripts/e2e-stack.sh                    # 16 Playwright tests against a fresh anvil + Postgres + backend + production build
 ```
 
-The end-to-end suite plays the full story in the browser, drives the exporter wizard and the financier's deposit with
-real wallet transactions, checks not-found, offline and mobile behaviour, and runs axe on every page (no serious or
-critical violations allowed).
+The end-to-end suite runs one shipment from registration to settlement in the browser using only the parties'
+wallets and generated logger CSVs (two releases, an excursion that pauses the facility, the exporter's proof-based
+recovery, the remaining releases, delivery and payment). It also refuses a gateway key on the wrong shipment,
+resolves a dispute from the arbiter console, checks not-found, offline and mobile behaviour, and runs axe on every
+page (no serious or critical violations allowed).
+
+The gateway signer in `src/lib/gateway.ts` is pinned to a signature produced by the backend's verifier
+(`backend/internal/auth`), so browser-signed readings and the API can never drift apart.
 
 ## Layout of `src/`
 
