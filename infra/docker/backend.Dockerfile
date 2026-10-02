@@ -2,7 +2,7 @@
 # Build from the repository root:  docker build -f infra/docker/backend.Dockerfile -t cargoflow-backend .
 
 # --- 1. the Go binary (static, no cgo)
-FROM golang:1.24-alpine AS gobuild
+FROM golang:1.26-alpine AS gobuild
 WORKDIR /src/backend
 COPY backend/go.mod backend/go.sum ./
 RUN go mod download
