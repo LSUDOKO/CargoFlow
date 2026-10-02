@@ -51,3 +51,8 @@ assests/
 frontend/.open-next/
 frontend/.wrangler/
 frontend/.dev.vars
+
+# agent skill installs (npx skills add), not project code
+.agents/
+.claude/skills/
+skills-lock.json

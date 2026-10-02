@@ -194,8 +194,8 @@ a real chain, with axe accessibility checks on every page. See [`frontend/README
 
 | | |
 |---|---|
-| Contract tests | 170 (unit, fuzz, invariants I1-I8, real-proof integration) |
-| Frontend | 54 unit tests; 16 Playwright end-to-end and accessibility tests on the real stack |
+| Contract tests | 174 (unit, fuzz, invariants I1-I8, real-proof integration) |
+| Frontend | 78 unit tests; 18 Playwright end-to-end and accessibility tests on the real stack, including one shipment from registration to settlement through wallets and logger CSVs |
 | Backend | 21 Go packages with `-race`; integration tests run a real anvil chain and Postgres; the end-to-end test drives the full story through the running service |
 | Circuit | 13,494 constraints; proves in about 1 s; 25 tests including tamper and wrong-context cases |
 | ZK resume on-chain | ~0.25 M gas (real Groth16 verification) |
