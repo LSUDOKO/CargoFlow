@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useRef, useState } from "react";
 import type { Abi, Address, Hash } from "viem";
 import { useAccount } from "wagmi";
-import { waitForTransactionReceipt, writeContract } from "wagmi/actions";
+import { switchChain, waitForTransactionReceipt, writeContract } from "wagmi/actions";
 import { useToast } from "@/components/ui/Toast";
 import { explorerTx } from "@/lib/explorer";
 import { wagmiConfig, type SupportedChainId } from "./config";
@@ -29,7 +29,16 @@ export function useTx() {
 
   const send = useCallback(
     async (req: TxRequest): Promise<Hash | undefined> => {
-      const reason = appChain === undefined ? "The network configuration is still loading." : txGuard({ pending: busy.current, walletChain: isConnected ? walletChain : undefined, appChain });
+      let reason = appChain === undefined ? "The network configuration is still loading." : txGuard({ pending: busy.current, walletChain: isConnected ? walletChain : undefined, appChain });
+      if (reason && appChain !== undefined && isConnected && !busy.current && walletChain !== appChain) {
+        // ask the wallet to change network itself; only if it refuses does the person have to do it by hand
+        try {
+          await switchChain(wagmiConfig, { chainId: appChain as SupportedChainId });
+          reason = null;
+        } catch {
+          /* keep the reason */
+        }
+      }
       if (reason) {
         toast({ tone: "alert", title: reason });
         return undefined;

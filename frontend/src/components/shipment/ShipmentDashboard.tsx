@@ -21,6 +21,7 @@ import { EscrowPanel } from "./EscrowPanel";
 import { Gauge } from "./Gauge";
 import { MilestoneTimeline } from "./MilestoneTimeline";
 import { ProofCard } from "./ProofCard";
+import { RecoveryPanel } from "./RecoveryPanel";
 import { RoleActions } from "./RoleActions";
 import { RouteMap } from "./RouteMap";
 import { SourcesPanel } from "./SourcesPanel";
@@ -175,6 +176,7 @@ export function ShipmentDashboard({ id, compact }: { id: string; compact?: boole
           <Card>
             <CardHeader title="Zero-knowledge recovery" />
             <ProofCard epochs={ev} audit={au} chainId={chainId} paused={v?.facility?.status === "PAUSED"} />
+            {v && !compact && <RecoveryPanel view={v} />}
           </Card>
         </div>
       </div>

@@ -3,7 +3,8 @@ import type { AuditEntry, EpochSummary } from "@/lib/api/schemas";
 
 export function ProofCard({ epochs, audit, chainId, paused }: { epochs: EpochSummary[]; audit: AuditEntry[]; chainId?: number; paused: boolean }) {
   const proven = epochs.find((e) => e.proofVerified);
-  const resume = audit.find((a) => a.title.startsWith("RESUME_WITH_PROOF"));
+  // sent by the backend (operator recovery) or by the exporter's own wallet; the chain event covers both
+  const resume = audit.find((a) => a.title.startsWith("FinancingResumed") || a.title.startsWith("RESUME_WITH_PROOF"));
   if (!proven) {
     return (
       <p className="text-slate">
