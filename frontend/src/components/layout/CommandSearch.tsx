@@ -51,6 +51,7 @@ export function CommandSearch() {
           <label htmlFor="cmd-q" className="sr-only">Shipment id or reference</label>
           <input
             id="cmd-q"
+            data-autofocus
             value={q}
             onChange={(e) => { setQ(e.target.value); setError(null); }}
             placeholder="0x… or CF-2026-SG01-…"

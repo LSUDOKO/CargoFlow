@@ -5,14 +5,21 @@ import { useEffect, useRef } from "react";
 /** Focus trap, Escape to close, scroll lock and focus restore for modal surfaces. */
 export function useDialog(open: boolean, onClose: () => void) {
   const ref = useRef<HTMLDivElement>(null);
+  // callers pass inline callbacks; keeping the latest in a ref means a parent re-render never re-runs the
+  // effect below, which would yank focus back to the first control on every keystroke
+  const close = useRef(onClose);
+  useEffect(() => {
+    close.current = onClose;
+  });
   useEffect(() => {
     if (!open) return;
     const previous = document.activeElement as HTMLElement | null;
     const focusable = () =>
       Array.from(ref.current?.querySelectorAll<HTMLElement>('a[href],button:not([disabled]),input:not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"])') ?? []);
-    focusable()[0]?.focus();
+    const preferred = ref.current?.querySelector<HTMLElement>("[data-autofocus]");
+    (preferred ?? focusable()[0])?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") close.current();
       if (e.key !== "Tab") return;
       const els = focusable();
       if (els.length === 0) return;
@@ -29,6 +36,6 @@ export function useDialog(open: boolean, onClose: () => void) {
       document.body.style.overflow = overflow;
       previous?.focus?.();
     };
-  }, [open, onClose]);
+  }, [open]);
   return ref;
 }

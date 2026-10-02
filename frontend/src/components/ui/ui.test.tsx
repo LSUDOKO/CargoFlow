@@ -102,3 +102,24 @@ describe("Toast", () => {
     expect(region.textContent).toContain("Deposited");
   });
 });
+
+describe("dialog focus", () => {
+  it("keeps focus where the user put it when the parent re-renders", async () => {
+    const { Modal } = await import("./Modal");
+    const { useState } = await import("react");
+    function Host() {
+      const [q, setQ] = useState("");
+      return (
+        <Modal open title="Find" onClose={() => {}}>
+          <input aria-label="query" value={q} onChange={(e) => setQ(e.target.value)} />
+        </Modal>
+      );
+    }
+    render(<Host />);
+    const input = screen.getByLabelText("query") as HTMLInputElement;
+    input.focus();
+    fireEvent.change(input, { target: { value: "C" } });
+    fireEvent.change(input, { target: { value: "CF" } });
+    expect(document.activeElement).toBe(input);
+  });
+});
