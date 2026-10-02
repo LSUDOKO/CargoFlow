@@ -154,6 +154,8 @@ func (s *Server) createShipment(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+var addressPattern = regexp.MustCompile(`^0x[0-9a-fA-F]{40}$`)
+
 func (s *Server) listShipments(w http.ResponseWriter, r *http.Request) error {
 	limit, offset := 50, 0
 	q := r.URL.Query()
@@ -171,7 +173,14 @@ func (s *Server) listShipments(w http.ResponseWriter, r *http.Request) error {
 		}
 		offset = n
 	}
-	list, err := s.c.Store.ListShipments(r.Context(), limit, offset)
+	filter := store.ShipmentFilter{Ref: strings.TrimSpace(q.Get("ref")), Party: strings.TrimSpace(q.Get("party"))}
+	if filter.Party != "" && !addressPattern.MatchString(filter.Party) {
+		return ErrBadRequest("party must be a 0x address")
+	}
+	if len(filter.Ref) > 128 {
+		return ErrBadRequest("ref is too long")
+	}
+	list, err := s.c.Store.ListShipmentsWhere(r.Context(), filter, limit, offset)
 	if err != nil {
 		return err
 	}

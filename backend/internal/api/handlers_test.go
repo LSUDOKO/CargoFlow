@@ -595,3 +595,27 @@ func TestMirrorIgnoresCallerScoringParametersAndRequiresTheRoute(t *testing.T) {
 		t.Fatalf("caller-chosen scoring parameters were stored: %+v", sh.Policy)
 	}
 }
+
+func TestShipmentListFiltersByPartyAndReference(t *testing.T) {
+	e := newEnv(t, nil)
+	id := e.onChain(t, "api-filter-1", true)
+	e.registerShipment(t, id, "api-filter-1")
+	type list struct {
+		Shipments []struct {
+			ID string `json:"id"`
+		} `json:"shipments"`
+	}
+	var byRef, byParty, none list
+	e.do(t, "GET", "/v1/shipments?ref=API-FILTER-1", nil, nil, &byRef)
+	e.do(t, "GET", "/v1/shipments?party="+strings.ToLower(e.buyer.Address().Hex()), nil, nil, &byParty)
+	e.do(t, "GET", "/v1/shipments?party=0x"+strings.Repeat("0", 40), nil, nil, &none)
+	if len(byRef.Shipments) != 1 || byRef.Shipments[0].ID != idHex(id) {
+		t.Fatalf("by reference: %+v", byRef)
+	}
+	if len(byParty.Shipments) != 1 || len(none.Shipments) != 0 {
+		t.Fatalf("by party: %+v / %+v", byParty, none)
+	}
+	if resp := e.do(t, "GET", "/v1/shipments?party=nope", nil, nil, nil); resp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("malformed party = %d", resp.StatusCode)
+	}
+}

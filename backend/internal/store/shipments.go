@@ -78,11 +78,25 @@ func (s *Store) GetShipment(ctx context.Context, id string) (Shipment, error) {
 	return scanShipment(s.pool.QueryRow(ctx, "SELECT "+shipmentColumns+" FROM shipments WHERE shipment_id = $1", id))
 }
 
+// ShipmentFilter narrows a shipment listing. Empty fields match everything.
+type ShipmentFilter struct {
+	Party string // an address that is the exporter, buyer or financier (case-insensitive)
+	Ref   string // an exact external reference (case-insensitive)
+}
+
 // ListShipments returns shipments newest first.
 func (s *Store) ListShipments(ctx context.Context, limit, offset int) ([]Shipment, error) {
+	return s.ListShipmentsWhere(ctx, ShipmentFilter{}, limit, offset)
+}
+
+// ListShipmentsWhere returns the shipments matching f, newest first.
+func (s *Store) ListShipmentsWhere(ctx context.Context, f ShipmentFilter, limit, offset int) ([]Shipment, error) {
 	rows, err := s.pool.Query(ctx,
-		"SELECT "+shipmentColumns+" FROM shipments ORDER BY created_at DESC, shipment_id DESC LIMIT $1 OFFSET $2",
-		limit, offset)
+		"SELECT "+shipmentColumns+` FROM shipments
+		WHERE ($3 = '' OR lower(exporter) = lower($3) OR lower(buyer) = lower($3) OR lower(coalesce(financier, '')) = lower($3))
+		  AND ($4 = '' OR lower(external_ref) = lower($4))
+		ORDER BY created_at DESC, shipment_id DESC LIMIT $1 OFFSET $2`,
+		limit, offset, f.Party, f.Ref)
 	if err != nil {
 		return nil, err
 	}

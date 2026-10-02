@@ -270,3 +270,43 @@ func TestSetShipmentFinancier(t *testing.T) {
 		t.Fatalf("unknown shipment: %v", err)
 	}
 }
+
+func TestShipmentsCanBeFilteredByPartyAndReference(t *testing.T) {
+	s := newStore(t)
+	ctx := context.Background()
+	a := sampleShipment(hex64('f'))
+	a.ExternalRef, a.Exporter, a.Buyer = "CF-ALPHA", hex40('1'), hex40('2')
+	b := sampleShipment(hex64('e'))
+	b.ExternalRef, b.Exporter, b.Buyer = "CF-BETA", hex40('3'), hex40('2')
+	for _, sh := range []store.Shipment{a, b} {
+		if err := s.CreateShipment(ctx, sh, sampleMilestones()); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := s.SetShipmentFinancier(ctx, b.ID, hex40('9')); err != nil {
+		t.Fatal(err)
+	}
+	ids := func(f store.ShipmentFilter) []string {
+		got, err := s.ListShipmentsWhere(ctx, f, 50, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var out []string
+		for _, sh := range got {
+			out = append(out, sh.ExternalRef)
+		}
+		return out
+	}
+	if got := ids(store.ShipmentFilter{Party: strings.ToUpper(hex40('2'))}); len(got) != 2 {
+		t.Fatalf("buyer of both: %v", got)
+	}
+	if got := ids(store.ShipmentFilter{Party: hex40('9')}); len(got) != 1 || got[0] != "CF-BETA" {
+		t.Fatalf("financier: %v", got)
+	}
+	if got := ids(store.ShipmentFilter{Ref: "cf-alpha"}); len(got) != 1 || got[0] != "CF-ALPHA" {
+		t.Fatalf("reference, case-insensitive: %v", got)
+	}
+	if got := ids(store.ShipmentFilter{Ref: "CF-NONE"}); len(got) != 0 {
+		t.Fatalf("unknown reference: %v", got)
+	}
+}
