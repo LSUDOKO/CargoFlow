@@ -15,8 +15,9 @@ type limiter struct {
 }
 
 type window struct {
-	start time.Time
-	count int
+	start  time.Time
+	count  int
+	period time.Duration
 }
 
 func newLimiter(now func() time.Time) *limiter {
@@ -28,22 +29,31 @@ func newLimiter(now func() time.Time) *limiter {
 
 // allow reports whether key may make another request this minute, and if not, how long to wait.
 func (l *limiter) allow(key string, perMinute int) (bool, time.Duration) {
-	if perMinute <= 0 {
+	return l.allowN(key, 1, perMinute, time.Minute)
+}
+
+// allowN reports whether key may use n more units of a budget of limit per period, and if not, how long to
+// wait. A refused request uses nothing.
+func (l *limiter) allowN(key string, n, limit int, period time.Duration) (bool, time.Duration) {
+	if limit <= 0 {
 		return true, 0
 	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	now := l.now()
 	w := l.windows[key]
-	if w == nil || now.Sub(w.start) >= time.Minute {
-		l.windows[key] = &window{start: now, count: 1}
+	if w == nil || now.Sub(w.start) >= w.period {
+		if n > limit {
+			return false, period
+		}
+		l.windows[key] = &window{start: now, count: n, period: period}
 		l.gc(now)
 		return true, 0
 	}
-	if w.count >= perMinute {
-		return false, time.Minute - now.Sub(w.start)
+	if w.count+n > limit {
+		return false, w.period - now.Sub(w.start)
 	}
-	w.count++
+	w.count += n
 	return true, 0
 }
 
@@ -53,7 +63,7 @@ func (l *limiter) gc(now time.Time) {
 		return
 	}
 	for k, w := range l.windows {
-		if now.Sub(w.start) >= time.Minute {
+		if now.Sub(w.start) >= w.period {
 			delete(l.windows, k)
 		}
 	}

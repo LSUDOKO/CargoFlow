@@ -15,6 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/crypto"
 
+	"github.com/LSUDOKO/CargoFlow/backend/internal/api"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/auth"
 )
 
@@ -144,5 +145,65 @@ func TestABoundGatewayCannotReportForAnotherShipment(t *testing.T) {
 	own := "/v1/shipments/" + idHex(mine) + "/telemetry"
 	if resp := e.signedRaw(t, created.ID, own, body, priv, nowFunc().Unix(), nil); resp.StatusCode != http.StatusOK {
 		t.Fatalf("telemetry to its own shipment = %d", resp.StatusCode)
+	}
+}
+
+// boundGateway registers a fresh gateway for shipment and returns its id and private key.
+func boundGateway(t *testing.T, e *env, shipment string) (string, ed25519.PrivateKey) {
+	t.Helper()
+	pub, priv, _ := ed25519.GenerateKey(rand.Reader)
+	var created struct {
+		ID string `json:"id"`
+	}
+	if resp := e.do(t, "POST", "/v1/shipments/"+shipment+"/sources", gatewayBody(t, e.keys["exporter"], shipment, pub, time.Now().Unix()), nil, &created); resp.StatusCode != http.StatusCreated {
+		t.Fatalf("register gateway = %d", resp.StatusCode)
+	}
+	return created.ID, priv
+}
+
+func readingsBody(ts ...int64) []byte {
+	pts := make([]map[string]any, len(ts))
+	for i, t := range ts {
+		pts[i] = map[string]any{"timestamp": t, "sensorId": "sensor-1", "temperatureX100": 500, "humidityX100": 6500,
+			"latitudeE6": 18_950_000, "longitudeE6": 72_950_000, "shockX100": 10}
+	}
+	b, _ := json.Marshal(map[string]any{"points": pts})
+	return b
+}
+
+func TestAShipmentHasAtMostEightGateways(t *testing.T) {
+	e := newEnv(t, nil)
+	id := e.onChain(t, "api-gw-cap", true)
+	e.registerShipment(t, id, "api-gw-cap")
+	for range 8 {
+		boundGateway(t, e, idHex(id))
+	}
+	pub, _, _ := ed25519.GenerateKey(rand.Reader)
+	var apiErr struct {
+		Error struct{ Code string } `json:"error"`
+	}
+	if resp := e.do(t, "POST", "/v1/shipments/"+idHex(id)+"/sources", gatewayBody(t, e.keys["exporter"], idHex(id), pub, time.Now().Unix()), nil, &apiErr); resp.StatusCode != http.StatusConflict {
+		t.Fatalf("a ninth gateway = %d %q, want 409", resp.StatusCode, apiErr.Error.Code)
+	}
+}
+
+func TestReadingsArePacedPerShipmentAndNeverFromTheFuture(t *testing.T) {
+	e := newEnvWith(t, nil, func(_ *env, c *api.Config) { c.ShipmentReadingsPerHour = 3 })
+	id := e.onChain(t, "api-gw-budget", true)
+	e.registerShipment(t, id, "api-gw-budget")
+	a, privA := boundGateway(t, e, idHex(id))
+	b, privB := boundGateway(t, e, idHex(id))
+	path := "/v1/shipments/" + idHex(id) + "/telemetry"
+	now := time.Now().Unix()
+
+	if resp := e.signedRaw(t, a, path, readingsBody(now+3600), privA, nowFunc().Unix(), nil); resp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("a reading an hour in the future = %d, want 400", resp.StatusCode)
+	}
+	if resp := e.signedRaw(t, a, path, readingsBody(now-90, now-80), privA, nowFunc().Unix(), nil); resp.StatusCode != http.StatusOK {
+		t.Fatalf("within the budget = %d", resp.StatusCode)
+	}
+	// the budget is the shipment's, not the gateway's: another gateway cannot widen it
+	if resp := e.signedRaw(t, b, path, readingsBody(now-70, now-60), privB, nowFunc().Unix(), nil); resp.StatusCode != http.StatusTooManyRequests {
+		t.Fatalf("over the shipment's hourly budget = %d, want 429", resp.StatusCode)
 	}
 }

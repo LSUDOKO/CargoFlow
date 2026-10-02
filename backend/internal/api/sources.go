@@ -5,7 +5,9 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -15,6 +17,9 @@ import (
 
 // authorizationWindow is how far a signed authorization's issuedAt may be from the server clock.
 const authorizationWindow = 10 * time.Minute
+
+// maxGatewaysPerShipment bounds how many evidence sources an exporter can bind to one shipment.
+const maxGatewaysPerShipment = 8
 
 type gatewayRequest struct {
 	Label     string   `json:"label"`
@@ -107,6 +112,13 @@ func (s *Server) registerGateway(w http.ResponseWriter, r *http.Request) error {
 	}
 	if signer != strings.ToLower(sh.Exporter) {
 		return ErrUnauthorized("only the shipment's exporter can add an evidence source")
+	}
+	existing, err := s.c.Store.SourcesForShipment(r.Context(), sh.ID)
+	if err != nil {
+		return err
+	}
+	if len(existing) >= maxGatewaysPerShipment && !slices.ContainsFunc(existing, func(x store.Source) bool { return x.ID == SourceIDFor(pub) }) {
+		return ErrConflictMsg(fmt.Sprintf("a shipment can have at most %d gateways", maxGatewaysPerShipment))
 	}
 	src, created, err := s.c.Store.RegisterBoundSource(r.Context(), store.Source{
 		ID: SourceIDFor(pub), PublicKey: pub, SensorIDs: req.SensorIDs, ShipmentID: sh.ID, Label: strings.TrimSpace(req.Label),

@@ -19,6 +19,7 @@ import (
 // Limits on what one request may carry.
 const (
 	maxPointsPerBatch = 500
+	maxFutureSkewSec  = 300 // how far ahead of the server clock a reading may be dated
 	maxListLimit      = 200
 )
 
@@ -40,6 +41,10 @@ type Config struct {
 	MirrorPerMinute    int // public shipment mirroring, per client address; default 30
 	GatewayPerMinute   int // gateway registrations, per client address; default 20
 	RecoveryPerMinute  int // exporter recovery preparations, per shipment; default 3
+	// ShipmentReadingsPerHour caps the readings one shipment may receive per hour from all of its sources, which
+	// bounds the evidence commits the worker pays for. Default 20,000: a 30-day, two-probe logger export at
+	// 10-minute intervals fits in one go.
+	ShipmentReadingsPerHour int
 
 	Now func() time.Time
 }
@@ -69,6 +74,9 @@ func NewServer(c Config) *Server {
 	}
 	if c.RecoveryPerMinute == 0 {
 		c.RecoveryPerMinute = 3
+	}
+	if c.ShipmentReadingsPerHour == 0 {
+		c.ShipmentReadingsPerHour = 20_000
 	}
 	return &Server{c: c, limiter: newLimiter(c.Now)}
 }

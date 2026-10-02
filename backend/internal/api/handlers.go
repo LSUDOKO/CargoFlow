@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 
@@ -253,6 +254,20 @@ func (s *Server) telemetry(w http.ResponseWriter, r *http.Request) error {
 	}
 	if len(req.Points) > maxPointsPerBatch {
 		return &Error{http.StatusRequestEntityTooLarge, "payload_too_large", fmt.Sprintf("at most %d readings per request", maxPointsPerBatch)}
+	}
+	now := time.Now()
+	if s.c.Now != nil {
+		now = s.c.Now()
+	}
+	for i, p := range req.Points {
+		if p.Timestamp > now.Unix()+maxFutureSkewSec {
+			return ErrBadRequest(fmt.Sprintf("reading %d is dated in the future; check the device clock", i))
+		}
+	}
+	budgetKey := "readings:" + strings.ToLower(strings.TrimSpace(r.PathValue("id")))
+	if ok, wait := s.limiter.allowN(budgetKey, len(req.Points), s.c.ShipmentReadingsPerHour, time.Hour); !ok {
+		w.Header().Set("Retry-After", strconv.Itoa(int(wait.Seconds())+1))
+		return &Error{http.StatusTooManyRequests, "rate_limited", "this shipment has received its hourly allowance of readings; retry later"}
 	}
 	points := make([]telemetry.Point, len(req.Points))
 	for i, p := range req.Points {
