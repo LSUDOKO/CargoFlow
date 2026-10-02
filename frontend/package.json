@@ -10,7 +10,10 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "e2e": "playwright test",
-    "abi": "node scripts/gen-abi.mjs"
+    "abi": "node scripts/gen-abi.mjs",
+    "cf:build": "opennextjs-cloudflare build",
+    "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "cf:deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy"
   },
   "dependencies": {
     "@noble/curves": "^1.9.7",
@@ -27,6 +30,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",
+    "@opennextjs/cloudflare": "^1.20.7",
     "@playwright/test": "1.63.0",
     "@tailwindcss/postcss": "4.3.3",
     "@testing-library/react": "16.3.3",
@@ -38,7 +42,8 @@
     "jsdom": "^26",
     "tailwindcss": "4.3.3",
     "typescript": "5.9.3",
-    "vitest": "^3"
+    "vitest": "^3",
+    "wrangler": "^4.146.0"
   },
   "packageManager": "pnpm@10.19.0",
   "pnpm": {

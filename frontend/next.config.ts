@@ -7,7 +7,8 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   turbopack: { root: fileURLToPath(new URL(".", import.meta.url)) },
   poweredByHeader: false,
-  images: { formats: ["image/avif", "image/webp"] },
+  // Cloudflare Workers has no Next.js image optimizer unless an Images binding is configured: serve originals there
+  images: { formats: ["image/avif", "image/webp"], unoptimized: process.env.CLOUDFLARE_BUILD === "1" },
   async headers() {
     return [
       {

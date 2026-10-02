@@ -48,3 +48,6 @@ assests/
 
 # browser automation scratch
 .playwright-mcp/
+frontend/.open-next/
+frontend/.wrangler/
+frontend/.dev.vars
