@@ -254,7 +254,9 @@ Performance targets:
 
 | Spec said | Built | Why |
 |---|---|---|
-| Telemetry charts from the API | New `GET /v1/shipments/{id}/telemetry` returning per-epoch per-sensor aggregates | The API deliberately exposes no readings; aggregates keep that rule while making charts possible |
+| Telemetry charts from the API | New `GET /v1/shipments/{id}/telemetry` returning per-epoch per-sensor min/mean/max and the latest position | Charts need temperatures; salts, humidity, shock and reading order stay private so committed leaves cannot be reconstructed |
+| Stats include USDG under escrow | Stats are counts only; the landing shows facilities in transit | Amounts live on-chain per facility; summing them server-side needs a chain read per shipment |
+| Fleet filter chips "paused only", "has proof" | Status tabs (including Paused) and "My shipments" | The tabs already cover the paused case; proof status is visible per row in the dashboard |
 | Illustrations generated with free image models | Hero generated (FLUX.1-schnell); the six spot illustrations hand-drawn as SVG | The generated spots missed the palette and the free GPU quota ran out (spec fallback) |
 | OG image as a static PNG | Rendered at build by `next/og` | Always in sync with the brand, no binary to maintain |
 | Exporter recomputes shipment id and policy hash | Read from the contracts (`shipmentIdFor`, `hashPolicy`); only the route commitment is recomputed, pinned by a Go vector | No second implementation to drift |

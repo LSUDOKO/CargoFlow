@@ -5,10 +5,10 @@ import { useState } from "react";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { HashBadge } from "@/components/ui/HashBadge";
 import { Spinner } from "@/components/ui/Spinner";
-import { apiGet } from "@/lib/api/client";
+import { apiGet, lookupReference } from "@/lib/api/client";
 import { useConfig, useShipments } from "@/lib/api/hooks";
 import { EpochList, type EpochSummary } from "@/lib/api/schemas";
-import { resolveShipmentQuery } from "@/lib/resolve";
+import { resolveShipment } from "@/lib/resolve";
 
 const tabs = [
   { id: "track", label: "Track a shipment", icon: "M4 7h11l5 5v5h-2a2 2 0 1 1-4 0H9a2 2 0 1 1-4 0H4z" },
@@ -89,7 +89,20 @@ function TrackPanel() {
   const router = useRouter();
   const [q, setQ] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const { data, isFetching } = useShipments(200, 0);
+  const [busy, setBusy] = useState(false);
+  const submit = async () => {
+    if (!q.trim()) return setError("Enter a shipment id or reference.");
+    setBusy(true);
+    try {
+      const r = await resolveShipment(q, lookupReference);
+      if (r.kind === "none") setError("We couldn't find that shipment. Paste its 0x id or its exact reference.");
+      else router.push(`/track/${r.id}`);
+    } catch {
+      setError("The CargoFlow backend could not be reached. Try again in a moment.");
+    } finally {
+      setBusy(false);
+    }
+  };
   return (
     <div id="hero-panel-track" role="tabpanel" aria-labelledby="hero-tab-track">
       <SearchRow
@@ -98,13 +111,9 @@ function TrackPanel() {
         placeholder="Shipment id (0x…) or reference, e.g. CF-2026-SG01-…"
         value={q}
         onChange={(v) => { setQ(v); setError(null); }}
-        busy={isFetching && !data}
+        busy={busy}
         cta="Track"
-        onSubmit={() => {
-          const r = resolveShipmentQuery(q, data?.shipments ?? []);
-          if (r.kind === "none") setError(q.trim() ? "We couldn't find that shipment. Paste its 0x id or its exact reference." : "Enter a shipment id or reference.");
-          else router.push(`/track/${r.id}`);
-        }}
+        onSubmit={submit}
       />
       {error ? (
         <p className="mt-2 px-3 text-sm font-medium text-danger" role="alert">{error}</p>

@@ -17,3 +17,18 @@ describe("resolveShipmentQuery", () => {
     expect(resolveShipmentQuery("0x1234", list)).toEqual({ kind: "none" });
   });
 });
+
+import { resolveShipment } from "./resolve";
+
+describe("resolveShipment (asks the backend for references)", () => {
+  it("returns an id directly without a lookup", async () => {
+    let called = false;
+    expect(await resolveShipment(id, async () => { called = true; return []; })).toEqual({ kind: "id", id });
+    expect(called).toBe(false);
+  });
+  it("looks a reference up and reports none when nothing matches", async () => {
+    expect(await resolveShipment("CF-2026-SG01-1790857906019", async (ref) => (ref === "CF-2026-SG01-1790857906019" ? [{ id }] : []))).toEqual({ kind: "ref", id });
+    expect(await resolveShipment("CF-NOPE", async () => [])).toEqual({ kind: "none" });
+    expect(await resolveShipment("  ", async () => [{ id }])).toEqual({ kind: "none" });
+  });
+});

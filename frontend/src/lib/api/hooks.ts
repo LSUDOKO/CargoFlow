@@ -1,15 +1,36 @@
 "use client";
 
-import { useQueries, useQuery } from "@tanstack/react-query";
-import { apiGet } from "./client";
-import { AuditList, Config, DemoStatus, EpochList, Health, ShipmentList, ShipmentView, Stats, TelemetrySummary } from "./schemas";
+import { useInfiniteQuery, useQueries, useQuery } from "@tanstack/react-query";
+import { apiGet, fetchHealth } from "./client";
+import { AuditList, Config, DemoStatus, EpochList, ShipmentList, ShipmentView, Stats, TelemetrySummary } from "./schemas";
 
 export const useConfig = () => useQuery({ queryKey: ["config"], queryFn: () => apiGet("/v1/config", Config), staleTime: 5 * 60_000 });
 
 export const useHealth = () =>
-  useQuery({ queryKey: ["health"], queryFn: () => apiGet("/v1/health", Health), refetchInterval: 15_000, retry: 0 });
+  useQuery({ queryKey: ["health"], queryFn: () => fetchHealth(), refetchInterval: 15_000, retry: 0 });
 
 export const useStats = () => useQuery({ queryKey: ["stats"], queryFn: () => apiGet("/v1/stats", Stats), refetchInterval: 20_000 });
+
+/** Shipments where `party` is the exporter, financier or buyer (no 200-row ceiling: the backend filters). */
+export const useShipmentsFor = (party: string | undefined) =>
+  useQuery({
+    queryKey: ["shipments", "party", party?.toLowerCase()],
+    queryFn: () => apiGet(`/v1/shipments?party=${party}&limit=200`, ShipmentList),
+    enabled: !!party,
+    refetchInterval: 20_000,
+  });
+
+const PAGE = 50;
+
+/** The fleet, page by page, using offsets so it never asks for more than the backend allows per request. */
+export const useFleetPages = () =>
+  useInfiniteQuery({
+    queryKey: ["shipments", "fleet"],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) => apiGet(`/v1/shipments?limit=${PAGE}&offset=${pageParam}`, ShipmentList),
+    getNextPageParam: (last, pages) => (last.shipments.length === PAGE ? pages.length * PAGE : undefined),
+    refetchInterval: 30_000,
+  });
 
 export const useShipments = (limit = 50, offset = 0) =>
   useQuery({

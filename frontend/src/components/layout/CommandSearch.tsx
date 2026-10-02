@@ -4,16 +4,16 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
-import { useShipments } from "@/lib/api/hooks";
-import { resolveShipmentQuery } from "@/lib/resolve";
+import { lookupReference } from "@/lib/api/client";
+import { resolveShipment } from "@/lib/resolve";
 
 /** Global "find a shipment" dialog, opened with Ctrl/⌘ K or the header button. */
 export function CommandSearch() {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const router = useRouter();
-  const { data } = useShipments(200, 0);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
@@ -24,9 +24,15 @@ export function CommandSearch() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
-  const go = (e: React.FormEvent) => {
+  const go = async (e: React.FormEvent) => {
     e.preventDefault();
-    const r = resolveShipmentQuery(q, data?.shipments ?? []);
+    setBusy(true);
+    const r = await resolveShipment(q, lookupReference).catch(() => null);
+    setBusy(false);
+    if (!r) {
+      setError("The CargoFlow backend could not be reached. Try again in a moment.");
+      return;
+    }
     if (r.kind === "none") {
       setError("We couldn't find that shipment. Paste its 0x id or its exact reference.");
       return;
@@ -59,7 +65,7 @@ export function CommandSearch() {
             autoComplete="off"
           />
           {error && <p className="text-sm font-medium text-danger">{error}</p>}
-          <Button type="submit" size="lg">Track shipment</Button>
+          <Button type="submit" size="lg" loading={busy}>Track shipment</Button>
         </form>
       </Modal>
     </>

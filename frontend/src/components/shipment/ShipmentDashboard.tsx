@@ -1,6 +1,10 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { lookupReference } from "@/lib/api/client";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { HashBadge } from "@/components/ui/HashBadge";
 import { StatusPill } from "@/components/ui/Pill";
@@ -23,6 +27,13 @@ import { TelemetryChart } from "./TelemetryChart";
 
 export function ShipmentDashboard({ id, compact }: { id: string; compact?: boolean }) {
   const valid = /^0x[0-9a-fA-F]{64}$/.test(id);
+  const router = useRouter();
+  // /track/<reference> links work too: resolve the reference, then move to the canonical id URL
+  const byRef = useQuery({ queryKey: ["ref", id], queryFn: () => lookupReference(id), enabled: !valid && id.trim() !== "" });
+  const resolved = byRef.data?.[0]?.id;
+  useEffect(() => {
+    if (resolved) router.replace(`/track/${resolved}`);
+  }, [resolved, router]);
   const shipment = useShipment(valid ? id : undefined);
   const epochs = useEpochs(valid ? id : undefined);
   const audit = useAudit(valid ? id : undefined);
@@ -31,12 +42,19 @@ export function ShipmentDashboard({ id, compact }: { id: string; compact?: boole
   const { connected } = useShipmentStream(valid ? id : undefined);
   const chainId = cfg?.chainId;
 
+  if (!valid && (byRef.isPending || resolved)) {
+    return (
+      <div className="container-page py-20 text-center text-slate" role="status">
+        Looking up {id}…
+      </div>
+    );
+  }
   if (!valid || (shipment.error as { status?: number } | null)?.status === 404) {
     return (
       <div className="container-page py-20 text-center">
         <h1 className="font-display text-4xl font-bold">We couldn&apos;t find that shipment</h1>
         <p className="mx-auto mt-4 max-w-md text-slate">
-          {valid ? "No shipment with this id is tracked by this deployment." : "That doesn't look like a shipment id. Ids are 0x followed by 64 hex characters."}
+          {valid ? "No shipment with this id is tracked by this deployment." : `No shipment id or reference matches “${id}”.`}
         </p>
         <div className="mt-8 flex justify-center gap-3">
           <LinkButton href="/shipments">Browse the fleet</LinkButton>

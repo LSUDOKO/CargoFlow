@@ -51,17 +51,17 @@ export function RoleActions({ view, epochs }: { view: ShipmentView; epochs: Epoc
       </Button>,
     );
   }
-  if ((roles.includes("exporter") || roles.includes("financier")) && (f.status === "ACTIVE" || f.status === "PAUSED") && next < f.milestoneCount && evidence) {
+  // releasing is only possible while ACTIVE (a paused facility reverts with FacilityPaused before evaluating)
+  if ((roles.includes("exporter") || roles.includes("financier")) && f.status === "ACTIVE" && next < f.milestoneCount && evidence && evidence.decisionPass) {
     actions.push(
       <Button
         key="release"
-        variant={f.status === "PAUSED" ? "secondary" : "primary"}
         loading={pending}
         onClick={() =>
           send({ address: contracts.controller, abi: controllerAbi, functionName: "evaluateAndReleaseMilestone", args: [id, next, evidence.sequence], label: `Release milestone ${next + 1}`, successTitle: `Milestone ${next + 1} released` })
         }
       >
-        {f.status === "PAUSED" ? `Try releasing milestone ${next + 1}` : `Release milestone ${next + 1}`}
+        {`Release milestone ${next + 1}`}
       </Button>,
     );
   }

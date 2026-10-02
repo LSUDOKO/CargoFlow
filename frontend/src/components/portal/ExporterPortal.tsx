@@ -5,11 +5,11 @@ import { Card, CardHeader } from "@/components/ui/Card";
 import { ExporterWizard, MyShipments } from "@/components/portal/ExporterWizard";
 import { PortalHeader } from "@/components/portal/PortalHeader";
 import { NetworkGuard } from "@/components/wallet/NetworkGuard";
-import { useShipments } from "@/lib/api/hooks";
+import { useShipmentsFor } from "@/lib/api/hooks";
 
 export function ExporterPortal() {
   const { address } = useAccount();
-  const { data } = useShipments(200, 0);
+  const { data } = useShipmentsFor(address);
   const mine = (data?.shipments ?? []).filter((s) => address && s.exporter.toLowerCase() === address.toLowerCase());
   return (
     <div className="container-page flex flex-col gap-6 py-10">

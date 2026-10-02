@@ -11,7 +11,7 @@ import { StatusPill } from "@/components/ui/Pill";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Tabs } from "@/components/ui/Tabs";
 import { apiGet } from "@/lib/api/client";
-import { useShipments } from "@/lib/api/hooks";
+import { useFleetPages } from "@/lib/api/hooks";
 import { EpochList, ShipmentView } from "@/lib/api/schemas";
 import { filterFleet, tabCounts, type FleetRow, type FleetSort, type FleetTab } from "@/lib/fleet";
 import { formatUSDG } from "@/lib/format";
@@ -19,12 +19,9 @@ import { useHydrated } from "@/lib/useHydrated";
 import { ContainerDrawer } from "./ContainerDrawer";
 import { Sparkline } from "./Sparkline";
 
-const PAGE = 50;
-
 export function FleetView() {
-  const [limit, setLimit] = useState(PAGE);
-  const { data, isPending, isError, error, refetch, isFetching } = useShipments(limit, 0);
-  const shipments = useMemo(() => data?.shipments ?? [], [data]);
+  const { data, isPending, isError, error, refetch, isFetching, fetchNextPage, hasNextPage, isFetchingNextPage } = useFleetPages();
+  const shipments = useMemo(() => data?.pages.flatMap((p) => p.shipments) ?? [], [data]);
   const views = useQueries({ queries: shipments.map((s) => ({ queryKey: ["shipment", s.id], queryFn: () => apiGet(`/v1/shipments/${s.id}`, ShipmentView), staleTime: 10_000 })) });
   const epochs = useQueries({ queries: shipments.map((s) => ({ queryKey: ["epochs", s.id], queryFn: () => apiGet(`/v1/shipments/${s.id}/epochs`, EpochList), staleTime: 15_000 })) });
   const [tab, setTab] = useState<FleetTab>("all");
@@ -176,9 +173,9 @@ export function FleetView() {
                 </li>
               ))}
             </ul>
-            {shipments.length >= limit && (
+            {hasNextPage && (
               <div className="mt-6 text-center">
-                <Button variant="secondary" loading={isFetching} onClick={() => setLimit((l) => l + PAGE)}>Load more</Button>
+                <Button variant="secondary" loading={isFetchingNextPage} onClick={() => fetchNextPage()}>Load more</Button>
               </div>
             )}
           </>

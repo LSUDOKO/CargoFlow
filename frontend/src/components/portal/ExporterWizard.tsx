@@ -74,7 +74,7 @@ export function ExporterWizard() {
         : null,
     total: !total || total <= 0n ? "Enter how much capital to raise." : invoice !== undefined && total + fee > invoice ? `The invoice (${formatUSDG(invoice)} USDG) must cover the facility plus its fee.` : null,
     count: !Number.isInteger(count) || count < 1 || count > 8 ? "Use 1 to 8 milestones." : null,
-    feePct: !Number.isFinite(feeBps) || feeBps < 0 || feeBps > 1000 ? "Use a fee from 0% to 10%." : null,
+    feePct: f.feePct.trim() === "" || !Number.isFinite(feeBps) || feeBps < 0 || feeBps > 1000 ? "Use a fee from 0% to 10%." : null,
   };
   const valid = [Object.values(detailErr).every((e) => !e), Object.keys(policyErr).length === 0, Object.values(facilityErr).every((e) => !e)];
   const next = () => {
@@ -87,7 +87,11 @@ export function ExporterWizard() {
 
   // --- signing: each step reads the chain first, so a half-finished run resumes instead of reverting
   const submit = async () => {
-    if (!contracts || !address || !invoice || !total) return;
+    if (!contracts || !address) {
+      toast({ tone: "alert", title: "The network configuration has not loaded", body: "Check that the CargoFlow backend is reachable, then try again." });
+      return;
+    }
+    if (!invoice || !total) return;
     setRunning(true);
     const cid = chainId as SupportedChainId;
     const route = ROUTES.find((r) => r.id === d.route)!.points;
@@ -99,8 +103,20 @@ export function ExporterWizard() {
       setProg((x) => ({ ...x, id }));
       const commitment = (await readContract(wagmiConfig, { address: contracts.policies, abi: policiesAbi, functionName: "hashPolicy", args: [policy], chainId: cid })) as Hex;
 
-      const sh = (await readContract(wagmiConfig, { address: contracts.registry, abi: registryAbi, functionName: "getShipment", args: [id], chainId: cid }).catch(() => null)) as { exists: boolean } | null;
-      if (sh?.exists) setProg((x) => ({ ...x, registered: "done" }));
+      const sh = (await readContract(wagmiConfig, { address: contracts.registry, abi: registryAbi, functionName: "getShipment", args: [id], chainId: cid }).catch(() => null)) as
+        | { exists: boolean; buyer: Address; invoiceValue: bigint; routeCommitment: Hex; policyCommitment: Hex }
+        | null;
+      if (sh?.exists) {
+        // this reference is already registered by this wallet: continue only if it is the same shipment
+        const same =
+          sh.buyer.toLowerCase() === d.buyer.toLowerCase() && sh.invoiceValue === invoice &&
+          sh.routeCommitment.toLowerCase() === routeCommitment(route).toLowerCase() && sh.policyCommitment.toLowerCase() === commitment.toLowerCase();
+        if (!same) {
+          toast({ tone: "danger", title: "This reference is already used for a different shipment", body: "Pick a new reference. On-chain shipments cannot be changed once registered." });
+          return;
+        }
+        setProg((x) => ({ ...x, registered: "done" }));
+      }
       else {
         const h = await send({
           address: contracts.registry, abi: registryAbi, functionName: "registerShipment",

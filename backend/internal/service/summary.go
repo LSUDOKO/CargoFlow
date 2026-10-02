@@ -32,8 +32,10 @@ type LatestPosition struct {
 	Timestamp int64 `json:"timestamp"`
 }
 
-// TelemetrySummary is what a dashboard may chart. It carries aggregates only: no individual reading, salt,
-// humidity or shock value, so raw telemetry stays private exactly as it does on-chain.
+// TelemetrySummary is what a dashboard may chart: per-epoch temperature range and mean per sensor, plus the
+// latest position. It never carries salts, humidity, shock or the readings' order, so the committed leaves stay
+// unrecoverable. The per-epoch min and max are themselves temperatures that were read, which is the point of the
+// chart; anyone needing more privacy than that should not expose this endpoint.
 type TelemetrySummary struct {
 	Epochs   []EpochTelemetry `json:"epochs"`
 	Position *LatestPosition  `json:"position"`

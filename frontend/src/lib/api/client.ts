@@ -14,7 +14,7 @@ export class ApiError extends Error {
   }
 }
 
-async function request<S extends z.ZodTypeAny>(method: string, path: string, schema: S, body?: unknown): Promise<z.infer<S>> {
+async function request<S extends z.ZodTypeAny>(method: string, path: string, schema: S, body?: unknown, acceptStatus: number[] = []): Promise<z.infer<S>> {
   let res: Response;
   try {
     res = await fetch(`${API_URL}${path}`, {
@@ -33,7 +33,7 @@ async function request<S extends z.ZodTypeAny>(method: string, path: string, sch
   } catch {
     /* not JSON */
   }
-  if (!res.ok) {
+  if (!res.ok && !acceptStatus.includes(res.status)) {
     const e = (json as { error?: { code?: string; message?: string } } | undefined)?.error;
     throw new ApiError(res.status, e?.code ?? "http_error", e?.message ?? `Request failed with status ${res.status}.`);
   }
@@ -51,4 +51,17 @@ export const apiPost = <S extends z.ZodTypeAny>(path: string, body: unknown, sch
 export function wsURL(apiURL: string, shipmentId: string): string {
   const base = apiURL.replace(/\/+$/, "").replace(/^http/, "ws");
   return `${base}/v1/ws?shipment=${shipmentId}`;
+}
+
+/** Health, reading the backend's 503 "degraded" body instead of treating it as unreachable. */
+export async function fetchHealth() {
+  const { Health } = await import("./schemas");
+  return request("GET", "/v1/health", Health, undefined, [503]);
+}
+
+/** Shipments whose external reference is exactly `ref` (case-insensitive). */
+export async function lookupReference(ref: string) {
+  const { ShipmentList } = await import("./schemas");
+  const list = await apiGet(`/v1/shipments?ref=${encodeURIComponent(ref)}&limit=5`, ShipmentList);
+  return list.shipments;
 }

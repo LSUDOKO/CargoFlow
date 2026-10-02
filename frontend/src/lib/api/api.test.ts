@@ -68,3 +68,12 @@ describe("client", () => {
     expect(wsURL("https://api.cargoflow.app/", id)).toBe(`wss://api.cargoflow.app/v1/ws?shipment=${id}`);
   });
 });
+
+describe("degraded health", () => {
+  afterEach(() => vi.unstubAllGlobals());
+  it("reads a 503 health body instead of treating the backend as unreachable", async () => {
+    const { fetchHealth } = await import("./client");
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ status: "degraded", database: "ok", chain: "unavailable" }), { status: 503 })));
+    expect((await fetchHealth()).status).toBe("degraded");
+  });
+});

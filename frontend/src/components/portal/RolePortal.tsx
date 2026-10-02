@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/Card";
 import { StatusPill } from "@/components/ui/Pill";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { NetworkGuard } from "@/components/wallet/NetworkGuard";
-import { useShipments, useShipmentViews } from "@/lib/api/hooks";
+import { useShipmentsFor, useShipmentViews } from "@/lib/api/hooks";
 import type { ShipmentView } from "@/lib/api/schemas";
 import { controllerAbi } from "@/lib/chain/abis";
 import { useContracts } from "@/lib/chain/contracts";
@@ -41,7 +41,7 @@ const copy = {
 export function RolePortal({ role }: { role: Role }) {
   const c = copy[role];
   const { address } = useAccount();
-  const { data, isPending } = useShipments(200, 0);
+  const { data, isPending } = useShipmentsFor(address);
   const ids = (data?.shipments ?? []).map((s) => s.id);
   const views = useShipmentViews(ids);
   const mine = views
@@ -49,6 +49,8 @@ export function RolePortal({ role }: { role: Role }) {
     .filter((v): v is ShipmentView => !!v && !!address && !!v.facility && v.facility[role].toLowerCase() === address.toLowerCase());
   const committed = mine.reduce((s, v) => s + BigInt(v.facility!.committed), 0n);
   const drawn = mine.reduce((s, v) => s + BigInt(v.facility!.drawn), 0n);
+  // capital actually sitting in escrow: funded facilities that have not closed (settled or defaulted)
+  const inEscrow = mine.filter((v) => v.facility!.funded && !v.facility!.closed).reduce((s, v) => s + BigInt(v.facility!.remaining), 0n);
 
   return (
     <div className="container-page flex flex-col gap-6 py-10">
@@ -60,7 +62,7 @@ export function RolePortal({ role }: { role: Role }) {
               ["Facilities", String(mine.length)],
               ["Committed", `${formatUSDG(committed, { compact: true })} USDG`],
               ["Drawn by exporters", `${formatUSDG(drawn, { compact: true })} USDG`],
-              ["Still in escrow", `${formatUSDG(committed - drawn, { compact: true })} USDG`],
+              ["Still in escrow", `${formatUSDG(inEscrow, { compact: true })} USDG`],
             ].map(([k, val]) => (
               <div key={k} className="rounded-2xl border border-line bg-white p-5">
                 <dt className="text-sm font-semibold text-slate">{k}</dt>
@@ -69,7 +71,7 @@ export function RolePortal({ role }: { role: Role }) {
             ))}
           </dl>
         )}
-        {isPending ? (
+        {isPending && !!address ? (
           <Skeleton className="h-40" />
         ) : mine.length === 0 ? (
           <Card className="text-center">

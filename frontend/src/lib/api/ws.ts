@@ -20,6 +20,12 @@ export function useShipmentStream(id: string | undefined) {
   const qc = useQueryClient();
   const [connected, setConnected] = useState(false);
   const [events, setEvents] = useState<WsEvent[]>([]);
+  const [forId, setForId] = useState(id);
+  if (forId !== id) {
+    // a different shipment: drop the previous one's events (state adjusted during render, React's pattern)
+    setForId(id);
+    setEvents([]);
+  }
   useEffect(() => {
     if (!id) return;
     let ws: WebSocket | null = null;
