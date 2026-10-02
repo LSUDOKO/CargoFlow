@@ -29,7 +29,15 @@ type ShipmentInput struct {
 	Route       []store.RoutePoint // optional; if given it must match the on-chain route commitment
 	MaxGapSec   int                // off-chain scoring: longest tolerated silence between readings
 	MinSensors  int                // off-chain scoring: independent sensors the policy requires
+
+	// DeriveScoring ignores MaxGapSec and MinSensors and derives them from the on-chain policy instead, and
+	// requires the route. Public (unauthenticated) callers must use it: the off-chain scoring parameters gate
+	// releases, so no caller may choose them.
+	DeriveScoring bool
 }
+
+// derived scoring defaults for publicly mirrored shipments
+const publicMinSensors = 2
 
 // RegisterShipment records the off-chain mirror of a shipment that already exists on-chain. It refuses
 // anything the chain does not confirm, and stores nothing on refusal.
@@ -38,10 +46,13 @@ func (s *Service) RegisterShipment(ctx context.Context, in ShipmentInput) (store
 	if err != nil {
 		return store.Shipment{}, err
 	}
-	if in.MinSensors < 1 {
+	if in.DeriveScoring && len(in.Route) == 0 {
+		return store.Shipment{}, fmt.Errorf("%w: route is required and must match the route committed on chain", ErrInvalid)
+	}
+	if !in.DeriveScoring && in.MinSensors < 1 {
 		return store.Shipment{}, fmt.Errorf("%w: minSensors must be at least 1", ErrInvalid)
 	}
-	if in.MaxGapSec < 0 {
+	if !in.DeriveScoring && in.MaxGapSec < 0 {
 		return store.Shipment{}, fmt.Errorf("%w: maxGapSec must not be negative", ErrInvalid)
 	}
 	if in.ExternalRef == "" {
@@ -75,6 +86,12 @@ func (s *Service) RegisterShipment(ctx context.Context, in ShipmentInput) (store
 		return store.Shipment{}, err
 	}
 
+	if in.DeriveScoring {
+		in.MaxGapSec, in.MinSensors = int(pol.MaxEvidenceAgeSec), publicMinSensors
+		if in.MaxGapSec == 0 {
+			in.MaxGapSec = 1800
+		}
+	}
 	sh := store.Shipment{
 		ID: canon, ExternalRef: in.ExternalRef,
 		Exporter: addrHex(onchain.Exporter), Buyer: addrHex(onchain.Buyer),

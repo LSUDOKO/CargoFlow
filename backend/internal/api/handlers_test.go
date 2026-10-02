@@ -465,7 +465,7 @@ func TestStatsArePublic(t *testing.T) {
 func TestMirrorIsPublicChainVerifiedAndIdempotent(t *testing.T) {
 	e := newEnv(t, nil)
 	id := e.onChain(t, "api-mirror-1", true)
-	body := map[string]any{"shipmentId": idHex(id), "externalRef": "api-mirror-1", "maxGapSec": 1800, "minSensors": 2}
+	body := map[string]any{"shipmentId": idHex(id), "externalRef": "api-mirror-1", "route": testRoute}
 	if resp := e.do(t, "POST", "/v1/shipments/mirror", body, nil, nil); resp.StatusCode != http.StatusCreated {
 		t.Fatalf("first mirror = %d", resp.StatusCode)
 	}
@@ -476,7 +476,7 @@ func TestMirrorIsPublicChainVerifiedAndIdempotent(t *testing.T) {
 		t.Fatalf("repeat mirror = %d %+v, want 200 with the existing shipment", resp.StatusCode, again)
 	}
 	other := e.onChain(t, "api-mirror-2", true)
-	bad := map[string]any{"shipmentId": idHex(other), "externalRef": "not-the-reference"}
+	bad := map[string]any{"shipmentId": idHex(other), "externalRef": "not-the-reference", "route": testRoute}
 	if resp := e.do(t, "POST", "/v1/shipments/mirror", bad, nil, nil); resp.StatusCode < 400 || resp.StatusCode >= 500 {
 		t.Fatalf("a reference the chain does not confirm = %d, want 4xx", resp.StatusCode)
 	}
@@ -569,5 +569,29 @@ func TestDemoRoutesDoNotExistWhenDemoModeIsOff(t *testing.T) {
 	}
 	if e.do(t, "GET", "/v1/config", nil, nil, &cfg); cfg.DemoMode {
 		t.Fatal("demo mode advertised while off")
+	}
+}
+
+// The public mirror must not let a caller choose the off-chain scoring parameters that gate releases: they come
+// from the on-chain policy, and the route must be the one the chain committed to.
+func TestMirrorIgnoresCallerScoringParametersAndRequiresTheRoute(t *testing.T) {
+	e := newEnv(t, nil)
+	id := e.onChain(t, "api-mirror-3", true)
+	noRoute := map[string]any{"shipmentId": idHex(id), "externalRef": "api-mirror-3"}
+	if resp := e.do(t, "POST", "/v1/shipments/mirror", noRoute, nil, nil); resp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("mirror without a route = %d, want 400", resp.StatusCode)
+	}
+	hostile := map[string]any{"shipmentId": idHex(id), "externalRef": "api-mirror-3", "route": testRoute, "maxGapSec": 1, "minSensors": 1000}
+	var sh struct {
+		Policy struct {
+			MaxGapSec  int `json:"maxGapSec"`
+			MinSensors int `json:"minSensors"`
+		} `json:"policy"`
+	}
+	if resp := e.do(t, "POST", "/v1/shipments/mirror", hostile, nil, &sh); resp.StatusCode != http.StatusCreated {
+		t.Fatalf("mirror = %d", resp.StatusCode)
+	}
+	if sh.Policy.MaxGapSec != int(testPolicy.MaxEvidenceAgeSec) || sh.Policy.MinSensors != 2 {
+		t.Fatalf("caller-chosen scoring parameters were stored: %+v", sh.Policy)
 	}
 }

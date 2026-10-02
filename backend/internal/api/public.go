@@ -45,6 +45,7 @@ func (s *Server) mirror(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
+	in.DeriveScoring = true // a public caller never chooses the scoring parameters that gate releases
 	existing, err := s.c.Store.GetShipment(r.Context(), strings.ToLower(strings.TrimSpace(req.ShipmentID)))
 	switch {
 	case err == nil:
