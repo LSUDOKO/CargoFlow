@@ -254,6 +254,9 @@ func (s *Server) telemetry(w http.ResponseWriter, r *http.Request) error {
 	if err := auth.CheckSensors(src, points); err != nil {
 		return err
 	}
+	if src.ShipmentID != "" && !strings.EqualFold(src.ShipmentID, strings.TrimSpace(r.PathValue("id"))) {
+		return ErrForbidden("this evidence source is registered for a different shipment")
+	}
 	res, err := s.c.Service.IngestTelemetry(r.Context(), r.PathValue("id"), src.ID, points)
 	if err != nil {
 		return err

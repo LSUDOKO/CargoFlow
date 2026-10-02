@@ -2,6 +2,7 @@ package store_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/LSUDOKO/CargoFlow/backend/internal/store"
@@ -143,5 +144,36 @@ func TestQuarantineKeepsTheRejectedReadingAndItsReason(t *testing.T) {
 	limited, _ := s.Quarantined(ctx, id, 1)
 	if len(limited) != 1 {
 		t.Fatal("limit ignored")
+	}
+}
+
+func TestBoundSourcesAreCreatedOnceAndNeverMovedToAnotherShipment(t *testing.T) {
+	s, id := withShipment(t)
+	ctx := context.Background()
+	other := sampleShipment(hex64('e'))
+	other.ExternalRef = "other"
+	if err := s.CreateShipment(ctx, other, sampleMilestones()); err != nil {
+		t.Fatal(err)
+	}
+	src := store.Source{ID: "src-1", PublicKey: make([]byte, 32), SensorIDs: []string{"sensor-1"}, ShipmentID: id, Label: "Reefer logger"}
+	got, created, err := s.RegisterBoundSource(ctx, src)
+	if err != nil || !created || got.ShipmentID != id || got.Label != "Reefer logger" {
+		t.Fatalf("%+v %v %v", got, created, err)
+	}
+	if _, created, err = s.RegisterBoundSource(ctx, src); err != nil || created {
+		t.Fatalf("a repeat must return the existing source: %v %v", created, err)
+	}
+	moved := src
+	moved.ShipmentID = other.ID
+	if _, _, err := s.RegisterBoundSource(ctx, moved); !errors.Is(err, store.ErrConflict) {
+		t.Fatalf("a key bound to one shipment was re-bound to another: %v", err)
+	}
+	list, err := s.SourcesForShipment(ctx, id)
+	if err != nil || len(list) != 1 || list[0].ID != "src-1" {
+		t.Fatalf("%+v %v", list, err)
+	}
+	fetched, _ := s.GetSource(ctx, "src-1")
+	if fetched.ShipmentID != id {
+		t.Fatalf("GetSource lost the binding: %+v", fetched)
 	}
 }

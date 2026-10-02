@@ -58,5 +58,7 @@ type Source struct {
 	SensorIDs      []string
 	ReliabilityBps int
 	Disabled       bool
+	ShipmentID     string // set for exporter-registered sources: they may only report for this shipment
+	Label          string
 	CreatedAt      time.Time
 }
