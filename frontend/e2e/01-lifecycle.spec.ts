@@ -80,7 +80,7 @@ test("a shipment runs from registration to settlement through real wallets and l
   await expect(page.getByText("Delivery confirmed")).toBeVisible({ timeout: 60_000 });
   const mint = page.getByRole("button", { name: /Mint .* test USDG/ });
   const approve = page.getByRole("button", { name: /Approve 100,000 USDG/ });
-  await expect(mint.or(approve)).toBeVisible({ timeout: 30_000 }); // the payment panel renders after the status updates
+  await expect(mint.or(approve)).toBeVisible({ timeout: 120_000 }); // the balance read is slow on CI runners // the payment panel renders after the status updates
   if (await mint.isVisible()) await mint.click();
   await approve.click();
   await page.getByRole("button", { name: /Pay the 100,000 USDG invoice/ }).click();

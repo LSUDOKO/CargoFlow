@@ -5,16 +5,35 @@
   </picture>
 </p>
 
-# CargoFlow
+<p align="center">
+  <img src="docs/assets/banner.png" alt="CargoFlow: working capital that releases only when the cargo's own evidence says it should. A temperature chart shows probe-1 leaving the agreed 2.0 to 8.0 °C band at milestone 3 while probe-2 stays inside it." width="100%">
+</p>
 
-[![CI](https://github.com/LSUDOKO/CargoFlow/actions/workflows/ci.yml/badge.svg)](https://github.com/LSUDOKO/CargoFlow/actions/workflows/ci.yml)
-![Solidity 0.8.28](https://img.shields.io/badge/solidity-0.8.28-363636)
-![Go 1.24](https://img.shields.io/badge/go-1.24-00ADD8)
-![Circom Groth16](https://img.shields.io/badge/zk-circom%20%2B%20groth16-8A2BE2)
-![Robinhood Chain Testnet](https://img.shields.io/badge/network-Robinhood%20Chain%20Testnet-00C805)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+<h3 align="center">Evidence-gated working capital for physical trade finance</h3>
 
-**Evidence-gated working capital for physical trade finance.**
+<p align="center">
+  <a href="https://cargoflow.adoranto737.workers.dev"><img alt="Live on Robinhood Chain Testnet" src="https://img.shields.io/badge/live-Robinhood%20Chain%20Testnet-00C46A?style=flat-square&labelColor=0B1B2B"></a>
+  <a href="#deployed-contracts-source-verified"><img alt="USDG settlement" src="https://img.shields.io/badge/settlement-USDG-C6F432?style=flat-square&labelColor=0B1B2B"></a>
+  <a href="https://explorer.testnet.chain.robinhood.com"><img alt="Chain 46630" src="https://img.shields.io/badge/chain-46630-F7F9F4?style=flat-square&labelColor=0B1B2B"></a>
+  <a href="#measured-not-claimed"><img alt="Tests: 174 contract, 25 circuit, 78 frontend unit, 18 end-to-end" src="https://img.shields.io/badge/tests-174%20%C2%B7%2025%20%C2%B7%2078%20%C2%B7%2018-00C46A?style=flat-square&labelColor=0B1B2B"></a>
+  <a href="https://github.com/LSUDOKO/CargoFlow/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/LSUDOKO/CargoFlow/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-F7F9F4?style=flat-square&labelColor=0B1B2B"></a>
+</p>
+
+<p align="center">
+  <img alt="Solidity 0.8.28" src="https://img.shields.io/badge/solidity-0.8.28-363636?style=flat-square">
+  <img alt="Go 1.26" src="https://img.shields.io/badge/go-1.26-00ADD8?style=flat-square">
+  <img alt="Circom and Groth16" src="https://img.shields.io/badge/zk-circom%20%2B%20groth16-8A2BE2?style=flat-square">
+  <img alt="Next.js 16" src="https://img.shields.io/badge/next.js-16-0B1B2B?style=flat-square">
+</p>
+
+<p align="center">
+  <a href="https://cargoflow.adoranto737.workers.dev"><b>Live app</b></a> ·
+  <a href="https://cargoflow-api-75ul.onrender.com/v1/health"><b>API</b></a> ·
+  <a href="https://explorer.testnet.chain.robinhood.com/address/0xA2E708376CDDf0eb8fa746c43089611B4d49E210"><b>Explorer</b></a> ·
+  <a href="docs/architecture.md"><b>Docs</b></a> ·
+  <a href="#demo-video"><b>Demo video</b></a> (coming)
+</p>
 
 A financier locks USDG in a shipment-specific escrow facility. Tranches release only when multi-source sensor
 evidence satisfies an on-chain policy. An anomaly pauses the facility, a context-bound zero-knowledge proof of
@@ -24,13 +43,58 @@ secondary evidence resumes it, and the buyer's invoice payment settles through a
 PHYSICAL REALITY → CRYPTOGRAPHIC EVIDENCE → EVIDENCE CONFIDENCE → FINANCIAL RISK → AVAILABLE CAPITAL → USDG SETTLEMENT
 ```
 
+> [!NOTE]
 > **Status: testnet prototype with production-grade engineering.** Deployed and verified on Robinhood Chain
 > Testnet with testnet USDG (no monetary value). Not audited, not a regulated financial product, and the ZK
-> trusted setup is single-party (testnet only). See [limits](#honest-limits).
+> trusted setup is single-party (testnet only). See [honest limits](#honest-limits).
 
-## The story in one picture
+## Contents
 
-A 40,000 USDG facility against a 100,000 USDG invoice (5 milestones of 8,000, 3% fee):
+- [The problem in one paragraph](#the-problem-in-one-paragraph)
+- [What CargoFlow does](#what-cargoflow-does)
+- [Product tour](#product-tour)
+- [How each party uses it](#how-each-party-uses-it)
+- [Architecture](#architecture)
+- [Live on Robinhood Chain Testnet](#live-on-robinhood-chain-testnet)
+- [Under the hood](#under-the-hood): evidence engine, zero-knowledge recovery, AI monitor, disputes
+- [For developers](#for-developers)
+- [Measured, not claimed](#measured-not-claimed)
+- [Security and honest limits](#security-and-honest-limits)
+
+## The problem in one paragraph
+
+The Asian Development Bank puts the global trade finance gap at
+[$2.5 trillion in 2025, about 10% of global trade, with 41% of SME applications rejected](https://www.adb.org/news/demand-trade-finance-rise-amid-supply-chain-realignment-adb-report)
+([survey brief](https://www.adb.org/publications/adb-global-trade-finance-gap-survey)). In India, half of B2B sales are
+made on credit with
+[average payment terms of 52 days](https://group.atradius.com/knowledge-and-research/reports/b2b-payment-practices-trends-india-2025)
+(Atradius, 2025), so an exporter waits about two months for cash it has already earned. And the cargo itself is at
+risk in transit: biopharma alone loses
+[about $35 billion a year to failures in temperature-controlled logistics](https://www.aircargonews.net/pharma-logistics/2019/07/failures-in-temperature-controlled-logistics-cost-biopharma-industry-billions/)
+(IQVIA). A lender advancing money against a reefer container sees paperwork, not the container, so it either lends
+blind or does not lend. CargoFlow lets the cargo's own sensor evidence decide how much capital is available, on-chain,
+milestone by milestone.
+
+## What CargoFlow does
+
+<p align="center">
+  <img src="docs/assets/flow-lifecycle.svg" alt="The lifecycle in five beats. 1, facility funded: the exporter registers the shipment, policy and facility, the financier deposits USDG. 2, evidence clears: signed readings close an epoch whose Poseidon root and score are committed, and a tranche is released when the policy passes. 3, an excursion pauses the facility. 4, a Groth16 proof over the other probe's hidden readings resumes it. 5, the buyer confirms delivery and pays the invoice, and the vault splits it: 40,000 principal and 1,200 fee to the financier, 58,800 residual to the exporter in the reference run." width="100%">
+</p>
+
+- **Capital follows physical evidence.** A shipment has a financial facility attached; a failed milestone
+  changes what can be drawn, on-chain, not in a dashboard.
+- **No single oracle.** Sources are fused with Dempster-Shafer and an explicit conflict factor, then scored
+  with documented penalties. The same input always yields the same score.
+- **Privacy by construction.** Raw telemetry never goes on-chain: only Poseidon Merkle roots, scores and
+  proof verification status do. Recovery is proved in zero knowledge over readings that stay private.
+- **An AI that cannot move money.** A language model may only ever make an outcome *stricter* (pause or ask for
+  more proof), through a key that holds no other role. It never sees telemetry-derived text, and the policy
+  gate decides alone whenever the model is absent, slow or wrong. See [the AI monitor](backend/README.md#ai-monitor).
+- **Contracts hold final authority.** Core contracts are immutable (no proxy). Pause is narrow and cannot
+  withdraw funds. Eight invariants are fuzz- and invariant-tested.
+
+<details>
+<summary><b>The same story as a sequence diagram</b> (a 40,000 USDG facility against a 100,000 USDG invoice, 5 milestones of 8,000, 3% fee)</summary>
 
 ```mermaid
 sequenceDiagram
@@ -60,19 +124,77 @@ sequenceDiagram
     C-->>X: 58,800 residual
 ```
 
-## Why it is different
+</details>
 
-- **Capital follows physical evidence.** A shipment has a financial facility attached; a failed milestone
-  changes what can be drawn, on-chain, not in a dashboard.
-- **No single oracle.** Sources are fused with Dempster-Shafer and an explicit conflict factor, then scored
-  with documented penalties. The same input always yields the same score.
-- **Privacy by construction.** Raw telemetry never goes on-chain: only Poseidon Merkle roots, scores and
-  proof verification status do. Recovery is proved in zero knowledge over readings that stay private.
-- **An AI that cannot move money.** A language model may only ever make an outcome *stricter* (pause or ask for
-  more proof), through a key that holds no other role. It never sees telemetry-derived text, and the policy
-  gate decides alone whenever the model is absent, slow or wrong. See [the AI monitor](backend/README.md#ai-monitor).
-- **Contracts hold final authority.** Core contracts are immutable (no proxy). Pause is narrow and cannot
-  withdraw funds. Eight invariants are fuzz- and invariant-tested.
+## Product tour
+
+Every screen below is the live app at **https://cargoflow.adoranto737.workers.dev**, captured on 2 October 2026 with
+real testnet data.
+
+**Landing.** Track any shipment by id or reference, start financing, or verify a committed evidence epoch.
+
+<p align="center"><img src="docs/assets/shot-landing.webp" alt="CargoFlow landing page: the headline 'Capital that moves with your cargo' over a container port, with a track, get financing and verify evidence bar." width="100%"></p>
+
+**Live shipment dashboard.** The settled run `CF-LIVE-1790936950736`: parties, invoice and facility, route, every
+milestone with its release transaction, the evidence score, sensor conflict and risk gauges, escrow, the AI monitor's
+verdict, and temperature per epoch against the agreed band, with probe-1's excursion at milestone 3.
+
+<p align="center"><img src="docs/assets/shot-dashboard.webp" alt="Dashboard for CF-LIVE-1790936950736, status Settled: invoice 30 USDG, facility 20 USDG, milestones 1 to 4 released, evidence score 100, sensor conflict 1.7%, risk 4.3%, escrow 20 of 20 USDG drawn, monitor 'All checks passed', temperature chart with a spike above 8 °C at milestone 3." width="100%"></p>
+
+**Zero-knowledge recovery and committed evidence.** Each committed epoch with its score, conflict, decision and
+on-chain commit. Milestone 3's first epoch scored 48 with 74.8% conflict and paused the facility; its second epoch is
+marked *ZK proven*: eight hidden readings were proved to sit inside the band, and none of them was revealed.
+
+<p align="center"><img src="docs/assets/shot-dashboard-zk.webp" alt="Committed evidence table: M5, M4 approve at score 100; M3 #2 ZK proven score 98 approve; an observed epoch skipped because the facility was paused; M3 #1 score 48, conflict 74.8%, pause; M2 and M1 approve. Beside it, the zero-knowledge recovery card reads 'Groth16 proof verified on-chain'." width="80%"></p>
+
+<table>
+  <tr>
+    <td width="33%" valign="top"><img src="docs/assets/shot-fleet.webp" alt="Fleet page listing three shipments: one active, CF-LIVE-1790936950736 settled with 20 of 20 USDG drawn and evidence 100, and one paused with evidence 70."><br><b>Fleet.</b> Every shipment with status tabs, search, sort, capital drawn and an evidence sparkline.</td>
+    <td width="33%" valign="top"><img src="docs/assets/shot-exporter.webp" alt="Exporter portal, step 1 of the 4-step wizard (shipment, cold-chain policy, financing, sign) with a shipment reference, buyer address, invoice value and route filled in."><br><b>Exporter.</b> A four-step wizard: shipment, cold-chain policy, financing, sign. Shown with a read-only wallet; nothing was signed.</td>
+    <td width="33%" valign="top"><img src="docs/assets/shot-arbiter.webp" alt="Arbiter console connected with a wallet that does not hold the dispute role, showing the queue with one paused shipment, CF-LIVE-1790936827464."><br><b>Arbiter.</b> The dispute queue; acting on it needs the on-chain dispute role, which this wallet does not hold.</td>
+  </tr>
+</table>
+
+## How each party uses it
+
+<p align="center">
+  <img src="docs/assets/roles.svg" alt="What each party signs. Exporter: registerShipment, setPolicy, createFacility, startTransit, evaluateAndReleaseMilestone, resumeWithProof, openDispute. Financier: approve, depositCapital, evaluateAndReleaseMilestone, openDispute. Buyer: markDelivered, approve, settle. Arbiter, holding the dispute role: pauseFinancing, resumeByVerifier, openDispute, resolveDispute, markDefaulted. Backend service keys: worker commits epochs, monitor may only pause, manager starts transit, releases and submits proofs." width="100%">
+</p>
+
+| Party | What they do, from their own wallet |
+|---|---|
+| **Exporter** | Registers the shipment, its cold-chain policy and the financing plan; adds a sensor gateway (an Ed25519 device key authorized by a wallet signature); uploads the data logger's readings or streams them through the signed API; starts transit; releases tranches as evidence clears; recovers a paused facility with a zero-knowledge proof; can open a dispute |
+| **Financier** | Approves and deposits the committed USDG into the shipment's escrow; follows exposure and evidence live; can open a dispute |
+| **Buyer** | Confirms delivery and pays the invoice; the vault repays the financier with the fee and sends the exporter the residual in the same transaction |
+| **Arbiter** | Holds the on-chain dispute role: resolves disputes (resume or default), resumes a paused facility on verified evidence, or declares a default |
+
+Nothing on this path needs an operator: the backend scores and commits the evidence, and the contracts decide
+what may move. The full authority matrix, including what each role *cannot* do, is in
+[`docs/architecture.md`](docs/architecture.md#who-may-do-what).
+
+## Architecture
+
+<p align="center">
+  <img src="docs/assets/architecture.svg" alt="Architecture. Exporter, financier, buyer and arbiter wallets use the web app on Cloudflare Workers (Next.js 16, wagmi, viem, OpenNext), which signs transactions from each wallet directly to Robinhood Chain Testnet and talks to the Go service on Render over REST and WebSocket. A sensor gateway posts Ed25519-signed readings to the service. The service contains ingestion, the evidence engine, the AI monitor (which calls the Groq model API, advisory only), the policy gate, the prover worker, the outbox and reconciler, the chain indexer and the API, and stores operational evidence in Postgres. It acts on-chain through three role keys and indexes contract events. On-chain: FinancingController, ReceivableVault, EvidenceRegistry, PolicyEngine, ShipmentRegistry, Groth16Verifier, CargoFlowAccess and USDG." width="100%">
+</p>
+
+The chain is the financial source of truth. Postgres holds operational evidence (readings, epochs, the action
+outbox, the audit trail) and is reconciled from chain events; the API's facility view reads the chain directly, so a
+lagging indexer can never show money that did not move. Components, the facility state machine and every trust
+boundary are in [`docs/architecture.md`](docs/architecture.md).
+
+### Repository layout
+
+| Path | Purpose |
+|---|---|
+| `contracts/` | Solidity core (Foundry): registry, policy, evidence, controller, vault, verifier |
+| `backend/` | Go service: ingestion, evidence engine, AI monitor, proof worker, API (wallet-signed gateway registration and recovery), indexer, reconciler, CLI story runner |
+| `circuits/` | Circom telemetry-epoch circuit and Groth16 tooling |
+| `infra/` | Hardened Dockerfile and compose stack |
+| `scripts/` | Key generation, funding, testnet deploy and explorer verification |
+| `docs/` | Architecture, runbooks, security, benchmarks, protocol knowledge base, design spec, roadmap |
+| `stylus/` | Optional Rust (Stylus) evidence engine for Arbitrum Sepolia, benchmarked against a Solidity reference |
+| `frontend/` | Next.js 16 web app: landing, live dashboard, fleet, exporter / financier / buyer portals, gateway onboarding and CSV upload, arbiter console |
 
 ## Live on Robinhood Chain Testnet
 
@@ -81,14 +203,6 @@ Chain `46630` · RPC `https://rpc.testnet.chain.robinhood.com` · Explorer `http
 **Use it now:** the web app is at **https://cargoflow.adoranto737.workers.dev** (Cloudflare Workers) and its API at
 **https://cargoflow-api-75ul.onrender.com** (Render; the free instance sleeps when idle, so the first request after a
 quiet spell takes about a minute). Connect any wallet on Robinhood Chain Testnet.
-
-The real-user flows are checked live by `frontend/scripts/testnet-lifecycle.ts`, which drives one shipment from
-registration to settlement through the hosted API with each party's own key: wallet-authorized logger, signed
-readings, two releases, an excursion that pauses the facility, the exporter's zero-knowledge recovery, the remaining
-releases, delivery and payment. Its last run settled `CF-LIVE-1790936950736`
-([dashboard](https://cargoflow.adoranto737.workers.dev/track/0x5a9082d1854c1cc3e5fcf8aa1ebc3a3560495e03ee7d00110baf256fe9b49d61),
-[proof submitted by the exporter](https://explorer.testnet.chain.robinhood.com/tx/0xc582417abd0ce8498bab0fa4937b0a8ec8dbfbe19c47646f79646fa70ede1a82),
-[invoice paid](https://explorer.testnet.chain.robinhood.com/tx/0x78984fdfcefd2fa792c7170fff94b1f4b482986e96fad29193ff450251605041)).
 
 ### Deployed contracts (source-verified)
 
@@ -103,14 +217,29 @@ releases, delivery and payment. Its last run settled `CF-LIVE-1790936950736`
 | Groth16Verifier | [`0x1BAa24a99A9Fe8Cd53feB30E5dF098D1334E0a8D`](https://explorer.testnet.chain.robinhood.com/address/0x1BAa24a99A9Fe8Cd53feB30E5dF098D1334E0a8D) |
 | USDG (Paxos testnet stablecoin, 6 decimals) | [`0x7E955252E15c84f5768B83c41a71F9eba181802F`](https://explorer.testnet.chain.robinhood.com/address/0x7E955252E15c84f5768B83c41a71F9eba181802F) |
 
+The machine-readable manifest is [`contracts/deployments/robinhood-testnet.json`](contracts/deployments/robinhood-testnet.json).
 On Arbitrum Sepolia (optional Stylus evidence engine): Stylus `EvidenceEngine` [`0x2f7cac603654ec106da242cd0b16044b31f7608d`](https://sepolia.arbiscan.io/address/0x2f7cac603654ec106da242cd0b16044b31f7608d), Solidity reference [`0x5Ed4f105E3c3C0a67f916c0fc339B261E3De81d7`](https://sepolia.arbiscan.io/address/0x5Ed4f105E3c3C0a67f916c0fc339B261E3De81d7).
+
+### A real user run through the hosted API
+
+The real-user flows are checked live by `frontend/scripts/testnet-lifecycle.ts`, which drives one shipment from
+registration to settlement through the hosted API with each party's own key: wallet-authorized logger, signed
+readings, two releases, an excursion that pauses the facility, the exporter's zero-knowledge recovery, the remaining
+releases, delivery and payment. Its last run settled `CF-LIVE-1790936950736`
+([dashboard](https://cargoflow.adoranto737.workers.dev/track/0x5a9082d1854c1cc3e5fcf8aa1ebc3a3560495e03ee7d00110baf256fe9b49d61),
+[proof submitted by the exporter](https://explorer.testnet.chain.robinhood.com/tx/0xc582417abd0ce8498bab0fa4937b0a8ec8dbfbe19c47646f79646fa70ede1a82),
+[invoice paid](https://explorer.testnet.chain.robinhood.com/tx/0x78984fdfcefd2fa792c7170fff94b1f4b482986e96fad29193ff450251605041)).
+Its output, line for line:
+
+<p align="center"><img src="docs/assets/term-testnet-run.png" alt="Terminal output of testnet-lifecycle.ts for shipment CF-LIVE-1790936950736: register shipment, set policy, create facility, financier approves and deposits, transit starts, a gateway is added; leg 1 releases milestones 1 and 2; leg 2, reefer fails, pauses at milestone 3; leg 3 skips while paused; the recovery epoch is committed, the exporter resumes with a proof, milestone 3 is released; leg 4 releases milestones 4 and 5; the buyer confirms delivery, approves and pays; final status SETTLED, drawn 20 USDG." width="100%"></p>
 
 ### A complete facility, transaction by transaction
 
 A shipment from Nhava Sheva to Singapore financed with real testnet USDG: funding, two releases, a thermal
 excursion that paused the facility, a **Groth16 proof verified on-chain** that resumed it, the remaining releases,
 delivery and settlement through the waterfall. 22 transactions in 116 seconds, run at 1/2000 scale (a 20 USDG
-facility against a 50 USDG invoice) because the faucet supplies 100 USDG.
+facility against a 50 USDG invoice) because the faucet supplies 100 USDG. The full run is in the
+[testnet runbook](docs/runbooks/testnet.md#the-hero-run-on-the-public-testnet-done).
 
 | Step | Call | Transaction |
 |---|---|---|
@@ -140,21 +269,51 @@ facility against a 50 USDG invoice) because the faucet supplies 100 USDG.
 Result, read back from the chain: the exporter received **49.4 USDG** (20 advanced in tranches + 29.4 residual), the
 financier **20.6 USDG** (20 principal + 0.6 fee), and the vault ended empty.
 
-### How each party uses it
+## Under the hood
 
-| Party | What they do, from their own wallet |
-|---|---|
-| **Exporter** | Registers the shipment, its cold-chain policy and the financing plan; adds a sensor gateway (an Ed25519 device key authorized by a wallet signature); uploads the data logger's readings or streams them through the signed API; starts transit; releases tranches as evidence clears; recovers a paused facility with a zero-knowledge proof; can open a dispute |
-| **Financier** | Approves and deposits the committed USDG into the shipment's escrow; follows exposure and evidence live; can open a dispute |
-| **Buyer** | Confirms delivery and pays the invoice; the vault repays the financier with the fee and sends the exporter the residual in the same transaction |
-| **Arbiter** | Holds the on-chain dispute role: resolves disputes (resume or default), resumes a paused facility on verified evidence, or declares a default |
+### Evidence engine
 
-Nothing on this path needs an operator: the backend scores and commits the evidence, and the contracts decide
-what may move.
+Readings are validated and aligned into time buckets; each sensor contributes a mass over {physically fine, violated,
+unknown}, and Dempster-Shafer combines them per bucket while recording the worst conflict between sources. Seven
+capped penalties (physical, conflict, freshness, route, source reliability, fraud, coverage) turn that into a 0-100
+score with a published formula. Conflict is taken at the worst step, not averaged, so a short excursion cannot be
+averaged away. Eight readings close an epoch whose salted Poseidon Merkle root is committed on-chain with the score,
+conflict and risk; the readings stay in Postgres. The controller releases only if the committed epoch satisfies the
+on-chain policy, whatever the backend asked for.
+Details: [the evidence score](backend/README.md#the-evidence-score), [`docs/project/07-evidence-engine.md`](docs/project/07-evidence-engine.md).
 
-## Try it locally in five commands
+### Zero-knowledge recovery
 
-Needs Foundry, Go 1.24, Node 20+, Postgres and [circom](https://docs.circom.io/getting-started/installation/).
+After a pause, a Groth16 proof shows that eight readings of the unaffected probe, committed after the pause, lie
+inside the policy band, without revealing any of them. The contract derives every public signal itself, and the proof
+is bound to the chain, verifier, controller, shipment, epoch, policy, submitter and pause count, so it cannot be
+replayed against another facility or another pause. The circuit has 13,494 constraints and proves in about a second;
+`resumeWithProof` costs about 0.25 M gas on-chain.
+Details: [commitments](backend/README.md#commitments-the-contract-with-the-circuit), [`docs/project/08-zk-and-privacy.md`](docs/project/08-zk-and-privacy.md).
+
+### AI monitor
+
+A language model (Groq, OpenAI-compatible API, default `openai/gpt-oss-20b`) reviews every evaluated epoch and returns
+a strictly parsed, schema-checked assessment. It is advisory: it may only ask for a stricter outcome (secondary proof
+or a pause) when policy passed, and only above a confidence threshold. Pause is its only possible on-chain effect,
+through a monitor key that holds no other role. It is given integers, booleans and enum members, never telemetry-derived
+text, and any timeout, error or invalid reply falls back to the deterministic policy gate.
+Details: [the AI monitor](backend/README.md#ai-monitor), [`docs/project/09-ai-monitoring.md`](docs/project/09-ai-monitoring.md).
+
+### Disputes and defaults
+
+The exporter, the financier or the arbiter can open a dispute on an active or paused facility, which freezes releases.
+Only a wallet with the on-chain dispute role can resolve it, either resuming the facility or declaring a default; the
+same role can resume a paused facility on a verified basis or mark a paused or delivered facility as defaulted. On
+default the vault returns any undrawn USDG to the financier. The arbiter can never release a tranche, and every decision
+is a transaction with a hashed reference.
+Details: [facility state machine](docs/architecture.md#facility-state-machine), [`docs/project/05-roles-and-workflows.md`](docs/project/05-roles-and-workflows.md).
+
+## For developers
+
+### Try it locally in five commands
+
+Needs Foundry, Go 1.26, Node 20+, Postgres and [circom](https://docs.circom.io/getting-started/installation/).
 
 ```bash
 make anvil &                                         # a local chain
@@ -172,7 +331,13 @@ Then open the web app and use it as each party with your own wallets:
 cd frontend && cp .env.example .env.local && sed -i 's#8080#8787#' .env.local && pnpm install && pnpm dev
 ```
 
-## The web app
+### Checks
+
+`make check` formats, builds and tests everything. Its test steps, as run for this README:
+
+<p align="center"><img src="docs/assets/term-make-check.png" alt="Test output: forge test summary with 21 suites, 174 passed, 0 failed, 1 skipped; vitest 12 files and 78 tests passed; go test with every backend package ok; circuit tests 25 of 25 passing." width="760"></p>
+
+### The web app
 
 Next.js 16 with wagmi and viem. Browser wallets and WalletConnect are supported; every action is a transaction the
 user signs.
@@ -190,6 +355,23 @@ user signs.
 Tested by unit tests and Playwright tests that run the whole lifecycle in a real browser, through wallets, against
 a real chain, with axe accessibility checks on every page. See [`frontend/README.md`](frontend/README.md).
 
+### API and sensor gateways
+
+The REST and WebSocket API, configuration, startup safety checks and operational guarantees are documented in
+[`backend/README.md`](backend/README.md#api). A sensor gateway is an Ed25519 device key that the exporter authorizes
+with a wallet signature. It can upload a data logger's CSV from the shipment page, or post readings itself, each
+request signed like this (the shipment page shows the exact path and a complete Node example):
+
+<p align="center"><img src="docs/assets/term-gateway-api.png" alt="Signed telemetry request: POST to /v1/shipments/{id}/telemetry with headers Content-Type, X-Source-Id, X-Timestamp within 5 minutes of now, and X-Signature, the base64url Ed25519 signature over 'CARGOFLOW-V1, POST, path, timestamp, hex sha256 of the body'. The body is a list of points with timestamp, sensorId, temperatureX100, humidityX100, latitudeE6, longitudeE6 and shockX100; at most 500 readings per request." width="100%"></p>
+
+### Deployment
+
+| Piece | Where | How |
+|---|---|---|
+| Web app | Cloudflare Workers | Built with OpenNext and deployed with Wrangler: `cd frontend && pnpm cf:deploy` (config in [`frontend/wrangler.jsonc`](frontend/wrangler.jsonc); `NEXT_PUBLIC_API_URL` is compiled into the bundle) |
+| API, indexer, evidence pipeline, prover | Render (Docker) | [`infra/docker/backend.Dockerfile`](infra/docker/backend.Dockerfile): the Go binary plus the compiled circuit and snarkjs prover; serves on port 8080 with a `/v1/health` check |
+| Contracts | Robinhood Chain Testnet | `make testnet-deploy` (dry run), `BROADCAST=1 make testnet-deploy`, then `make testnet-verify`; see the [testnet runbook](docs/runbooks/testnet.md) |
+
 ## Measured, not claimed
 
 | | |
@@ -205,18 +387,24 @@ a real chain, with axe accessibility checks on every page. See [`frontend/README
 Every figure is reproducible with `make check`, `make bench` and `make slither`; method and caveats are in
 [`docs/benchmarks.md`](docs/benchmarks.md).
 
-## Repository layout
+## Security and honest limits
 
-| Path | Purpose |
-|---|---|
-| `contracts/` | Solidity core (Foundry): registry, policy, evidence, controller, vault, verifier |
-| `backend/` | Go service: ingestion, evidence engine, AI monitor, proof worker, API (wallet-signed gateway registration and recovery), indexer, reconciler, CLI story runner |
-| `circuits/` | Circom telemetry-epoch circuit and Groth16 tooling |
-| `infra/` | Hardened Dockerfile and compose stack |
-| `scripts/` | Key generation, funding, testnet deploy and explorer verification |
-| `docs/` | Architecture, runbooks, security, benchmarks, protocol knowledge base, design spec, roadmap |
-| `stylus/` | Optional Rust (Stylus) evidence engine for Arbitrum Sepolia, benchmarked against a Solidity reference |
-| `frontend/` | Next.js 16 web app: landing, live dashboard, fleet, exporter / financier / buyer portals, gateway onboarding and CSV upload, arbiter console |
+Report vulnerabilities as described in [`SECURITY.md`](SECURITY.md). The threat model is in
+[`docs/project/16-security-threat-model.md`](docs/project/16-security-threat-model.md) and the trust boundaries in
+[`docs/architecture.md`](docs/architecture.md#trust-boundaries).
+
+### Honest limits
+
+- Testnet only. No audit. USDG here has no value.
+- The Groth16 setup is single-party: it must be replaced by a public ceremony before any real use.
+- Telemetry is simulated; there is no hardware. Source authentication is Ed25519 signatures, not attested hardware.
+- The AI monitor's score weights and thresholds are design parameters, not statistically calibrated.
+- One backend instance per database; recovery proving runs inside the HTTP request.
+
+What would change for production, and what comes next, is in the
+[architecture notes](docs/architecture.md#what-would-change-for-production), the
+[roadmap](docs/superpowers/plans/2026-09-30-cargoflow-roadmap.md) and the
+[advanced roadmap](docs/project/22-advanced-roadmap.md).
 
 ## Documentation
 
@@ -227,13 +415,9 @@ Every figure is reproducible with `make check`, `make bench` and `make slither`;
 - [Protocol knowledge base](docs/project/README.md), [design spec](docs/superpowers/specs/2026-09-30-cargoflow-design.md), [roadmap](docs/superpowers/plans/2026-09-30-cargoflow-roadmap.md)
 - [Changelog](CHANGELOG.md), [Contributing](CONTRIBUTING.md), [Security policy](SECURITY.md)
 
-## Honest limits
+## Demo video
 
-- Testnet only. No audit. USDG here has no value.
-- The Groth16 setup is single-party: it must be replaced by a public ceremony before any real use.
-- Telemetry is simulated; there is no hardware. Source authentication is Ed25519 signatures, not attested hardware.
-- The AI monitor's score weights and thresholds are design parameters, not statistically calibrated.
-- One backend instance per database; recovery proving runs inside the HTTP request.
+Coming: a walkthrough of the live app, from registration to settlement.
 
 ## License
 

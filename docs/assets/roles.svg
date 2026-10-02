@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600" role="img" aria-label="CargoFlow roles: what the exporter, financier, buyer and arbiter each sign, receive and cannot do">
+<title>CargoFlow roles: what the exporter, financier, buyer and arbiter each sign, receive and cannot do</title>
+<style>
+  .h { font-family: 'Space Grotesk', 'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-weight: 600; fill: #F7F9F4; }
+  .b { font-family: 'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; fill: #C5D0DA; }
+  .m { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .lbl { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; letter-spacing: 1.4px; fill: #9AABBC; }
+</style>
+<defs>
+  <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9AABBC"/></marker>
+  <marker id="arrL" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#C6F432"/></marker>
+  <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#F7F9F4" stroke-opacity="0.045"/></pattern>
+</defs>
+<rect width="1200" height="600" rx="16" fill="#0B1B2B"/>
+<rect width="1200" height="600" rx="16" fill="url(#grid)"/>
+<text x="36" y="48" class="lbl" font-size="13" text-anchor="start">WHO SIGNS WHAT</text>
+<text x="36" y="78" class="h" font-size="22" text-anchor="start">Every party acts from its own wallet; nothing on the money path needs an operator</text>
+<rect x="36" y="108" width="270" height="360" rx="12" fill="#13293D" stroke="#2A3F54" stroke-width="1"/>
+<rect x="36" y="108" width="270" height="4" rx="2" fill="#C6F432"/>
+<text x="56" y="148" class="h" font-size="20" text-anchor="start">Exporter</text>
+<text x="56" y="174" class="lbl" font-size="13" text-anchor="start">SIGNS</text>
+<circle cx="60" cy="194" r="3" fill="#C6F432"/>
+<text x="72" y="198" class="m" font-size="12.5" style="fill:#F7F9F4" text-anchor="start">registerShipment</text>
+<circle cx="60" cy="218" r="3" fill="#C6F432"/>
+<text x="72" y="222" class="m" font-size="12.5" style="fill:#F7F9F4" text-anchor="start">setPolicy</text>
+<circle cx="60" cy="242" r="3" fill="#C6F432"/>
+<text x="72" y="246" class="m" font-size="12.5" style="fill:#F7F9F4" text-anchor="start">createFacility</text>
+<circle cx="60" cy="266" r="3" fill="#C6F432"/>
+<text x="72" y="270" class="m" font-size="12.5" style="fill:#F7F9F4" text-anchor="start">startTransit</text>
+<circle cx="60" cy="290" r="3" fill="#C6F432"/>
+<text x="72" y="294" class="m" font-size="12.5" style="fill:#F7F9F4" text-anchor="start">evaluateAndReleaseMilestone</text>
+<circle cx="60" cy="314" r="3" fill="#C6F432"/>
+<text x="72" y="318" class="m" font-size="12.5" style="fill:#F7F9F4" text-anchor="start">resumeWithProof</text>
+<circle cx="60" cy="338" r="3" fill="#C6F432"/>
+<text x="72" y="342" class="m" font-size="12.5" style="fill:#F7F9F4" text-anchor="start">openDispute</text>
+<text x="56" y="370" class="b" font-size="12" style="fill:#9AABBC" text-anchor="start">+ signs a gateway authorization</text>
+<line x1="56" y1="382" x2="286" y2="382" stroke="#2A3F54"/>
+<text x="56" y="406" class="b" font-size="12.5" style="fill:#00C46A" text-anchor="start">Receives: tranches, then the residual</text>
+<text x="56" y="424" class="b" font-size="12.5" style="fill:#9AABBC" text-anchor="start">Cannot: change a committed policy or</text>
+<text x="56" y="442" class="b" font-size="12.5" style="fill:#9AABBC" text-anchor="start">redirect funds</text>
+<rect x="322" y="108" width="270" height="360" rx="12" fill="#13293D" stroke="#2A3F54" stroke-width="1"/>
+<rect x="322" y="108" width="270" height="4" rx="2" fill="#C6F432"/>
+<text x="342" y="148" class="h" font-size="20" text-anchor="start">Financier</text>
+<text x="342" y="174" class="lbl" font-size="13" text-anchor="start">SIGNS</text>
+<circle cx="346" cy="194" r="3" fill="#C6F432"/>
+<text x="358" y="198" class="m" font-size="12.5" style="fill:#F7F9F4" text-anchor="start">approve (USDG)</text>
+<circle cx="346" cy="218" r="3" fill="#C6F432"/>
+<text x="358" y="222" class="m" font-size="12.5" style="fill:#F7F9F4" text-anchor="start">depositCapital</text>
+<circle cx="346" cy="242" r="3" fill="#C6F432"/>
+<text x="358" y="246" class="m" font-size="12.5" style="fill:#F7F9F4" text-anchor="start">evaluateAndReleaseMilestone</text>
+<circle cx="346" cy="266" r="3" fill="#C6F432"/>
+<text x="358" y="270" class="m" font-size="12.5" style="fill:#F7F9F4" text-anchor="start">openDispute</text>
+<line x1="342" y1="382" x2="572" y2="382" stroke="#2A3F54"/>
+<text x="342" y="406" class="b" font-size="12.5" style="fill:#00C46A" text-anchor="start">Receives: principal + fee (+ any</text>
+<text x="342" y="424" class="b" font-size="12.5" style="fill:#00C46A" text-anchor="start">undrawn)</text>
+<text x="342" y="442" class="b" font-size="12.5" style="fill:#9AABBC" text-anchor="start">Cannot: withdraw once deposited</text>
+<rect x="608" y="108" width="270" height="360" rx="12" fill="#13293D" stroke="#2A3F54" stroke-width="1"/>
+<rect x="608" y="108" width="270" height="4" rx="2" fill="#C6F432"/>
+<text x="628" y="148" class="h" font-size="20" text-anchor="start">Buyer</text>
+<text x="628" y="174" class="lbl" font-size="13" text-anchor="start">SIGNS</text>
+<circle cx="632" cy="194" r="3" fill="#C6F432"/>
+<text x="644" y="198" class="m" font-size="12.5" style="fill:#F7F9F4" text-anchor="start">markDelivered</text>
+<circle cx="632" cy="218" r="3" fill="#C6F432"/>
+<text x="644" y="222" class="m" font-size="12.5" style="fill:#F7F9F4" text-anchor="start">approve (USDG)</text>
+<circle cx="632" cy="242" r="3" fill="#C6F432"/>
+<text x="644" y="246" class="m" font-size="12.5" style="fill:#F7F9F4" text-anchor="start">settle</text>
+<line x1="628" y1="382" x2="858" y2="382" stroke="#2A3F54"/>
+<text x="628" y="406" class="b" font-size="12.5" style="fill:#00C46A" text-anchor="start">Pays: the invoice, split by the vault</text>
+<text x="628" y="424" class="b" font-size="12.5" style="fill:#9AABBC" text-anchor="start">Cannot: settle on someone else&#x27;s</text>
+<text x="628" y="442" class="b" font-size="12.5" style="fill:#9AABBC" text-anchor="start">behalf</text>
+<rect x="894" y="108" width="270" height="360" rx="12" fill="#13293D" stroke="#2A3F54" stroke-width="1"/>
+<rect x="894" y="108" width="270" height="4" rx="2" fill="#FFB020"/>
+<text x="914" y="148" class="h" font-size="20" text-anchor="start">Arbiter</text>
+<text x="914" y="174" class="lbl" font-size="13" text-anchor="start">SIGNS</text>
+<circle cx="918" cy="194" r="3" fill="#FFB020"/>
+<text x="930" y="198" class="m" font-size="12.5" style="fill:#F7F9F4" text-anchor="start">pauseFinancing</text>
+<circle cx="918" cy="218" r="3" fill="#FFB020"/>
+<text x="930" y="222" class="m" font-size="12.5" style="fill:#F7F9F4" text-anchor="start">resumeByVerifier</text>
+<circle cx="918" cy="242" r="3" fill="#FFB020"/>
+<text x="930" y="246" class="m" font-size="12.5" style="fill:#F7F9F4" text-anchor="start">openDispute</text>
+<circle cx="918" cy="266" r="3" fill="#FFB020"/>
+<text x="930" y="270" class="m" font-size="12.5" style="fill:#F7F9F4" text-anchor="start">resolveDispute</text>
+<circle cx="918" cy="290" r="3" fill="#FFB020"/>
+<text x="930" y="294" class="m" font-size="12.5" style="fill:#F7F9F4" text-anchor="start">markDefaulted</text>
+<text x="914" y="322" class="b" font-size="12" style="fill:#9AABBC" text-anchor="start">holds the on-chain DISPUTE role</text>
+<line x1="914" y1="382" x2="1144" y2="382" stroke="#2A3F54"/>
+<text x="914" y="406" class="b" font-size="12.5" style="fill:#00C46A" text-anchor="start">On default: undrawn USDG returns to</text>
+<text x="914" y="424" class="b" font-size="12.5" style="fill:#00C46A" text-anchor="start">the financier</text>
+<text x="914" y="442" class="b" font-size="12.5" style="fill:#9AABBC" text-anchor="start">Cannot: release a tranche</text>
+<rect x="36" y="498" width="1128" height="56" rx="12" fill="#0B1B2B" stroke="#2A3F54" stroke-width="1" stroke-dasharray="5 5"/>
+<text x="56" y="521" class="lbl" font-size="13" text-anchor="start">SERVICE KEYS (BACKEND)</text>
+<text x="56" y="542" class="m" font-size="12" style="fill:#F7F9F4" text-anchor="start">worker EVIDENCE_VERIFIER: commitEpoch   ·   monitor MONITOR: pause only   ·   manager FACILITY_MANAGER: startTransit, release, submit proofs</text>
+</svg>

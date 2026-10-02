@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="640" viewBox="0 0 1200 640" role="img" aria-label="CargoFlow lifecycle: facility funded, evidence clears and releases tranches, an excursion pauses, a zero-knowledge proof resumes, the invoice settles through a fixed waterfall">
+<title>CargoFlow lifecycle: facility funded, evidence clears and releases tranches, an excursion pauses, a zero-knowledge proof resumes, the invoice settles through a fixed waterfall</title>
+<style>
+  .h { font-family: 'Space Grotesk', 'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-weight: 600; fill: #F7F9F4; }
+  .b { font-family: 'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; fill: #C5D0DA; }
+  .m { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .lbl { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; letter-spacing: 1.4px; fill: #9AABBC; }
+</style>
+<defs>
+  <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9AABBC"/></marker>
+  <marker id="arrL" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#C6F432"/></marker>
+  <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#F7F9F4" stroke-opacity="0.045"/></pattern>
+</defs>
+<rect width="1200" height="640" rx="16" fill="#0B1B2B"/>
+<rect width="1200" height="640" rx="16" fill="url(#grid)"/>
+<text x="36" y="48" class="lbl" font-size="13" text-anchor="start">ONE FACILITY, FIVE BEATS</text>
+<text x="36" y="78" class="h" font-size="22" text-anchor="start">Capital moves only when the evidence allows it</text>
+<rect x="36" y="108" width="208" height="268" rx="12" fill="#13293D" stroke="#2A3F54" stroke-width="1"/>
+<rect x="52" y="108" width="176" height="3" rx="1.5" fill="#C6F432"/>
+<circle cx="66" cy="146" r="14" fill="#C6F432"/>
+<text x="66" y="151" class="h" font-size="14" style="fill:#0B1B2B" text-anchor="middle">1</text>
+<text x="90" y="152" class="h" font-size="16" text-anchor="start">Facility funded</text>
+<text x="54" y="190" class="b" font-size="13" text-anchor="start">The exporter registers the</text>
+<text x="54" y="211" class="b" font-size="13" text-anchor="start">shipment, its cold-chain</text>
+<text x="54" y="232" class="b" font-size="13" text-anchor="start">policy and the facility.</text>
+<text x="54" y="253" class="b" font-size="13" text-anchor="start">The financier deposits</text>
+<text x="54" y="274" class="b" font-size="13" text-anchor="start">USDG into the vault.</text>
+<rect x="54" y="318" width="132.79999999999998" height="22" rx="6" fill="#0B1B2B" stroke="#2A3F54" stroke-width="1"/>
+<text x="63" y="333" class="m" font-size="12" style="fill:#C6F432" text-anchor="start">createFacility</text>
+<rect x="54" y="344" width="132.79999999999998" height="22" rx="6" fill="#0B1B2B" stroke="#2A3F54" stroke-width="1"/>
+<text x="63" y="359" class="m" font-size="12" style="fill:#C6F432" text-anchor="start">depositCapital</text>
+<line x1="247" y1="146" x2="263" y2="146" stroke="#9AABBC" stroke-width="1.6" marker-end="url(#arr)"/>
+<rect x="266" y="108" width="208" height="268" rx="12" fill="#13293D" stroke="#2A3F54" stroke-width="1"/>
+<rect x="282" y="108" width="176" height="3" rx="1.5" fill="#00C46A"/>
+<circle cx="296" cy="146" r="14" fill="#00C46A"/>
+<text x="296" y="151" class="h" font-size="14" style="fill:#0B1B2B" text-anchor="middle">2</text>
+<text x="320" y="152" class="h" font-size="16" text-anchor="start">Evidence clears</text>
+<text x="284" y="190" class="b" font-size="13" text-anchor="start">Two probes send signed</text>
+<text x="284" y="211" class="b" font-size="13" text-anchor="start">readings. Every 8 close</text>
+<text x="284" y="232" class="b" font-size="13" text-anchor="start">an epoch: a Poseidon root</text>
+<text x="284" y="253" class="b" font-size="13" text-anchor="start">and a score go on-chain.</text>
+<text x="284" y="274" class="b" font-size="13" text-anchor="start">Policy passes: tranche out.</text>
+<rect x="284" y="318" width="108.19999999999999" height="22" rx="6" fill="#0B1B2B" stroke="#2A3F54" stroke-width="1"/>
+<text x="293" y="333" class="m" font-size="12" style="fill:#00C46A" text-anchor="start">commitEpoch</text>
+<rect x="284" y="344" width="173.79999999999998" height="22" rx="6" fill="#0B1B2B" stroke="#2A3F54" stroke-width="1"/>
+<text x="293" y="359" class="m" font-size="12" style="fill:#00C46A" text-anchor="start">evaluateAndRelease…</text>
+<line x1="477" y1="146" x2="493" y2="146" stroke="#9AABBC" stroke-width="1.6" marker-end="url(#arr)"/>
+<rect x="496" y="108" width="208" height="268" rx="12" fill="#13293D" stroke="#2A3F54" stroke-width="1"/>
+<rect x="512" y="108" width="176" height="3" rx="1.5" fill="#FFB020"/>
+<circle cx="526" cy="146" r="14" fill="#FFB020"/>
+<text x="526" y="151" class="h" font-size="14" style="fill:#0B1B2B" text-anchor="middle">3</text>
+<text x="550" y="152" class="h" font-size="16" text-anchor="start">Excursion pauses</text>
+<text x="514" y="190" class="b" font-size="13" text-anchor="start">Probe-1 overheats, the</text>
+<text x="514" y="211" class="b" font-size="13" text-anchor="start">probes disagree and the</text>
+<text x="514" y="232" class="b" font-size="13" text-anchor="start">score fails the policy.</text>
+<text x="514" y="253" class="b" font-size="13" text-anchor="start">The monitor key pauses</text>
+<text x="514" y="274" class="b" font-size="13" text-anchor="start">the facility; release reverts.</text>
+<rect x="514" y="318" width="132.79999999999998" height="22" rx="6" fill="#0B1B2B" stroke="#2A3F54" stroke-width="1"/>
+<text x="523" y="333" class="m" font-size="12" style="fill:#FFB020" text-anchor="start">pauseFinancing</text>
+<line x1="707" y1="146" x2="723" y2="146" stroke="#9AABBC" stroke-width="1.6" marker-end="url(#arr)"/>
+<rect x="726" y="108" width="208" height="268" rx="12" fill="#13293D" stroke="#2A3F54" stroke-width="1"/>
+<rect x="742" y="108" width="176" height="3" rx="1.5" fill="#C6F432"/>
+<circle cx="756" cy="146" r="14" fill="#C6F432"/>
+<text x="756" y="151" class="h" font-size="14" style="fill:#0B1B2B" text-anchor="middle">4</text>
+<text x="780" y="152" class="h" font-size="16" text-anchor="start">Proof resumes</text>
+<text x="744" y="190" class="b" font-size="13" text-anchor="start">A Groth16 proof shows 8</text>
+<text x="744" y="211" class="b" font-size="13" text-anchor="start">hidden readings of probe-2</text>
+<text x="744" y="232" class="b" font-size="13" text-anchor="start">sit inside the band, bound</text>
+<text x="744" y="253" class="b" font-size="13" text-anchor="start">to this exact pause. None</text>
+<text x="744" y="274" class="b" font-size="13" text-anchor="start">of them is revealed.</text>
+<rect x="744" y="318" width="141.0" height="22" rx="6" fill="#0B1B2B" stroke="#2A3F54" stroke-width="1"/>
+<text x="753" y="333" class="m" font-size="12" style="fill:#C6F432" text-anchor="start">resumeWithProof</text>
+<line x1="937" y1="146" x2="953" y2="146" stroke="#9AABBC" stroke-width="1.6" marker-end="url(#arr)"/>
+<rect x="956" y="108" width="208" height="268" rx="12" fill="#13293D" stroke="#2A3F54" stroke-width="1"/>
+<rect x="972" y="108" width="176" height="3" rx="1.5" fill="#00C46A"/>
+<circle cx="986" cy="146" r="14" fill="#00C46A"/>
+<text x="986" y="151" class="h" font-size="14" style="fill:#0B1B2B" text-anchor="middle">5</text>
+<text x="1010" y="152" class="h" font-size="16" text-anchor="start">Invoice settles</text>
+<text x="974" y="190" class="b" font-size="13" text-anchor="start">The buyer confirms delivery</text>
+<text x="974" y="211" class="b" font-size="13" text-anchor="start">and pays the invoice. One</text>
+<text x="974" y="232" class="b" font-size="13" text-anchor="start">transaction repays the</text>
+<text x="974" y="253" class="b" font-size="13" text-anchor="start">financier and sends the</text>
+<text x="974" y="274" class="b" font-size="13" text-anchor="start">exporter the residual.</text>
+<rect x="974" y="318" width="124.6" height="22" rx="6" fill="#0B1B2B" stroke="#2A3F54" stroke-width="1"/>
+<text x="983" y="333" class="m" font-size="12" style="fill:#00C46A" text-anchor="start">markDelivered</text>
+<rect x="974" y="344" width="67.19999999999999" height="22" rx="6" fill="#0B1B2B" stroke="#2A3F54" stroke-width="1"/>
+<text x="983" y="359" class="m" font-size="12" style="fill:#00C46A" text-anchor="start">settle</text>
+<text x="36" y="406" class="lbl" font-size="13" text-anchor="start">FACILITY STATE ON-CHAIN</text>
+<rect x="36" y="426" width="136" height="34" rx="17" fill="#0B1B2B" stroke="#9AABBC" stroke-width="1.4"/>
+<text x="104.0" y="448" class="m" font-size="13" style="fill:#9AABBC" text-anchor="middle">CREATED</text>
+<line x1="175" y1="443" x2="195" y2="443" stroke="#9AABBC" stroke-width="1.6" marker-end="url(#arr)"/>
+<rect x="198" y="426" width="136" height="34" rx="17" fill="#0B1B2B" stroke="#9AABBC" stroke-width="1.4"/>
+<text x="266.0" y="448" class="m" font-size="13" style="fill:#9AABBC" text-anchor="middle">FINANCED</text>
+<line x1="337" y1="443" x2="357" y2="443" stroke="#9AABBC" stroke-width="1.6" marker-end="url(#arr)"/>
+<rect x="360" y="426" width="136" height="34" rx="17" fill="#0B1B2B" stroke="#00C46A" stroke-width="1.4"/>
+<text x="428.0" y="448" class="m" font-size="13" style="fill:#00C46A" text-anchor="middle">ACTIVE</text>
+<line x1="499" y1="443" x2="519" y2="443" stroke="#9AABBC" stroke-width="1.6" marker-end="url(#arr)"/>
+<rect x="522" y="426" width="136" height="34" rx="17" fill="#0B1B2B" stroke="#FFB020" stroke-width="1.4"/>
+<text x="590.0" y="448" class="m" font-size="13" style="fill:#FFB020" text-anchor="middle">PAUSED</text>
+<line x1="661" y1="443" x2="681" y2="443" stroke="#9AABBC" stroke-width="1.6" marker-end="url(#arr)"/>
+<rect x="684" y="426" width="136" height="34" rx="17" fill="#0B1B2B" stroke="#00C46A" stroke-width="1.4"/>
+<text x="752.0" y="448" class="m" font-size="13" style="fill:#00C46A" text-anchor="middle">ACTIVE</text>
+<line x1="823" y1="443" x2="843" y2="443" stroke="#9AABBC" stroke-width="1.6" marker-end="url(#arr)"/>
+<rect x="846" y="426" width="136" height="34" rx="17" fill="#0B1B2B" stroke="#9AABBC" stroke-width="1.4"/>
+<text x="914.0" y="448" class="m" font-size="13" style="fill:#9AABBC" text-anchor="middle">DELIVERED</text>
+<line x1="985" y1="443" x2="1005" y2="443" stroke="#9AABBC" stroke-width="1.6" marker-end="url(#arr)"/>
+<rect x="1008" y="426" width="136" height="34" rx="17" fill="#0B1B2B" stroke="#C6F432" stroke-width="1.4"/>
+<text x="1076.0" y="448" class="m" font-size="13" style="fill:#C6F432" text-anchor="middle">SETTLED</text>
+<text x="36" y="506" class="lbl" font-size="13" text-anchor="start">SETTLEMENT WATERFALL  (reference run: 100,000 USDG invoice, 40,000 facility, 3% fee)</text>
+<clipPath id="wf"><rect x="36" y="520" width="1128" height="40" rx="8"/></clipPath><g clip-path="url(#wf)">
+<rect x="36.0" y="520" width="451.2" height="40" fill="#3A5168"/>
+<text x="50" y="545" class="m" font-size="13" style="fill:#F7F9F4" text-anchor="start">financier principal 40,000</text>
+<rect x="487.2" y="520" width="13.5" height="40" fill="#FFB020"/>
+<rect x="500.7" y="520" width="663.3" height="40" fill="#C6F432"/>
+<text x="514.736" y="545" class="m" font-size="13" style="fill:#0B1B2B" text-anchor="start">exporter residual 58,800</text>
+</g>
+<text x="493.20000000000005" y="582" class="m" font-size="12" style="fill:#FFB020" text-anchor="start">↑ fee 1,200 to the financier</text>
+<text x="36" y="616" class="b" font-size="13" style="fill:#9AABBC" text-anchor="start">Invoice → financier (drawn principal + fee + undrawn) → exporter (residual), in the buyer&#x27;s settle transaction.</text>
+</svg>

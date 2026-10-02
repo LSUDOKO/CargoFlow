@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img" aria-label="CargoFlow architecture: wallets and sensor gateways, the web app on Cloudflare Workers, the Go service on Render with Postgres, and the contracts on Robinhood Chain Testnet holding USDG">
+<title>CargoFlow architecture: wallets and sensor gateways, the web app on Cloudflare Workers, the Go service on Render with Postgres, and the contracts on Robinhood Chain Testnet holding USDG</title>
+<style>
+  .h { font-family: 'Space Grotesk', 'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-weight: 600; fill: #F7F9F4; }
+  .b { font-family: 'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; fill: #C5D0DA; }
+  .m { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .lbl { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; letter-spacing: 1.4px; fill: #9AABBC; }
+</style>
+<defs>
+  <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9AABBC"/></marker>
+  <marker id="arrL" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#C6F432"/></marker>
+  <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#F7F9F4" stroke-opacity="0.045"/></pattern>
+</defs>
+<rect width="1200" height="800" rx="16" fill="#0B1B2B"/>
+<rect width="1200" height="800" rx="16" fill="url(#grid)"/>
+<text x="36" y="48" class="lbl" font-size="13" text-anchor="start">ARCHITECTURE</text>
+<text x="36" y="78" class="h" font-size="22" text-anchor="start">Off-chain service scores evidence; the contracts decide what money may move</text>
+<text x="36" y="120" class="lbl" font-size="13" text-anchor="start">PEOPLE AND DEVICES</text>
+<rect x="36" y="136" width="210" height="44" rx="12" fill="#13293D" stroke="#2A3F54" stroke-width="1"/>
+<circle cx="58" cy="158" r="5" fill="#C6F432"/>
+<text x="74" y="163" class="b" font-size="14" style="fill:#F7F9F4" text-anchor="start">Exporter wallet</text>
+<rect x="36" y="192" width="210" height="44" rx="12" fill="#13293D" stroke="#2A3F54" stroke-width="1"/>
+<circle cx="58" cy="214" r="5" fill="#C6F432"/>
+<text x="74" y="219" class="b" font-size="14" style="fill:#F7F9F4" text-anchor="start">Financier wallet</text>
+<rect x="36" y="248" width="210" height="44" rx="12" fill="#13293D" stroke="#2A3F54" stroke-width="1"/>
+<circle cx="58" cy="270" r="5" fill="#C6F432"/>
+<text x="74" y="275" class="b" font-size="14" style="fill:#F7F9F4" text-anchor="start">Buyer wallet</text>
+<rect x="36" y="304" width="210" height="44" rx="12" fill="#13293D" stroke="#2A3F54" stroke-width="1"/>
+<circle cx="58" cy="326" r="5" fill="#C6F432"/>
+<text x="74" y="331" class="b" font-size="14" style="fill:#F7F9F4" text-anchor="start">Arbiter wallet</text>
+<rect x="36" y="409" width="210" height="52" rx="12" fill="#13293D" stroke="#2A3F54" stroke-width="1"/>
+<circle cx="58" cy="431" r="5" fill="#00C46A"/>
+<text x="74" y="434" class="b" font-size="14" style="fill:#F7F9F4" text-anchor="start">Sensor gateway</text>
+<text x="74" y="451" class="m" font-size="11" style="fill:#9AABBC" text-anchor="start">Ed25519-signed readings</text>
+<rect x="36" y="473" width="210" height="52" rx="12" fill="#0B1B2B" stroke="#2A3F54" stroke-width="1" stroke-dasharray="5 5"/>
+<text x="56" y="496" class="b" font-size="14" style="fill:#F7F9F4" text-anchor="start">Groq model API</text>
+<text x="56" y="514" class="m" font-size="11" style="fill:#9AABBC" text-anchor="start">advisory, never holds keys</text>
+<text x="316" y="120" class="lbl" font-size="13" text-anchor="start">CLOUDFLARE WORKERS</text>
+<rect x="316" y="136" width="420" height="150" rx="12" fill="#13293D" stroke="#2A3F54" stroke-width="1"/>
+<text x="336" y="170" class="h" font-size="18" text-anchor="start">Web app</text>
+<text x="336" y="196" class="b" font-size="13" text-anchor="start">Next.js 16, wagmi, viem; built with OpenNext</text>
+<text x="336" y="218" class="b" font-size="13" text-anchor="start">Landing, live dashboard, fleet, exporter /</text>
+<text x="336" y="238" class="b" font-size="13" text-anchor="start">financier / buyer portals, arbiter console</text>
+<text x="336" y="266" class="m" font-size="12" style="fill:#C6F432" text-anchor="start">cargoflow.adoranto737.workers.dev</text>
+<line x1="250" y1="236" x2="312" y2="236" stroke="#9AABBC" stroke-width="1.6" marker-end="url(#arr)"/>
+<text x="316" y="344" class="lbl" font-size="13" text-anchor="start">RENDER · DOCKER</text>
+<line x1="526.0" y1="290" x2="526.0" y2="330" stroke="#9AABBC" stroke-width="1.6" marker-end="url(#arr)"/>
+<text x="536.0" y="322" class="m" font-size="12" style="fill:#9AABBC" text-anchor="start">REST + WebSocket</text>
+<rect x="316" y="356" width="420" height="330" rx="12" fill="#13293D" stroke="#2A3F54" stroke-width="1"/>
+<text x="336" y="388" class="h" font-size="18" text-anchor="start">Go service (one binary)</text>
+<text x="336" y="674" class="m" font-size="12" style="fill:#C6F432" text-anchor="start">cargoflow-api-75ul.onrender.com</text>
+<rect x="336" y="408" width="184" height="54" rx="9" fill="#0B1B2B" stroke="#2A3F54" stroke-width="1"/>
+<text x="348" y="431" class="b" font-size="13.5" style="fill:#F7F9F4" font-weight="600" text-anchor="start">Ingestion</text>
+<text x="348" y="450" class="m" font-size="10.5" style="fill:#9AABBC" text-anchor="start">signatures, replay, fraud</text>
+<rect x="532" y="408" width="184" height="54" rx="9" fill="#0B1B2B" stroke="#2A3F54" stroke-width="1"/>
+<text x="544" y="431" class="b" font-size="13.5" style="fill:#F7F9F4" font-weight="600" text-anchor="start">Evidence engine</text>
+<text x="544" y="450" class="m" font-size="10.5" style="fill:#9AABBC" text-anchor="start">Dempster-Shafer, score</text>
+<rect x="336" y="472" width="184" height="54" rx="9" fill="#0B1B2B" stroke="#2A3F54" stroke-width="1"/>
+<text x="348" y="495" class="b" font-size="13.5" style="fill:#F7F9F4" font-weight="600" text-anchor="start">AI monitor</text>
+<text x="348" y="514" class="m" font-size="10.5" style="fill:#9AABBC" text-anchor="start">advisory, stricter only</text>
+<rect x="532" y="472" width="184" height="54" rx="9" fill="#0B1B2B" stroke="#2A3F54" stroke-width="1"/>
+<text x="544" y="495" class="b" font-size="13.5" style="fill:#F7F9F4" font-weight="600" text-anchor="start">Policy gate</text>
+<text x="544" y="514" class="m" font-size="10.5" style="fill:#9AABBC" text-anchor="start">deterministic decision</text>
+<rect x="336" y="536" width="184" height="54" rx="9" fill="#0B1B2B" stroke="#2A3F54" stroke-width="1"/>
+<text x="348" y="559" class="b" font-size="13.5" style="fill:#F7F9F4" font-weight="600" text-anchor="start">Prover worker</text>
+<text x="348" y="578" class="m" font-size="10.5" style="fill:#9AABBC" text-anchor="start">Circom + snarkjs Groth16</text>
+<rect x="532" y="536" width="184" height="54" rx="9" fill="#0B1B2B" stroke="#2A3F54" stroke-width="1"/>
+<text x="544" y="559" class="b" font-size="13.5" style="fill:#F7F9F4" font-weight="600" text-anchor="start">Outbox + reconciler</text>
+<text x="544" y="578" class="m" font-size="10.5" style="fill:#9AABBC" text-anchor="start">idempotent chain actions</text>
+<rect x="336" y="600" width="184" height="54" rx="9" fill="#0B1B2B" stroke="#2A3F54" stroke-width="1"/>
+<text x="348" y="623" class="b" font-size="13.5" style="fill:#F7F9F4" font-weight="600" text-anchor="start">Chain indexer</text>
+<text x="348" y="642" class="m" font-size="10.5" style="fill:#9AABBC" text-anchor="start">confirmations, reorgs</text>
+<rect x="532" y="600" width="184" height="54" rx="9" fill="#0B1B2B" stroke="#2A3F54" stroke-width="1"/>
+<text x="544" y="623" class="b" font-size="13.5" style="fill:#F7F9F4" font-weight="600" text-anchor="start">REST + WS API</text>
+<text x="544" y="642" class="m" font-size="10.5" style="fill:#9AABBC" text-anchor="start">facility view read on-chain</text>
+<line x1="250" y1="435.0" x2="312" y2="435.0" stroke="#9AABBC" stroke-width="1.6" marker-end="url(#arr)"/>
+<line x1="312" y1="499.0" x2="250" y2="499.0" stroke="#9AABBC" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#arr)"/>
+<line x1="526.0" y1="690" x2="526.0" y2="716" stroke="#9AABBC" stroke-width="1.6" marker-end="url(#arr)" marker-start="url(#arr)"/>
+<rect x="316" y="720" width="420" height="52" rx="12" fill="#13293D" stroke="#2A3F54" stroke-width="1"/>
+<text x="336" y="752" class="h" font-size="16" text-anchor="start">Postgres</text>
+<text x="436" y="752" class="b" font-size="13" style="fill:#9AABBC" text-anchor="start">readings, epochs, outbox, audit trail</text>
+<text x="852" y="120" class="lbl" font-size="13" text-anchor="start">ROBINHOOD CHAIN TESTNET · 46630</text>
+<rect x="852" y="136" width="312" height="544" rx="12" fill="#13293D" stroke="#C6F432" stroke-width="1.2"/>
+<rect x="870" y="156" width="276" height="52" rx="9" fill="#0B1B2B" stroke="#2A3F54" stroke-width="1"/>
+<text x="884" y="178" class="m" font-size="13.5" style="fill:#F7F9F4" text-anchor="start">FinancingController</text>
+<text x="884" y="196" class="b" font-size="12" style="fill:#9AABBC" text-anchor="start">state machine, release, pause, resume</text>
+<rect x="870" y="218" width="276" height="52" rx="9" fill="#0B1B2B" stroke="#2A3F54" stroke-width="1"/>
+<text x="884" y="240" class="m" font-size="13.5" style="fill:#F7F9F4" text-anchor="start">ReceivableVault</text>
+<text x="884" y="258" class="b" font-size="12" style="fill:#9AABBC" text-anchor="start">sole USDG custodian, waterfall</text>
+<rect x="870" y="280" width="276" height="52" rx="9" fill="#0B1B2B" stroke="#2A3F54" stroke-width="1"/>
+<text x="884" y="302" class="m" font-size="13.5" style="fill:#F7F9F4" text-anchor="start">EvidenceRegistry</text>
+<text x="884" y="320" class="b" font-size="12" style="fill:#9AABBC" text-anchor="start">epoch roots, scores, proof status</text>
+<rect x="870" y="342" width="276" height="52" rx="9" fill="#0B1B2B" stroke="#2A3F54" stroke-width="1"/>
+<text x="884" y="364" class="m" font-size="13.5" style="fill:#F7F9F4" text-anchor="start">PolicyEngine</text>
+<text x="884" y="382" class="b" font-size="12" style="fill:#9AABBC" text-anchor="start">committed cold-chain policy</text>
+<rect x="870" y="404" width="276" height="52" rx="9" fill="#0B1B2B" stroke="#2A3F54" stroke-width="1"/>
+<text x="884" y="426" class="m" font-size="13.5" style="fill:#F7F9F4" text-anchor="start">ShipmentRegistry</text>
+<text x="884" y="444" class="b" font-size="12" style="fill:#9AABBC" text-anchor="start">parties, invoice and route hashes</text>
+<rect x="870" y="466" width="276" height="52" rx="9" fill="#0B1B2B" stroke="#2A3F54" stroke-width="1"/>
+<text x="884" y="488" class="m" font-size="13.5" style="fill:#F7F9F4" text-anchor="start">Groth16Verifier</text>
+<text x="884" y="506" class="b" font-size="12" style="fill:#9AABBC" text-anchor="start">recovery proofs</text>
+<rect x="870" y="528" width="276" height="52" rx="9" fill="#0B1B2B" stroke="#2A3F54" stroke-width="1"/>
+<text x="884" y="550" class="m" font-size="13.5" style="fill:#F7F9F4" text-anchor="start">CargoFlowAccess</text>
+<text x="884" y="568" class="b" font-size="12" style="fill:#9AABBC" text-anchor="start">roles, two-step admin</text>
+<rect x="870" y="596" width="276" height="64" rx="9" fill="#0B1B2B" stroke="#C6F432" stroke-width="1"/>
+<text x="884" y="622" class="h" font-size="16" style="fill:#C6F432" text-anchor="start">USDG</text>
+<text x="884" y="643" class="b" font-size="12" style="fill:#9AABBC" text-anchor="start">Paxos stablecoin, 6 decimals</text>
+<line x1="740" y1="186" x2="848" y2="186" stroke="#C6F432" stroke-width="1.6" marker-end="url(#arrL)"/>
+<text x="748" y="176" class="m" font-size="11" style="fill:#C6F432" text-anchor="start">wallet txs</text>
+<line x1="740" y1="563.0" x2="848" y2="563.0" stroke="#9AABBC" stroke-width="1.6" marker-end="url(#arr)"/>
+<text x="748" y="553.0" class="m" font-size="11" style="fill:#9AABBC" text-anchor="start">role keys</text>
+<line x1="848" y1="627.0" x2="740" y2="627.0" stroke="#9AABBC" stroke-width="1.6" marker-end="url(#arr)"/>
+<text x="748" y="617.0" class="m" font-size="11" style="fill:#9AABBC" text-anchor="start">events</text>
+</svg>

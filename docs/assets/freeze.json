@@ -1,0 +1,11 @@
+{
+  "window": true,
+  "background": "#0B1B2B",
+  "margin": [2, 2, 2, 2],
+  "padding": [24, 36, 28, 32],
+  "border": { "radius": 12, "width": 1, "color": "#24384C" },
+  "shadow": { "blur": 0, "x": 0, "y": 0 },
+  "font": { "family": "JetBrains Mono", "file": "", "size": 15, "ligatures": false },
+  "line_height": 1.35,
+  "theme": "catppuccin-mocha"
+}

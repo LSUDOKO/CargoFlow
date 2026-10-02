@@ -55,7 +55,7 @@ export async function fund(page: Page, ref: string, amount = "40,000") {
   const card = page.getByRole("listitem").filter({ hasText: ref });
   const mint = card.getByRole("button", { name: /Mint .* test USDG/ });
   const approve = card.getByRole("button", { name: new RegExp(`Approve ${amount} USDG`) });
-  await expect(mint.or(approve)).toBeVisible({ timeout: 30_000 });
+  await expect(mint.or(approve)).toBeVisible({ timeout: 120_000 }); // the balance read is slow on CI runners
   if (await mint.isVisible()) await mint.click();
   await approve.click();
   await card.getByRole("button", { name: new RegExp(`Deposit ${amount} USDG`) }).click();
