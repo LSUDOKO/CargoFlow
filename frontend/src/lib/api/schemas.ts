@@ -172,3 +172,51 @@ export const DemoStatus = z.object({ done: list(z.string()), next: z.string(), d
 export type DemoStatus = z.infer<typeof DemoStatus>;
 
 export const MirrorResult = Shipment;
+
+export const GatewaySource = z.object({
+  id: z.string(),
+  shipmentId: z.string(),
+  label: z.string(),
+  publicKey: z.string(),
+  sensorIds: list(z.string()),
+  createdAt: z.string(),
+});
+export type GatewaySource = z.infer<typeof GatewaySource>;
+export const GatewayList = z.object({ sources: list(GatewaySource) });
+
+export const EpochOutcome = z.object({
+  sequence: z.number(),
+  milestoneIndex: z.number(),
+  epochId: z.string(),
+  score: z.number(),
+  pass: z.boolean(),
+  action: z.string(),
+  reasons: list(z.string()),
+  skipped: z.string().optional(),
+  commitTx: z.string().optional(),
+  releaseTx: z.string().optional(),
+  pauseTx: z.string().optional(),
+  error: z.string().optional(),
+});
+export type EpochOutcome = z.infer<typeof EpochOutcome>;
+export const IngestResult = z.object({
+  accepted: z.number(),
+  rejected: list(z.object({ sensorId: z.string(), timestamp: z.number(), reason: z.string() })),
+  epochs: list(EpochOutcome),
+});
+export type IngestResult = z.infer<typeof IngestResult>;
+
+const word = z.string();
+export const RecoveryProof = z.object({
+  milestoneIndex: z.number(),
+  sequence: z.number(),
+  epochId: z.string(),
+  root: z.string(),
+  score: z.number(),
+  commitTx: z.string(),
+  submitter: z.string(),
+  a: z.tuple([word, word]),
+  b: z.tuple([z.tuple([word, word]), z.tuple([word, word])]),
+  c: z.tuple([word, word]),
+});
+export type RecoveryProof = z.infer<typeof RecoveryProof>;

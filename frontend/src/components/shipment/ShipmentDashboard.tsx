@@ -23,6 +23,7 @@ import { MilestoneTimeline } from "./MilestoneTimeline";
 import { ProofCard } from "./ProofCard";
 import { RoleActions } from "./RoleActions";
 import { RouteMap } from "./RouteMap";
+import { SourcesPanel } from "./SourcesPanel";
 import { TelemetryChart } from "./TelemetryChart";
 
 export function ShipmentDashboard({ id, compact }: { id: string; compact?: boolean }) {
@@ -131,6 +132,12 @@ export function ShipmentDashboard({ id, compact }: { id: string; compact?: boole
 
         {/* center: evidence */}
         <div className="flex min-w-0 flex-col gap-4">
+          {!compact && (
+            <Card>
+              <CardHeader title="Evidence sources" />
+              {v ? <SourcesPanel shipment={v.shipment} chainId={chainId} closed={["SETTLED", "DEFAULTED", "CANCELLED"].includes(v.facility?.status ?? "")} /> : <Skeleton className="h-16" />}
+            </Card>
+          )}
           <Card>
             <CardHeader title="Evidence">
               {latest && <span className="text-sm text-slate">Latest epoch: milestone {latest.milestoneIndex === 255 ? "–" : latest.milestoneIndex + 1}</span>}

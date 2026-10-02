@@ -32,7 +32,17 @@ export const E2E_ACCOUNTS: { id: string; name: string; address: Address }[] = [
 
 function e2eConnector(id: string, name: string, address: Address): CreateConnectorFn {
   const base = mock({ accounts: [address], features: { reconnect: true } });
-  return (config) => ({ ...base(config), id, name });
+  return (config) => {
+    const c = base(config);
+    // the mock signs messages through the RPC of whichever chain it is on, but the test accounts only exist on the
+    // local node, so signature requests always go there
+    const getProvider = async (p?: { chainId?: number }) => {
+      const provider = (await c.getProvider(p)) as { request: (a: { method: string; params?: unknown }) => Promise<unknown> };
+      const local = (await c.getProvider({ chainId: localChain.id })) as typeof provider;
+      return { ...provider, request: (a: { method: string; params?: unknown }) => (/sign/i.test(a.method) ? local.request(a) : provider.request(a)) };
+    };
+    return { ...c, id, name, getProvider };
+  };
 }
 
 const connectors: CreateConnectorFn[] = [injected({ shimDisconnect: true })];

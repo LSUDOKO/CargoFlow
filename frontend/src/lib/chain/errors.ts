@@ -77,3 +77,10 @@ export function txGuard(s: { pending: boolean; walletChain: number | undefined; 
   if (s.walletChain !== s.appChain) return `Switch your wallet to ${chainName(s.appChain)}.`;
   return null;
 }
+
+/** A wallet signature request's failure, in words. */
+export function signatureError(err: unknown): string {
+  const text = err instanceof Error ? `${(err as { shortMessage?: string }).shortMessage ?? ""} ${err.message}` : String(err);
+  if (/user (rejected|denied)|rejected the request/i.test(text)) return "You declined the signature in your wallet.";
+  return (err as { shortMessage?: string })?.shortMessage ?? (err instanceof Error ? err.message : "The wallet could not sign.");
+}

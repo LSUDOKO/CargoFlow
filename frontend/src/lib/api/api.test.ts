@@ -77,3 +77,20 @@ describe("degraded health", () => {
     expect((await fetchHealth()).status).toBe("degraded");
   });
 });
+
+describe("signedTelemetryRequest", () => {
+  it("signs exactly the body it sends, on the lowercase shipment path", async () => {
+    const { signedTelemetryRequest } = await import("./client");
+    const { signingString, fromBase64Url, newGatewayKey, sourceIdFor } = await import("@/lib/gateway");
+    const { ed25519 } = await import("@noble/curves/ed25519");
+    const k = newGatewayKey();
+    const key = { sourceId: sourceIdFor(k.publicKey), shipmentId: "0x" + "AB".repeat(32), seed: k.seed };
+    const pt = { timestamp: 1, sensorId: "s1", temperatureX100: 400, humidityX100: 0, latitudeE6: 0, longitudeE6: 0, shockX100: 0 };
+    const r = signedTelemetryRequest(key, [pt], 1700000000);
+    expect(r.path).toBe(`/v1/shipments/0x${"ab".repeat(32)}/telemetry`);
+    expect(JSON.parse(r.raw)).toEqual({ points: [pt] });
+    expect(r.headers["X-Source-Id"]).toBe(key.sourceId);
+    const msg = new TextEncoder().encode(signingString("POST", r.path, 1700000000, r.raw));
+    expect(ed25519.verify(fromBase64Url(r.headers["X-Signature"]), msg, fromBase64Url(k.publicKey))).toBe(true);
+  });
+});
