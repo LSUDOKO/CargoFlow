@@ -33,6 +33,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 WORKDIR /app
 COPY --from=gobuild /out/cargoflow /app/cargoflow
 COPY --from=circuits --chown=10001:10001 /circuits /app/circuits
+# the public testnet deployment, so DEPLOYMENT_FILE=/app/deployments/robinhood-testnet.json works out of the box
+COPY contracts/deployments/robinhood-testnet.json /app/deployments/robinhood-testnet.json
 USER 10001:10001
 ENV CIRCUITS_DIR=/app/circuits HTTP_ADDR=:8080 LOG_LEVEL=info
 EXPOSE 8080
