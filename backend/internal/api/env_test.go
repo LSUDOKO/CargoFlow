@@ -25,7 +25,6 @@ import (
 	"github.com/LSUDOKO/CargoFlow/backend/internal/auth"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/chain"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/chain/chaintest"
-	"github.com/LSUDOKO/CargoFlow/backend/internal/demo"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/proof"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/service"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/simulator"
@@ -253,20 +252,4 @@ func (e *env) registerShipment(t *testing.T, id [32]byte, ref string) {
 	if resp := e.do(t, "POST", "/v1/shipments", body, map[string]string{"X-API-Key": adminKey}, nil); resp.StatusCode != 201 {
 		t.Fatalf("register shipment = %d", resp.StatusCode)
 	}
-}
-
-// newDemoEnv is an API environment with demo mode on, using the chaintest exporter, financier and buyer
-// wallets and a mintable mock token.
-func newDemoEnv(t *testing.T) *env {
-	t.Helper()
-	var reg *demo.Registry
-	e := newEnvWith(t, nil, func(e *env, c *api.Config) {
-		reg = demo.New(demo.Config{
-			AdminKey: adminKey, Chain: c.Chain, Divisor: 2000, Mint: true,
-			Exporter: chain.NewSigner(e.keys["exporter"]), Financier: chain.NewSigner(e.keys["financier"]), Buyer: chain.NewSigner(e.keys["buyer"]),
-		})
-		c.Demo = reg
-	})
-	reg.SetAPIURL(e.srv.URL)
-	return e
 }

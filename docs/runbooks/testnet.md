@@ -142,9 +142,7 @@ pnpm install && pnpm build && pnpm start
 ```
 
 Add the site's origin to the backend's `CORS_ORIGINS`. Wallets must be on Robinhood Chain Testnet (46630); the app
-offers to switch. For judge mode against the testnet, start the backend with `DEMO_MODE=true` and three funded
-throwaway wallets in `DEMO_*_KEY` (each run at the default divisor of 2000 needs 20 USDG for the financier and
-50 USDG for the buyer, plus gas).
+offers to switch.
 
 ## Re-deploying
 

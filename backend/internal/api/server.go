@@ -11,7 +11,6 @@ import (
 
 	"github.com/LSUDOKO/CargoFlow/backend/internal/auth"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/chain"
-	"github.com/LSUDOKO/CargoFlow/backend/internal/demo"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/service"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/store"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/ws"
@@ -42,8 +41,7 @@ type Config struct {
 	GatewayPerMinute   int // gateway registrations, per client address; default 20
 	RecoveryPerMinute  int // exporter recovery preparations, per shipment; default 3
 
-	Demo *demo.Registry // nil unless DEMO_MODE is on; registers the /v1/demo endpoints
-	Now  func() time.Time
+	Now func() time.Time
 }
 
 // Server is the HTTP API.
@@ -95,11 +93,6 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /v1/shipments/{id}/proof", s.handle(s.admin(s.proof)))
 	mux.HandleFunc("GET /v1/shipments/{id}/epochs", s.handle(s.epochs))
 	mux.HandleFunc("GET /v1/shipments/{id}/audit", s.handle(s.audit))
-	if s.c.Demo != nil {
-		mux.HandleFunc("POST /v1/demo/shipments", s.handle(s.demoCreate))
-		mux.HandleFunc("GET /v1/demo/shipments/{id}", s.handle(s.demoStatus))
-		mux.HandleFunc("POST /v1/demo/shipments/{id}/scenes/{scene}", s.handle(s.demoScene))
-	}
 	if s.c.Hub != nil {
 		mux.Handle("GET /v1/ws", s.c.Hub.Handler(originHosts(s.c.CORSOrigins)))
 	}
@@ -166,7 +159,6 @@ func (s *Server) config(w http.ResponseWriter, _ *http.Request) error {
 	writeJSON(w, http.StatusOK, map[string]any{
 		"chainId":      m.ChainID,
 		"usdgDecimals": 6,
-		"demoMode":     s.c.Demo != nil,
 		"contracts": map[string]string{
 			"usdg": hexAddr(m.USDG), "access": hexAddr(m.Access), "shipmentRegistry": hexAddr(m.Registry),
 			"policyEngine": hexAddr(m.Policies), "evidenceRegistry": hexAddr(m.Evidence),
