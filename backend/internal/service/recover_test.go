@@ -222,3 +222,66 @@ func TestPreparedRecoveryIsSubmittedByTheExportersOwnWallet(t *testing.T) {
 		t.Fatalf("preparing again once active = %v, want ErrNotPaused", err)
 	}
 }
+
+// flakyProver fails its first proof, as a prover that crashes or a request that is cut off would.
+type flakyProver struct {
+	proof.Prover
+	failed bool
+}
+
+func (p *flakyProver) Prove(ctx context.Context, req proof.Request) (*proof.Result, error) {
+	if !p.failed {
+		p.failed = true
+		return nil, errors.New("prover crashed")
+	}
+	return p.Prover.Prove(ctx, req)
+}
+
+func TestAnAbandonedOrFailedRecoveryCanBePreparedAgainWithoutNewReadings(t *testing.T) {
+	prover := &flakyProver{Prover: realProver(t)}
+	e := newEnv(t, prover)
+	ctx := context.Background()
+	hex, id, tl := pausedByAnomaly(t, e, "svc-recover-again")
+	if _, err := e.svc.IngestTelemetry(ctx, hex, "", tl.segment(t, simulator.Normal, 24, 8, simulator.SecondarySensor)); err != nil {
+		t.Fatal(err)
+	}
+	commits := func() int {
+		actions, _ := e.store.Actions(ctx, hex)
+		n := 0
+		for _, a := range actions {
+			if a.Kind == "COMMIT_EPOCH" {
+				n++
+			}
+		}
+		return n
+	}
+	before := commits()
+
+	// the prover fails: nothing may have been committed on chain for it
+	if _, err := e.svc.PrepareRecovery(ctx, hex, simulator.SecondarySensor, e.exporter.Address()); err == nil {
+		t.Fatal("expected the prover failure")
+	}
+	if commits() != before {
+		t.Fatal("a failed proof must not cost a commit")
+	}
+
+	// prepared, then abandoned (the exporter reloaded the page): preparing again must not need new readings
+	first, err := e.svc.PrepareRecovery(ctx, hex, simulator.SecondarySensor, e.exporter.Address())
+	if err != nil {
+		t.Fatal(err)
+	}
+	again, err := e.svc.PrepareRecovery(ctx, hex, simulator.SecondarySensor, e.exporter.Address())
+	if err != nil {
+		t.Fatalf("preparing again after an abandoned attempt: %v", err)
+	}
+	if again.EpochID != first.EpochID || commits() != before+1 {
+		t.Fatalf("the second preparation must re-prove the committed epoch (%s vs %s, %d commits)", again.EpochID, first.EpochID, commits()-before)
+	}
+	a, b, c, err := again.Calldata()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := e.chain.ResumeWithProof(ctx, e.exporter, id, uint8(again.Milestone), uint32(again.Sequence), a, b, c); err != nil {
+		t.Fatalf("the re-prepared proof must verify on chain: %v", err)
+	}
+}

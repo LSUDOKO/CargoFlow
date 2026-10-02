@@ -144,16 +144,22 @@ func (s *Service) prepareRecovery(ctx context.Context, id [32]byte, canon, senso
 	}
 	milestone := int(f.NextMilestone)
 
-	pts, err := s.recoveryReadings(ctx, canon, sensorID)
-	if err != nil {
-		return RecoveryProof{}, err
-	}
-
 	cfg, err := s.EpochConfig(sh)
 	if err != nil {
 		return RecoveryProof{}, err
 	}
 	cfg.Policy.MinSensors = 1 // a recovery epoch is one probe by design
+
+	// A recovery prepared earlier but never submitted (the page was closed, the request was cut off) is already
+	// committed for this pause: prove it again for this submitter instead of demanding fresh readings.
+	if p, ok, err := s.reproveCommittedRecovery(ctx, id, canon, sh, cfg, f, milestone, sensorID, submitter); ok || err != nil {
+		return p, err
+	}
+
+	pts, err := s.recoveryReadings(ctx, canon, sensorID)
+	if err != nil {
+		return RecoveryProof{}, err
+	}
 	e, err := epoch.FromPoints(cfg, 0, pts)
 	if err != nil {
 		return RecoveryProof{}, err
@@ -163,28 +169,28 @@ func (s *Service) prepareRecovery(ctx context.Context, id [32]byte, canon, senso
 		return RecoveryProof{}, fmt.Errorf("%w: the recovery evidence fails the policy (%s)", ErrNotRecoverable, strings.Join(reasonStrings(dec), ", "))
 	}
 
-	// The contract only accepts recovery evidence committed strictly after the pause. Blocks arrive many
-	// times a second, so wait until the clock has moved past the second the pause happened in.
-	if err := waitPast(ctx, f.PausedAt); err != nil {
-		return RecoveryProof{}, err
-	}
-
 	seq, err := s.o.Store.NextSequence(ctx, canon, milestone)
 	if err != nil {
 		return RecoveryProof{}, err
 	}
 	epochID := proof.EpochID(id, uint8(milestone), uint32(seq))
-	ctxHash, err := s.o.Chain.ProofContext(ctx, id, epochID, submitter)
-	if err != nil {
-		return RecoveryProof{}, err
-	}
-	req := proof.Request{Epoch: e, ContextHash: ctxHash, MinTempX100: int32(sh.Policy.MinTempX100), MaxTempX100: int32(sh.Policy.MaxTempX100)}
-	if err := req.Validate(); err != nil {
-		return RecoveryProof{}, fmt.Errorf("%w: %v", ErrNotRecoverable, err)
-	}
-
 	out := RecoveryProof{Milestone: milestone, Sequence: seq, EpochID: hex32(epochID), Root: hex32(e.RootBytes32Array()),
 		Score: e.Result.Score, Submitter: strings.ToLower(submitter.Hex())}
+
+	// Prove first: the proof context depends only on the epoch id and the submitter, so a prover failure costs
+	// no gas and leaves the readings available for another attempt.
+	if err := s.proveRecovery(ctx, &out, id, epochID, e, sh, submitter); err != nil {
+		return out, err
+	}
+
+	// From here on the work is paid for on chain: finish it even if the caller disconnects.
+	ctx = context.WithoutCancel(ctx)
+
+	// The contract only accepts recovery evidence committed strictly after the pause. Blocks arrive many
+	// times a second, so wait until the clock has moved past the second the pause happened in.
+	if err := waitPast(ctx, f.PausedAt); err != nil {
+		return RecoveryProof{}, err
+	}
 	rec, err := s.o.Store.InsertEpoch(ctx, toRecord(canon, milestone, seq, out.EpochID, out.Root, e, dec))
 	if err != nil && !errors.Is(err, store.ErrConflict) {
 		return out, err
@@ -205,16 +211,72 @@ func (s *Service) prepareRecovery(ctx context.Context, id [32]byte, canon, senso
 	}
 	out.CommitTx = commit.Hash.Hex()
 	_ = s.o.Store.SetEpochCommitted(ctx, out.EpochID, out.CommitTx)
+	return out, nil
+}
 
+// proveRecovery proves that every reading in e sits inside the policy band, bound to submitter, and fills out's
+// calldata.
+func (s *Service) proveRecovery(ctx context.Context, out *RecoveryProof, id, epochID [32]byte, e *epoch.Epoch, sh store.Shipment, submitter common.Address) error {
+	ctxHash, err := s.o.Chain.ProofContext(ctx, id, epochID, submitter)
+	if err != nil {
+		return err
+	}
+	req := proof.Request{Epoch: e, ContextHash: ctxHash, MinTempX100: int32(sh.Policy.MinTempX100), MaxTempX100: int32(sh.Policy.MaxTempX100)}
+	if err := req.Validate(); err != nil {
+		return fmt.Errorf("%w: %v", ErrNotRecoverable, err)
+	}
 	proven, err := s.o.Prover.Prove(ctx, req)
 	if err != nil {
-		return out, fmt.Errorf("generate proof: %w", err)
+		return fmt.Errorf("generate proof: %w", err)
 	}
 	if _, _, _, err := calldata(proven); err != nil {
-		return out, err
+		return err
 	}
 	out.A, out.B, out.C = proven.A, proven.B, proven.C
-	return out, nil
+	return nil
+}
+
+// reproveCommittedRecovery finds this pause's committed, not yet proven recovery epoch for sensorID and proves it
+// again for submitter. ok is false when there is none, so the caller builds a fresh one.
+func (s *Service) reproveCommittedRecovery(ctx context.Context, id [32]byte, canon string, sh store.Shipment, cfg epoch.Config, f chain.Facility, milestone int, sensorID string, submitter common.Address) (RecoveryProof, bool, error) {
+	epochs, err := s.o.Store.Epochs(ctx, canon)
+	if err != nil {
+		return RecoveryProof{}, false, err
+	}
+	for i := len(epochs) - 1; i >= 0; i-- {
+		rec := epochs[i]
+		if rec.MilestoneIndex != milestone || rec.CommitTxHash == "" || rec.ProofVerified || !rec.DecisionPass || len(rec.Points) != proof.EpochReadings || !allFrom(rec.Points, sensorID) {
+			continue
+		}
+		epochID, _, err := parseID(rec.EpochID)
+		if err != nil {
+			continue
+		}
+		onChain, err := s.o.Chain.Epoch(ctx, epochID)
+		if err != nil || onChain.CommittedAt <= f.PausedAt {
+			continue // committed before this pause: the contract would refuse it
+		}
+		e, err := epoch.FromPoints(cfg, 0, rec.Points)
+		if err != nil || hex32(e.RootBytes32Array()) != rec.MerkleRoot {
+			continue // not rebuildable to the committed root
+		}
+		out := RecoveryProof{Milestone: milestone, Sequence: rec.Sequence, EpochID: rec.EpochID, Root: rec.MerkleRoot,
+			Score: rec.Score, CommitTx: rec.CommitTxHash, Submitter: strings.ToLower(submitter.Hex())}
+		if err := s.proveRecovery(ctx, &out, id, epochID, e, sh, submitter); err != nil {
+			return out, false, err
+		}
+		return out, true, nil
+	}
+	return RecoveryProof{}, false, nil
+}
+
+func allFrom(pts []telemetry.Point, sensorID string) bool {
+	for _, p := range pts {
+		if p.SensorID != sensorID {
+			return false
+		}
+	}
+	return true
 }
 
 // waitPast blocks until the wall clock is in a later second than unix, so the next block's timestamp is
