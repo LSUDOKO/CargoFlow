@@ -9,8 +9,11 @@ export default function OpenGraphImage() {
     (
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", background: "#0B1B2B", padding: 72, color: "#F7F9F4", fontFamily: "sans-serif" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          <div style={{ width: 72, height: 72, borderRadius: 18, background: "#13293D", border: "4px solid #C6F432", display: "flex" }} />
-          <div style={{ fontSize: 44, fontWeight: 700, letterSpacing: -1 }}>CargoFlow</div>
+          <div style={{ width: 64, height: 64, borderRadius: 14, border: "8px solid #C6F432", borderRight: "8px solid transparent", display: "flex" }} />
+          <div style={{ display: "flex", fontSize: 48, fontWeight: 700, letterSpacing: -1 }}>
+            <span>Cargo</span>
+            <span style={{ color: "#C6F432" }}>Flow</span>
+          </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", fontSize: 76, fontWeight: 700, lineHeight: 1.02, letterSpacing: -2 }}>
           <div style={{ display: "flex" }}>Capital that</div>

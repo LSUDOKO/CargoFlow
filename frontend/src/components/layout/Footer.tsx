@@ -7,7 +7,7 @@ export function Footer() {
     <footer className="mt-24 bg-ink text-paper">
       <div className="container-page grid gap-12 py-16 md:grid-cols-[1.3fr_1fr_1fr_1fr]">
         <div>
-          <Logo tone="paper" />
+          <Logo tone="dark" />
           <p className="mt-4 max-w-sm text-paper/70">
             Working capital that releases only when the cargo&apos;s own evidence says it should.
           </p>

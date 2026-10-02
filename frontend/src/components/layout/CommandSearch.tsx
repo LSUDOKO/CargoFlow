@@ -47,10 +47,10 @@ export function CommandSearch() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="hidden h-11 items-center gap-3 rounded-full border-2 border-line bg-white pr-2 pl-4 text-sm text-slate transition-colors hover:border-ink md:inline-flex"
+        className="hidden h-11 items-center gap-3 rounded-full border-2 border-paper/20 bg-paper/5 pr-2 pl-4 text-sm text-paper/75 transition-colors hover:border-paper/50 hover:text-paper md:inline-flex"
       >
         Find a shipment
-        <kbd className="rounded-md bg-ink/6 px-1.5 py-0.5 font-sans text-xs font-semibold text-ink/70">Ctrl K</kbd>
+        <kbd className="rounded-md bg-paper/10 px-1.5 py-0.5 font-sans text-xs font-semibold text-paper/80">Ctrl K</kbd>
       </button>
       <Modal open={open} onClose={() => setOpen(false)} title="Find a shipment" description="Search by shipment id or by your reference, for example CF-2026-SG01-….">
         <form onSubmit={go} className="flex flex-col gap-3">

@@ -49,13 +49,13 @@ export function WalletButton({ compact }: { compact?: boolean }) {
         onClick={() => setMenu((m) => !m)}
         aria-expanded={menu}
         aria-haspopup="menu"
-        className="inline-flex h-11 items-center gap-2.5 rounded-full border-2 border-ink bg-white pr-4 pl-1.5 text-sm font-semibold"
+        className="inline-flex h-11 items-center gap-2.5 rounded-full border-2 border-current/25 pr-4 pl-1.5 text-sm font-semibold"
       >
         <span className={`grid h-8 w-8 place-items-center rounded-full ${wrongChain ? "bg-alert" : "bg-signal"}`} aria-hidden="true">
           <span className="h-2.5 w-2.5 rounded-full bg-ink" />
         </span>
         <span className="font-mono">{shortHash(address, 4, 4)}</span>
-        {!compact && balance !== undefined && <span className="hidden text-slate lg:inline">{formatUSDG(balance as bigint)} USDG</span>}
+        {!compact && balance !== undefined && <span className="hidden opacity-70 lg:inline">{formatUSDG(balance as bigint)} USDG</span>}
       </button>
       {menu && (
         <div role="menu" className="absolute right-0 z-40 mt-2 w-64 rounded-2xl border border-line bg-white p-2 shadow-[var(--shadow-lift)]">

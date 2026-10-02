@@ -29,7 +29,7 @@ export function Header() {
     return () => window.removeEventListener("scroll", on);
   }, []);
   return (
-    <header className={cx("sticky top-0 z-40 transition-[background,box-shadow] duration-200", scrolled ? "bg-paper/85 shadow-[0_1px_0_var(--color-line)] backdrop-blur-md" : "bg-paper")}>
+    <header className={cx("sticky top-0 z-40 bg-ink text-paper transition-shadow duration-200", scrolled && "shadow-[0_8px_24px_-12px_rgb(11_27_43/0.6)]")}>
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded-lg focus:bg-signal focus:px-3 focus:py-2 focus:font-semibold">
         Skip to content
       </a>
@@ -45,7 +45,7 @@ export function Header() {
                 key={n.href}
                 href={n.href}
                 aria-current={active ? "page" : undefined}
-                className={cx("rounded-full px-3.5 py-2 text-[0.95rem] font-semibold transition-colors", active ? "bg-ink text-paper" : "text-ink/75 hover:bg-ink/5 hover:text-ink")}
+                className={cx("rounded-full px-3.5 py-2 text-[0.95rem] font-semibold transition-colors", active ? "bg-signal text-ink" : "text-paper/80 hover:bg-paper/10 hover:text-paper")}
               >
                 {n.label}
               </Link>
@@ -63,7 +63,7 @@ export function Header() {
           <button
             type="button"
             onClick={() => setMenu(true)}
-            className="grid h-11 w-11 place-items-center rounded-full border-2 border-ink lg:hidden"
+            className="grid h-11 w-11 place-items-center rounded-full border-2 border-paper/40 text-paper lg:hidden"
             aria-label="Open menu"
             aria-expanded={menu}
           >
@@ -74,6 +74,7 @@ export function Header() {
         </div>
       </div>
       <Drawer open={menu} onClose={() => setMenu(false)} title="Menu">
+        <div className="mb-4"><Logo tone="light" className="h-8 w-auto" /></div>
         <nav aria-label="Mobile" className="flex flex-col gap-1">
           <Link href="/" onClick={() => setMenu(false)} className="rounded-2xl px-4 py-3 font-display text-xl font-semibold hover:bg-ink/5">Home</Link>
           {nav.map((n) => (

@@ -2,7 +2,7 @@
 
 | File | Source | Licence |
 |---|---|---|
-| `mark.svg`, `logo.svg`, `../../src/app/icon.svg` | Hand-drawn for CargoFlow (container whose middle ribs form a chain link) | MIT, as the repository |
+| `logo-dark.svg` (navy surfaces), `logo-light.svg` (light surfaces), `mark.svg`, `icon.svg`, `../../src/app/icon.svg` | Vectorised with potrace from the official CargoFlow logo supplied by the project owner (hexagonal "C" around container ribs and a forward arrow; "Cargo" + lime "Flow") | Project trademark, used by the project |
 | `illustrations/hero.webp`, `hero-800.webp` | Generated 2026-10-02 with FLUX.1-schnell (Black Forest Labs, Apache-2.0) via the public Hugging Face Space `evalstate/flux1_schnell`, seed 4242, prompt below; re-encoded with ImageMagick | Apache-2.0 model outputs, no third-party marks |
 | `illustrations/{sensor,merkle,zk,ai,vault,settle}.svg` | Hand-drawn SVG in the brand palette | MIT |
 | Open Graph image | Rendered at build time by `src/app/opengraph-image.tsx` (`next/og`) | MIT |
