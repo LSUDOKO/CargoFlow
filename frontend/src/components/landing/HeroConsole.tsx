@@ -72,7 +72,7 @@ export function HeroConsole() {
       <div aria-hidden="true" className="rounded-[1.5rem] border border-paper/10 bg-ink-2 p-4 shadow-[0_24px_60px_-24px_rgb(0_0_0/0.6)] sm:p-6">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="font-mono text-xs text-paper/50">CF-2026-SG01</p>
+            <p className="font-mono text-xs text-paper/70">CF-2026-SG01</p>
             <p className="mt-0.5 truncate text-sm font-semibold text-paper">Singapore to Rotterdam<span className="hidden sm:inline">, 40 ft reefer</span></p>
           </div>
           <Pill tone="verified" dot onDark className="shrink-0 whitespace-nowrap">In transit</Pill>
@@ -83,14 +83,14 @@ export function HeroConsole() {
         <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
           <ol className="flex flex-col gap-1 font-mono text-[0.8rem] tabular">
             {feed.map((r, i) => (
-              <li key={r.key} className={cx("flex items-center gap-3 transition-opacity duration-300", i === 0 ? "text-paper" : i === 1 ? "text-paper/55" : "text-paper/30")}>
-                <span className="text-paper/40">{r.time}</span>
+              <li key={r.key} className={cx("flex items-center gap-3 transition-opacity duration-300", i === 0 ? "text-paper" : i === 1 ? "text-paper/85" : "text-paper/70")}>
+                <span className="text-paper/70">{r.time}</span>
                 <span>A {r.a.toFixed(1)} °C</span>
                 <span>B {r.b.toFixed(1)} °C</span>
               </li>
             ))}
           </ol>
-          <p className="text-xs text-paper/50 sm:text-right">
+          <p className="text-xs text-paper/70 sm:text-right">
             Agreed band
             <span className="block font-mono text-sm text-paper/80">2.0 to 8.0 °C</span>
           </p>
@@ -99,7 +99,7 @@ export function HeroConsole() {
         <div className="mt-5 border-t border-paper/10 pt-4">
           <div className="flex items-center justify-between text-xs">
             <span className="font-semibold text-paper/80">Evidence epoch {epoch}</span>
-            <span className="font-mono text-paper/50 tabular">{filled} of {READINGS_PER_EPOCH} readings</span>
+            <span className="font-mono text-paper/70 tabular">{filled} of {READINGS_PER_EPOCH} readings</span>
           </div>
           <div className="mt-2 grid grid-cols-8 gap-1">
             {Array.from({ length: READINGS_PER_EPOCH }, (_, i) => (
@@ -112,14 +112,14 @@ export function HeroConsole() {
           <div className="flex items-center justify-between gap-3 py-2.5">
             <dt className="min-w-0">
               <span className="font-semibold text-paper">Merkle root</span>
-              <span className={cx("ml-2 font-mono text-xs transition-colors", committed ? "text-paper/60" : "text-paper/25")}>{roots[cycle % roots.length]}</span>
+              <span className={cx("ml-2 font-mono text-xs transition-colors", committed ? "text-paper/80" : "text-paper/70")}>{roots[cycle % roots.length]}</span>
             </dt>
             <dd>{committed ? <Pill tone="verified" dot onDark>Committed</Pill> : <Pill tone="slate" onDark>Collecting</Pill>}</dd>
           </div>
           <div className="flex items-center justify-between gap-3 py-2.5">
             <dt className="min-w-0">
               <span className="font-semibold text-paper">Milestone {milestone} of {MILESTONES}</span>
-              <span className="ml-2 font-mono text-xs text-paper/60 tabular">{TRANCHE} USDG</span>
+              <span className="ml-2 font-mono text-xs text-paper/80 tabular">{TRANCHE} USDG</span>
             </dt>
             <dd>{released ? <Pill tone="ink" onDark>Released</Pill> : <Pill tone="slate" onDark>In escrow</Pill>}</dd>
           </div>
