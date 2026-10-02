@@ -13,6 +13,8 @@
     "abi": "node scripts/gen-abi.mjs"
   },
   "dependencies": {
+    "@noble/curves": "^1.9.7",
+    "@noble/hashes": "^1.8.0",
     "@tanstack/react-query": "5.104.0",
     "@walletconnect/ethereum-provider": "^2.25.0",
     "motion": "13.5.0",

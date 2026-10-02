@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"crypto/rand"
+	"encoding/base64"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -198,5 +199,22 @@ func TestSigningStringIsUnambiguous(t *testing.T) {
 	c := auth.SigningString("POST", "/b", 1, []byte("x"))
 	if string(a) == string(b) || string(a) == string(c) {
 		t.Fatal("distinct requests produce the same signing string")
+	}
+}
+
+// TestSigningVectorMatchesTheBrowser pins a fixed-seed signature; frontend/src/lib/gateway.test.ts checks the same
+// vector, so a browser gateway and this verifier can never drift apart.
+func TestSigningVectorMatchesTheBrowser(t *testing.T) {
+	seed := make([]byte, 32)
+	for i := range seed {
+		seed[i] = byte(i + 1)
+	}
+	priv := ed25519.NewKeyFromSeed(seed)
+	if got := base64.RawURLEncoding.EncodeToString(priv.Public().(ed25519.PublicKey)); got != "ebVWLo_mVPlAeLES6KmLp5AfhTrmlb7X4OORC60ElmQ" {
+		t.Fatalf("public key %s", got)
+	}
+	const want = "sj1mt5G8eKywRtIFawngVCppOosS5MoZI3CpxYikGQXlDlwkoz8fvjHEjDnSBm3HqXgtLcI17J1atefHLz0wDg"
+	if got := auth.Sign(priv, "POST", "/v1/shipments/0xabc/telemetry", 1700000000, []byte(`{"points":[]}`)); got != want {
+		t.Fatalf("signature %s", got)
 	}
 }
