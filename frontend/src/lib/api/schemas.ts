@@ -146,7 +146,6 @@ export type Stats = z.infer<typeof Stats>;
 export const Config = z.object({
   chainId: z.number(),
   usdgDecimals: z.number(),
-  demoMode: z.boolean().optional().default(false),
   contracts: z.record(z.string(), z.string()),
 });
 export type Config = z.infer<typeof Config>;
@@ -160,16 +159,6 @@ export const Health = z.object({
 });
 export type Health = z.infer<typeof Health>;
 
-export const DemoStep = z.object({
-  scene: z.string(),
-  txHashes: list(z.string()),
-  status: z.string().optional().default(""),
-  drawn: z.string().optional().default("0"),
-});
-export type DemoStep = z.infer<typeof DemoStep>;
-export const DemoCreated = DemoStep.extend({ shipmentId: z.string(), divisor: z.number().optional().default(1) });
-export const DemoStatus = z.object({ done: list(z.string()), next: z.string(), divisor: z.number().optional().default(1) });
-export type DemoStatus = z.infer<typeof DemoStatus>;
 
 export const MirrorResult = Shipment;
 

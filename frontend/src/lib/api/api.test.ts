@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ApiError, apiGet, apiPost, wsURL } from "./client";
-import { AuditList, Config, ShipmentList, ShipmentView, Stats, TelemetrySummary, DemoStep } from "./schemas";
+import { AuditList, ShipmentList, ShipmentView, Stats, TelemetrySummary } from "./schemas";
 import { reduceEvents, type WsEvent } from "./ws";
 
 const id = "0x" + "a".repeat(64);
@@ -19,10 +19,8 @@ describe("schemas", () => {
     expect(v.milestones).toEqual([]);
     expect(ShipmentList.parse({ shipments: [shipment], limit: 50, offset: 0 }).shipments).toHaveLength(1);
     expect(Stats.parse({ shipments: { ACTIVE: 2 }, total: 2, epochsCommitted: 5, proofsVerified: 1 }).total).toBe(2);
-    expect(Config.parse({ chainId: 31337, usdgDecimals: 6, contracts: { usdg: "0x1" } }).demoMode).toBe(false);
     expect(TelemetrySummary.parse({ epochs: [], position: null }).position).toBeNull();
     expect(AuditList.parse({ entries: [{ time: "t", kind: "epoch", title: "x" }] }).entries[0]!.detail).toEqual({});
-    expect(DemoStep.parse({ scene: "healthy", txHashes: null, status: "ACTIVE", drawn: "1" }).txHashes).toEqual([]);
   });
   it("reject a malformed view instead of crashing later", () => {
     expect(() => ShipmentView.parse({ ...view, shipment: { ...shipment, invoiceValue: 5 } })).toThrow();

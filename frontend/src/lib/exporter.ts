@@ -2,7 +2,7 @@ import { keccak256, toBytes, type Hex } from "viem";
 
 export type RoutePoint = { latE6: number; lonE6: number };
 
-/** Route presets; the first is the demo lane. Coordinates are degrees x 1e6. */
+/** Route presets; the first is the default lane. Coordinates are degrees x 1e6. */
 export const ROUTES: { id: string; label: string; points: RoutePoint[] }[] = [
   { id: "inns-sgsin", label: "Nhava Sheva (IN) → Singapore (SG)", points: [{ latE6: 18_950_000, lonE6: 72_950_000 }, { latE6: 1_264_000, lonE6: 103_820_000 }] },
   { id: "aejea-nlrtm", label: "Jebel Ali (AE) → Rotterdam (NL)", points: [{ latE6: 25_011_000, lonE6: 55_061_000 }, { latE6: 51_950_000, lonE6: 4_140_000 }] },

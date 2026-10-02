@@ -60,7 +60,7 @@ export function ShipmentDashboard({ id, compact }: { id: string; compact?: boole
         </p>
         <div className="mt-8 flex justify-center gap-3">
           <LinkButton href="/shipments">Browse the fleet</LinkButton>
-          <LinkButton href="/demo" variant="secondary">Run the live demo</LinkButton>
+          <LinkButton href="/exporter" variant="secondary">Open the exporter portal</LinkButton>
         </div>
       </div>
     );

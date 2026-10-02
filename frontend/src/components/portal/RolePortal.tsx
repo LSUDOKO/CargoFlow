@@ -79,7 +79,7 @@ export function RolePortal({ role }: { role: Role }) {
             <p className="mx-auto mt-2 max-w-md text-slate">{c.empty}</p>
             <div className="mt-6 flex justify-center gap-2">
               <LinkButton href="/shipments" variant="secondary">Browse the fleet</LinkButton>
-              <LinkButton href="/demo">Run the live demo</LinkButton>
+              <LinkButton href="/exporter">Open the exporter portal</LinkButton>
             </div>
           </Card>
         ) : (

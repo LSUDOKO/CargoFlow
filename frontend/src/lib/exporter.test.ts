@@ -8,7 +8,7 @@ describe("routeCommitment", () => {
 });
 
 describe("policy", () => {
-  it("defaults to the cold-chain policy the demo uses", () => {
+  it("defaults to the 2 to 8 °C cold-chain policy", () => {
     expect(buildPolicy(defaultPolicyForm)).toEqual({
       minTempX100: 200, maxTempX100: 800, maxEvidenceAgeSec: 1800, maxRouteDeviationM: 25000,
       minEvidenceScore: 75, maxConflictBps: 3000, maxRiskBps: 3500, requiresZK: false,

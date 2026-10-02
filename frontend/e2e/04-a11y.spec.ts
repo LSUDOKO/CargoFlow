@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { latestShipmentId } from "./helpers";
 
-const routes = ["/", "/shipments", "/exporter", "/financier", "/buyer", "/demo"];
+const routes = ["/", "/shipments", "/exporter", "/financier", "/buyer", "/arbiter"];
 
 for (const route of routes) {
   test(`${route} has no serious or critical accessibility violations`, async ({ page }) => {

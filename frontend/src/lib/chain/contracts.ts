@@ -14,13 +14,12 @@ export type Contracts = {
 };
 
 /** Deployed contract addresses from the backend's /v1/config, so one build serves every network. */
-export function useContracts(): { contracts: Contracts | undefined; chainId: number | undefined; demoMode: boolean } {
+export function useContracts(): { contracts: Contracts | undefined; chainId: number | undefined } {
   const { data } = useApiConfig();
-  if (!data) return { contracts: undefined, chainId: undefined, demoMode: false };
+  if (!data) return { contracts: undefined, chainId: undefined };
   const c = data.contracts;
   return {
     chainId: data.chainId,
-    demoMode: data.demoMode,
     contracts: {
       controller: c.financingController as Address,
       registry: c.shipmentRegistry as Address,

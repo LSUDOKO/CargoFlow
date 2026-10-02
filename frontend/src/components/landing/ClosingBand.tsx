@@ -13,13 +13,13 @@ export function ClosingBand() {
       <div className="relative overflow-hidden rounded-[2rem] bg-signal px-6 py-14 md:rounded-[2.5rem] md:px-14 md:py-20">
         <div className="relative z-10 max-w-2xl xl:max-w-[34rem]">
           <h2 id="close-title" className="font-display text-[clamp(2.4rem,5.4vw,4.4rem)] leading-[0.98] font-bold tracking-[-0.045em] text-ink">
-            Watch a shipment earn its financing
+            Put your next shipment on evidence
           </h2>
           <p className="mt-5 max-w-lg text-lg text-ink/80">
-            The live demo funds a facility, overheats a container, proves the recovery and settles the invoice, on-chain, in about a minute.
+            Open a facility as the exporter, have your financier fund it from their own wallet, and let the cargo&apos;s readings decide every release.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <LinkButton href="/demo" size="lg" variant="dark">Run the live demo</LinkButton>
+            <LinkButton href="/exporter" size="lg" variant="dark">Start as an exporter</LinkButton>
             <LinkButton href="/shipments" size="lg" variant="secondary">Browse the fleet</LinkButton>
           </div>
         </div>

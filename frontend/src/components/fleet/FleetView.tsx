@@ -113,13 +113,12 @@ export function FleetView() {
           <div className="rounded-[var(--radius-card)] border border-dashed border-ink/25 p-12 text-center">
             <p className="font-display text-2xl font-semibold">{rows.length === 0 ? "No shipments yet" : "Nothing matches these filters"}</p>
             <p className="mx-auto mt-2 max-w-md text-slate">
-              {rows.length === 0 ? "Start one in the exporter portal, or run the live demo to watch a shipment go end to end." : "Try another tab or clear the search."}
+              {rows.length === 0 ? "Exporters register shipments and open facilities in the exporter portal; they appear here as soon as they are on chain." : "Try another tab or clear the search."}
             </p>
             <div className="mt-6 flex justify-center gap-2">
               {rows.length === 0 ? (
                 <>
-                  <LinkButton href="/demo">Run the live demo</LinkButton>
-                  <LinkButton href="/exporter" variant="secondary">Open the exporter portal</LinkButton>
+                  <LinkButton href="/exporter">Open the exporter portal</LinkButton>
                 </>
               ) : (
                 <Button variant="secondary" onClick={() => { setQ(""); setTab("all"); setMineOnly(false); }}>Clear filters</Button>

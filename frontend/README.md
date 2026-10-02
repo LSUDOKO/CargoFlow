@@ -40,7 +40,7 @@ backend's admin key.
 | `/exporter` | Wizard: register shipment → set policy → open facility → start tracking, each step a wallet transaction that resumes safely |
 | `/financier` | Facilities naming your wallet: approve and deposit, exposure, settlement projection |
 | `/buyer` | Confirm delivery and pay the invoice through the waterfall |
-| `/demo` | Judge mode: the whole story scene by scene with server-held demo wallets (backend `DEMO_MODE=true`) |
+| `/arbiter` | The dispute role's console: resolve disputes, lift pauses on a verified basis, declare defaults (gated by `hasRole` on chain) |
 
 ## Tests
 
@@ -59,7 +59,7 @@ critical violations allowed).
 |---|---|
 | `app/` | Routes, layout, providers, error and not-found pages, generated icon and OG image |
 | `components/ui` | Accessible primitives: Button, Card, Pill, HashBadge, Tabs, Accordion, Drawer, Modal, Toast, Field, Stepper |
-| `components/{landing,shipment,fleet,portal,demo,wallet,layout,brand}` | Page sections |
+| `components/{landing,shipment,fleet,portal,wallet,layout,brand}` | Page sections |
 | `lib/api` | zod schemas mirroring the Go API, fetch client, query hooks, WebSocket stream |
 | `lib/chain` | wagmi config, ABIs generated from `contracts/out` (`pnpm abi`), `useTx`, revert decoding |
 | `lib/*.ts` | Pure logic with unit tests: formatting, fleet filtering, waterfall, milestones, exporter helpers |

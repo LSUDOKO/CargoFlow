@@ -13,7 +13,7 @@ export function Footer() {
           </p>
         </div>
         <FooterCol title="Product" links={[["/shipments", "Fleet"], ["/exporter", "For exporters"], ["/financier", "For financiers"], ["/buyer", "For buyers"]]} />
-        <FooterCol title="Try it" links={[["/demo", "Live demo"], ["/#how-it-works", "How it works"], ["/#faq", "Questions"]]} />
+        <FooterCol title="Get started" links={[["/exporter", "Start a shipment"], ["/arbiter", "For arbiters"], ["/#how-it-works", "How it works"], ["/#faq", "Questions"]]} />
         <FooterCol
           title="Verify"
           links={[

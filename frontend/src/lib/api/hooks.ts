@@ -2,7 +2,7 @@
 
 import { useInfiniteQuery, useQueries, useQuery } from "@tanstack/react-query";
 import { apiGet, fetchHealth } from "./client";
-import { AuditList, Config, DemoStatus, EpochList, GatewayList, ShipmentList, ShipmentView, Stats, TelemetrySummary } from "./schemas";
+import { AuditList, Config, EpochList, GatewayList, ShipmentList, ShipmentView, Stats, TelemetrySummary } from "./schemas";
 
 export const useConfig = () => useQuery({ queryKey: ["config"], queryFn: () => apiGet("/v1/config", Config), staleTime: 5 * 60_000 });
 
@@ -69,9 +69,6 @@ export const useTelemetry = (id?: string) =>
 
 export const useGateways = (id?: string) =>
   useQuery({ queryKey: ["gateways", id], queryFn: () => apiGet(`/v1/shipments/${id}/sources`, GatewayList), enabled: enabled(id) });
-
-export const useDemoStatus = (id?: string) =>
-  useQuery({ queryKey: ["demo", id], queryFn: () => apiGet(`/v1/demo/shipments/${id}`, DemoStatus), enabled: enabled(id), retry: 0 });
 
 /** Live views for many shipments at once (portals filter them by the connected wallet's role). */
 export function useShipmentViews(ids: string[]) {
