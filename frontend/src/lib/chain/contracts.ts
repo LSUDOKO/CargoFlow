@@ -10,6 +10,7 @@ export type Contracts = {
   vault: Address;
   evidence: Address;
   usdg: Address;
+  access: Address;
 };
 
 /** Deployed contract addresses from the backend's /v1/config, so one build serves every network. */
@@ -27,6 +28,7 @@ export function useContracts(): { contracts: Contracts | undefined; chainId: num
       vault: c.receivableVault as Address,
       evidence: c.evidenceRegistry as Address,
       usdg: c.usdg as Address,
+      access: c.access as Address,
     },
   };
 }

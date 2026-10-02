@@ -23,11 +23,12 @@ export type SupportedChainId = (typeof supportedChains)[number]["id"];
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ?? "";
 const e2e = process.env.NEXT_PUBLIC_E2E === "1";
 
-/** Anvil's public dev accounts 1-3, used only by the end-to-end tests (NEXT_PUBLIC_E2E=1). */
+/** Anvil's public dev accounts 1-3 and 6 (the local arbiter), used only by the end-to-end tests (NEXT_PUBLIC_E2E=1). */
 export const E2E_ACCOUNTS: { id: string; name: string; address: Address }[] = [
   { id: "e2e-exporter", name: "Test exporter", address: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8" },
   { id: "e2e-financier", name: "Test financier", address: "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC" },
   { id: "e2e-buyer", name: "Test buyer", address: "0x90F79bf6EB2c4f870365E785982E1f101E93b906" },
+  { id: "e2e-arbiter", name: "Test arbiter", address: "0x976EA74026E726554dB657fA54763abd0C3a0aa9" },
 ];
 
 function e2eConnector(id: string, name: string, address: Address): CreateConnectorFn {

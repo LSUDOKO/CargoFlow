@@ -21,3 +21,10 @@ describe("txGuard", () => {
     expect(txGuard({ pending: false, walletChain: 31337, appChain: 31337 })).toBeNull();
   });
 });
+
+describe("arbiter role", () => {
+  it("matches the contract's Roles.DISPUTE_ROLE", async () => {
+    const { DISPUTE_ROLE } = await import("@/components/portal/ArbiterConsole");
+    expect(DISPUTE_ROLE).toBe("0xc785f0e55c16138ca0f8448186fa6229be092a3a83db3c5d63c9286723c5a2c4");
+  });
+});

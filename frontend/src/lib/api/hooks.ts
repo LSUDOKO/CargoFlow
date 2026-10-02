@@ -20,6 +20,15 @@ export const useShipmentsFor = (party: string | undefined) =>
     refetchInterval: 20_000,
   });
 
+/** Shipments in any of these states, for the arbiter's queue. */
+export const useShipmentsByStatus = (statuses: string[], enabledFlag = true) =>
+  useQuery({
+    queryKey: ["shipments", "status", statuses.join(",")],
+    queryFn: () => apiGet(`/v1/shipments?status=${statuses.join(",")}&limit=200`, ShipmentList),
+    enabled: enabledFlag,
+    refetchInterval: 20_000,
+  });
+
 const PAGE = 50;
 
 /** The fleet, page by page, using offsets so it never asks for more than the backend allows per request. */

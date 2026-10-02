@@ -10,6 +10,7 @@ const targets = {
   policiesAbi: "PolicyEngine",
   vaultAbi: "ReceivableVault",
   evidenceAbi: "EvidenceRegistry",
+  accessAbi: "CargoFlowAccess", // hasRole: who may arbitrate disputes
   usdgAbi: "MockUSDG", // the ERC-20 surface (approve, allowance, balanceOf) plus mint on local chains
 };
 

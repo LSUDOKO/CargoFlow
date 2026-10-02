@@ -15,7 +15,7 @@ export const nav = [
   { href: "/exporter", label: "Exporters" },
   { href: "/financier", label: "Financiers" },
   { href: "/buyer", label: "Buyers" },
-  { href: "/demo", label: "Live demo" },
+  { href: "/arbiter", label: "Arbiters" },
 ];
 
 export function Header() {

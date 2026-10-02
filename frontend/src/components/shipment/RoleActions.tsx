@@ -4,6 +4,7 @@ import { useAccount } from "wagmi";
 import { PayAction } from "@/components/portal/PayAction";
 import { Button } from "@/components/ui/Button";
 import { WalletButton } from "@/components/wallet/WalletButton";
+import { DisputeAction } from "./DisputeAction";
 import type { EpochSummary, ShipmentView } from "@/lib/api/schemas";
 import { controllerAbi } from "@/lib/chain/abis";
 import { useContracts } from "@/lib/chain/contracts";
@@ -74,6 +75,9 @@ export function RoleActions({ view, epochs }: { view: ShipmentView; epochs: Epoc
   }
   if (roles.includes("buyer") && f.status === "DELIVERED") {
     actions.push(<PayAction key="settle" shipmentId={id} amount={BigInt(view.shipment.invoiceValue)} action="settle" label={`Pay the ${formatUSDG(view.shipment.invoiceValue)} USDG invoice`} successTitle="Invoice paid and settled" />);
+  }
+  if ((roles.includes("exporter") || roles.includes("financier")) && (f.status === "ACTIVE" || f.status === "PAUSED")) {
+    actions.push(<DisputeAction key="dispute" shipmentId={id} controller={contracts.controller} />);
   }
   return (
     <div className="flex flex-col gap-2">
