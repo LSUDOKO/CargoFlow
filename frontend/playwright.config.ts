@@ -3,7 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 // The stack (chain, backend, built frontend) is started by scripts/e2e-stack.sh, which sets E2E_BASE_URL.
 export default defineConfig({
   testDir: "./e2e",
-  fullyParallel: false, // the tests share one chain and the demo backend spaces runs 30 s apart
+  fullyParallel: false, // the tests share one chain and its test wallets
   workers: 1,
   timeout: 120_000,
   expect: { timeout: 15_000 },

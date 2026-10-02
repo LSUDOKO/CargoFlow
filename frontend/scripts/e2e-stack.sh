@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Runs the Playwright suite against the real stack: a fresh anvil chain with the contracts deployed, a fresh
-# Postgres database, the Go backend in demo mode, and a production build of the frontend. Everything it starts is
+# Postgres database, the Go backend, and a production build of the frontend. Everything it starts is
 # stopped on exit. Ports default away from the usual dev ports so a running dev stack is left alone.
 #
 #   bash frontend/scripts/e2e-stack.sh            # from the repository root
@@ -11,7 +11,7 @@ ANVIL_PORT="${ANVIL_PORT:-8645}"; API_PORT="${API_PORT:-8887}"; WEB_PORT="${WEB_
 DB="${E2E_DB:-cargoflow_e2e}"
 PGHOST_DIR="${PGHOST_DIR:-/run/postgresql}"
 FORGE="${FORGE:-$(command -v forge)}"; ANVIL="${ANVIL:-$(dirname "$FORGE")/anvil}"
-LOGS="$ROOT/frontend/test-results/stack"; mkdir -p "$LOGS"
+LOGS="$ROOT/frontend/.e2e-stack"; mkdir -p "$LOGS" # outside test-results, which Playwright empties on start
 pids=()
 cleanup() {
   [ "${E2E_KEEP:-0}" = 1 ] && { echo "stack left running (pids ${pids[*]})"; return; }
@@ -37,8 +37,9 @@ fi
 echo "== backend"
 (cd "$ROOT/backend" && go build -o "$LOGS/cargoflow" ./cmd/cargoflow)
 (
+  E2E_DATABASE="$DATABASE_URL" # the example env names the dev database; the suite must use its own fresh one
   set -a; . "$ROOT/.env.local.example"; set +a
-  export DATABASE_URL RPC_URL="http://127.0.0.1:$ANVIL_PORT" DEPLOYMENT_FILE="$MANIFEST" \
+  export DATABASE_URL="$E2E_DATABASE" RPC_URL="http://127.0.0.1:$ANVIL_PORT" DEPLOYMENT_FILE="$MANIFEST" \
     CIRCUITS_DIR="$ROOT/circuits" HTTP_ADDR="127.0.0.1:$API_PORT" CORS_ORIGINS="http://127.0.0.1:$WEB_PORT,http://localhost:$WEB_PORT" \
     LOG_LEVEL=warn GROQ_API_KEY=
   exec "$LOGS/cargoflow" serve

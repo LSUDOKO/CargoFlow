@@ -106,14 +106,14 @@ export function RecoveryPanel({ view }: { view: ShipmentView }) {
             <p className="mt-2 text-sm font-medium">No probe has reported yet. Submit readings from a gateway first.</p>
           ) : (
             <div className="mt-3 flex flex-wrap items-end gap-3">
-              <label className="text-sm font-semibold">
-                Probe
-                <select className="mt-1 block h-11 rounded-2xl border-2 border-line bg-white px-3 font-mono font-normal" value={chosen} onChange={(e) => setSensor(e.target.value)}>
+              <div>
+                <label htmlFor="recovery-probe" className="text-sm font-semibold">Probe</label>
+                <select id="recovery-probe" className="mt-1 block h-11 rounded-2xl border-2 border-line bg-white px-3 font-mono" value={chosen} onChange={(e) => setSensor(e.target.value)}>
                   {sensors.map((s) => (
                     <option key={s} value={s}>{s}</option>
                   ))}
                 </select>
-              </label>
+              </div>
               <Button loading={stage !== null} onClick={() => void prepare()}>
                 {stage === "sign" ? "Waiting for your signature…" : stage === "prove" ? "Proving, up to a minute…" : "Sign and prepare proof"}
               </Button>

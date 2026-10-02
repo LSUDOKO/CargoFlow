@@ -39,6 +39,7 @@ contracts/deployments/e2e.json
 
 # frontend
 frontend/test-results/
+frontend/.e2e-stack/
 frontend/playwright-report/
 frontend/.env.local
 
