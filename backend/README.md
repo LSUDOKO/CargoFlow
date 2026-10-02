@@ -46,6 +46,7 @@ The image compiles the circuit at build time and runs as a non-root user on a re
 | `SALT_SECRET` | yes (16+ chars) | derives the private per-reading salts behind every committed reading |
 | `WORKER_KEY`, `MONITOR_KEY`, `MANAGER_KEY` | yes | the three role keys; **use three different wallets** |
 | `GROQ_API_KEY`, `GROQ_MODEL`, `AI_TIMEOUT`, `AI_MIN_CONFIDENCE` | no | enable and tune the [AI monitor](#ai-monitor); without a key the policy gate decides alone |
+| `DEMO_MODE`, `DEMO_EXPORTER_KEY`, `DEMO_FINANCIER_KEY`, `DEMO_BUYER_KEY`, `DEMO_DIVISOR` | no | judge mode with three server-held wallets; throwaway testnet wallets only |
 | `RECONCILE_INTERVAL` | no | how often failed chain actions are retried (default `30s`, `0s` disables) |
 | `HTTP_ADDR`, `LOG_LEVEL`, `CORS_ORIGINS`, `START_BLOCK`, `CONFIRMATIONS`, `INDEXER_POLL`, `CIRCUITS_DIR` | no | see `.env.example` |
 
@@ -66,13 +67,17 @@ Public reads need no credentials. Everything that writes is authenticated.
 | Method and path | Auth | Purpose |
 |---|---|---|
 | `GET /v1/health` | none | database and chain reachability, head block |
-| `GET /v1/config` | none | chain id, USDG decimals, contract addresses |
+| `GET /v1/config` | none | chain id, USDG decimals, contract addresses, whether demo mode is on |
+| `GET /v1/stats` | none | shipments by status, committed epochs, verified proofs |
 | `POST /v1/sources` | admin key | register an evidence source (Ed25519 public key, its sensors, reliability) |
 | `POST /v1/shipments` | admin key | mirror a shipment that already exists on chain |
+| `POST /v1/shipments/mirror` | none, 30/min per client | the same mirroring for the web app; safe because nothing the chain does not confirm is stored; a repeat returns the existing record |
 | `GET /v1/shipments`, `GET /v1/shipments/{id}` | none | list; combined view (store + live chain state) |
 | `POST /v1/shipments/{id}/telemetry` | **signed by a source** | submit up to 500 readings |
 | `POST /v1/shipments/{id}/proof` | admin key | ZK recovery of a paused facility from a sensor's fresh readings |
 | `GET /v1/shipments/{id}/epochs` | none | evidence epochs (scores and roots; **never raw readings**) |
+| `GET /v1/shipments/{id}/telemetry` | none | per-epoch, per-sensor min / mean / max temperature and the latest position; aggregates only |
+| `POST /v1/demo/shipments`, `POST /v1/demo/shipments/{id}/scenes/{scene}`, `GET /v1/demo/shipments/{id}` | none, only with `DEMO_MODE=true` | judge mode: create a funded demo shipment, play scenes in order (409 names the next one), read progress |
 | `GET /v1/shipments/{id}/audit` | none | merged, time-ordered trail of chain events, decisions, epochs and sent transactions |
 | `GET /v1/ws?shipment=0x..` | none | WebSocket event stream |
 

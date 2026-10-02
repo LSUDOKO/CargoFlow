@@ -4,6 +4,14 @@ Phases follow [`docs/superpowers/plans/2026-09-30-cargoflow-roadmap.md`](docs/su
 
 ## Unreleased
 
+### P6 - Frontend
+- Next.js 16 web app: landing with a tabbed track bar, live shipment dashboard (route, milestones, telemetry,
+  evidence gauges, escrow, AI monitor, ZK proof, audit trail over WebSocket), fleet view, exporter wizard, financier
+  and buyer portals, judge mode. Custom wallet modal with browser wallets and WalletConnect.
+- Backend: public chain-verified mirroring, stats, per-epoch telemetry aggregates, opt-in demo mode; the hero runner
+  now runs as ordered, idempotent scenes.
+- 54 unit tests and 16 Playwright tests against the real stack, including axe on every page; new CI jobs.
+
 ### P8 - Stylus (optional)
 - Rust Dempster-Shafer engine (`stylus/engine`) and Stylus contract, a Solidity reference, and shared Go-generated
   parity vectors. Both engines deployed on Arbitrum Sepolia and benchmarked on identical calldata: 8 readings cost 40,239 gas in Solidity

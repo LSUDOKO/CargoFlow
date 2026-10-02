@@ -21,6 +21,8 @@ PHYSICAL REALITY → CRYPTOGRAPHIC EVIDENCE → EVIDENCE CONFIDENCE → FINANCIA
 > Testnet with testnet USDG (no monetary value). Not audited, not a regulated financial product, and the ZK
 > trusted setup is single-party (testnet only). See [limits](#honest-limits).
 
+![CargoFlow landing page](docs/screenshots/landing.png)
+
 ## The story in one picture
 
 A 40,000 USDG facility against a 100,000 USDG invoice (5 milestones of 8,000, 3% fee):
@@ -101,12 +103,32 @@ ENV_FILE=.env.local.example make demo ARGS="-mint -pace 2s"   # the whole story,
 
 The same `make demo` runs against the public testnet (`ARGS="-divisor 2000"` fits a 100 USDG faucet drip).
 
+Then open the web app (`.env.local.example` enables the backend's demo mode, so judge mode works):
+
+```bash
+cd frontend && cp .env.example .env.local && sed -i 's#8080#8787#' .env.local && pnpm install && pnpm dev
+```
+
+## The web app
+
+| | |
+|---|---|
+| ![Live shipment dashboard, paused after a thermal excursion](docs/screenshots/dashboard-paused.png) | ![Judge mode playing the story scene by scene](docs/screenshots/demo.png) |
+| **Shipment dashboard**: route, milestones, telemetry against the band, evidence gauges, escrow, AI monitor, ZK proof, audit trail, live over WebSocket | **Judge mode**: every scene sends real transactions; the dashboard beside it updates as they land |
+| ![Fleet view](docs/screenshots/fleet.png) | ![Exporter wizard](docs/screenshots/exporter.png) |
+| **Fleet**: tabs, search, sort, container drawer | **Exporter wizard**: register, set policy, open the facility, each step signed in your wallet |
+
+Next.js 16, wagmi and viem, with typed API hooks and a custom wallet modal (browser wallets and WalletConnect).
+Tested by 54 unit tests and 16 Playwright tests that play the full story in a real browser against a real chain,
+with axe accessibility checks on every page. See [`frontend/README.md`](frontend/README.md).
+
 ## Measured, not claimed
 
 | | |
 |---|---|
 | Contract tests | 170 (unit, fuzz, invariants I1-I8, real-proof integration) |
-| Backend | 19 Go packages with `-race`; integration tests run a real anvil chain and Postgres; the end-to-end test drives the full story through the running service |
+| Frontend | 54 unit tests; 16 Playwright end-to-end and accessibility tests on the real stack |
+| Backend | 21 Go packages with `-race`; integration tests run a real anvil chain and Postgres; the end-to-end test drives the full story through the running service |
 | Circuit | 13,494 constraints; proves in about 1 s; 25 tests including tamper and wrong-context cases |
 | ZK resume on-chain | ~0.25 M gas (real Groth16 verification) |
 | Stylus vs Solidity (optional engine) | 128-reading epoch fusion: 611,945 vs 31,511 gas on Arbitrum Sepolia (19x; 32x cached); [method and caveats](stylus/README.md) |
@@ -126,7 +148,7 @@ Every figure is reproducible with `make check`, `make bench` and `make slither`;
 | `scripts/` | Key generation, funding, testnet deploy and explorer verification |
 | `docs/` | Architecture, runbooks, security, benchmarks, protocol knowledge base, design spec, roadmap |
 | `stylus/` | Optional Rust (Stylus) evidence engine for Arbitrum Sepolia, benchmarked against a Solidity reference |
-| `frontend/` | Planned: dashboard |
+| `frontend/` | Next.js 16 web app: landing, live dashboard, fleet, exporter / financier / buyer portals, judge mode |
 
 ## Documentation
 
@@ -144,7 +166,6 @@ Every figure is reproducible with `make check`, `make bench` and `make slither`;
 - Telemetry is simulated; there is no hardware. Source authentication is Ed25519 signatures, not attested hardware.
 - The AI monitor's score weights and thresholds are design parameters, not statistically calibrated.
 - One backend instance per database; recovery proving runs inside the HTTP request.
-- The dashboard is not built yet, so the API, the demo command and the explorer are the interface today.
 
 ## License
 

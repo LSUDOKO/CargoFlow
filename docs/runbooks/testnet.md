@@ -133,6 +133,19 @@ The AI monitor was consulted on every evaluated epoch and agreed with the policy
 reasoning stored in the audit trail). It never needed to override anything, and the pause itself did not wait for it.
 The full-size 40,000 / 100,000 run is covered by the end-to-end test and has been run locally.
 
+## The web app against the testnet
+
+```bash
+cd frontend
+printf 'NEXT_PUBLIC_API_URL=<your backend URL>\nNEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=<project id>\n' > .env.local
+pnpm install && pnpm build && pnpm start
+```
+
+Add the site's origin to the backend's `CORS_ORIGINS`. Wallets must be on Robinhood Chain Testnet (46630); the app
+offers to switch. For judge mode against the testnet, start the backend with `DEMO_MODE=true` and three funded
+throwaway wallets in `DEMO_*_KEY` (each run at the default divisor of 2000 needs 20 USDG for the financier and
+50 USDG for the buyer, plus gas).
+
 ## Re-deploying
 
 ```bash

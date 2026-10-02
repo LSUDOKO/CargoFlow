@@ -53,8 +53,9 @@ demonstrable state and stops for review before the next begins.
 **Done when:** AI can request an allowed pause and nothing else. (`internal/ai`, `service/ai_test.go`)
 
 ## P6 — Frontend (CF-042..043)
-- [ ] design system, landing, wallet/network, exporter, financier, live shipment, audit drawer
-- [ ] anomaly + recovery UX, judge-mode switch, Playwright tests, responsive + accessible
+- [x] design system, landing, wallet/network, exporter, financier, buyer, live shipment, audit trail
+- [x] anomaly + recovery UX, judge mode, Playwright tests (16), responsive (375/768/1280) + axe-clean
+- [x] backend additions: public mirror, stats, telemetry aggregates, demo mode (`docs/superpowers/plans/2026-10-02-frontend.md`)
 **Done when:** a judge can follow the whole lifecycle without opening code.
 
 ## P7 — Testnet and hardening (CF-060..063)
@@ -72,5 +73,5 @@ demonstrable state and stops for review before the next begins.
 **Done when:** both engines are deployed on Arbitrum Sepolia and the benchmark table is published. (Done.)
 
 ## P9 — Launch polish
-- [x] README with diagrams, architecture docs, runbook, changelog (screenshots wait on the frontend)
+- [x] README with diagrams, screenshots, architecture docs, runbook, changelog
 - [ ] tags/releases, repo topics and description, roadmap issues

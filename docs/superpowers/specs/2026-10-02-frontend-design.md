@@ -1,6 +1,6 @@
 # CargoFlow Frontend: Design Spec
 
-Status: approved direction, awaiting spec review
+Status: approved and implemented (plan: `docs/superpowers/plans/2026-10-02-frontend.md`)
 Parent spec: [`2026-09-30-cargoflow-design.md`](2026-09-30-cargoflow-design.md) (P6)
 
 ## 1. Intent
@@ -249,3 +249,13 @@ Performance targets:
 - **Image generation quality on free models:** mitigated by the SVG fallback with the same palette.
 - **Next.js 16 / wagmi compatibility:** pin versions and verify the build early (task 1).
 - **Testnet latency in the demo (≈2 min per run):** each scene shows progress and can be resumed.
+
+## 12. Deviations found while building
+
+| Spec said | Built | Why |
+|---|---|---|
+| Telemetry charts from the API | New `GET /v1/shipments/{id}/telemetry` returning per-epoch per-sensor aggregates | The API deliberately exposes no readings; aggregates keep that rule while making charts possible |
+| Illustrations generated with free image models | Hero generated (FLUX.1-schnell); the six spot illustrations hand-drawn as SVG | The generated spots missed the palette and the free GPU quota ran out (spec fallback) |
+| OG image as a static PNG | Rendered at build by `next/og` | Always in sync with the brand, no binary to maintain |
+| Exporter recomputes shipment id and policy hash | Read from the contracts (`shipmentIdFor`, `hashPolicy`); only the route commitment is recomputed, pinned by a Go vector | No second implementation to drift |
+| Backend-down test stops the API | The test aborts API requests in the browser | Deterministic, and identical from the user's side |
