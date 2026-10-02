@@ -78,6 +78,18 @@ sequenceDiagram
 
 Chain `46630` · RPC `https://rpc.testnet.chain.robinhood.com` · Explorer `https://explorer.testnet.chain.robinhood.com`
 
+**Use it now:** the web app is at **https://cargoflow.adoranto737.workers.dev** (Cloudflare Workers) and its API at
+**https://cargoflow-api-75ul.onrender.com** (Render; the free instance sleeps when idle, so the first request after a
+quiet spell takes about a minute). Connect any wallet on Robinhood Chain Testnet.
+
+The real-user flows are checked live by `frontend/scripts/testnet-lifecycle.ts`, which drives one shipment from
+registration to settlement through the hosted API with each party's own key: wallet-authorized logger, signed
+readings, two releases, an excursion that pauses the facility, the exporter's zero-knowledge recovery, the remaining
+releases, delivery and payment. Its last run settled `CF-LIVE-1790936950736`
+([dashboard](https://cargoflow.adoranto737.workers.dev/track/0x5a9082d1854c1cc3e5fcf8aa1ebc3a3560495e03ee7d00110baf256fe9b49d61),
+[proof submitted by the exporter](https://explorer.testnet.chain.robinhood.com/tx/0xc582417abd0ce8498bab0fa4937b0a8ec8dbfbe19c47646f79646fa70ede1a82),
+[invoice paid](https://explorer.testnet.chain.robinhood.com/tx/0x78984fdfcefd2fa792c7170fff94b1f4b482986e96fad29193ff450251605041)).
+
 ### Deployed contracts (source-verified)
 
 | Contract | Address |
