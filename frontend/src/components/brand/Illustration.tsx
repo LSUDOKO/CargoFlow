@@ -1,6 +1,7 @@
 import Image from "next/image";
 
 const art = {
+  hero: { src: "/brand/illustrations/hero.webp", w: 1344, h: 768, alt: "A container ship docked under a gantry crane at a busy port" },
   sensor: { src: "/brand/illustrations/sensor.svg", w: 240, h: 240, alt: "A temperature sensor fixed to a container door" },
   merkle: { src: "/brand/illustrations/merkle.svg", w: 240, h: 240, alt: "Readings hashed into a Merkle tree" },
   zk: { src: "/brand/illustrations/zk.svg", w: 240, h: 240, alt: "A shield over a sealed proof" },
@@ -22,7 +23,7 @@ export function Illustration({ name, className, priority, sizes, decorative }: P
       height={a.h}
       alt={decorative ? "" : a.alt}
       priority={priority}
-      sizes={sizes ?? "160px"}
+      sizes={sizes ?? (name === "hero" ? "(min-width: 1024px) 50vw, 100vw" : "160px")}
       className={className}
     />
   );

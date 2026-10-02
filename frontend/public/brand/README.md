@@ -6,8 +6,9 @@
 | `illustrations/{sensor,merkle,zk,ai,vault,settle}.svg` | Hand-drawn SVG in the brand palette | MIT |
 | Open Graph image | Rendered at build time by `src/app/opengraph-image.tsx` (`next/og`) | MIT |
 
-The landing hero is not an image: it is drawn in React and SVG (`src/components/landing/HeroConsole.tsx`) from the
-brand tokens, so it renders crisply at any size and adds nothing to the page weight.
+| `illustrations/hero.webp`, `hero-800.webp` | Generated 2026-10-02 with FLUX.1-schnell (Black Forest Labs, Apache-2.0) via the public Hugging Face Space `evalstate/flux1_schnell`, seed 4242; the generated "verified" badge was painted out afterwards so the scene carries no symbols | Apache-2.0 model outputs, no third-party marks |
+
+`src/components/landing/HeroConsole.tsx` (a React/SVG evidence console in the brand tokens) is kept as an alternative hero.
 
 The generated spot illustrations did not match the palette, so all six were redrawn by hand as SVG (spec §4
 fallback). The screenshots in `assests/` were design references only and are not part of the product.
