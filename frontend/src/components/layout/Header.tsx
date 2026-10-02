@@ -33,7 +33,7 @@ export function Header() {
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded-lg focus:bg-signal focus:px-3 focus:py-2 focus:font-semibold">
         Skip to content
       </a>
-      <div className="container-page flex h-[4.5rem] items-center gap-6">
+      <div className="surface-ink container-page flex h-[4.5rem] items-center gap-4 lg:gap-6">
         <Link href="/" aria-label="CargoFlow home" className="shrink-0">
           <Logo />
         </Link>
@@ -45,7 +45,7 @@ export function Header() {
                 key={n.href}
                 href={n.href}
                 aria-current={active ? "page" : undefined}
-                className={cx("rounded-full px-3.5 py-2 text-[0.95rem] font-semibold transition-colors", active ? "bg-signal text-ink" : "text-paper/80 hover:bg-paper/10 hover:text-paper")}
+                className={cx("inline-flex h-10 items-center rounded-full px-4 text-[0.9375rem] font-semibold whitespace-nowrap transition-colors", active ? "bg-paper/12 text-paper" : "text-paper/70 hover:bg-paper/8 hover:text-paper")}
               >
                 {n.label}
               </Link>
@@ -58,12 +58,12 @@ export function Header() {
           </div>
           <CommandSearch />
           <div className="hidden sm:block">
-            <WalletButton compact />
+            <WalletButton compact onDark />
           </div>
           <button
             type="button"
             onClick={() => setMenu(true)}
-            className="grid h-11 w-11 place-items-center rounded-full border-2 border-paper/40 text-paper lg:hidden"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full border-2 border-paper/35 text-paper transition-colors hover:border-paper/70 hover:bg-paper/8 lg:hidden"
             aria-label="Open menu"
             aria-expanded={menu}
           >

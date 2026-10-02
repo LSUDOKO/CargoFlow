@@ -3,7 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useId, useState } from "react";
-import { Button } from "@/components/ui/Button";
+import { Button, buttonClass } from "@/components/ui/Button";
 import { HashBadge } from "@/components/ui/HashBadge";
 import { Modal } from "@/components/ui/Modal";
 import { ApiError, postReadings } from "@/lib/api/client";
@@ -151,7 +151,7 @@ export function UploadReadings({ open, onClose, shipment, initialKey, chainId }:
             </button>
           </p>
           <div className="mt-2 flex items-center gap-3">
-            <label htmlFor={csvInput} className={`inline-flex h-10 items-center rounded-full border-2 px-4 text-sm font-semibold ${key ? "cursor-pointer border-ink hover:bg-ink hover:text-paper" : "cursor-not-allowed border-line text-slate"}`}>
+            <label htmlFor={csvInput} aria-disabled={!key || undefined} className={buttonClass("secondary", "sm", key ? "cursor-pointer" : undefined)}>
               Choose CSV
             </label>
             <input id={csvInput} type="file" accept=".csv,text/csv" className="sr-only" disabled={!key} onChange={(e) => {

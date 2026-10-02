@@ -7,12 +7,12 @@ const marks = [
 
 export function BuiltOn() {
   return (
-    <section aria-labelledby="built-title" className="container-page mt-20">
+    <section aria-labelledby="built-title" className="container-page mt-12 md:mt-16">
       <h2 id="built-title" className="sr-only">Built on</h2>
-      <ul className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-line bg-line lg:grid-cols-4">
+      <ul className="grid grid-cols-2 gap-px overflow-hidden rounded-[var(--radius-tile)] border border-line bg-line lg:grid-cols-4">
         {marks.map((m) => (
-          <li key={m.name} className="bg-paper px-5 py-6">
-            <p className="font-display text-xl font-bold tracking-tight">{m.name}</p>
+          <li key={m.name} className="bg-paper px-5 py-5 md:px-6 md:py-6">
+            <p className="font-display text-lg font-semibold tracking-tight md:text-xl">{m.name}</p>
             <p className="mt-1 text-sm text-slate">{m.note}</p>
           </li>
         ))}

@@ -20,16 +20,21 @@
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 
   --radius-card: 1.75rem;
+  --radius-tile: 1rem;
   --shadow-card: 0 1px 0 rgb(11 27 43 / 0.04), 0 12px 32px -12px rgb(11 27 43 / 0.18);
   --shadow-lift: 0 2px 0 rgb(11 27 43 / 0.06), 0 24px 48px -16px rgb(11 27 43 / 0.28);
 
   --animate-rise: rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   --animate-pulse-dot: pulse-dot 1.6s ease-in-out infinite;
+  --animate-fade: fade 0.25s ease-out both;
 }
 
 @keyframes rise {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: none; }
+}
+@keyframes fade {
+  from { opacity: 0; }
 }
 @keyframes pulse-dot {
   0%, 100% { box-shadow: 0 0 0 0 rgb(0 196 106 / 0.5); }
@@ -48,22 +53,38 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
-  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.02em; }
-  :focus-visible { outline: 3px solid var(--color-signal); outline-offset: 2px; border-radius: 8px; }
+  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.02em; text-wrap: balance; }
+  p { text-wrap: pretty; }
+  /* ink ring on light surfaces, lime ring on navy ones: both clear 3:1 against their background */
+  :focus-visible { outline: 2px solid var(--color-ink); outline-offset: 3px; }
+  .surface-ink :focus-visible { outline-color: var(--color-signal); }
+  .surface-ink .surface-light :focus-visible { outline-color: var(--color-ink); }
   ::selection { background: var(--color-signal); color: var(--color-ink); }
 }
 
 @layer components {
   /* Highlighted keyword, Robinhood-style marker */
+  /* the marker covers the x-height band plus a little, not the whole line box, so it never overlaps the line above */
   .mark {
-    background: var(--color-signal);
+    background: linear-gradient(var(--color-signal), var(--color-signal)) 0 58% / 100% 0.9em no-repeat;
     color: var(--color-ink);
-    padding: 0.02em 0.14em 0;
+    padding: 0 0.14em;
     border-radius: 0.08em;
     -webkit-box-decoration-break: clone;
     box-decoration-break: clone;
   }
   .tabular { font-variant-numeric: tabular-nums; }
+
+  /* One type scale for every landing section: h2, lede and the small label above data */
+  .h-section {
+    font-family: var(--font-display);
+    font-size: clamp(2.1rem, 4.4vw, 3.5rem);
+    line-height: 1.02;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    text-wrap: balance;
+  }
+  .lede { font-size: 1.125rem; line-height: 1.6; max-width: 36rem; text-wrap: pretty; }
   .container-page { width: 100%; max-width: 80rem; margin-inline: auto; padding-inline: 1rem; }
   @media (min-width: 768px) { .container-page { padding-inline: 2rem; } }
   .grid-bg {

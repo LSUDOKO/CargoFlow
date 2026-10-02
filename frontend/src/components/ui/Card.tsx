@@ -11,8 +11,8 @@ export function Card({ as: Tag = "div", tone = "white", padded = true, className
 /** Section heading inside a card: a title plus optional trailing content. */
 export function CardHeader({ title, children, id }: { title: string; children?: React.ReactNode; id?: string }) {
   return (
-    <div className="mb-4 flex items-start justify-between gap-3">
-      <h2 id={id} className="font-display text-lg font-semibold">{title}</h2>
+    <div className="mb-4 flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
+      <h2 id={id} className="shrink-0 font-display text-lg font-semibold">{title}</h2>
       {children}
     </div>
   );

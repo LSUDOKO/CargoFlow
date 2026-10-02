@@ -13,7 +13,7 @@ const items = [
 export function Faq() {
   return (
     <section id="faq" aria-labelledby="faq-title" className="container-page mt-24 grid gap-10 md:mt-32 lg:grid-cols-[0.8fr_1.2fr]">
-      <h2 id="faq-title" className="font-display text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[1] font-bold tracking-[-0.04em]">Questions people ask first</h2>
+      <h2 id="faq-title" className="h-section max-w-md">Questions people ask first</h2>
       <Accordion items={items} />
     </section>
   );

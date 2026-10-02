@@ -4,7 +4,7 @@ import { useQueries } from "@tanstack/react-query";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useAccount } from "wagmi";
-import { Button, LinkButton } from "@/components/ui/Button";
+import { Button, LinkButton, buttonClass } from "@/components/ui/Button";
 import { cx } from "@/components/ui/cx";
 import { HashBadge } from "@/components/ui/HashBadge";
 import { StatusPill } from "@/components/ui/Pill";
@@ -18,6 +18,37 @@ import { formatUSDG } from "@/lib/format";
 import { useHydrated } from "@/lib/useHydrated";
 import { ContainerDrawer } from "./ContainerDrawer";
 import { Sparkline } from "./Sparkline";
+
+// rows are separated tables cells, so the border lives on the cells and the row hover darkens all of them at once
+const rowClass = "group cursor-pointer";
+const cell = "border-y border-line bg-white transition-colors group-hover:border-ink";
+
+/** Placeholder rows shaped like the real ones: reference and id, status, capital, evidence sparkline, link. */
+function FleetSkeleton() {
+  return (
+    <div role="status" aria-label="Loading the fleet">
+      <div className="hidden flex-col gap-2 pt-9 md:flex">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="grid h-[4.75rem] grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,1.6fr)_auto] items-center gap-4 rounded-[var(--radius-tile)] border border-line bg-white px-5">
+            <div className="flex flex-col gap-2"><Skeleton className="h-4 w-48" /><Skeleton className="h-5 w-24 rounded-md" /></div>
+            <Skeleton className="h-6 w-20 rounded-full" />
+            <Skeleton className="h-4 w-20" />
+            <div className="flex items-center gap-3"><Skeleton className="h-5 w-24" /><Skeleton className="h-4 w-8" /></div>
+            <Skeleton className="h-4 w-20" />
+          </div>
+        ))}
+      </div>
+      <div className="flex flex-col gap-3 md:hidden">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="rounded-[var(--radius-tile)] border border-line bg-white p-4">
+            <div className="flex items-center justify-between gap-3"><Skeleton className="h-4 w-40" /><Skeleton className="h-6 w-20 rounded-full" /></div>
+            <div className="mt-4 flex items-center justify-between"><Skeleton className="h-4 w-24" /><Skeleton className="h-5 w-24" /></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function FleetView() {
   const { data, isPending, isError, error, refetch, isFetching, fetchNextPage, hasNextPage, isFetchingNextPage } = useFleetPages();
@@ -55,13 +86,13 @@ export function FleetView() {
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="font-display text-[clamp(2.2rem,5vw,3.6rem)] leading-none font-bold tracking-[-0.04em]">Fleet</h1>
-          <p className="mt-3 max-w-xl text-lg text-slate">Every financed shipment, its evidence and the capital it has unlocked.</p>
+          <p className="lede mt-3 text-slate">Every financed shipment, its evidence and the capital it has unlocked.</p>
         </div>
         <LinkButton href="/exporter">Finance a new shipment</LinkButton>
       </div>
 
       <div className="sticky top-[4.5rem] z-30 -mx-4 mt-8 flex flex-col gap-3 bg-paper/90 px-4 py-3 backdrop-blur-md md:mx-0 md:flex-row md:items-center md:justify-between md:rounded-2xl md:px-0">
-        <div className="overflow-x-auto pb-1 [scrollbar-width:none]">
+        <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden">
           <Tabs label="Filter by status" tabs={tabs} value={tab} onChange={(t) => setTab(t as FleetTab)} />
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -71,14 +102,14 @@ export function FleetView() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search reference or id"
-            className="h-11 w-full rounded-full border-2 border-line bg-white px-4 text-sm outline-none focus:border-ink sm:w-60"
+            className="h-11 w-full rounded-full border-2 border-line bg-white px-4 text-sm transition-colors outline-none focus:border-ink sm:w-60"
           />
           <label htmlFor="fleet-sort" className="sr-only">Sort by</label>
           <select
             id="fleet-sort"
             value={`${sort}:${dir}`}
             onChange={(e) => { const [s, d] = e.target.value.split(":"); setSort(s as FleetSort); setDir(d as "asc" | "desc"); }}
-            className="h-11 rounded-full border-2 border-line bg-white px-4 text-sm font-semibold outline-none focus:border-ink"
+            className="h-11 rounded-full border-2 border-line bg-white px-4 text-sm font-semibold transition-colors outline-none focus:border-ink"
           >
             <option value="created:desc">Newest first</option>
             <option value="created:asc">Oldest first</option>
@@ -92,7 +123,7 @@ export function FleetView() {
               type="button"
               aria-pressed={mineOnly}
               onClick={() => setMineOnly((m) => !m)}
-              className={cx("h-11 rounded-full border-2 px-4 text-sm font-semibold", mineOnly ? "border-ink bg-ink text-paper" : "border-line bg-white")}
+              className={cx("h-11 rounded-full border-2 px-4 text-sm font-semibold whitespace-nowrap transition-colors", mineOnly ? "border-ink bg-ink text-paper" : "border-line bg-white hover:border-ink")}
             >
               My shipments
             </button>
@@ -105,10 +136,10 @@ export function FleetView() {
           <div className="rounded-[var(--radius-card)] border border-line bg-white p-10 text-center">
             <p className="font-display text-xl font-semibold">The fleet could not be loaded</p>
             <p className="mt-2 text-slate">{error.message}</p>
-            <Button className="mt-5" onClick={() => refetch()} loading={isFetching}>Try again</Button>
+            <Button className="mt-5" variant="secondary" onClick={() => refetch()} loading={isFetching}>Try again</Button>
           </div>
         ) : isPending ? (
-          <div className="flex flex-col gap-2">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-20" />)}</div>
+          <FleetSkeleton />
         ) : shown.length === 0 ? (
           <div className="rounded-[var(--radius-card)] border border-dashed border-ink/25 p-12 text-center">
             <p className="font-display text-2xl font-semibold">{rows.length === 0 ? "No shipments yet" : "Nothing matches these filters"}</p>
@@ -117,9 +148,7 @@ export function FleetView() {
             </p>
             <div className="mt-6 flex justify-center gap-2">
               {rows.length === 0 ? (
-                <>
-                  <LinkButton href="/exporter">Open the exporter portal</LinkButton>
-                </>
+                <LinkButton href="/exporter" variant="secondary">Open the exporter portal</LinkButton>
               ) : (
                 <Button variant="secondary" onClick={() => { setQ(""); setTab("all"); setMineOnly(false); }}>Clear filters</Button>
               )}
@@ -139,18 +168,18 @@ export function FleetView() {
               </thead>
               <tbody>
                 {shown.map((r) => (
-                  <tr key={r.id} className="cursor-pointer bg-white shadow-[0_0_0_1px_var(--color-line)] transition-shadow hover:shadow-[0_0_0_2px_var(--color-ink)]" onClick={() => setOpen(r.id)}>
-                    <td className="rounded-l-2xl px-5 py-4">
+                  <tr key={r.id} className={rowClass} onClick={() => setOpen(r.id)}>
+                    <td className={cx(cell, "rounded-l-[var(--radius-tile)] border-l px-5 py-4")}>
                       <button type="button" onClick={(e) => { e.stopPropagation(); setOpen(r.id); }} className="text-left font-semibold hover:underline">{r.ref}</button>
                       <div className="mt-1"><HashBadge value={r.id} compact /></div>
                     </td>
-                    <td><StatusPill status={r.status} /></td>
-                    <td className="font-mono text-sm">
+                    <td className={cell}><StatusPill status={r.status} /></td>
+                    <td className={cx(cell, "font-mono text-sm")}>
                       {r.committed !== "0" ? <>{formatUSDG(r.drawn)} <span className="text-slate">/ {formatUSDG(r.committed)}</span></> : <span className="font-sans text-slate">No facility</span>}
                     </td>
-                    <td><div className="flex items-center gap-3"><Sparkline values={scoreSeries.get(r.id) ?? []} /><span className="font-mono text-sm font-semibold">{r.score ?? "–"}</span></div></td>
-                    <td className="rounded-r-2xl pr-5 text-right">
-                      <Link href={`/track/${r.id}`} onClick={(e) => e.stopPropagation()} className="rounded-full px-3 py-2 text-sm font-semibold underline-offset-2 hover:underline">Dashboard</Link>
+                    <td className={cell}><div className="flex items-center gap-3"><Sparkline values={scoreSeries.get(r.id) ?? []} /><span className="font-mono text-sm font-semibold">{r.score ?? "–"}</span></div></td>
+                    <td className={cx(cell, "rounded-r-[var(--radius-tile)] border-r pr-4 text-right")}>
+                      <Link href={`/track/${r.id}`} onClick={(e) => e.stopPropagation()} className={buttonClass("ghost", "sm")}>Dashboard</Link>
                     </td>
                   </tr>
                 ))}
@@ -159,7 +188,7 @@ export function FleetView() {
             <ul className="flex flex-col gap-3 md:hidden">
               {shown.map((r) => (
                 <li key={r.id}>
-                  <button type="button" onClick={() => setOpen(r.id)} className="w-full rounded-2xl border border-line bg-white p-4 text-left">
+                  <button type="button" onClick={() => setOpen(r.id)} className="w-full rounded-[var(--radius-tile)] border border-line bg-white p-4 text-left transition-colors hover:border-ink">
                     <div className="flex items-center justify-between gap-3">
                       <span className="truncate font-semibold">{r.ref}</span>
                       <StatusPill status={r.status} />

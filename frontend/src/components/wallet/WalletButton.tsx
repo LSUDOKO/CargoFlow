@@ -10,7 +10,11 @@ import { chainName } from "@/lib/explorer";
 import { formatUSDG, shortHash } from "@/lib/format";
 import { WalletModal } from "./WalletModal";
 
-export function WalletButton({ compact }: { compact?: boolean }) {
+/**
+ * `onDark` is the header placement: an outlined button, so the lime primary stays free for each page's own main action.
+ * `compact` hides the balance next to the address once connected.
+ */
+export function WalletButton({ compact, onDark }: { compact?: boolean; onDark?: boolean }) {
   const { address, isConnected, chainId } = useAccount();
   const { disconnect } = useDisconnect();
   const { contracts, chainId: appChain } = useContracts();
@@ -36,7 +40,7 @@ export function WalletButton({ compact }: { compact?: boolean }) {
   if (!mounted || !isConnected || !address) {
     return (
       <>
-        <Button size={compact ? "sm" : "md"} onClick={() => setOpen(true)}>Connect wallet</Button>
+        <Button variant={onDark ? "inverse" : "primary"} onClick={() => setOpen(true)}>Connect wallet</Button>
         <WalletModal open={open} onClose={() => setOpen(false)} />
       </>
     );
@@ -49,7 +53,7 @@ export function WalletButton({ compact }: { compact?: boolean }) {
         onClick={() => setMenu((m) => !m)}
         aria-expanded={menu}
         aria-haspopup="menu"
-        className="inline-flex h-11 items-center gap-2.5 rounded-full border-2 border-current/25 pr-4 pl-1.5 text-sm font-semibold"
+        className="inline-flex h-11 items-center gap-2.5 rounded-full border-2 border-current/25 pr-4 pl-1.5 text-sm font-semibold whitespace-nowrap transition-colors hover:border-current/50"
       >
         <span className={`grid h-8 w-8 place-items-center rounded-full ${wrongChain ? "bg-alert" : "bg-signal"}`} aria-hidden="true">
           <span className="h-2.5 w-2.5 rounded-full bg-ink" />

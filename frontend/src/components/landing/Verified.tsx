@@ -21,22 +21,22 @@ export function Verified() {
   return (
     <section aria-labelledby="verified-title" className="container-page mt-24 md:mt-32">
       <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-        <h2 id="verified-title" className="max-w-2xl font-display text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[1] font-bold tracking-[-0.04em]">
+        <h2 id="verified-title" className="h-section max-w-2xl">
           Don&apos;t trust the dashboard. Read the chain.
         </h2>
-        <p className="max-w-md text-lg text-ink/75">
+        <p className="lede max-w-md text-ink/75">
           Six immutable contracts, source-verified, no admin key that can move funds. Every number on this site can be checked against them.
         </p>
       </div>
-      <ul className="mt-10 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      <ul className="mt-10 grid gap-3 md:grid-cols-2 lg:grid-cols-3 lg:gap-4">
         {roles.map(([key, name, what]) => (
-          <li key={key} className="rounded-2xl border border-line bg-white p-5">
-            <div className="flex items-center justify-between gap-3">
+          <li key={key} className="flex flex-col rounded-[var(--radius-tile)] border border-line bg-white p-5 md:p-6">
+            <div className="flex items-start justify-between gap-3">
               <h3 className="font-display text-lg font-semibold">{name}</h3>
               {data && <Pill tone={testnet ? "verified" : "slate"} dot>{testnet ? "Source verified" : chainName(data.chainId)}</Pill>}
             </div>
             <p className="mt-1.5 text-sm text-slate">{what}</p>
-            <div className="mt-4">
+            <div className="mt-auto pt-4">
               {isPending ? <Skeleton className="h-6 w-44" /> : data?.contracts[key] ? <HashBadge value={data.contracts[key]!} kind="address" chainId={data.chainId} /> : <span className="text-sm text-slate">Not available</span>}
             </div>
           </li>

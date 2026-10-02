@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Highlight } from "@/components/brand/Highlight";
 import { Illustration, type IllustrationName } from "@/components/brand/Illustration";
+import { ToggleIcon } from "@/components/ui/Button";
 
 const steps: { id: string; label: string; title: string; art: IllustrationName; detail: string }[] = [
   { id: "sense", label: "Sense", title: "Two probes watch every container", art: "sensor",
@@ -22,21 +23,21 @@ const steps: { id: string; label: string; title: string; art: IllustrationName; 
 export function HowItWorks() {
   const [open, setOpen] = useState<string | null>(null);
   return (
-    <section id="how-it-works" aria-labelledby="how-title" className="mt-24 bg-ink py-20 text-paper md:mt-32 md:py-28">
+    <section id="how-it-works" aria-labelledby="how-title" className="surface-ink mt-24 bg-ink py-20 text-paper md:mt-32 md:py-28">
       <div className="container-page">
-        <h2 id="how-title" className="max-w-3xl font-display text-[clamp(2.2rem,5vw,4rem)] leading-[1] font-bold tracking-[-0.04em]">
+        <h2 id="how-title" className="h-section max-w-3xl">
           From a sensor ping to <Highlight>released capital</Highlight>
         </h2>
-        <p className="mt-5 max-w-2xl text-lg text-paper/70">
+        <p className="lede mt-5 text-paper/70">
           Six steps, each one checkable on the explorer. Open a card to see what happens underneath.
         </p>
         <ol className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {steps.map((s, i) => {
             const expanded = open === s.id;
             return (
-              <li key={s.id} className="flex min-h-[25rem] flex-col rounded-[var(--radius-card)] bg-white p-6 text-ink">
+              <li key={s.id} className="surface-light flex min-h-[22rem] flex-col rounded-[var(--radius-card)] bg-white p-6 text-ink md:p-7">
                 <div className="flex items-start justify-between gap-4">
-                  <p className="text-sm font-semibold text-slate">
+                  <p className="pt-2 text-sm font-semibold text-slate">
                     <span className="tabular">{i + 1}.</span> {s.label}
                   </p>
                   <button
@@ -45,17 +46,17 @@ export function HowItWorks() {
                     aria-expanded={expanded}
                     aria-controls={`step-${s.id}`}
                     aria-label={`${expanded ? "Hide" : "Show"} details: ${s.title}`}
-                    className={`grid h-10 w-10 shrink-0 place-items-center rounded-full border-2 border-ink text-2xl leading-none transition-transform ${expanded ? "rotate-45 bg-ink text-signal" : "hover:bg-ink/5"}`}
+                    className="shrink-0 rounded-full"
                   >
-                    +
+                    <ToggleIcon open={expanded} />
                   </button>
                 </div>
-                <h3 className="mt-4 font-display text-[1.75rem] leading-[1.08] font-semibold tracking-[-0.03em]">{s.title}</h3>
+                <h3 className="mt-3 font-display text-[1.6rem] leading-[1.1] font-semibold tracking-[-0.03em]">{s.title}</h3>
                 {expanded ? (
-                  <p id={`step-${s.id}`} className="mt-4 text-[1.02rem] leading-relaxed text-ink/80">{s.detail}</p>
+                  <p id={`step-${s.id}`} className="mt-4 leading-relaxed text-ink/80">{s.detail}</p>
                 ) : (
                   <div className="mt-auto flex justify-center pt-6">
-                    <Illustration name={s.art} className="h-40 w-40" />
+                    <Illustration name={s.art} className="h-36 w-36" />
                   </div>
                 )}
               </li>

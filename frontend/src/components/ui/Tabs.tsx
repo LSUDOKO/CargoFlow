@@ -17,7 +17,7 @@ export function Tabs({ tabs, value, onChange, label, className, size = "md" }: P
     void from;
   };
   return (
-    <div role="tablist" aria-label={label} className={cx("inline-flex gap-1 rounded-full bg-ink/5 p-1", className)}>
+    <div role="tablist" aria-label={label} className={cx("inline-flex gap-1 rounded-full bg-mist p-1", className)}>
       {tabs.map((t, i) => {
         const selected = t.id === value;
         return (
@@ -40,14 +40,14 @@ export function Tabs({ tabs, value, onChange, label, className, size = "md" }: P
               else if (e.key === "End") { e.preventDefault(); move(i, tabs.length - 1); }
             }}
             className={cx(
-              "inline-flex items-center gap-2 rounded-full font-semibold transition-colors",
-              size === "lg" ? "h-11 px-5" : "h-9 px-4 text-sm",
-              selected ? "bg-ink text-paper shadow-sm" : "text-ink/70 hover:text-ink",
+              "inline-flex shrink-0 items-center gap-2 rounded-full font-semibold whitespace-nowrap transition-colors",
+              size === "lg" ? "h-11 px-5 text-[0.9375rem]" : "h-9 px-4 text-sm",
+              selected ? "bg-ink text-paper" : "text-ink/70 hover:bg-ink/6 hover:text-ink",
             )}
           >
             {t.label}
             {t.count !== undefined && (
-              <span className={cx("rounded-full px-1.5 text-xs tabular", selected ? "bg-signal text-ink" : "bg-ink/10")}>{t.count}</span>
+              <span className={cx("min-w-5 rounded-full px-1.5 text-center text-xs leading-5 tabular", selected ? "bg-signal text-ink" : "bg-ink/8")}>{t.count}</span>
             )}
           </button>
         );

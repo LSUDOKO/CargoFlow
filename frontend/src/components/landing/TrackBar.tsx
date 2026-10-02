@@ -11,9 +11,9 @@ import { EpochList, type EpochSummary } from "@/lib/api/schemas";
 import { resolveShipment } from "@/lib/resolve";
 
 const tabs = [
-  { id: "track", label: "Track a shipment", icon: "M4 7h11l5 5v5h-2a2 2 0 1 1-4 0H9a2 2 0 1 1-4 0H4z" },
-  { id: "finance", label: "Get financing", icon: "M4 7h16v10H4zM8 12h8M12 9v6" },
-  { id: "verify", label: "Verify evidence", icon: "M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6zM9 12l2 2 4-4" },
+  { id: "track", label: "Track a shipment", short: "Track", icon: "M4 7h11l5 5v5h-2a2 2 0 1 1-4 0H9a2 2 0 1 1-4 0H4z" },
+  { id: "finance", label: "Get financing", short: "Finance", icon: "M4 7h16v10H4zM8 12h8M12 9v6" },
+  { id: "verify", label: "Verify evidence", short: "Verify", icon: "M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6zM9 12l2 2 4-4" },
 ] as const;
 
 type TabId = (typeof tabs)[number]["id"];
@@ -22,8 +22,9 @@ type TabId = (typeof tabs)[number]["id"];
 export function TrackBar() {
   const [tab, setTab] = useState<TabId>("track");
   return (
-    <div className="rounded-[1.75rem] border border-line bg-white p-2 shadow-[var(--shadow-lift)] md:p-3">
-      <div role="tablist" aria-label="What would you like to do?" className="flex gap-1 overflow-x-auto px-1 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="rounded-[var(--radius-card)] border border-line bg-white p-3 shadow-[var(--shadow-lift)] md:p-4">
+      {/* the tab strip, the search field and its button share one geometry: a 2px-bordered pill, 6px inset, 44px controls */}
+      <div role="tablist" aria-label="What would you like to do?" className="grid grid-cols-3 gap-1 rounded-full border-2 border-mist bg-mist p-1 sm:inline-flex">
         {tabs.map((t, i) => {
           const selected = t.id === tab;
           return (
@@ -43,17 +44,18 @@ export function TrackBar() {
                 setTab(next.id);
                 document.getElementById(`hero-tab-${next.id}`)?.focus();
               }}
-              className={`relative inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2.5 text-[0.95rem] font-semibold transition-colors ${selected ? "bg-ink text-paper" : "text-ink/70 hover:bg-ink/5 hover:text-ink"}`}
+              className={`inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full px-3 text-[0.9375rem] font-semibold whitespace-nowrap transition-colors sm:px-5 ${selected ? "bg-ink text-paper" : "text-ink/70 hover:bg-ink/6 hover:text-ink"}`}
             >
-              <svg viewBox="0 0 24 24" className="h-[1.1rem] w-[1.1rem]" aria-hidden="true">
+              <svg viewBox="0 0 24 24" className="hidden h-4 w-4 shrink-0 sm:block" aria-hidden="true">
                 <path d={t.icon} fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinejoin="round" strokeLinecap="round" />
               </svg>
-              {t.label}
+              <span className="sm:hidden">{t.short}</span>
+              <span className="hidden sm:inline">{t.label}</span>
             </button>
           );
         })}
       </div>
-      <div className="p-2 pt-3 md:p-3">
+      <div className="pt-3">
         {tab === "track" && <TrackPanel />}
         {tab === "finance" && <FinancePanel />}
         {tab === "verify" && <VerifyPanel />}
@@ -68,7 +70,7 @@ function SearchRow({ id, label, placeholder, value, onChange, busy, cta, onSubmi
   return (
     <form
       onSubmit={(e) => { e.preventDefault(); onSubmit(); }}
-      className="flex flex-col gap-2 sm:flex-row sm:items-center sm:rounded-full sm:border-2 sm:border-line sm:bg-paper sm:p-1.5 sm:focus-within:border-ink"
+      className="flex flex-col gap-2 sm:flex-row sm:items-center sm:rounded-full sm:border-2 sm:border-line sm:bg-paper sm:p-1 sm:transition-colors sm:focus-within:border-ink"
     >
       <label htmlFor={id} className="sr-only">{label}</label>
       <input
@@ -78,9 +80,9 @@ function SearchRow({ id, label, placeholder, value, onChange, busy, cta, onSubmi
         placeholder={placeholder}
         autoComplete="off"
         spellCheck={false}
-        className="h-13 min-w-0 rounded-full border-2 border-line bg-paper px-5 sm:flex-1 text-[1rem] outline-none focus:border-ink sm:h-12 sm:border-0 sm:bg-transparent"
+        className="h-12 min-w-0 rounded-full border-2 border-line bg-paper px-5 text-base outline-none placeholder:text-slate/80 focus:border-ink sm:h-11 sm:flex-1 sm:border-0 sm:bg-transparent sm:px-4"
       />
-      <Button type="submit" size="lg" loading={busy} className="sm:h-12">{cta}</Button>
+      <Button type="submit" loading={busy} className="h-12 sm:h-11 sm:min-w-[7.5rem]">{cta}</Button>
     </form>
   );
 }
@@ -116,9 +118,9 @@ function TrackPanel() {
         onSubmit={submit}
       />
       {error ? (
-        <p className="mt-2 px-3 text-sm font-medium text-danger" role="alert">{error}</p>
+        <p className="mt-2.5 px-4 text-sm font-medium text-danger" role="alert">{error}</p>
       ) : (
-        <p className="mt-2 px-3 text-sm text-slate">
+        <p className="mt-2.5 px-4 text-sm text-slate">
           See the route, the evidence behind every release and the money in escrow, live. No wallet needed.
         </p>
       )}
@@ -128,13 +130,13 @@ function TrackPanel() {
 
 function FinancePanel() {
   return (
-    <div id="hero-panel-finance" role="tabpanel" aria-labelledby="hero-tab-finance" className="flex flex-col gap-4 px-1 sm:flex-row sm:items-center sm:justify-between">
-      <p className="max-w-xl text-[1.02rem] text-ink/80">
+    <div id="hero-panel-finance" role="tabpanel" aria-labelledby="hero-tab-finance" className="flex flex-col gap-4 px-1 sm:flex-row sm:items-center sm:justify-between sm:pl-4">
+      <p className="max-w-xl text-[0.9375rem] leading-relaxed text-ink/80">
         Register a shipment and its cold-chain policy, then name a financier. Each tranche reaches you the moment its evidence is committed.
       </p>
-      <div className="flex shrink-0 gap-2">
-        <LinkButton href="/exporter" size="lg">Start as an exporter</LinkButton>
-        <LinkButton href="/financier" size="lg" variant="secondary">Fund a facility</LinkButton>
+      <div className="flex shrink-0 flex-wrap gap-2">
+        <LinkButton href="/exporter">Start as an exporter</LinkButton>
+        <LinkButton href="/financier" variant="secondary">Fund a facility</LinkButton>
       </div>
     </div>
   );
@@ -175,7 +177,7 @@ function VerifyPanel() {
   return (
     <div id="hero-panel-verify" role="tabpanel" aria-labelledby="hero-tab-verify">
       <SearchRow id="verify-q" label="Evidence epoch id" placeholder="Evidence epoch id (0x…)" value={q} onChange={(v) => { setQ(v); setError(null); }} busy={busy} cta="Verify" onSubmit={search} />
-      {error && <p className="mt-2 px-3 text-sm font-medium text-danger" role="alert">{error}</p>}
+      {error && <p className="mt-2.5 px-4 text-sm font-medium text-danger" role="alert">{error}</p>}
       {found && (
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl bg-verified/10 px-4 py-3 text-sm">
           <span className="font-semibold text-[#00733e]">Committed on-chain</span>
@@ -183,11 +185,11 @@ function VerifyPanel() {
           <span>{found.epoch.readingCount} readings</span>
           <HashBadge value={found.epoch.root} label="root" />
           {found.epoch.commitTx && <HashBadge value={found.epoch.commitTx} kind="tx" chainId={cfg?.chainId} label="tx" />}
-          <a href={`/track/${found.shipment}`} className="font-semibold underline underline-offset-2">Open shipment</a>
+          <LinkButton href={`/track/${found.shipment}`} variant="ghost" size="sm" className="-my-1">Open shipment</LinkButton>
         </div>
       )}
-      {!error && !found && !busy && <p className="mt-2 px-3 text-sm text-slate">Every evidence epoch is a Poseidon Merkle root on-chain. The readings themselves stay private.</p>}
-      {busy && <p className="mt-2 flex items-center gap-2 px-3 text-sm text-slate"><Spinner /> Searching committed epochs…</p>}
+      {!error && !found && !busy && <p className="mt-2.5 px-4 text-sm text-slate">Every evidence epoch is a Poseidon Merkle root on-chain. The readings themselves stay private.</p>}
+      {busy && <p className="mt-2.5 flex items-center gap-2 px-4 text-sm text-slate"><Spinner /> Searching committed epochs…</p>}
     </div>
   );
 }

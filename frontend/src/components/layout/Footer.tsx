@@ -4,7 +4,7 @@ import { ROBINHOOD_EXPLORER } from "@/lib/explorer";
 
 export function Footer() {
   return (
-    <footer className="mt-24 bg-ink text-paper">
+    <footer className="surface-ink mt-24 bg-ink text-paper">
       <div className="container-page grid gap-12 py-16 md:grid-cols-[1.3fr_1fr_1fr_1fr]">
         <div>
           <Logo tone="dark" />

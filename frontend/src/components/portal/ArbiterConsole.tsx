@@ -164,7 +164,7 @@ function CaseCard({ view, canAct, chainId }: { view: ShipmentView; canAct: boole
             </Button>
           )}
           <Button
-            variant="danger"
+            variant="danger-outline"
             onClick={() =>
               setDecision({
                 title: "Declare a default",

@@ -2,32 +2,45 @@ import Link from "next/link";
 import { cx } from "./cx";
 import { Spinner } from "./Spinner";
 
-type Variant = "primary" | "secondary" | "ghost" | "dark" | "danger";
-type Size = "sm" | "md" | "lg";
+/**
+ * The one button system for the app.
+ * - primary: lime, the single main action of a view
+ * - secondary: ink outline, the alternative next to it
+ * - ghost: text-weight, tertiary actions and row links
+ * - inverse: paper outline, secondary actions on navy surfaces
+ * - danger: filled red, the confirm step of an irreversible action
+ * - danger-outline: red outline, the trigger that opens that confirm step
+ * Every variant carries a 2px border (transparent when filled) so heights, text baselines and icon spacing match.
+ */
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "inverse" | "danger" | "danger-outline";
+export type ButtonSize = "sm" | "md" | "lg";
 
-const variants: Record<Variant, string> = {
-  primary: "bg-signal text-ink hover:bg-signal-2 active:translate-y-px shadow-[inset_0_-2px_0_rgb(11_27_43/0.18)]",
-  secondary: "border-2 border-ink text-ink hover:bg-ink hover:text-paper",
-  ghost: "text-ink hover:bg-ink/5",
-  dark: "bg-ink text-paper hover:bg-ink-2",
-  danger: "bg-danger text-white hover:brightness-95",
+const variants: Record<ButtonVariant, string> = {
+  primary: "border-transparent bg-signal text-ink hover:bg-signal-2",
+  secondary: "border-ink text-ink hover:bg-ink/6",
+  ghost: "border-transparent text-ink hover:bg-ink/6",
+  inverse: "border-paper/35 text-paper hover:border-paper/70 hover:bg-paper/8",
+  danger: "border-transparent bg-danger text-white hover:bg-[#cf3c41]",
+  "danger-outline": "border-danger/70 text-[#b4232a] hover:border-danger hover:bg-danger/6",
 };
-const sizes: Record<Size, string> = {
+const sizes: Record<ButtonSize, string> = {
   sm: "h-9 px-4 text-sm",
-  md: "h-11 px-5 text-[0.95rem]",
-  lg: "h-14 px-7 text-base",
+  md: "h-11 px-5 text-[0.9375rem]",
+  lg: "h-12 px-6 text-base",
 };
 
-export function buttonClass(variant: Variant = "primary", size: Size = "md", className?: string) {
+export function buttonClass(variant: ButtonVariant = "primary", size: ButtonSize = "md", className?: string) {
   return cx(
-    "inline-flex items-center justify-center gap-2 rounded-full font-semibold whitespace-nowrap transition-[background,color,transform,box-shadow] duration-150 disabled:cursor-not-allowed disabled:opacity-55",
+    "inline-flex shrink-0 items-center justify-center gap-2 rounded-full border-2 font-semibold whitespace-nowrap select-none",
+    "transition-[background-color,border-color,color,transform] duration-150 ease-out active:translate-y-px",
+    "disabled:cursor-not-allowed disabled:opacity-50 disabled:active:translate-y-0 aria-disabled:cursor-not-allowed aria-disabled:opacity-50",
     variants[variant],
     sizes[size],
     className,
   );
 }
 
-type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: Size; loading?: boolean };
+type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: ButtonVariant; size?: ButtonSize; loading?: boolean };
 
 export function Button({ variant, size, loading, disabled, className, children, type = "button", ...rest }: ButtonProps) {
   return (
@@ -38,7 +51,7 @@ export function Button({ variant, size, loading, disabled, className, children, 
   );
 }
 
-type LinkButtonProps = { href: string; variant?: Variant; size?: Size; className?: string; children: React.ReactNode; external?: boolean };
+type LinkButtonProps = { href: string; variant?: ButtonVariant; size?: ButtonSize; className?: string; children: React.ReactNode; external?: boolean };
 
 export function LinkButton({ href, variant, size, className, children, external }: LinkButtonProps) {
   if (external) {
@@ -52,5 +65,21 @@ export function LinkButton({ href, variant, size, className, children, external 
     <Link href={href} className={buttonClass(variant, size, className)}>
       {children}
     </Link>
+  );
+}
+
+/** A round icon button that toggles open/closed, drawn as a plus that turns into a cross. */
+export function ToggleIcon({ open, className }: { open: boolean; className?: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cx(
+        "grid h-10 w-10 shrink-0 place-items-center rounded-full border-2 transition-[transform,background-color,color] duration-200",
+        open ? "rotate-45 border-ink bg-ink text-signal" : "border-ink text-ink",
+        className,
+      )}
+    >
+      <svg viewBox="0 0 16 16" className="h-4 w-4"><path d="M8 2.5v11M2.5 8h11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+    </span>
   );
 }
