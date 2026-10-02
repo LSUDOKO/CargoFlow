@@ -3,8 +3,6 @@
 The dashboard for CargoFlow: track a shipment's evidence and escrow live, register and finance shipments from a
 wallet, fund facilities, settle invoices, and play the whole story in judge mode.
 
-![Shipment dashboard](../docs/screenshots/dashboard-paused.png)
-
 ## Stack
 
 Next.js 16 (App Router, React 19, Turbopack) · TypeScript (strict) · Tailwind CSS 4 · wagmi 3 + viem ·

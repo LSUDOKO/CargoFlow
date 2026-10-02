@@ -73,5 +73,5 @@ demonstrable state and stops for review before the next begins.
 **Done when:** both engines are deployed on Arbitrum Sepolia and the benchmark table is published. (Done.)
 
 ## P9 — Launch polish
-- [x] README with diagrams, screenshots, architecture docs, runbook, changelog
+- [x] README with diagrams, deployed addresses and the live transaction trail, architecture docs, runbook, changelog
 - [ ] tags/releases, repo topics and description, roadmap issues
