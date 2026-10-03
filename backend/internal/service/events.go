@@ -106,6 +106,21 @@ func (s *Service) onChainEvent(ctx context.Context, ev store.ChainEvent) error {
 		s.publish(ws.Event{Type: ws.FacilitySettled, ShipmentID: shipment, Data: withTx(ev, map[string]any{
 			"principal": ev.Args["principal"], "fee": ev.Args["fee"], "residual": ev.Args["residual"], "undrawnRefund": ev.Args["undrawnRefund"]})})
 
+	case "EvidenceTelemetryCommitted":
+		// the aggregates were computed and stored when the epoch was built; the event only confirms them on chain
+
+	case "CoverOffered", "OfferWithdrawn", "CoverAccepted", "CoverReleased", "CoverClaimed":
+		if err := s.o.Store.RebuildCover(ctx, shipment); err != nil {
+			return err
+		}
+		data := map[string]any{"change": ev.Name}
+		for _, k := range []string{"insurer", "financier", "amount", "premiumBps", "premium", "loss", "payout", "remainder"} {
+			if v, ok := ev.Args[k]; ok {
+				data[k] = v
+			}
+		}
+		s.publish(ws.Event{Type: ws.CoverUpdated, ShipmentID: shipment, Data: withTx(ev, data)})
+
 	case "DisputeOpened", "DisputeResolved", "DefaultDeclared":
 		s.publish(ws.Event{Type: ws.ShipmentUpdated, ShipmentID: shipment, Data: withTx(ev, map[string]any{"change": ev.Name})})
 	}
@@ -122,6 +137,9 @@ var alertEvents = map[string][2]string{
 	"DeliveryConfirmed":        {alerts.Delivered, "DELIVERED"},
 	"FacilitySettled":          {alerts.Settled, "SETTLED"},
 	"DefaultDeclared":          {alerts.Defaulted, "DEFAULTED"},
+	"CoverOffered":             {alerts.CoverOffered, ""},
+	"CoverAccepted":            {alerts.CoverAccepted, ""},
+	"CoverClaimed":             {alerts.CoverClaimed, ""},
 }
 
 // alert queues an alert for an alertable event. It never blocks or fails event handling.

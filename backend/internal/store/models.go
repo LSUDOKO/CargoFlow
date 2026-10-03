@@ -13,6 +13,8 @@ type Policy struct {
 	MaxRiskBps         int  `json:"maxRiskBps"`
 	RequiresZK         bool `json:"requiresZk"`
 	MinSensors         int  `json:"minSensors"`
+	MaxHumidityX100    int  `json:"maxHumidityX100"` // % x 100; 0 = no limit
+	MaxShockX100       int  `json:"maxShockX100"`    // g x 100; 0 = no limit
 }
 
 // RoutePoint is a planned-route waypoint in degrees x 1e6.
@@ -34,6 +36,7 @@ type Shipment struct {
 	InvoiceValue     string       `json:"invoiceValue"`
 	Policy           Policy       `json:"policy"`
 	Route            []RoutePoint `json:"route"`
+	PlaceLabels      []string     `json:"placeLabels"` // milestone place names by index, as posted by the frontend
 	Status           string       `json:"status"`
 	CreatedAt        time.Time    `json:"createdAt"`
 	UpdatedAt        time.Time    `json:"updatedAt"`
@@ -46,6 +49,10 @@ type Milestone struct {
 	AllocatedUSDG        string    `json:"allocatedUsdg"`
 	EvidenceThreshold    int       `json:"evidenceThreshold"`
 	CheckpointCommitment string    `json:"checkpointCommitment"`
+	LatE6                int32     `json:"latE6"`      // centre of the milestone's place, degrees x 1e6
+	LonE6                int32     `json:"lonE6"`      //
+	RadiusM              uint32    `json:"radiusM"`    // 0 = no place condition
+	PlaceLabel           string    `json:"placeLabel"` // display name of the place ("" when unnamed)
 	IsReleased           bool      `json:"released"`
 	ReleaseTxHash        string    `json:"releaseTxHash,omitempty"`
 	ReleasedAt           time.Time `json:"releasedAt,omitzero"` // zero until released

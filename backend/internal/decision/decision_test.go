@@ -72,3 +72,45 @@ func TestActionNamesMatchTheAIOutputContract(t *testing.T) {
 		t.Fatal("action names drifted from the documented contract")
 	}
 }
+
+func TestHumidityAndShockBreachesPauseTheFacility(t *testing.T) {
+	l := limits
+	l.MaxHumidityX100, l.MaxShockX100 = 8500, 300
+
+	r := healthy()
+	r.MaxHumidityX100, r.MaxShockX100 = 8500, 300
+	if d := decision.Decide(r, 800, l); !d.Pass {
+		t.Fatalf("maxima exactly on the limits must pass: %+v", d)
+	}
+
+	r.MaxHumidityX100 = 8501
+	d := decision.Decide(r, 800, l)
+	if d.Pass || d.Action != decision.PauseFacility || !reflect.DeepEqual(d.Reasons, []decision.Reason{decision.HumidityLimit}) {
+		t.Fatalf("humidity breach: %+v", d)
+	}
+
+	r = healthy()
+	r.MaxShockX100 = 1200
+	d = decision.Decide(r, 800, l)
+	if d.Pass || d.Action != decision.PauseFacility || !reflect.DeepEqual(d.Reasons, []decision.Reason{decision.ShockLimit}) {
+		t.Fatalf("shock breach: %+v", d)
+	}
+
+	r.MaxHumidityX100, r.Score = 9900, 60
+	d = decision.Decide(r, 800, l)
+	want := []decision.Reason{decision.ScoreBelowThreshold, decision.HumidityLimit, decision.ShockLimit}
+	if d.Action != decision.PauseFacility || !reflect.DeepEqual(d.Reasons, want) {
+		t.Fatalf("reasons must be ordered score, ..., risk, humidity, shock, fraud: %+v", d)
+	}
+}
+
+func TestZeroHumidityAndShockLimitsMeanNoLimit(t *testing.T) {
+	r := healthy()
+	r.MaxHumidityX100, r.MaxShockX100 = 10_000, 65_535
+	if d := decision.Decide(r, 800, limits); !d.Pass {
+		t.Fatalf("a zero limit must not constrain: %+v", d)
+	}
+	if decision.HumidityLimit != "HUMIDITY_LIMIT" || decision.ShockLimit != "SHOCK_LIMIT" || decision.HeldNotAtPlace != "HELD_NOT_AT_PLACE" {
+		t.Fatal("reason names drifted from the documented contract")
+	}
+}

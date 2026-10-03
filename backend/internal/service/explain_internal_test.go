@@ -94,3 +94,55 @@ func TestAForecastIsOnlyShownWhileTheCargoIsTravellingAndReporting(t *testing.T)
 		}
 	}
 }
+
+func TestRulesExplainHumidityAndShockBreaches(t *testing.T) {
+	sh := store.Shipment{Policy: store.Policy{MinTempX100: 200, MaxTempX100: 800, MinEvidenceScore: 75, MaxConflictBps: 3000, MaxRiskBps: 3500,
+		MaxHumidityX100: 8500, MaxShockX100: 300}}
+	ev := &EpochSummary{Score: 96, DecisionAction: "PAUSE_FACILITY", Reasons: []string{"HUMIDITY_LIMIT", "SHOCK_LIMIT"},
+		MaxHumidityX100: 9240, MaxShockX100: 1250}
+	x := explainRules(sh, &FacilityView{Status: "PAUSED", MilestoneCount: 5, NextMilestone: 2}, ev)
+	all := strings.Join(x.Causes, " ")
+	for _, want := range []string{"92.4%", "85%", "12.5 g", "3 g"} {
+		if !strings.Contains(all, want) {
+			t.Errorf("causes %q do not mention %q", x.Causes, want)
+		}
+	}
+	if !strings.Contains(x.Headline, "humidity") {
+		t.Errorf("headline %q should name the humidity breach", x.Headline)
+	}
+	for _, s := range x.NextSteps {
+		if strings.Contains(s.Action, "recovery proof") {
+			t.Errorf("a humidity pause is not recovered by the temperature proof: %+v", x.NextSteps)
+		}
+	}
+}
+
+func TestAHeldMilestoneIsExplainedWithItsPlaceAndDistance(t *testing.T) {
+	sh := store.Shipment{Policy: band}
+	held := int64(412_300)
+	ev := &EpochSummary{Score: 97, MilestoneIndex: 2, DecisionPass: true, DecisionAction: "HELD_NOT_AT_PLACE", HeldDistanceM: &held}
+	ms := []store.Milestone{{Index: 0}, {Index: 1}, {Index: 2, LatE6: 6_927_100, LonE6: 79_861_200, RadiusM: 50_000, PlaceLabel: "Colombo"}}
+	x := explainRules(sh, &FacilityView{Status: "ACTIVE", MilestoneCount: 3, NextMilestone: 2}, ev)
+	applyHold(&x, ms, ev)
+	want := "Milestone 3 waits until the cargo is within 50 km of Colombo; it is 412 km away"
+	if x.Hold == nil || x.Hold.Message != want || strings.Contains(x.Headline+strings.Join(x.Causes, " "), "Colombo") {
+		t.Fatalf("explanation %+v should hold %q, with the label kept out of the text a model may reword", x, want)
+	}
+	if x.Hold == nil || x.Hold.MilestoneIndex != 2 || x.Hold.DistanceM != 412_300 || x.Hold.RadiusM != 50_000 || x.Hold.PlaceLabel != "Colombo" {
+		t.Fatalf("hold = %+v", x.Hold)
+	}
+	// an unnamed place is described by its coordinates
+	ms[2].PlaceLabel = ""
+	x = explainRules(sh, &FacilityView{Status: "ACTIVE", MilestoneCount: 3, NextMilestone: 2}, ev)
+	applyHold(&x, ms, ev)
+	if x.Hold == nil || !strings.Contains(x.Hold.Message, "6.9271, 79.8612") {
+		t.Fatalf("hold = %+v", x.Hold)
+	}
+	// not held: no hold
+	ev2 := &EpochSummary{Score: 97, DecisionPass: true, DecisionAction: "APPROVE_ADVANCE"}
+	x = explainRules(sh, &FacilityView{Status: "ACTIVE", MilestoneCount: 3, NextMilestone: 2}, ev2)
+	applyHold(&x, ms, ev2)
+	if x.Hold != nil {
+		t.Fatalf("hold = %+v", x.Hold)
+	}
+}

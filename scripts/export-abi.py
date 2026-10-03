@@ -11,7 +11,7 @@ root = pathlib.Path(__file__).resolve().parent.parent
 out_dir = root / "backend" / "internal" / "chain" / "abi"
 out_dir.mkdir(parents=True, exist_ok=True)
 
-for name in ["FinancingController", "EvidenceRegistry", "ShipmentRegistry", "PolicyEngine", "ReceivableVault"]:
+for name in ["FinancingController", "EvidenceRegistry", "ShipmentRegistry", "PolicyEngine", "ReceivableVault", "CoverPool"]:
     artifact = root / "contracts" / "out" / f"{name}.sol" / f"{name}.json"
     if not artifact.exists():
         raise SystemExit(f"{artifact} not found; run `make contracts-build` first")

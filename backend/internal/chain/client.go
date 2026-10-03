@@ -23,6 +23,7 @@ type Manifest struct {
 	Vault      common.Address
 	Controller common.Address
 	Verifier   common.Address
+	CoverPool  common.Address // v2; zero for a v1 deployment, which has no default cover
 }
 
 // LoadManifest reads and validates a deployment manifest, naming any missing or malformed field.
@@ -42,6 +43,7 @@ func LoadManifest(path string) (Manifest, error) {
 			ReceivableVault     string `json:"receivableVault"`
 			Groth16Verifier     string `json:"groth16Verifier"`
 			FinancingController string `json:"financingController"`
+			CoverPool           string `json:"coverPool"` // v2, optional
 		} `json:"contracts"`
 	}
 	if err := json.Unmarshal(raw, &f); err != nil {
@@ -73,6 +75,12 @@ func LoadManifest(path string) (Manifest, error) {
 		}
 		*field.dst = common.HexToAddress(field.raw)
 	}
+	if raw := f.Contracts.CoverPool; raw != "" {
+		if !common.IsHexAddress(raw) {
+			return Manifest{}, fmt.Errorf("chain: manifest coverPool is not an address: %q", raw)
+		}
+		m.CoverPool = common.HexToAddress(raw)
+	}
 	return m, nil
 }
 
@@ -102,19 +110,27 @@ func Dial(ctx context.Context, rpcURL string, m Manifest) (*Client, error) {
 	return &Client{Eth: eth, M: m}, nil
 }
 
+// HasCoverPool reports whether the deployment includes the v2 CoverPool.
+func (c *Client) HasCoverPool() bool { return c.M.CoverPool != (common.Address{}) }
+
 // Close releases the connection.
 func (c *Client) Close() { c.Eth.Close() }
 
 // CheckDeployed verifies that every contract address holds code, naming the first that does not.
 func (c *Client) CheckDeployed(ctx context.Context) error {
-	for _, a := range []struct {
+	type named struct {
 		name string
 		addr common.Address
-	}{
+	}
+	all := []named{
 		{"access", c.M.Access}, {"registry", c.M.Registry}, {"policies", c.M.Policies},
 		{"evidence", c.M.Evidence}, {"vault", c.M.Vault}, {"controller", c.M.Controller},
 		{"verifier", c.M.Verifier}, {"usdg", c.M.USDG},
-	} {
+	}
+	if c.HasCoverPool() {
+		all = append(all, named{"coverPool", c.M.CoverPool})
+	}
+	for _, a := range all {
 		code, err := c.Eth.CodeAt(ctx, a.addr, nil)
 		if err != nil {
 			return fmt.Errorf("chain: read code of %s: %w", a.name, err)

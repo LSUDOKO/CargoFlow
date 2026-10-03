@@ -39,6 +39,17 @@ type BuyerStats struct {
 	defaulted  int
 }
 
+// InsurerStats is an address's record as a default-cover insurer, in USDG base units.
+type InsurerStats struct {
+	Offered        int    `json:"offered"`        // facilities it offered cover on
+	Active         int    `json:"active"`         // accepted covers still backing a facility
+	Released       int    `json:"released"`       // covers returned after the facility settled
+	Claimed        int    `json:"claimed"`        // covers that paid a financier after a default
+	CoverWritten   string `json:"coverWritten"`   // summed amount of accepted covers
+	PremiumsEarned string `json:"premiumsEarned"` // premiums received on accepted covers
+	PaidOut        string `json:"paidOut"`        // paid to financiers on claimed covers
+}
+
 // PartyStats is an address's track record across the roles it has held, computed from the mirrored shipments and
 // the indexed chain events.
 type PartyStats struct {
@@ -46,6 +57,7 @@ type PartyStats struct {
 	Exporter  ExporterStats  `json:"exporter"`
 	Financier FinancierStats `json:"financier"`
 	Buyer     BuyerStats     `json:"buyer"`
+	Insurer   InsurerStats   `json:"insurer"`
 	Since     *time.Time     `json:"since"` // first shipment involving the address, nil when there is none
 }
 
@@ -115,6 +127,18 @@ func (s *Store) PartyStats(ctx context.Context, addr string) (PartyStats, error)
 		SELECT count(*), count(*) FILTER (WHERE status = 'SETTLED'), count(*) FILTER (WHERE status = 'DEFAULTED'),
 		       COALESCE(sum(invoice_value) FILTER (WHERE status = 'SETTLED'), 0)::text
 		FROM shipments WHERE buyer = $1`, addr).Scan(&bu.Shipments, &bu.Settled, &bu.defaulted, &bu.PaidVolume)
+	if err != nil {
+		return p, mapErr(err)
+	}
+
+	in := &p.Insurer
+	err = s.pool.QueryRow(ctx, `
+		SELECT (SELECT count(*) FROM cover_offers WHERE insurer = $1),
+		       count(*) FILTER (WHERE status = 'ACTIVE'), count(*) FILTER (WHERE status = 'RELEASED'),
+		       count(*) FILTER (WHERE status = 'CLAIMED'), COALESCE(sum(amount), 0)::text, COALESCE(sum(premium), 0)::text,
+		       COALESCE(sum(financier_payout), 0)::text
+		FROM covers WHERE insurer = $1`, addr).
+		Scan(&in.Offered, &in.Active, &in.Released, &in.Claimed, &in.CoverWritten, &in.PremiumsEarned, &in.PaidOut)
 	if err != nil {
 		return p, mapErr(err)
 	}

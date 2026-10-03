@@ -127,6 +127,8 @@ type shipmentRequest struct {
 	Route       []store.RoutePoint `json:"route"`
 	MaxGapSec   int                `json:"maxGapSec"`
 	MinSensors  int                `json:"minSensors"`
+	// PlaceLabels names the milestone places by milestone index ("" for none), for display. Optional.
+	PlaceLabels []string `json:"placeLabels"`
 }
 
 // input validates the request shape and converts it for the service.
@@ -136,6 +138,7 @@ func (req shipmentRequest) input() (service.ShipmentInput, error) {
 	}
 	return service.ShipmentInput{
 		ShipmentID: req.ShipmentID, ExternalRef: req.ExternalRef, Route: req.Route, MaxGapSec: req.MaxGapSec, MinSensors: req.MinSensors,
+		PlaceLabels: req.PlaceLabels,
 	}, nil
 }
 
@@ -347,5 +350,15 @@ func (s *Server) audit(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"entries": entries})
+	return nil
+}
+
+// cover returns a shipment's open default-cover offers and its accepted cover (null when there is none).
+func (s *Server) cover(w http.ResponseWriter, r *http.Request) error {
+	c, err := s.c.Service.Cover(r.Context(), r.PathValue("id"))
+	if err != nil {
+		return err
+	}
+	writeJSON(w, http.StatusOK, c)
 	return nil
 }

@@ -87,7 +87,11 @@ func fromService(err error) error {
 		return ErrForbidden(auth.PublicError(err))
 	}
 	if rev, ok := chain.AsRevert(err); ok {
-		return &Error{http.StatusConflict, "chain_rejected", "the contract rejected the action: " + rev.Name}
+		msg := "the contract rejected the action: " + rev.Name
+		if why := chain.RevertMessage(rev.Name); why != "" {
+			msg += ": " + why
+		}
+		return &Error{http.StatusConflict, "chain_rejected", msg}
 	}
 	return err // unclassified: WriteError turns it into a generic 500
 }

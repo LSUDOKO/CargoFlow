@@ -57,6 +57,9 @@ func (ix *Indexer) init() {
 		ix.C.M.Policies:   {"PolicyEngine", a["PolicyEngine"]},
 		ix.C.M.Vault:      {"ReceivableVault", a["ReceivableVault"]},
 	}
+	if ix.C.HasCoverPool() {
+		ix.contracts[ix.C.M.CoverPool] = contractInfo{"CoverPool", a["CoverPool"]}
+	}
 	if ix.MaxRange == 0 {
 		ix.MaxRange = 1000
 	}

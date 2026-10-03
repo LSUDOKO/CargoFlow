@@ -37,9 +37,14 @@ type Brief struct {
 	Penalties  map[string]int `json:"penalties"`  // evidence score deductions by factor
 	FraudKinds []string       `json:"fraudKinds"` // enum members only
 
-	MinScore       int `json:"minScore"`
-	MaxConflictBps int `json:"maxConflictBps"`
-	MaxRiskBps     int `json:"maxRiskBps"`
+	MaxHumidityX100 int `json:"maxHumidityX100"` // highest relative humidity in the epoch, % x 100
+	MaxShockX100    int `json:"maxShockX100"`    // highest shock in the epoch, g x 100
+
+	MinScore          int `json:"minScore"`
+	MaxConflictBps    int `json:"maxConflictBps"`
+	MaxRiskBps        int `json:"maxRiskBps"`
+	HumidityLimitX100 int `json:"humidityLimitX100"` // policy limit; 0 = none
+	ShockLimitX100    int `json:"shockLimitX100"`    // policy limit; 0 = none
 
 	Deterministic        decision.Action `json:"deterministicAction"`
 	DeterministicReasons []string        `json:"deterministicReasons"`
@@ -55,11 +60,14 @@ func NewBrief(shipmentID string, r evidence.Result, riskBps int, l decision.Limi
 			"physical": r.Penalties.Physical, "conflict": r.Penalties.Conflict, "freshness": r.Penalties.Freshness,
 			"route": r.Penalties.Route, "source": r.Penalties.Source, "fraud": r.Penalties.Fraud, "coverage": r.Penalties.Coverage,
 		},
-		FraudKinds:     []string{},
-		MinScore:       l.MinScore,
-		MaxConflictBps: l.MaxConflictBps,
-		MaxRiskBps:     l.MaxRiskBps,
-		Deterministic:  det.Action, DeterministicReasons: []string{},
+		FraudKinds:      []string{},
+		MaxHumidityX100: r.MaxHumidityX100, MaxShockX100: r.MaxShockX100,
+		MinScore:          l.MinScore,
+		MaxConflictBps:    l.MaxConflictBps,
+		MaxRiskBps:        l.MaxRiskBps,
+		HumidityLimitX100: l.MaxHumidityX100,
+		ShockLimitX100:    l.MaxShockX100,
+		Deterministic:     det.Action, DeterministicReasons: []string{},
 	}
 	for _, f := range r.Fraud {
 		if knownFraud[f.Kind] {

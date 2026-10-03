@@ -49,6 +49,16 @@ func (s *Server) mirror(w http.ResponseWriter, r *http.Request) error {
 	existing, err := s.c.Store.GetShipment(r.Context(), strings.ToLower(strings.TrimSpace(req.ShipmentID)))
 	switch {
 	case err == nil:
+		// labels posted after the first mirror fill in once; stored labels are never replaced
+		if len(req.PlaceLabels) > 0 && len(existing.PlaceLabels) == 0 {
+			if ok, err := s.c.Service.SetPlaceLabels(r.Context(), existing.ID, req.PlaceLabels); err != nil {
+				return err
+			} else if ok {
+				if existing, err = s.c.Store.GetShipment(r.Context(), existing.ID); err != nil {
+					return err
+				}
+			}
+		}
 		writeJSON(w, http.StatusOK, existing)
 		return nil
 	case !errors.Is(err, store.ErrNotFound):

@@ -31,6 +31,7 @@ var anvilKeys = map[string]string{
 	"worker":    "47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a",
 	"monitor":   "8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba",
 	"arbiter":   "92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b2b4ec1564e",
+	"insurer":   "4bbbf85ce3377467afe5d46f804f221813b2bb87f24d81f60f1fcdbf7cbf4356", // no role: CoverPool needs none
 }
 
 // Env describes the running chain.
@@ -38,7 +39,7 @@ type Env struct {
 	RPCURL       string
 	ChainID      uint64
 	ManifestPath string
-	Keys         map[string]*ecdsa.PrivateKey // deployer, exporter, financier, buyer, worker, monitor, arbiter
+	Keys         map[string]*ecdsa.PrivateKey // deployer, exporter, financier, buyer, worker, monitor, arbiter, insurer
 	// the deployer also holds FACILITY_MANAGER_ROLE in the local deployment
 }
 

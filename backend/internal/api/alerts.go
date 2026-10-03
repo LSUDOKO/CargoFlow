@@ -139,8 +139,18 @@ func (s *Server) subscribe(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
+	allowed := parties(sh)
+	// an insurer with an open offer or the accepted cover follows the shipment too
+	if cv, err := s.c.Store.CoverOf(r.Context(), sh.ID); err == nil {
+		for _, o := range cv.Offers {
+			allowed = append(allowed, o.Insurer)
+		}
+		if cv.Cover != nil {
+			allowed = append(allowed, cv.Cover.Insurer)
+		}
+	}
 	signer, err := s.walletSigner(r.Context(), auth.AlertsAuthorization(sh.ID, req.Channel, req.Target, req.IssuedAt), req.Signature, req.IssuedAt,
-		"only the shipment's exporter, financier or buyer can subscribe to its alerts", parties(sh)...)
+		"only the shipment's exporter, financier, buyer or insurer can subscribe to its alerts", allowed...)
 	if err != nil {
 		return err
 	}

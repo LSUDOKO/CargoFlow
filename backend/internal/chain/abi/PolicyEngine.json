@@ -78,6 +78,16 @@
             "name": "requiresZK",
             "type": "bool",
             "internalType": "bool"
+          },
+          {
+            "name": "maxHumidityX100",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "maxShockX100",
+            "type": "uint16",
+            "internalType": "uint16"
           }
         ]
       }
@@ -132,6 +142,16 @@
             "name": "requiresZK",
             "type": "bool",
             "internalType": "bool"
+          },
+          {
+            "name": "maxHumidityX100",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "maxShockX100",
+            "type": "uint16",
+            "internalType": "uint16"
           }
         ]
       }
@@ -217,6 +237,16 @@
             "name": "requiresZK",
             "type": "bool",
             "internalType": "bool"
+          },
+          {
+            "name": "maxHumidityX100",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "maxShockX100",
+            "type": "uint16",
+            "internalType": "uint16"
           }
         ]
       }

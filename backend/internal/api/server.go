@@ -114,6 +114,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /v1/shipments/{id}/telemetry", s.handle(s.telemetrySummary))
 	mux.HandleFunc("GET /v1/shipments/{id}/track", s.handle(s.track))
 	mux.HandleFunc("GET /v1/shipments/{id}/explanation", s.handle(s.explanation))
+	mux.HandleFunc("GET /v1/shipments/{id}/cover", s.handle(s.cover))
 	mux.HandleFunc("POST /v1/shipments/{id}/documents", s.handle(s.attestDocument))
 	mux.HandleFunc("GET /v1/shipments/{id}/documents", s.handle(s.listDocuments))
 	mux.HandleFunc("POST /v1/shipments/{id}/subscriptions", s.handle(s.subscribe))
@@ -190,14 +191,18 @@ func (s *Server) health(w http.ResponseWriter, r *http.Request) error {
 
 func (s *Server) config(w http.ResponseWriter, _ *http.Request) error {
 	m := s.c.Chain.M
+	contracts := map[string]string{
+		"usdg": hexAddr(m.USDG), "access": hexAddr(m.Access), "shipmentRegistry": hexAddr(m.Registry),
+		"policyEngine": hexAddr(m.Policies), "evidenceRegistry": hexAddr(m.Evidence),
+		"receivableVault": hexAddr(m.Vault), "financingController": hexAddr(m.Controller), "groth16Verifier": hexAddr(m.Verifier),
+	}
+	if s.c.Chain.HasCoverPool() {
+		contracts["coverPool"] = hexAddr(m.CoverPool)
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"chainId":      m.ChainID,
 		"usdgDecimals": 6,
-		"contracts": map[string]string{
-			"usdg": hexAddr(m.USDG), "access": hexAddr(m.Access), "shipmentRegistry": hexAddr(m.Registry),
-			"policyEngine": hexAddr(m.Policies), "evidenceRegistry": hexAddr(m.Evidence),
-			"receivableVault": hexAddr(m.Vault), "financingController": hexAddr(m.Controller), "groth16Verifier": hexAddr(m.Verifier),
-		},
+		"contracts":    contracts,
 		"alerts": map[string]any{
 			"webhook": true, "telegram": s.c.Alerts.TelegramBot != "", "email": s.c.Alerts.Email, "telegramBot": s.c.Alerts.TelegramBot,
 		},

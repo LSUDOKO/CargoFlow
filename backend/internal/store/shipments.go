@@ -18,6 +18,10 @@ func (s *Store) CreateShipment(ctx context.Context, sh Shipment, ms []Milestone)
 	if sh.Route == nil {
 		route = []byte("[]")
 	}
+	labels, err := json.Marshal(nonNilStrings(sh.PlaceLabels))
+	if err != nil {
+		return err
+	}
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return err
@@ -28,22 +32,24 @@ func (s *Store) CreateShipment(ctx context.Context, sh Shipment, ms []Milestone)
 		INSERT INTO shipments (shipment_id, external_ref, exporter, buyer, financier, invoice_hash,
 			route_commitment, policy_commitment, invoice_value,
 			min_temp_x100, max_temp_x100, max_gap_sec, max_route_deviation_m, min_evidence_score,
-			max_conflict_bps, max_risk_bps, requires_zk, min_sensors, route)
-		VALUES ($1,$2,$3,$4,NULLIF($5,''),$6,$7,$8,$9::numeric,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19::jsonb)`,
+			max_conflict_bps, max_risk_bps, requires_zk, min_sensors, route,
+			max_humidity_x100, max_shock_x100, place_labels)
+		VALUES ($1,$2,$3,$4,NULLIF($5,''),$6,$7,$8,$9::numeric,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19::jsonb,$20,$21,$22::jsonb)`,
 		sh.ID, sh.ExternalRef, sh.Exporter, sh.Buyer, sh.Financier, sh.InvoiceHash,
 		sh.RouteCommitment, sh.PolicyCommitment, sh.InvoiceValue,
 		sh.Policy.MinTempX100, sh.Policy.MaxTempX100, sh.Policy.MaxGapSec, sh.Policy.MaxRouteDeviationM,
 		sh.Policy.MinEvidenceScore, sh.Policy.MaxConflictBps, sh.Policy.MaxRiskBps,
-		sh.Policy.RequiresZK, sh.Policy.MinSensors, string(route))
+		sh.Policy.RequiresZK, sh.Policy.MinSensors, string(route),
+		sh.Policy.MaxHumidityX100, sh.Policy.MaxShockX100, string(labels))
 	if err != nil {
 		return mapErr(err)
 	}
 	for _, m := range ms {
 		_, err = tx.Exec(ctx, `
 			INSERT INTO financing_milestones (shipment_id, milestone_index, description, allocated_usdg,
-				evidence_threshold, checkpoint_commitment)
-			VALUES ($1,$2,$3,$4::numeric,$5,$6)`,
-			sh.ID, m.Index, m.Description, m.AllocatedUSDG, m.EvidenceThreshold, m.CheckpointCommitment)
+				evidence_threshold, checkpoint_commitment, lat_e6, lon_e6, radius_m)
+			VALUES ($1,$2,$3,$4::numeric,$5,$6,$7,$8,$9)`,
+			sh.ID, m.Index, m.Description, m.AllocatedUSDG, m.EvidenceThreshold, m.CheckpointCommitment, m.LatE6, m.LonE6, m.RadiusM)
 		if err != nil {
 			return fmt.Errorf("milestone %d: %w", m.Index, mapErr(err))
 		}
@@ -54,21 +60,26 @@ func (s *Store) CreateShipment(ctx context.Context, sh Shipment, ms []Milestone)
 const shipmentColumns = `shipment_id, external_ref, exporter, buyer, COALESCE(financier,''), invoice_hash,
 	route_commitment, policy_commitment, invoice_value::text,
 	min_temp_x100, max_temp_x100, max_gap_sec, max_route_deviation_m, min_evidence_score,
-	max_conflict_bps, max_risk_bps, requires_zk, min_sensors, route, status, created_at, updated_at`
+	max_conflict_bps, max_risk_bps, requires_zk, min_sensors, route, status, created_at, updated_at,
+	max_humidity_x100, max_shock_x100, place_labels`
 
 func scanShipment(row pgx.Row) (Shipment, error) {
 	var sh Shipment
-	var route []byte
+	var route, labels []byte
 	err := row.Scan(&sh.ID, &sh.ExternalRef, &sh.Exporter, &sh.Buyer, &sh.Financier, &sh.InvoiceHash,
 		&sh.RouteCommitment, &sh.PolicyCommitment, &sh.InvoiceValue,
 		&sh.Policy.MinTempX100, &sh.Policy.MaxTempX100, &sh.Policy.MaxGapSec, &sh.Policy.MaxRouteDeviationM,
 		&sh.Policy.MinEvidenceScore, &sh.Policy.MaxConflictBps, &sh.Policy.MaxRiskBps,
-		&sh.Policy.RequiresZK, &sh.Policy.MinSensors, &route, &sh.Status, &sh.CreatedAt, &sh.UpdatedAt)
+		&sh.Policy.RequiresZK, &sh.Policy.MinSensors, &route, &sh.Status, &sh.CreatedAt, &sh.UpdatedAt,
+		&sh.Policy.MaxHumidityX100, &sh.Policy.MaxShockX100, &labels)
 	if err != nil {
 		return Shipment{}, mapErr(err)
 	}
 	if err := json.Unmarshal(route, &sh.Route); err != nil {
 		return Shipment{}, fmt.Errorf("store: corrupt route for %s: %w", sh.ID, err)
+	}
+	if err := json.Unmarshal(labels, &sh.PlaceLabels); err != nil {
+		return Shipment{}, fmt.Errorf("store: corrupt place labels for %s: %w", sh.ID, err)
 	}
 	return sh, nil
 }
@@ -129,9 +140,11 @@ func (s *Store) SetShipmentStatus(ctx context.Context, id, status string) error 
 // Milestones returns a shipment's milestones in index order.
 func (s *Store) Milestones(ctx context.Context, id string) ([]Milestone, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT milestone_index, description, allocated_usdg::text, evidence_threshold, checkpoint_commitment,
-		       is_released, COALESCE(release_tx_hash,''), released_at
-		FROM financing_milestones WHERE shipment_id = $1 ORDER BY milestone_index`, id)
+		SELECT m.milestone_index, m.description, m.allocated_usdg::text, m.evidence_threshold, m.checkpoint_commitment,
+		       m.is_released, COALESCE(m.release_tx_hash,''), m.released_at, m.lat_e6, m.lon_e6, m.radius_m,
+		       COALESCE(s.place_labels->>m.milestone_index, '')
+		FROM financing_milestones m JOIN shipments s USING (shipment_id)
+		WHERE m.shipment_id = $1 ORDER BY m.milestone_index`, id)
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +154,7 @@ func (s *Store) Milestones(ctx context.Context, id string) ([]Milestone, error) 
 		var m Milestone
 		var at *time.Time
 		if err := rows.Scan(&m.Index, &m.Description, &m.AllocatedUSDG, &m.EvidenceThreshold,
-			&m.CheckpointCommitment, &m.IsReleased, &m.ReleaseTxHash, &at); err != nil {
+			&m.CheckpointCommitment, &m.IsReleased, &m.ReleaseTxHash, &at, &m.LatE6, &m.LonE6, &m.RadiusM, &m.PlaceLabel); err != nil {
 			return nil, err
 		}
 		if at != nil {
@@ -187,12 +200,13 @@ func (s *Store) UpsertMilestones(ctx context.Context, shipmentID string, ms []Mi
 	for _, m := range ms {
 		_, err := tx.Exec(ctx, `
 			INSERT INTO financing_milestones (shipment_id, milestone_index, description, allocated_usdg,
-				evidence_threshold, checkpoint_commitment)
-			VALUES ($1,$2,$3,$4::numeric,$5,$6)
+				evidence_threshold, checkpoint_commitment, lat_e6, lon_e6, radius_m)
+			VALUES ($1,$2,$3,$4::numeric,$5,$6,$7,$8,$9)
 			ON CONFLICT (shipment_id, milestone_index) DO UPDATE
 			SET description = EXCLUDED.description, allocated_usdg = EXCLUDED.allocated_usdg,
-			    evidence_threshold = EXCLUDED.evidence_threshold, checkpoint_commitment = EXCLUDED.checkpoint_commitment`,
-			shipmentID, m.Index, m.Description, m.AllocatedUSDG, m.EvidenceThreshold, m.CheckpointCommitment)
+			    evidence_threshold = EXCLUDED.evidence_threshold, checkpoint_commitment = EXCLUDED.checkpoint_commitment,
+			    lat_e6 = EXCLUDED.lat_e6, lon_e6 = EXCLUDED.lon_e6, radius_m = EXCLUDED.radius_m`,
+			shipmentID, m.Index, m.Description, m.AllocatedUSDG, m.EvidenceThreshold, m.CheckpointCommitment, m.LatE6, m.LonE6, m.RadiusM)
 		if err != nil {
 			return fmt.Errorf("milestone %d: %w", m.Index, mapErr(err))
 		}
@@ -210,4 +224,32 @@ func (s *Store) SetShipmentFinancier(ctx context.Context, id, financier string) 
 		return ErrNotFound
 	}
 	return nil
+}
+
+// SetPlaceLabels stores the display names of a shipment's milestone places, but only when none are stored yet: the
+// first labels posted stand. It reports whether they were stored.
+func (s *Store) SetPlaceLabels(ctx context.Context, id string, labels []string) (bool, error) {
+	raw, err := json.Marshal(nonNilStrings(labels))
+	if err != nil {
+		return false, err
+	}
+	tag, err := s.pool.Exec(ctx, `UPDATE shipments SET place_labels = $2::jsonb, updated_at = now()
+		WHERE shipment_id = $1 AND place_labels = '[]'::jsonb`, id, string(raw))
+	if err != nil {
+		return false, mapErr(err)
+	}
+	if tag.RowsAffected() == 1 {
+		return true, nil
+	}
+	if _, err := s.GetShipment(ctx, id); err != nil {
+		return false, err
+	}
+	return false, nil
+}
+
+func nonNilStrings(v []string) []string {
+	if v == nil {
+		return []string{}
+	}
+	return v
 }

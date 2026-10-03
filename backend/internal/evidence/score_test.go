@@ -261,3 +261,15 @@ func TestAnExplicitBucketStillOverridesTheInferredOne(t *testing.T) {
 		t.Fatalf("a deliberately coarse bucket should dilute conflict (%d vs %d)", coarse.ConflictBps, inferred.ConflictBps)
 	}
 }
+
+func TestEvaluateReportsHumidityAndShockMaxima(t *testing.T) {
+	pts := []telemetry.Point{
+		{Timestamp: 1000, SensorID: "a", TemperatureX100: 450, HumidityX100: 6500, ShockX100: 20},
+		{Timestamp: 1060, SensorID: "a", TemperatureX100: 460, HumidityX100: 9100, ShockX100: 380},
+		{Timestamp: 1000, SensorID: "b", TemperatureX100: 455, HumidityX100: 7000, ShockX100: 15},
+	}
+	res := evidence.Evaluate(evidence.EpochInput{Points: pts, Policy: evidence.Policy{Band: evidence.Band{MinTempX100: 200, MaxTempX100: 800}, MinSensors: 1}})
+	if res.MaxHumidityX100 != 9100 || res.MaxShockX100 != 380 {
+		t.Fatalf("maxima = %d / %d", res.MaxHumidityX100, res.MaxShockX100)
+	}
+}

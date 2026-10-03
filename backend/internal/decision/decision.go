@@ -24,27 +24,35 @@ const (
 	ConflictTooHigh     Reason = "CONFLICT_TOO_HIGH"
 	RiskTooHigh         Reason = "RISK_TOO_HIGH"
 	FraudSignals        Reason = "FRAUD_SIGNALS"
+	// HumidityLimit and ShockLimit: the epoch's humidity or shock maximum is above the policy limit.
+	HumidityLimit Reason = "HUMIDITY_LIMIT"
+	ShockLimit    Reason = "SHOCK_LIMIT"
 	// AIRequested marks a stricter outcome that the AI monitor asked for and the guardrails accepted.
 	AIRequested Reason = "AI_REQUESTED"
+	// HeldNotAtPlace is not a failure: the evidence passed, but its centroid is outside the next
+	// milestone's place, so the release waits for evidence from there. It is recorded, never a pause.
+	HeldNotAtPlace Reason = "HELD_NOT_AT_PLACE"
 )
 
 // Limits mirror the policy fields the controller checks.
 type Limits struct {
-	MinScore       int
-	MaxConflictBps int
-	MaxRiskBps     int
+	MinScore        int
+	MaxConflictBps  int
+	MaxRiskBps      int
+	MaxHumidityX100 int // 0 = no limit
+	MaxShockX100    int // 0 = no limit
 }
 
 // Decision is the outcome for one epoch.
 type Decision struct {
 	Pass    bool
 	Action  Action
-	Reasons []Reason // in fixed order: score, compliance, conflict, risk, fraud
+	Reasons []Reason // in fixed order: score, compliance, conflict, risk, humidity, shock, fraud
 }
 
-// Decide applies the gates. Limits are inclusive. Anything that signals a physical failure, sensor
-// contradiction or manipulation pauses the facility; a merely weak score or high composite risk asks
-// for secondary proof instead.
+// Decide applies the gates. Limits are inclusive. Anything that signals a physical failure (including a
+// humidity or shock maximum above its limit), sensor contradiction or manipulation pauses the facility;
+// a merely weak score or high composite risk asks for secondary proof instead.
 func Decide(res evidence.Result, riskBps int, l Limits) Decision {
 	var reasons []Reason
 	severe := false
@@ -61,6 +69,14 @@ func Decide(res evidence.Result, riskBps int, l Limits) Decision {
 	}
 	if riskBps > l.MaxRiskBps {
 		reasons = append(reasons, RiskTooHigh)
+	}
+	if l.MaxHumidityX100 > 0 && res.MaxHumidityX100 > l.MaxHumidityX100 {
+		reasons = append(reasons, HumidityLimit)
+		severe = true
+	}
+	if l.MaxShockX100 > 0 && res.MaxShockX100 > l.MaxShockX100 {
+		reasons = append(reasons, ShockLimit)
+		severe = true
 	}
 	if len(res.Fraud) > 0 {
 		reasons = append(reasons, FraudSignals)

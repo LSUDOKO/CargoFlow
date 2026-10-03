@@ -43,6 +43,7 @@ type Epoch struct {
 	Root       *big.Int
 	Result     evidence.Result
 	RiskBps    int
+	Telemetry  telemetry.Aggregates // centroid and humidity/shock maxima: what reaches the chain besides the root
 
 	tree   *merkle.Tree
 	leaves []*big.Int
@@ -233,6 +234,7 @@ func FromPoints(cfg Config, seq uint32, points []telemetry.Point) (*Epoch, error
 		Root:       tree.Root(),
 		Result:     res,
 		RiskBps:    risk.Score(risk.FromEvidence(res, cfg.RiskContext)),
+		Telemetry:  telemetry.Aggregate(pts),
 		tree:       tree,
 		leaves:     leaves,
 		salts:      salts,

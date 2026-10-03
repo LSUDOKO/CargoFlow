@@ -33,6 +33,12 @@ type EpochSummary struct {
 	CommitTx       string         `json:"commitTx,omitempty"`
 	ProofVerified  bool           `json:"proofVerified"`
 	CreatedAt      time.Time      `json:"createdAt"`
+	// v2 aggregates committed with the epoch (0 for epochs from before v2)
+	LatE6           int32  `json:"latE6"`
+	LonE6           int32  `json:"lonE6"`
+	MaxHumidityX100 int    `json:"maxHumidityX100"`
+	MaxShockX100    int    `json:"maxShockX100"`
+	HeldDistanceM   *int64 `json:"heldDistanceM"` // metres from the milestone's place when the decision is HELD_NOT_AT_PLACE, else null
 }
 
 func summarize(e store.EpochRecord) EpochSummary {
@@ -42,6 +48,7 @@ func summarize(e store.EpochRecord) EpochSummary {
 		ConflictBps: e.ConflictBps, RiskBps: e.RiskBps, Compliant: e.Compliant, Penalties: e.Penalties,
 		DecisionPass: e.DecisionPass, DecisionAction: e.DecisionAction, Reasons: e.DecisionReasons,
 		CommitTx: e.CommitTxHash, ProofVerified: e.ProofVerified, CreatedAt: e.CreatedAt,
+		LatE6: e.LatE6, LonE6: e.LonE6, MaxHumidityX100: e.MaxHumidityX100, MaxShockX100: e.MaxShockX100, HeldDistanceM: e.HeldDistanceM,
 	}
 }
 
@@ -73,6 +80,8 @@ type ShipmentView struct {
 	LatestEvidence *EpochSummary     `json:"latestEvidence"`
 	Quarantined    int               `json:"quarantinedReadings"`
 	USDGDecimals   int               `json:"usdgDecimals"`
+	Cover          *store.Cover      `json:"cover"`           // the accepted default cover, null when there is none
+	OpenOffers     int               `json:"openCoverOffers"` // cover offers waiting for the financier
 }
 
 // View assembles a shipment's store record and its live chain state. The chain decides milestone state:
@@ -131,7 +140,24 @@ func (s *Service) View(ctx context.Context, shipmentID string) (ShipmentView, er
 	if q, err := s.o.Store.Quarantined(ctx, canon, 1000); err == nil {
 		v.Quarantined = len(q)
 	}
+	cv, err := s.o.Store.CoverOf(ctx, canon)
+	if err != nil {
+		return ShipmentView{}, err
+	}
+	v.Cover, v.OpenOffers = cv.Cover, len(cv.Offers)
 	return v, nil
+}
+
+// Cover returns a shipment's open default-cover offers and its accepted cover, as indexed from the CoverPool.
+func (s *Service) Cover(ctx context.Context, shipmentID string) (store.ShipmentCover, error) {
+	_, canon, err := parseID(shipmentID)
+	if err != nil {
+		return store.ShipmentCover{}, err
+	}
+	if _, err := s.o.Store.GetShipment(ctx, canon); err != nil {
+		return store.ShipmentCover{}, mapStoreErr(err)
+	}
+	return s.o.Store.CoverOf(ctx, canon)
 }
 
 // Epochs lists a shipment's epochs without their readings.
@@ -191,7 +217,11 @@ func (s *Service) Audit(ctx context.Context, shipmentID string, limit int) ([]Au
 		return nil, err
 	}
 	for _, a := range ai {
-		out = append(out, AuditEntry{Time: a.CreatedAt, Kind: "monitoring", Title: a.ActionType + " " + a.ReasonCode, TxHash: a.TxHash,
+		title := a.ActionType + " " + a.ReasonCode
+		if msg, ok := a.Data["message"].(string); ok && msg != "" {
+			title = a.ActionType + ": " + msg // a held milestone says where it waits and how far away the cargo is
+		}
+		out = append(out, AuditEntry{Time: a.CreatedAt, Kind: "monitoring", Title: title, TxHash: a.TxHash,
 			Detail: map[string]any{"severity": a.Severity, "epochId": a.EpochID, "onchainActionTriggered": a.OnchainActionTriggered, "data": a.Data}})
 	}
 	epochs, err := s.o.Store.Epochs(ctx, canon)

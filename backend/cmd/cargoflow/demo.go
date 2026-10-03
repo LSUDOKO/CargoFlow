@@ -53,6 +53,14 @@ func demo(ctx context.Context, args []string, getenv func(string) string, out io
 		}
 		keys[name] = chain.NewSigner(k)
 	}
+	// optional: an insurer wallet adds default cover to the story (needs a deployment with a CoverPool)
+	if raw := strings.TrimPrefix(strings.TrimPrefix(strings.TrimSpace(getenv("INSURER_KEY")), "0x"), "0X"); raw != "" {
+		if k, err := crypto.HexToECDSA(raw); err != nil {
+			missing = append(missing, "INSURER_KEY must be a 32-byte hex private key")
+		} else {
+			keys["INSURER_KEY"] = chain.NewSigner(k)
+		}
+	}
 	chainID, err := strconv.ParseUint(chainRaw, 10, 64)
 	if chainRaw != "" && err != nil {
 		missing = append(missing, "CHAIN_ID must be a non-negative integer")
@@ -76,7 +84,7 @@ func demo(ctx context.Context, args []string, getenv func(string) string, out io
 
 	res, err := hero.Run(ctx, hero.Config{
 		APIURL: apiURL, AdminKey: admin, Chain: client,
-		Exporter: keys["EXPORTER_KEY"], Financier: keys["FINANCIER_KEY"], Buyer: keys["BUYER_KEY"],
+		Exporter: keys["EXPORTER_KEY"], Financier: keys["FINANCIER_KEY"], Buyer: keys["BUYER_KEY"], Insurer: keys["INSURER_KEY"],
 		MintTestTokens: *mint, AmountDivisor: *divisor, Pace: *pace, Log: out,
 	})
 	if err != nil {

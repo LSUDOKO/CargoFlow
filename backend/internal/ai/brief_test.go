@@ -44,3 +44,30 @@ func TestBriefCarriesOnlyNumbersAndEnums(t *testing.T) {
 		t.Fatalf("%+v", b)
 	}
 }
+
+func TestBriefCarriesHumidityAndShockAgainstTheirLimits(t *testing.T) {
+	l := limits
+	l.MaxHumidityX100, l.MaxShockX100 = 8500, 300
+	r := evidence.Result{Score: 97, Compliant: true, ConflictBps: 100, ReadingCount: 16, SensorCount: 2,
+		MaxHumidityX100: 9200, MaxShockX100: 120}
+	det := decision.Decide(r, 500, l)
+	b := ai.NewBrief(shipment, r, 500, l, det)
+	if b.MaxHumidityX100 != 9200 || b.MaxShockX100 != 120 || b.HumidityLimitX100 != 8500 || b.ShockLimitX100 != 300 {
+		t.Fatalf("%+v", b)
+	}
+	if len(b.DeterministicReasons) != 1 || b.DeterministicReasons[0] != "HUMIDITY_LIMIT" {
+		t.Fatalf("reasons = %v", b.DeterministicReasons)
+	}
+	raw, _ := json.Marshal(b)
+	for _, k := range []string{`"maxHumidityX100":9200`, `"maxShockX100":120`, `"humidityLimitX100":8500`, `"shockLimitX100":300`} {
+		if !strings.Contains(string(raw), k) {
+			t.Fatalf("brief JSON lacks %s: %s", k, raw)
+		}
+	}
+	// the model may name the new reasons
+	reply := `{"shipmentId":"` + shipment + `","severity":"CRITICAL","action":"PAUSE_FACILITY","reasonCode":"HUMIDITY_LIMIT",` +
+		`"confidence":0.9,"evidence":{"score":97,"conflictBps":100,"riskBps":500},"requestedNextStep":"PAUSE_FACILITY","explanation":"humid"}`
+	if _, err := ai.ParseAssessment([]byte(reply), b); err != nil {
+		t.Fatalf("HUMIDITY_LIMIT must be an allowed reason code: %v", err)
+	}
+}

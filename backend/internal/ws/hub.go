@@ -26,6 +26,10 @@ const (
 	FinancingResumed    = "FINANCING_RESUMED"
 	DeliveryConfirmed   = "DELIVERY_CONFIRMED"
 	FacilitySettled     = "FACILITY_SETTLED"
+	// MilestoneHeld: evidence passed but the cargo is outside the next milestone's place; the release waits.
+	MilestoneHeld = "MILESTONE_HELD"
+	// CoverUpdated: a default-cover offer, acceptance, release or claim was indexed.
+	CoverUpdated = "COVER_UPDATED"
 )
 
 // Event is one message to clients. Seq is assigned by the hub and increases across all events, so a

@@ -70,30 +70,31 @@ Public reads need no credentials. Everything that writes is authenticated.
 | Method and path | Auth | Purpose |
 |---|---|---|
 | `GET /v1/health` | none | database and chain reachability, head block |
-| `GET /v1/config` | none | chain id, USDG decimals, contract addresses, and which optional integrations are on: `alerts {webhook, telegram, email, telegramBot}`, `gasDrip`, `ais` |
+| `GET /v1/config` | none | chain id, USDG decimals, contract addresses (with `coverPool` on a v2 deployment), and which optional integrations are on: `alerts {webhook, telegram, email, telegramBot}`, `gasDrip`, `ais` |
 | `GET /v1/stats` | none | shipments by status, committed epochs, verified proofs |
 | `POST /v1/sources` | admin key | register an evidence source (Ed25519 public key, its sensors, reliability) |
 | `POST /v1/shipments` | admin key | mirror a shipment that already exists on chain |
-| `POST /v1/shipments/mirror` | none, 30/min per client | the same mirroring for the web app; safe because nothing the chain does not confirm is stored; a repeat returns the existing record |
-| `GET /v1/shipments`, `GET /v1/shipments/{id}` | none | list (filters: `party=0x..`, `ref=`, `status=PAUSED,DISPUTED`; `limit` up to 200, `offset`); combined view (store + live chain state) |
+| `POST /v1/shipments/mirror` | none, 30/min per client | the same mirroring for the web app; safe because nothing the chain does not confirm is stored; a repeat returns the existing record. Optional `placeLabels: ["", "", "Colombo"]` names milestone places by index (display only, plain text up to 64 characters; the first labels stored stand, a repeat only fills them in when none were stored) |
+| `GET /v1/shipments`, `GET /v1/shipments/{id}` | none | list (filters: `party=0x..`, `ref=`, `status=PAUSED,DISPUTED`; `limit` up to 200, `offset`); combined view (store + live chain state): `{shipment, milestones, facility, latestEvidence, quarantinedReadings, usdgDecimals, cover, openCoverOffers}` (see [contracts v2](#contracts-v2-places-humidity-and-shock-default-cover)) |
+| `GET /v1/shipments/{id}/cover` | none | default cover: `{offers:[{insurer, amount, premiumBps, createdAt}], cover:{insurer, financier, amount, premium, status, financierPayout, insurerReturn}\|null}`; open offers only, amounts in base units, `status` `ACTIVE`, `RELEASED` or `CLAIMED` |
 | `POST /v1/shipments/{id}/telemetry` | **signed by a source** | submit up to 500 readings, none dated more than 5 minutes ahead; each shipment accepts at most 20,000 readings an hour across all its sources, which bounds the evidence commits the worker pays for |
 | `POST /v1/shipments/{id}/sources` | **the exporter's wallet signature** | register an evidence gateway (Ed25519 public key and its sensors) bound to this shipment; a repeat with the same sensors returns it (200), the same key with other sensors is 409; at most 8 per shipment, 20 registrations a minute per shipment |
 | `GET /v1/shipments/{id}/sources` | none | the shipment's evidence gateways |
 | `POST /v1/shipments/{id}/recovery` | **the exporter's wallet signature** | prepare a ZK recovery bound to the exporter's wallet; returns the calldata for `resumeWithProof` (3 per minute per shipment) |
 | `POST /v1/shipments/{id}/proof` | admin key | ZK recovery of a paused facility from a sensor's fresh readings |
-| `GET /v1/shipments/{id}/epochs` | none | evidence epochs (scores and roots; **never raw readings**) |
+| `GET /v1/shipments/{id}/epochs` | none | evidence epochs (scores, roots and the committed aggregates `latE6, lonE6, maxHumidityX100, maxShockX100, heldDistanceM`; **never raw readings**) |
 | `GET /v1/shipments/{id}/telemetry` | none | per-epoch, per-sensor min / mean / max temperature and the latest position; aggregates only |
 | `GET /v1/shipments/{id}/audit` | none | merged, time-ordered trail of chain events, decisions, epochs and sent transactions |
-| `GET /v1/shipments/{id}/track` | none | one centroid per stored epoch, oldest first: `{points:[{epochId, milestoneIndex, sequence, startTime, endTime, latE6, lonE6, minTempX100, maxTempX100, pass, committed}]}`; aggregates only |
-| `GET /v1/shipments/{id}/explanation` | none | why the shipment is where it is: `{status, headline, causes, nextSteps:[{role, action}], forecast:{sensorId, trend, minutesToLimit}\|null, source}`; rule-derived, optionally reworded by the model |
+| `GET /v1/shipments/{id}/track` | none | one centroid per stored epoch, oldest first: `{points:[{epochId, milestoneIndex, sequence, startTime, endTime, latE6, lonE6, minTempX100, maxTempX100, maxHumidityX100, maxShockX100, pass, committed}]}`; aggregates only |
+| `GET /v1/shipments/{id}/explanation` | none | why the shipment is where it is: `{status, headline, causes, nextSteps:[{role, action}], forecast:{sensorId, trend, minutesToLimit}\|null, hold:{milestoneIndex, placeLabel, latE6, lonE6, radiusM, distanceM, message}\|null, source}`; rule-derived, optionally reworded by the model |
 | `POST /v1/shipments/{id}/documents` | **a party's wallet signature** | attest a file by its SHA-256 and keccak256 (the file is never uploaded); 201, or 200 with the existing record when the signer attested that file before; at most 100 per shipment |
 | `GET /v1/shipments/{id}/documents` | none | the attestations, each with `matchesInvoiceHash` (its keccak256 equals the on-chain `invoiceHash`) |
-| `POST /v1/shipments/{id}/subscriptions` | **a party's wallet signature** | subscribe to [alerts](#alerts) by webhook, Telegram or email; 503 `channel_unavailable` for a channel without credentials; at most 10 per address per shipment |
+| `POST /v1/shipments/{id}/subscriptions` | **a party's (or an offering / covering insurer's) wallet signature** | subscribe to [alerts](#alerts) by webhook, Telegram or email; 503 `channel_unavailable` for a channel without credentials; at most 10 per address per shipment |
 | `GET /v1/shipments/{id}/subscriptions?address=0x..` | none | that address's subscriptions, targets masked |
 | `DELETE /v1/shipments/{id}/subscriptions/{sid}` | **the subscriber's wallet signature** | remove a subscription; answers `{id, deleted: true}` |
 | `POST /v1/shipments/{id}/vessel` | **the exporter's wallet signature** | name the vessel by its 9-digit MMSI (and a display name); naming it again replaces it (200) |
 | `GET /v1/shipments/{id}/vessel` | none | `{mmsi, name, live, last, track, crossCheck}`; 404 when no vessel is named |
-| `GET /v1/parties/{address}` | none | an address's track record as exporter, financier and buyer, and a grade (`A`, `B`, `C` or `new`) |
+| `GET /v1/parties/{address}` | none | an address's track record as exporter, financier, buyer and insurer (`insurer: {offered, active, released, claimed, coverWritten, premiumsEarned, paidOut}`), and a grade (`A`, `B`, `C` or `new`) |
 | `POST /v1/requests` | **the exporter's wallet signature** | post a [financing request](#financing-marketplace) for a mirrored, policy-set shipment without a facility |
 | `GET /v1/requests?status=&exporter=` | none | requests newest first, with their offers cheapest first |
 | `POST /v1/requests/{rid}/offers` | **a financier's wallet signature** | offer a fee (anyone but the exporter and buyer); offering again replaces your fee (200) |
@@ -103,9 +104,15 @@ Public reads need no credentials. Everything that writes is authenticated.
 | `GET /v1/ws?shipment=0x..` | none | WebSocket event stream |
 
 **Shipment registration mirrors the chain.** The caller supplies only the id, the external reference, the
-route and two off-chain scoring parameters. Parties, invoice value, commitments and policy are *read from the
-chain*, and the request is refused if the reference does not hash to the id or the route does not match the
-on-chain route commitment.
+route and two off-chain scoring parameters (and optional place labels). Parties, invoice value, commitments,
+policy (including the v2 humidity and shock limits) and milestone places are *read from the chain*, and the request
+is refused if the reference does not hash to the id, the route does not match the on-chain route commitment, or
+the revealed policy does not hash (`hashPolicy`) to the registry's policy commitment.
+
+**Contract errors** come back as 409 `chain_rejected` with the revert name and a plain explanation, for example
+`the contract rejected the action: OutsideMilestonePlace: the cargo is not yet within the milestone's place; the
+milestone waits for evidence from there` (`internal/chain/revert_message.go` covers every controller, registry,
+policy, vault and CoverPool error, including `EvidenceBelowPolicy` and `InvalidMilestonePlace`).
 
 **Source authentication.** A source signs each submission with Ed25519; the database stores only its public
 key, so a leak exposes nothing that could forge data. Headers: `X-Source-Id`, `X-Timestamp` (unix seconds,
@@ -155,7 +162,10 @@ a generic 500 and never leak internals.
 
 `TELEMETRY_EPOCH_ADDED`, `EVIDENCE_UPDATED`, `RISK_UPDATED` (from the evidence pipeline) and `SHIPMENT_UPDATED`,
 `MILESTONE_RELEASED`, `FINANCING_PAUSED`, `PROOF_VERIFIED`, `FINANCING_RESUMED`, `DELIVERY_CONFIRMED`,
-`FACILITY_SETTLED` (from the chain). Each carries a hub-assigned `seq`; chain-derived events include `txHash`
+`FACILITY_SETTLED`, `COVER_UPDATED` (from the chain; data `{change: CoverOffered|OfferWithdrawn|CoverAccepted|CoverReleased|CoverClaimed,
+insurer, financier, amount, premiumBps, premium, loss, payout, remainder}` as present) and `MILESTONE_HELD` (from the
+evidence pipeline: `{milestoneIndex, sequence, epochId, distanceM, latE6, lonE6, radiusM, placeLabel, placeLatE6,
+placeLonE6, message}`). Each carries a hub-assigned `seq`; chain-derived events include `txHash`
 and `logIndex` so a client can drop a redelivered duplicate. A client that cannot keep up is dropped with
 close code 1013 and should refetch over REST and reconnect.
 
@@ -171,9 +181,10 @@ the chain does.
 
 ## Alerts
 
-Shipment parties subscribe to `PAUSED`, `RELEASED`, `RESUMED`, `DISPUTED`, `DELIVERED`, `SETTLED` and `DEFAULTED`
-(from `FinancingPaused`, `MilestoneAdvanceReleased`, `FinancingResumed`, `DisputeOpened`, `DeliveryConfirmed`,
-`FacilitySettled` and `DefaultDeclared`). The chain-event sink only queues alerts; a dispatcher delivers them, three
+Shipment parties subscribe to `PAUSED`, `RELEASED`, `RESUMED`, `DISPUTED`, `DELIVERED`, `SETTLED`, `DEFAULTED`,
+`COVER_OFFERED`, `COVER_ACCEPTED` and `COVER_CLAIMED` (from `FinancingPaused`, `MilestoneAdvanceReleased`,
+`FinancingResumed`, `DisputeOpened`, `DeliveryConfirmed`, `FacilitySettled`, `DefaultDeclared`, `CoverOffered`,
+`CoverAccepted` and `CoverClaimed`). An insurer with an open offer or the accepted cover may subscribe too. The chain-event sink only queues alerts; a dispatcher delivers them, three
 attempts with doubling backoff, and records each (subscription, event) once so a redelivered chain event never
 alerts twice.
 
@@ -245,6 +256,40 @@ discipline as the monitor: it receives only the rule text (numbers and fixed phr
 text), every number of each sentence must survive, the count and order of causes must match, and the next steps
 and forecast are never sent to it. Rewrites are cached by their input and the model is called at most 30 times a
 minute; any failure serves the rule wording (`source: "rules"`).
+
+## Contracts v2: places, humidity and shock, default cover
+
+The backend follows contracts v2 (`docs/superpowers/plans/2026-10-03-contracts-v2.md`); the ABIs are re-exported
+with `make abi`. A v1 manifest (no `contracts.coverPool`) still loads: cover features are then off.
+
+- **Policy limits.** `maxHumidityX100` (% x 100) and `maxShockX100` (g x 100), 0 = no limit, are part of the policy
+  commitment and mirrored into `shipment.policy`. The evidence engine reports each epoch's maxima; the policy gate
+  pauses when one exceeds its limit with reason **`HUMIDITY_LIMIT`** or **`SHOCK_LIMIT`** (a physical failure,
+  like `NOT_COMPLIANT`). The AI brief carries `maxHumidityX100`, `maxShockX100`, `humidityLimitX100` and
+  `shockLimitX100`, and the model may name both reasons. The temperature proof cannot clear such a pause, so the
+  explanation points to the arbiter, and a recovery epoch must also be within the limits.
+- **Epoch aggregates.** Every epoch stores and commits (`commitEpoch(..., telemetry)`) its centroid, the mean
+  reading position rounded to the nearest microdegree (longitudes straddling the antimeridian averaged on a 0..360
+  circle, as in `/track`), and its humidity and shock maxima. Only these aggregates reach the chain.
+- **Place-based milestones.** A milestone with `radiusM > 0` releases only on evidence whose centroid lies within
+  `radiusM` of `(latE6, lonE6)`. Milestones in the shipment view carry `latE6, lonE6, radiusM, placeLabel`.
+  Before sending a release the backend asks the controller (`placeCheck`, whose distance is the one that counts);
+  when the place is required and the epoch is outside it, nothing is sent: the epoch's decision becomes
+  **`HELD_NOT_AT_PLACE`** with `heldDistanceM`, a monitoring event joins the audit trail, `MILESTONE_HELD` goes to
+  dashboards and `/explanation` says, for example, *"Milestone 3 waits until the cargo is within 50 km of Colombo; it
+  is 412 km away"*. A hold is neither a failure nor a pause; the reconciler never resends a held release, and the
+  first passing epoch from inside the place releases the milestone. A ZK recovery from outside the place is refused
+  before anything is paid for (`geo.PlaceDistanceM` is a bit-exact port of `GeoDistance.distanceM`, checked against
+  `placeCheck` in the chain tests).
+- **Default cover.** CoverPool events are indexed and folded, in chain order, into `cover_offers` and `covers`
+  (rebuilt from `chain_events` on every cover event, so redelivery and reorg rewinds are harmless), served by
+  `GET /v1/shipments/{id}/cover`, summarised in the shipment view (`cover`, `openCoverOffers`) and in the party
+  record's `insurer` section.
+
+Decision actions recorded on an epoch: `APPROVE_ADVANCE`, `REQUEST_SECONDARY_PROOF`, `PAUSE_FACILITY`,
+`HELD_NOT_AT_PLACE`, and `SKIPPED_<reason>` for epochs observed while no milestone could be evaluated. Reasons:
+`SCORE_BELOW_THRESHOLD`, `NOT_COMPLIANT`, `CONFLICT_TOO_HIGH`, `RISK_TOO_HIGH`, `HUMIDITY_LIMIT`, `SHOCK_LIMIT`,
+`FRAUD_SIGNALS`, `AI_REQUESTED`, in that order.
 
 ## Operational guarantees
 
@@ -325,7 +370,7 @@ Runs are reproducible: the same `-seed` gives byte-identical output.
 | `internal/config` | validated environment configuration with unprintable secrets |
 | `internal/telemetry` | `Point` (fixed-point), stateless validation, stateful ordering / replay / equivocation gate |
 | `internal/simulator` | seeded, deterministic scenario generator |
-| `internal/geo` | integer-only distance and point-to-route deviation |
+| `internal/geo` | integer-only distance, point-to-route deviation, and the bit-exact port of the contracts' `GeoDistance` |
 | `internal/evidence` | per-reading mass, Dempster-Shafer `Combine` with conflict factor, fraud signals, 0-100 score |
 | `internal/risk` | six-factor risk model (0.25 / 0.20 / 0.20 / 0.15 / 0.10 / 0.10) |
 | `internal/merkle` | Poseidon Merkle tree (circomlib-compatible), salted reading leaves |
@@ -339,7 +384,10 @@ Runs are reproducible: the same `-seed` gives byte-identical output.
 Unit tests run anywhere. Integration tests start a **real anvil chain, deploy the real contracts, and use a
 real Postgres schema**; they skip (not fail) when Foundry or `TEST_DATABASE_URL` is missing. The capstone,
 `cmd/cargoflow/e2e_test.go`, launches the real `serve` command and drives the whole demo story over HTTP and
-WebSocket, from registration to settlement, asserting the 98,800 / 41,200 USDG outcome.
+WebSocket, from registration to settlement, asserting the 98,800 / 41,200 USDG outcome. Against the v2 deployment
+it also runs default cover (offered and accepted before transit, released to the insurer after settlement) and a
+last milestone placed at Singapore with a 100 km radius, which is held while the cargo is at sea and released when it
+arrives. `make demo` does the same; set `INSURER_KEY` to include the cover.
 
 ```bash
 createdb cargoflow_test

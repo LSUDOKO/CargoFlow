@@ -1,6 +1,7 @@
 // Package hero runs the CargoFlow demo story end to end against a running backend and a chain:
 //
-//	fund -> two healthy milestones -> thermal anomaly -> pause -> ZK recovery -> last milestones -> delivery -> settlement
+//	fund (+ default cover) -> two healthy milestones -> thermal anomaly -> pause -> ZK recovery -> milestone 4 ->
+//	milestone 5 held until the cargo reaches the destination port -> arrival releases it -> delivery -> settlement
 //
 // It acts as the exporter, financier and buyer with their own wallets (real transactions) and talks to the
 // backend only through its public API, exactly as a customer integration would. It is used by the
@@ -35,6 +36,19 @@ const (
 	ExporterReceivedUSDG = 98_800
 	// FinancierReceivedUSDG is the 40,000 principal plus the 1,200 fee.
 	FinancierReceivedUSDG = 41_200
+	// With an insurer: 20,000 of default cover at 1.5%, a 300 premium the financier pays the insurer up front.
+	CoverUSDG        = 20_000
+	CoverPremiumBps  = 150
+	CoverPremiumUSDG = 300
+	// The last milestone only releases on evidence from within 100 km of the destination port.
+	DestinationRadiusM = 100_000
+	DestinationLabel   = "Singapore"
+)
+
+// Destination is the port at the end of the committed route (Singapore), where the last milestone is placed.
+var (
+	OriginLatE6, OriginLonE6           int32 = 18_950_000, 72_950_000
+	DestinationLatE6, DestinationLonE6 int32 = 1_264_000, 103_820_000
 )
 
 const stepSeconds = 10 // seconds between readings: a whole journey fits inside the chain's freshness window
@@ -46,6 +60,10 @@ type Config struct {
 	Chain    *chain.Client
 
 	Exporter, Financier, Buyer *chain.Signer
+
+	// Insurer, when set and the deployment has a CoverPool, offers default cover before transit; the financier
+	// accepts it (paying the premium) and the cover returns to the insurer after settlement.
+	Insurer *chain.Signer
 
 	// MintTestTokens mints USDG to the financier and buyer. Only a mock token can do this; with the real
 	// USDG the wallets must already hold 40,000 and 100,000 (from the Paxos faucet).
@@ -69,6 +87,8 @@ type Result struct {
 	ExporterReceived             *big.Int // base units
 	FinancierReceived            *big.Int
 	PauseCount                   int
+	HoldMessage                  string // why milestone 5 waited before the cargo reached the destination port
+	CoverStatus                  string // the default cover's final status ("" without an insurer)
 	TransactionHashes            []string
 	SettledAfterSeconds          float64
 	exporterBefore, financierBef *big.Int
@@ -105,14 +125,17 @@ func validDivisor(div int64) error {
 	if div < 1 {
 		return fmt.Errorf("hero: amount divisor must be at least 1, got %d", div)
 	}
-	for _, n := range []int64{TrancheUSDG, CommittedUSDG, InvoiceUSDG, ExporterReceivedUSDG, FinancierReceivedUSDG} {
+	for _, n := range []int64{TrancheUSDG, CommittedUSDG, InvoiceUSDG, ExporterReceivedUSDG, FinancierReceivedUSDG, CoverUSDG, CoverPremiumUSDG} {
 		if (n*1_000_000)%div != 0 {
 			return fmt.Errorf("hero: divisor %d does not divide %d USDG into whole base units", div, n)
 		}
 	}
-	// the 3% fee must stay exact too
+	// the 3% fee and the cover premium must stay exact too
 	if (CommittedUSDG*1_000_000/div)*FeeBps%10_000 != 0 {
 		return fmt.Errorf("hero: divisor %d makes the fee inexact", div)
+	}
+	if (CoverUSDG*1_000_000/div)*CoverPremiumBps%10_000 != 0 {
+		return fmt.Errorf("hero: divisor %d makes the cover premium inexact", div)
 	}
 	return nil
 }
@@ -185,11 +208,17 @@ func (r *runner) preflight(ctx context.Context) error {
 	if r.cfg.MintTestTokens {
 		return nil
 	}
-	for _, need := range []struct {
+	type need struct {
 		who    string
 		s      *chain.Signer
 		amount int64
-	}{{"financier", r.cfg.Financier, CommittedUSDG}, {"buyer", r.cfg.Buyer, InvoiceUSDG}} {
+	}
+	needs := []need{{"financier", r.cfg.Financier, CommittedUSDG}, {"buyer", r.cfg.Buyer, InvoiceUSDG}}
+	if r.withCover() {
+		needs[0].amount += CoverPremiumUSDG
+		needs = append(needs, need{"insurer", r.cfg.Insurer, CoverUSDG})
+	}
+	for _, need := range needs {
 		bal, err := r.c.USDGBalance(ctx, need.s.Address())
 		if err != nil {
 			return err
@@ -201,6 +230,9 @@ func (r *runner) preflight(ctx context.Context) error {
 	}
 	return nil
 }
+
+// withCover reports whether this run includes default cover.
+func (r *runner) withCover() bool { return r.cfg.Insurer != nil && r.c.HasCoverPool() }
 
 func formatUSDG(v *big.Int) string {
 	if v == nil {

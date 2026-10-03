@@ -49,6 +49,8 @@ type EpochOutcome struct {
 	Skipped        string   `json:"skipped,omitempty"` // set when the epoch was recorded but not evaluated
 	CommitTx       string   `json:"commitTx,omitempty"`
 	ReleaseTx      string   `json:"releaseTx,omitempty"`
+	Held           bool     `json:"held,omitempty"`      // passed, but outside the milestone's place: the release waits
+	DistanceM      uint64   `json:"distanceM,omitempty"` // with Held: metres from the milestone's place
 	PauseTx        string   `json:"pauseTx,omitempty"`
 	Error          string   `json:"error,omitempty"`
 }
@@ -91,7 +93,8 @@ func (s *Service) EpochConfig(sh store.Shipment) (epoch.Config, error) {
 }
 
 func limitsOf(sh store.Shipment) decision.Limits {
-	return decision.Limits{MinScore: sh.Policy.MinEvidenceScore, MaxConflictBps: sh.Policy.MaxConflictBps, MaxRiskBps: sh.Policy.MaxRiskBps}
+	return decision.Limits{MinScore: sh.Policy.MinEvidenceScore, MaxConflictBps: sh.Policy.MaxConflictBps, MaxRiskBps: sh.Policy.MaxRiskBps,
+		MaxHumidityX100: sh.Policy.MaxHumidityX100, MaxShockX100: sh.Policy.MaxShockX100}
 }
 
 // stateFor returns the shipment's pipeline, rebuilding it from durable storage after a restart.
@@ -292,6 +295,7 @@ func (s *Service) handleEpoch(ctx context.Context, sh store.Shipment, e *epoch.E
 			ShipmentID: id, Milestone: uint8(milestone), Seq: uint32(seq), Root: e.RootBytes32Array(),
 			Start: uint64(e.StartTime), End: uint64(e.EndTime), Score: uint32(e.Result.Score),
 			ConflictBps: uint32(e.Result.ConflictBps), RiskBps: uint32(e.RiskBps), Compliant: e.Result.Compliant,
+			Telemetry: chainTelemetry(e.Telemetry),
 		})
 	}, "EpochAlreadyCommitted")
 	if err != nil {
@@ -302,14 +306,21 @@ func (s *Service) handleEpoch(ctx context.Context, sh store.Shipment, e *epoch.E
 	}
 
 	if dec.Pass && out.CommitTx != "" {
-		res, err := s.runAction(ctx, canon, "RELEASE", fmt.Sprintf("release:%s:%d:%d", canon, milestone, seq), func() (chain.TxResult, error) {
-			return s.o.Chain.ReleaseMilestone(ctx, s.o.Manager, id, uint8(milestone), uint32(seq))
-		}, "MilestoneAlreadyReleased")
-		if err != nil {
-			out.Error = joinErr(out.Error, "release: "+err.Error())
+		// A place-based milestone releases only on evidence from inside its place. Ask the controller first
+		// (its distance is the one that counts) rather than send a release that would revert.
+		if hold, ok := s.placeHold(ctx, canon, id, rec); ok {
+			out.Held, out.DistanceM = true, hold
 		} else {
-			released, releaseTx = true, res.Hash.Hex()
-			out.ReleaseTx = releaseTx
+			res, err := s.release(ctx, canon, id, rec)
+			switch {
+			case chain.IsRevert(err, "OutsideMilestonePlace"):
+				out.Held = true
+			case err != nil:
+				out.Error = joinErr(out.Error, "release: "+err.Error())
+			default:
+				released, releaseTx = true, res.Hash.Hex()
+				out.ReleaseTx = releaseTx
+			}
 		}
 	}
 
@@ -433,7 +444,20 @@ func toRecord(canon string, milestone, seq int, epochID, root string, e *epoch.E
 		ConflictBps: e.Result.ConflictBps, RiskBps: e.RiskBps, Compliant: e.Result.Compliant,
 		Penalties: penaltyMap(e.Result.Penalties), DecisionPass: dec.Pass, DecisionAction: string(dec.Action),
 		DecisionReasons: reasonStrings(dec), Points: e.Points,
+		LatE6: e.Telemetry.LatE6, LonE6: e.Telemetry.LonE6,
+		MaxHumidityX100: int(e.Telemetry.MaxHumidityX100), MaxShockX100: int(e.Telemetry.MaxShockX100),
 	}
+}
+
+// chainTelemetry converts an epoch's aggregates into the commitEpoch tuple.
+func chainTelemetry(a telemetry.Aggregates) chain.EpochTelemetry {
+	return chain.EpochTelemetry{LatE6: a.LatE6, LonE6: a.LonE6, MaxHumidityX100: a.MaxHumidityX100, MaxShockX100: a.MaxShockX100}
+}
+
+// recordTelemetry rebuilds the commitEpoch tuple from a stored epoch, clamped to what the contract accepts.
+func recordTelemetry(e store.EpochRecord) chain.EpochTelemetry {
+	return chain.EpochTelemetry{LatE6: e.LatE6, LonE6: e.LonE6,
+		MaxHumidityX100: uint16(min(max(e.MaxHumidityX100, 0), telemetry.MaxHumidityX100)), MaxShockX100: uint16(min(max(e.MaxShockX100, 0), 65_535))}
 }
 
 func penaltyMap(p evidence.Breakdown) map[string]int {

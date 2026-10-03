@@ -36,9 +36,11 @@ Choose exactly one action:
 - REQUEST_SECONDARY_PROOF: the evidence is weak or ambiguous and independent corroboration is needed.
 - PAUSE_FACILITY: the evidence indicates a physical failure, contradictory sensors or manipulation.
 
+Humidity and shock maxima above a non-zero policy limit (humidityLimitX100, shockLimitX100; 0 means no limit) are physical failures.
+
 Reply with one JSON object and nothing else, using exactly these keys:
 {"shipmentId": string (copy from input), "severity": "INFO"|"WARNING"|"CRITICAL", "action": one of the three actions,
-"reasonCode": "OK"|"SCORE_BELOW_THRESHOLD"|"NOT_COMPLIANT"|"CONFLICT_TOO_HIGH"|"RISK_TOO_HIGH"|"FRAUD_SIGNALS"|"SENSOR_PATTERN_ANOMALY",
+"reasonCode": "OK"|"SCORE_BELOW_THRESHOLD"|"NOT_COMPLIANT"|"CONFLICT_TOO_HIGH"|"RISK_TOO_HIGH"|"HUMIDITY_LIMIT"|"SHOCK_LIMIT"|"FRAUD_SIGNALS"|"SENSOR_PATTERN_ANOMALY",
 "confidence": number between 0 and 1, "evidence": {"score": int, "conflictBps": int, "riskBps": int} (copy the input values exactly),
 "requestedNextStep": "NONE"|"REQUEST_SECONDARY_PROOF"|"PAUSE_FACILITY", "explanation": string of at most 300 characters}`
 

@@ -56,6 +56,11 @@ func (c *Client) contract(name string) (common.Address, string, error) {
 		return c.M.USDG, "ERC20", nil
 	case "access":
 		return c.M.Access, "AccessControl", nil
+	case "cover":
+		if !c.HasCoverPool() {
+			return common.Address{}, "", ErrNoCoverPool
+		}
+		return c.M.CoverPool, "CoverPool", nil
 	}
 	return common.Address{}, "", fmt.Errorf("chain: unknown contract %q", name)
 }

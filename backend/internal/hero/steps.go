@@ -27,7 +27,7 @@ const (
 	SceneHealthy   = "healthy"   // 16 readings: two milestones release
 	SceneExcursion = "excursion" // 8 readings: the primary probe overheats, the facility pauses
 	SceneRecover   = "recover"   // 8 core-probe readings and a zero-knowledge proof resume the facility
-	SceneFinish    = "finish"    // 16 readings: milestones 4 and 5 release
+	SceneFinish    = "finish"    // 24 readings: milestone 4 releases, milestone 5 waits at sea, then releases on arrival
 	SceneSettle    = "settle"    // delivery confirmed, invoice paid, waterfall settles
 )
 
@@ -175,6 +175,13 @@ type view struct {
 		NextMilestone int    `json:"nextMilestone"`
 		PauseCount    int    `json:"pauseCount"`
 	} `json:"facility"`
+	LatestEvidence *struct {
+		MilestoneIndex int    `json:"milestoneIndex"`
+		DecisionAction string `json:"decisionAction"`
+	} `json:"latestEvidence"`
+	Cover *struct {
+		Status string `json:"status"`
+	} `json:"cover"`
 }
 
 // runScene performs one scene and reports the facility state afterwards.
@@ -223,9 +230,10 @@ func (r *runner) setup(ctx context.Context) error {
 	if err := r.preflight(ctx); err != nil {
 		return err
 	}
+	// v2 policy: besides the 2-8 C band, relative humidity may not exceed 85% and shocks 3 g
 	policy := chain.Policy{MinTempX100: 200, MaxTempX100: 800, MaxEvidenceAgeSec: 1800, MaxRouteDeviationM: 25_000,
-		MinEvidenceScore: 75, MaxConflictBps: 3000, MaxRiskBps: 3500}
-	route := []store.RoutePoint{{LatE6: 18_950_000, LonE6: 72_950_000}, {LatE6: 1_264_000, LonE6: 103_820_000}}
+		MinEvidenceScore: 75, MaxConflictBps: 3000, MaxRiskBps: 3500, MaxHumidityX100: 8500, MaxShockX100: 300}
+	route := []store.RoutePoint{{LatE6: OriginLatE6, LonE6: OriginLonE6}, {LatE6: DestinationLatE6, LonE6: DestinationLonE6}}
 	ref := fmt.Sprintf("%s-%d", r.cfg.RefPrefix, time.Now().UnixNano()/1e6)
 	commitment, err := c.HashPolicy(ctx, policy)
 	if err != nil {
@@ -252,6 +260,8 @@ func (r *runner) setup(ctx context.Context) error {
 	for i := range ms {
 		ms[i] = chain.MilestoneSpec{Allocation: r.amt(TrancheUSDG), EvidenceThreshold: 75, CheckpointCommitment: [32]byte{byte(i + 1)}}
 	}
+	// the last tranche is paid at the destination port: only evidence from within 100 km of it releases it
+	ms[4].LatE6, ms[4].LonE6, ms[4].RadiusM = DestinationLatE6, DestinationLonE6, DestinationRadiusM
 	type step struct {
 		label  string
 		signer *chain.Signer
@@ -271,8 +281,22 @@ func (r *runner) setup(ctx context.Context) error {
 	steps = append(steps,
 		step{"approve vault (financier)", r.cfg.Financier, "usdg", "approve", []any{c.M.Vault, r.amt(CommittedUSDG)}},
 		step{fmt.Sprintf("depositCapital %s USDG", r.label(CommittedUSDG)), r.cfg.Financier, "controller", "depositCapital", []any{id}},
-		step{"startTransit", r.cfg.Exporter, "controller", "startTransit", []any{id}},
 	)
+	if r.withCover() {
+		// default cover can only be offered and accepted before transit
+		ins := r.cfg.Insurer
+		if r.cfg.MintTestTokens {
+			steps = append(steps,
+				step{"mint test USDG to insurer", ins, "usdg", "mint", []any{ins.Address(), r.amt(CoverUSDG)}},
+				step{"mint test USDG for the premium", r.cfg.Financier, "usdg", "mint", []any{r.cfg.Financier.Address(), r.amt(CoverPremiumUSDG)}})
+		}
+		steps = append(steps,
+			step{"approve cover pool (insurer)", ins, "usdg", "approve", []any{c.M.CoverPool, r.amt(CoverUSDG)}},
+			step{fmt.Sprintf("offerCover %s USDG at %s", r.label(CoverUSDG), percentBps(CoverPremiumBps)), ins, "cover", "offerCover", []any{id, r.amt(CoverUSDG), uint16(CoverPremiumBps)}},
+			step{"approve cover pool (financier)", r.cfg.Financier, "usdg", "approve", []any{c.M.CoverPool, r.amt(CoverPremiumUSDG)}},
+			step{fmt.Sprintf("acceptCover (premium %s USDG)", r.label(CoverPremiumUSDG)), r.cfg.Financier, "cover", "acceptCover", []any{id, ins.Address()}})
+	}
+	steps = append(steps, step{"startTransit", r.cfg.Exporter, "controller", "startTransit", []any{id}})
 	for _, s := range steps {
 		if err := r.tx(ctx, s.label, s.signer, s.cname, s.method, s.args...); err != nil {
 			return err
@@ -289,7 +313,7 @@ func (r *runner) setup(ctx context.Context) error {
 		return fmt.Errorf("register evidence source: %w", err)
 	}
 	if err := r.api(ctx, "POST", "/v1/shipments", true, map[string]any{"shipmentId": r.shipmentHex, "externalRef": ref,
-		"route": route, "maxGapSec": 1800, "minSensors": 2}, nil); err != nil {
+		"route": route, "maxGapSec": 1800, "minSensors": 2, "placeLabels": []string{"", "", "", "", DestinationLabel}}, nil); err != nil {
 		return fmt.Errorf("register shipment with the backend: %w", err)
 	}
 	return nil
@@ -297,6 +321,12 @@ func (r *runner) setup(ctx context.Context) error {
 
 // send generates n simulator steps of a scenario continuing the journey, timed to end just before now.
 func (r *runner) send(ctx context.Context, sc simulator.Scenario, n int, sensors ...string) error {
+	return r.sendAt(ctx, sc, n, false, sensors...)
+}
+
+// sendAt is send; with atDestination the readings are moved to the destination port, as if the voyage had
+// arrived (the simulated lane is thousands of kilometres long and the demo only plays minutes of it).
+func (r *runner) sendAt(ctx context.Context, sc simulator.Scenario, n int, atDestination bool, sensors ...string) error {
 	now, err := r.c.BlockTime(ctx)
 	if err != nil {
 		return err
@@ -306,6 +336,13 @@ func (r *runner) send(ctx context.Context, sc simulator.Scenario, n int, sensors
 		IntervalSec: stepSeconds, Steps: n, StartStep: r.step, Sensors: sensors})
 	if err != nil {
 		return err
+	}
+	if atDestination && len(pts) > 0 {
+		dLat, dLon := DestinationLatE6-pts[0].LatitudeE6, DestinationLonE6-pts[0].LongitudeE6
+		for i := range pts {
+			pts[i].LatitudeE6 += dLat
+			pts[i].LongitudeE6 += dLon
+		}
 	}
 	out := make([]map[string]any, len(pts))
 	for i, p := range pts {
@@ -388,10 +425,42 @@ func (r *runner) recover(ctx context.Context) error {
 }
 
 func (r *runner) finish(ctx context.Context) error {
-	if err := r.scene(ctx, "Scene 6 - the remaining milestones release"); err != nil {
+	if err := r.scene(ctx, "Scene 6 - milestone 4 releases; milestone 5 waits for the destination port"); err != nil {
 		return err
 	}
-	if err := r.send(ctx, simulator.Normal, 16); err != nil {
+	if err := r.send(ctx, simulator.Normal, 8); err != nil {
+		return err
+	}
+	if _, err := r.waitView(ctx, "milestone 4", func(v view) bool { return v.Facility.NextMilestone == 4 }); err != nil {
+		return err
+	}
+	// still at sea: the evidence passes but its centroid is thousands of kilometres from the port, so it is held
+	if err := r.send(ctx, simulator.Normal, 8); err != nil {
+		return err
+	}
+	if _, err := r.waitView(ctx, "the held milestone", func(v view) bool {
+		return v.LatestEvidence != nil && v.LatestEvidence.MilestoneIndex == 4 && v.LatestEvidence.DecisionAction == "HELD_NOT_AT_PLACE"
+	}); err != nil {
+		return err
+	}
+	var x struct {
+		Hold *struct {
+			Message string `json:"message"`
+		} `json:"hold"`
+	}
+	if err := r.api(ctx, "GET", "/v1/shipments/"+r.shipmentHex+"/explanation", false, nil, &x); err != nil {
+		return err
+	}
+	if x.Hold == nil {
+		return errors.New("the explanation does not say why milestone 5 waits")
+	}
+	r.res.HoldMessage = x.Hold.Message
+	r.say("  %s", x.Hold.Message)
+
+	if err := r.scene(ctx, "Scene 6b - the cargo arrives at %s: milestone 5 releases", DestinationLabel); err != nil {
+		return err
+	}
+	if err := r.sendAt(ctx, simulator.Normal, 8, true); err != nil {
 		return err
 	}
 	_, err := r.waitView(ctx, "all five tranches", func(v view) bool {
@@ -421,6 +490,11 @@ func (r *runner) settle(ctx context.Context) error {
 	if _, err := r.waitView(ctx, "settlement", func(v view) bool { return v.Facility.Status == "SETTLED" }); err != nil {
 		return err
 	}
+	if r.withCover() {
+		if err := r.releaseCover(ctx); err != nil {
+			return err
+		}
+	}
 	exporterAfter, _ := r.c.USDGBalance(ctx, r.cfg.Exporter.Address())
 	financierAfter, _ := r.c.USDGBalance(ctx, r.cfg.Financier.Address())
 	r.res.ExporterReceived = new(big.Int).Sub(exporterAfter, r.res.exporterBefore)
@@ -434,4 +508,27 @@ func (r *runner) settle(ctx context.Context) error {
 			formatUSDG(r.res.ExporterReceived), r.label(ExporterReceivedUSDG), formatUSDG(r.res.FinancierReceived), r.label(FinancierReceivedUSDG))
 	}
 	return nil
+}
+
+// releaseCover returns the default cover to the insurer once the facility has settled, and the insurer pulls it.
+func (r *runner) releaseCover(ctx context.Context) error {
+	if err := r.tx(ctx, "release cover", r.cfg.Buyer, "cover", "release", r.id); err != nil {
+		return err
+	}
+	if err := r.tx(ctx, "withdraw (insurer)", r.cfg.Insurer, "cover", "withdraw"); err != nil {
+		return err
+	}
+	v, err := r.waitView(ctx, "the released cover", func(v view) bool { return v.Cover != nil && v.Cover.Status == "RELEASED" })
+	if err != nil {
+		return err
+	}
+	r.res.CoverStatus = v.Cover.Status
+	r.say("  default cover RELEASED: %s USDG back to the insurer, who kept the %s premium", r.label(CoverUSDG), r.label(CoverPremiumUSDG))
+	return nil
+}
+
+// percentBps renders basis points as a percentage, e.g. 150 -> "1.5%".
+func percentBps(bps int) string {
+	s := strconv.FormatFloat(float64(bps)/100, 'f', -1, 64)
+	return s + "%"
 }

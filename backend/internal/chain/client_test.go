@@ -76,6 +76,22 @@ func TestLoadManifestRejectsIncompleteOrMalformedFiles(t *testing.T) {
 	}
 }
 
+func TestLoadManifestReadsTheOptionalCoverPool(t *testing.T) {
+	m, err := chain.LoadManifest(writeManifest(t, goodManifest))
+	if err != nil || m.CoverPool != (common.Address{}) {
+		t.Fatalf("a v1 manifest must load without a cover pool: %+v, %v", m, err)
+	}
+	v2 := strings.Replace(goodManifest, `"access":`, `"coverPool": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6", "access":`, 1)
+	m, err = chain.LoadManifest(writeManifest(t, v2))
+	if err != nil || m.CoverPool != common.HexToAddress("0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6") {
+		t.Fatalf("v2 manifest: %+v, %v", m, err)
+	}
+	bad := strings.Replace(goodManifest, `"access":`, `"coverPool": "0xNOPE", "access":`, 1)
+	if _, err := chain.LoadManifest(writeManifest(t, bad)); err == nil || !strings.Contains(err.Error(), "coverPool") {
+		t.Fatalf("a malformed cover pool must be named, got %v", err)
+	}
+}
+
 func dial(t *testing.T) (*chain.Client, *chaintest.Env) {
 	t.Helper()
 	env := chaintest.Start(t)

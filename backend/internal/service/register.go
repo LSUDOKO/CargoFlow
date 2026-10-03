@@ -6,6 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"regexp"
+	"strings"
+	"unicode/utf8"
 
 	"github.com/ethereum/go-ethereum/crypto"
 
@@ -29,6 +32,9 @@ type ShipmentInput struct {
 	Route       []store.RoutePoint // optional; if given it must match the on-chain route commitment
 	MaxGapSec   int                // off-chain scoring: longest tolerated silence between readings
 	MinSensors  int                // off-chain scoring: independent sensors the policy requires
+	// PlaceLabels are display names for the milestone places, by milestone index ("" for none). They are
+	// cosmetic: the place itself (coordinates and radius) is always read from the chain.
+	PlaceLabels []string
 
 	// DeriveScoring ignores MaxGapSec and MinSensors and derives them from the on-chain policy instead, and
 	// requires the route. Public (unauthenticated) callers must use it: the off-chain scoring parameters gate
@@ -85,6 +91,17 @@ func (s *Service) RegisterShipment(ctx context.Context, in ShipmentInput) (store
 	case err != nil:
 		return store.Shipment{}, err
 	}
+	// The policy engine only accepts a policy that hashes to the registry's commitment; check it anyway, so a
+	// mirror never stores limits the shipment did not commit to (for example after an ABI mismatch).
+	if h, err := s.o.Chain.HashPolicy(ctx, pol); err != nil {
+		return store.Shipment{}, err
+	} else if h != onchain.PolicyCommitment {
+		return store.Shipment{}, fmt.Errorf("%w: the revealed policy does not match the shipment's policy commitment", ErrInvalid)
+	}
+	labels, err := cleanPlaceLabels(in.PlaceLabels)
+	if err != nil {
+		return store.Shipment{}, err
+	}
 
 	if in.DeriveScoring {
 		in.MaxGapSec, in.MinSensors = int(pol.MaxEvidenceAgeSec), publicMinSensors
@@ -102,13 +119,21 @@ func (s *Service) RegisterShipment(ctx context.Context, in ShipmentInput) (store
 			MaxGapSec: in.MaxGapSec, MaxRouteDeviationM: int(pol.MaxRouteDeviationM),
 			MinEvidenceScore: int(pol.MinEvidenceScore), MaxConflictBps: int(pol.MaxConflictBps),
 			MaxRiskBps: int(pol.MaxRiskBps), RequiresZK: pol.RequiresZK, MinSensors: in.MinSensors,
+			MaxHumidityX100: int(pol.MaxHumidityX100), MaxShockX100: int(pol.MaxShockX100),
 		},
-		Route: in.Route,
+		Route:       in.Route,
+		PlaceLabels: labels,
 	}
 	if err := s.o.Store.CreateShipment(ctx, sh, nil); err != nil {
 		if errors.Is(err, store.ErrConflict) {
 			return store.Shipment{}, ErrConflict
 		}
+		return store.Shipment{}, err
+	}
+
+	// Cover offered or accepted before the mirror existed was indexed but not applied: apply it now. Events
+	// indexed later reach the sink, which rebuilds the cover again.
+	if err := s.o.Store.RebuildCover(ctx, canon); err != nil {
 		return store.Shipment{}, err
 	}
 
@@ -143,6 +168,7 @@ func (s *Service) SyncMilestones(ctx context.Context, shipmentID string) error {
 		ms = append(ms, store.Milestone{
 			Index: int(i), AllocatedUSDG: new(big.Int).Set(m.Allocation).String(),
 			EvidenceThreshold: int(m.EvidenceThreshold), CheckpointCommitment: hex32(m.CheckpointCommitment),
+			LatE6: m.LatE6, LonE6: m.LonE6, RadiusM: m.RadiusM,
 		})
 	}
 	if err := s.o.Store.UpsertMilestones(ctx, canon, ms); err != nil {
@@ -152,6 +178,49 @@ func (s *Service) SyncMilestones(ctx context.Context, shipmentID string) error {
 		return mapStoreErr(err)
 	}
 	return mapStoreErr(s.o.Store.SetShipmentStatus(ctx, canon, chain.StatusName(f.Status)))
+}
+
+// Place label limits: a label is a short display name, shown in explanations (which a model may reword), so it is
+// restricted to plain characters that cannot carry markup or instructions of any length.
+const (
+	maxPlaceLabels   = 32
+	maxPlaceLabelLen = 64
+)
+
+var placeLabelPattern = regexp.MustCompile(`^[\p{L}\p{N} .,'()/-]*$`)
+
+// cleanPlaceLabels validates milestone place labels, trimming spaces. Trailing empty labels are dropped.
+func cleanPlaceLabels(in []string) ([]string, error) {
+	if len(in) > maxPlaceLabels {
+		return nil, fmt.Errorf("%w: at most %d place labels", ErrInvalid, maxPlaceLabels)
+	}
+	out := make([]string, len(in))
+	for i, l := range in {
+		l = strings.TrimSpace(l)
+		if utf8.RuneCountInString(l) > maxPlaceLabelLen || !placeLabelPattern.MatchString(l) {
+			return nil, fmt.Errorf("%w: place label %d must be up to %d letters, digits, spaces or .,'()/-", ErrInvalid, i, maxPlaceLabelLen)
+		}
+		out[i] = l
+	}
+	for len(out) > 0 && out[len(out)-1] == "" {
+		out = out[:len(out)-1]
+	}
+	return out, nil
+}
+
+// SetPlaceLabels stores milestone place labels for a mirrored shipment that has none yet; labels already stored
+// stand. It reports whether they were stored.
+func (s *Service) SetPlaceLabels(ctx context.Context, shipmentID string, labels []string) (bool, error) {
+	_, canon, err := parseID(shipmentID)
+	if err != nil {
+		return false, err
+	}
+	clean, err := cleanPlaceLabels(labels)
+	if err != nil || len(clean) == 0 {
+		return false, err
+	}
+	ok, err := s.o.Store.SetPlaceLabels(ctx, canon, clean)
+	return ok, mapStoreErr(err)
 }
 
 func mapStoreErr(err error) error {

@@ -168,6 +168,11 @@ func (s *Service) prepareRecovery(ctx context.Context, id [32]byte, canon, senso
 	if !dec.Pass {
 		return RecoveryProof{}, fmt.Errorf("%w: the recovery evidence fails the policy (%s)", ErrNotRecoverable, strings.Join(reasonStrings(dec), ", "))
 	}
+	// resumeWithProof applies the milestone's place to the recovery epoch too: refuse before paying for a
+	// commit and a proof the controller would reject.
+	if err := s.recoveryPlaceCheck(ctx, id, uint8(milestone), e.Telemetry); err != nil {
+		return RecoveryProof{}, err
+	}
 
 	seq, err := s.o.Store.NextSequence(ctx, canon, milestone)
 	if err != nil {
@@ -204,6 +209,7 @@ func (s *Service) prepareRecovery(ctx context.Context, id [32]byte, canon, senso
 			ShipmentID: id, Milestone: uint8(milestone), Seq: uint32(seq), Root: e.RootBytes32Array(),
 			Start: uint64(e.StartTime), End: uint64(e.EndTime), Score: uint32(e.Result.Score),
 			ConflictBps: uint32(e.Result.ConflictBps), RiskBps: uint32(e.RiskBps), Compliant: e.Result.Compliant,
+			Telemetry: chainTelemetry(e.Telemetry),
 		})
 	}, "EpochAlreadyCommitted")
 	if err != nil {

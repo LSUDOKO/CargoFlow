@@ -118,6 +118,8 @@ func TestHeroLifecycleThroughTheRunningService(t *testing.T) {
 	}
 
 	exporter, financier, buyer := chain.NewSigner(ce.Keys["exporter"]), chain.NewSigner(ce.Keys["financier"]), chain.NewSigner(ce.Keys["buyer"])
+	insurer := chain.NewSigner(ce.Keys["insurer"])
+	insurerBefore, _ := c.USDGBalance(context.Background(), insurer.Address())
 	var events struct {
 		sync.Mutex
 		n map[string]int
@@ -132,7 +134,7 @@ func TestHeroLifecycleThroughTheRunningService(t *testing.T) {
 	// the demo runner is the same code `cargoflow demo` uses against any deployment
 	res, err := hero.Run(context.Background(), hero.Config{
 		APIURL: base, AdminKey: env["ADMIN_API_KEY"], Chain: c,
-		Exporter: exporter, Financier: financier, Buyer: buyer, MintTestTokens: true,
+		Exporter: exporter, Financier: financier, Buyer: buyer, Insurer: insurer, MintTestTokens: true,
 		RefPrefix: "CF-2026-SG01-e2e", Log: testLog{t},
 		OnShipment: func(shipmentID string) { // a WebSocket client watches the whole run
 			conn, _, err := websocket.Dial(wsCtx, "ws"+strings.TrimPrefix(base, "http")+"/v1/ws?shipment="+shipmentID, nil)
@@ -204,8 +206,58 @@ func TestHeroLifecycleThroughTheRunningService(t *testing.T) {
 	if got := new(big.Int).Sub(exporterAfter, exporterBefore); got.Cmp(usd(98_800)) != 0 {
 		t.Errorf("exporter received %s USDG base units, want 98,800 (40,000 advanced + 58,800 residual)", got)
 	}
+	// (the runner mints the 300 premium to the financier on a mock token, so the premium nets out here)
 	if got := new(big.Int).Sub(financierAfter, financierBefore); got.Cmp(usd(41_200)) != 0 {
 		t.Errorf("financier received %s base units, want 41,200 (40,000 principal + 1,200 fee)", got)
+	}
+	// the insurer kept the 300 premium and got its 20,000 cover back after settlement
+	if insurerAfter, _ := c.USDGBalance(ctxBG, insurer.Address()); new(big.Int).Sub(insurerAfter, insurerBefore).Cmp(usd(20_000+300)) != 0 {
+		t.Errorf("insurer balance moved by %s, want 20,300 (minted cover returned + premium)", new(big.Int).Sub(insurerAfter, insurerBefore))
+	}
+	if pool, _ := c.USDGBalance(ctxBG, c.M.CoverPool); pool.Sign() != 0 {
+		t.Errorf("the cover pool still holds %s", pool)
+	}
+	if res.CoverStatus != "RELEASED" {
+		t.Errorf("cover status = %q", res.CoverStatus)
+	}
+
+	// contracts v2: the last milestone was placed at Singapore and waited until the cargo got there
+	if !strings.HasPrefix(res.HoldMessage, "Milestone 5 waits until the cargo is within 100 km of Singapore; it is ") ||
+		!strings.HasSuffix(res.HoldMessage, " km away") {
+		t.Errorf("hold message = %q", res.HoldMessage)
+	}
+	var cover struct {
+		Offers []any `json:"offers"`
+		Cover  *struct {
+			Status, Insurer, Premium, InsurerReturn string
+		} `json:"cover"`
+	}
+	call("GET", "/v1/shipments/"+shipmentHex+"/cover", &cover)
+	if cover.Cover == nil || cover.Cover.Status != "RELEASED" || cover.Cover.Premium != usd(300).String() || cover.Cover.InsurerReturn != usd(20_000).String() ||
+		cover.Cover.Insurer != strings.ToLower(insurer.Address().Hex()) || len(cover.Offers) != 0 {
+		t.Errorf("cover endpoint = %+v", cover.Cover)
+	}
+	var epochs struct {
+		Epochs []struct {
+			MilestoneIndex  int    `json:"milestoneIndex"`
+			DecisionAction  string `json:"decisionAction"`
+			LatE6           int32  `json:"latE6"`
+			MaxHumidityX100 int    `json:"maxHumidityX100"`
+			HeldDistanceM   *int64 `json:"heldDistanceM"`
+		} `json:"epochs"`
+	}
+	call("GET", "/v1/shipments/"+shipmentHex+"/epochs", &epochs)
+	held := 0
+	for _, e := range epochs.Epochs {
+		if e.DecisionAction == "HELD_NOT_AT_PLACE" && e.MilestoneIndex == 4 && e.HeldDistanceM != nil && *e.HeldDistanceM > 100_000 {
+			held++
+		}
+		if e.LatE6 == 0 || e.MaxHumidityX100 == 0 {
+			t.Errorf("epoch without telemetry aggregates: %+v", e)
+		}
+	}
+	if held != 1 {
+		t.Errorf("want exactly one held epoch for milestone 5, got %d: %+v", held, epochs.Epochs)
 	}
 	if vault, _ := c.USDGBalance(ctxBG, c.M.Vault); vault.Sign() != 0 {
 		t.Errorf("the vault still holds %s", vault)
@@ -213,7 +265,9 @@ func TestHeroLifecycleThroughTheRunningService(t *testing.T) {
 
 	// The audit trail and the WebSocket stream are fed by the indexer, which runs slightly behind the chain:
 	// wait for the exact conditions being asserted instead of sleeping and hoping.
-	wantTitles := []string{"PAUSE_FACILITY CONFIRMED", "RESUME_WITH_PROOF CONFIRMED", "ReceivableVault.FacilitySettled", "FinancingController.FinancingPaused"}
+	wantTitles := []string{"PAUSE_FACILITY CONFIRMED", "RESUME_WITH_PROOF CONFIRMED", "ReceivableVault.FacilitySettled", "FinancingController.FinancingPaused",
+		"EvidenceRegistry.EvidenceTelemetryCommitted", "CoverPool.CoverOffered", "CoverPool.CoverAccepted", "CoverPool.CoverReleased",
+		"HELD_NOT_AT_PLACE: " + res.HoldMessage}
 	var missing []string
 	eventually(t, 30*time.Second, func() bool {
 		var audit struct {
@@ -236,7 +290,8 @@ func TestHeroLifecycleThroughTheRunningService(t *testing.T) {
 		t.Errorf("the audit trail is missing %q", missing)
 	}
 
-	wantEvents := map[string]int{"MILESTONE_RELEASED": 5, "FINANCING_PAUSED": 1, "PROOF_VERIFIED": 1, "FINANCING_RESUMED": 1, "DELIVERY_CONFIRMED": 1, "FACILITY_SETTLED": 1, "TELEMETRY_EPOCH_ADDED": 5}
+	wantEvents := map[string]int{"MILESTONE_RELEASED": 5, "FINANCING_PAUSED": 1, "PROOF_VERIFIED": 1, "FINANCING_RESUMED": 1, "DELIVERY_CONFIRMED": 1, "FACILITY_SETTLED": 1, "TELEMETRY_EPOCH_ADDED": 5,
+		"MILESTONE_HELD": 1, "COVER_UPDATED": 1} // the offer and acceptance precede the mirror; the release is broadcast
 	satisfied := func() bool {
 		events.Lock()
 		defer events.Unlock()

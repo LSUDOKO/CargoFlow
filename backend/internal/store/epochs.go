@@ -33,6 +33,12 @@ type EpochRecord struct {
 	CommitTxHash    string
 	ProofVerified   bool
 	CreatedAt       time.Time
+	// v2 aggregates committed with the epoch (zero for epochs stored before v2)
+	LatE6           int32
+	LonE6           int32
+	MaxHumidityX100 int
+	MaxShockX100    int
+	HeldDistanceM   *int64 // set when the epoch passed but was outside the milestone's place
 }
 
 // InsertEpoch stores an epoch. A second epoch for the same (shipment, milestone, sequence), or the same
@@ -56,12 +62,14 @@ func (s *Store) InsertEpoch(ctx context.Context, e EpochRecord) (EpochRecord, er
 	err = s.pool.QueryRow(ctx, `
 		INSERT INTO telemetry_epochs (shipment_id, milestone_index, sequence, epoch_id, merkle_root, reading_count,
 			start_time, end_time, score, conflict_bps, risk_bps, compliant, penalties,
-			decision_pass, decision_action, decision_reasons, points)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::jsonb,$14,$15,$16,$17::jsonb)
+			decision_pass, decision_action, decision_reasons, points,
+			lat_e6, lon_e6, max_humidity_x100, max_shock_x100)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::jsonb,$14,$15,$16,$17::jsonb,$18,$19,$20,$21)
 		RETURNING id::text, created_at`,
 		e.ShipmentID, e.MilestoneIndex, e.Sequence, e.EpochID, e.MerkleRoot, e.ReadingCount,
 		e.StartTime, e.EndTime, e.Score, e.ConflictBps, e.RiskBps, e.Compliant, string(penalties),
-		e.DecisionPass, e.DecisionAction, reasons, string(points)).Scan(&e.ID, &e.CreatedAt)
+		e.DecisionPass, e.DecisionAction, reasons, string(points),
+		e.LatE6, e.LonE6, e.MaxHumidityX100, e.MaxShockX100).Scan(&e.ID, &e.CreatedAt)
 	if err != nil {
 		return EpochRecord{}, mapErr(err)
 	}
@@ -70,14 +78,16 @@ func (s *Store) InsertEpoch(ctx context.Context, e EpochRecord) (EpochRecord, er
 
 const epochColumns = `id::text, shipment_id, milestone_index, sequence, epoch_id, merkle_root, reading_count,
 	start_time, end_time, score, conflict_bps, risk_bps, compliant, penalties, decision_pass, decision_action,
-	decision_reasons, points, COALESCE(commit_tx_hash,''), proof_verified, created_at`
+	decision_reasons, points, COALESCE(commit_tx_hash,''), proof_verified, created_at,
+	lat_e6, lon_e6, max_humidity_x100, max_shock_x100, held_distance_m`
 
 func scanEpoch(row pgx.Row) (EpochRecord, error) {
 	var e EpochRecord
 	var penalties, points []byte
 	err := row.Scan(&e.ID, &e.ShipmentID, &e.MilestoneIndex, &e.Sequence, &e.EpochID, &e.MerkleRoot, &e.ReadingCount,
 		&e.StartTime, &e.EndTime, &e.Score, &e.ConflictBps, &e.RiskBps, &e.Compliant, &penalties, &e.DecisionPass,
-		&e.DecisionAction, &e.DecisionReasons, &points, &e.CommitTxHash, &e.ProofVerified, &e.CreatedAt)
+		&e.DecisionAction, &e.DecisionReasons, &points, &e.CommitTxHash, &e.ProofVerified, &e.CreatedAt,
+		&e.LatE6, &e.LonE6, &e.MaxHumidityX100, &e.MaxShockX100, &e.HeldDistanceM)
 	if err != nil {
 		return EpochRecord{}, mapErr(err)
 	}
@@ -139,6 +149,18 @@ func (s *Store) SetEpochCommitted(ctx context.Context, epochID, txHash string) e
 // SetEpochProofVerified marks that a ZK proof over this epoch verified on chain.
 func (s *Store) SetEpochProofVerified(ctx context.Context, epochID string) error {
 	return s.epochUpdate(ctx, epochID, "proof_verified = true")
+}
+
+// HeldNotAtPlace is the decision action recorded on an epoch that passed the policy but whose centroid was
+// outside its milestone's place: the release waits for evidence from inside the place.
+const HeldNotAtPlace = "HELD_NOT_AT_PLACE"
+
+// SetEpochHeld records that a passing epoch is held, distanceM metres from its milestone's place. A failed epoch
+// is never marked held.
+func (s *Store) SetEpochHeld(ctx context.Context, epochID string, distanceM int64) error {
+	_, err := s.pool.Exec(ctx, `UPDATE telemetry_epochs SET held_distance_m = $2, decision_action = $3
+		WHERE epoch_id = $1 AND decision_pass`, epochID, distanceM, HeldNotAtPlace)
+	return err
 }
 
 func (s *Store) epochUpdate(ctx context.Context, epochID, set string, args ...any) error {

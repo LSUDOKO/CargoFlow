@@ -60,6 +60,11 @@ type EvidenceEpoch struct {
 	MilestoneIndex uint8
 	Compliant      bool
 	ProofVerified  bool
+	// v2 aggregates; zero on a v1 deployment
+	LatE6           int32
+	LonE6           int32
+	MaxHumidityX100 uint16
+	MaxShockX100    uint16
 }
 
 // Shipment mirrors IShipmentRegistry.Shipment.
@@ -74,7 +79,8 @@ type Shipment struct {
 	Exists           bool
 }
 
-// Policy mirrors IPolicyEngine.Policy (temperatures are degrees C x 100, signed).
+// Policy mirrors IPolicyEngine.Policy (temperatures are degrees C x 100, signed). Humidity is % x 100 and
+// shock is g x 100; a zero humidity or shock limit means no limit.
 type Policy struct {
 	MinTempX100        int32
 	MaxTempX100        int32
@@ -84,13 +90,33 @@ type Policy struct {
 	MaxConflictBps     uint16
 	MaxRiskBps         uint16
 	RequiresZK         bool
+	MaxHumidityX100    uint16
+	MaxShockX100       uint16
 }
 
-// MilestoneSpec mirrors IFinancingController.MilestoneSpec.
+// MilestoneSpec mirrors IFinancingController.MilestoneSpec. RadiusM 0 means the milestone has no place
+// condition; otherwise it releases only on evidence whose centroid lies within RadiusM metres of
+// (LatE6, LonE6), and 1,000 <= RadiusM <= 1,000,000.
 type MilestoneSpec struct {
 	Allocation           *big.Int
 	EvidenceThreshold    uint16
 	CheckpointCommitment [32]byte
+	LatE6                int32
+	LonE6                int32
+	RadiusM              uint32
+}
+
+// Milestone place bounds enforced by createFacility.
+const (
+	MinMilestoneRadiusM = 1_000
+	MaxMilestoneRadiusM = 1_000_000
+)
+
+// PlaceCheck is the controller's verdict on whether an epoch satisfies a milestone's place.
+type PlaceCheck struct {
+	Required  bool   // false when the milestone has no place (then Inside is true)
+	Inside    bool   // the epoch centroid is within the radius (inclusive)
+	DistanceM uint64 // on-chain distance from the epoch centroid to the place, whole metres
 }
 
 // call runs a view function and returns the raw decoded outputs.
@@ -224,4 +250,18 @@ func (c *Client) Milestone(ctx context.Context, id [32]byte, index uint8) (Miles
 	var m MilestoneSpec
 	err := c.callInto(ctx, &m, "controller", "getMilestone", id, index)
 	return m, err
+}
+
+// PlaceCheck asks the controller whether epoch (shipmentID, milestone, seq) satisfies the milestone's place,
+// using the exact on-chain distance so nothing off chain has to re-derive it.
+func (c *Client) PlaceCheck(ctx context.Context, shipmentID [32]byte, milestone uint8, seq uint32) (PlaceCheck, error) {
+	out, err := c.call(ctx, "controller", "placeCheck", shipmentID, milestone, seq)
+	if err != nil {
+		return PlaceCheck{}, err
+	}
+	d := out[2].(*big.Int)
+	if !d.IsUint64() {
+		return PlaceCheck{}, fmt.Errorf("controller.placeCheck: distance %s out of range", d)
+	}
+	return PlaceCheck{Required: out[0].(bool), Inside: out[1].(bool), DistanceM: d.Uint64()}, nil
 }

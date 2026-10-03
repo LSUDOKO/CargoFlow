@@ -121,6 +121,7 @@ func (s *Service) reconcileShipment(ctx context.Context, sh store.Shipment, rep 
 			ShipmentID: id, Milestone: uint8(e.MilestoneIndex), Seq: uint32(e.Sequence), Root: root,
 			Start: uint64(e.StartTime), End: uint64(e.EndTime), Score: uint32(e.Score),
 			ConflictBps: uint32(e.ConflictBps), RiskBps: uint32(e.RiskBps), Compliant: e.Compliant,
+			Telemetry: recordTelemetry(*e),
 		}
 		res, ok := s.retry(ctx, canon, rep, intent{
 			kind: "COMMIT_EPOCH", key: "commit:" + e.EpochID, benign: "EpochAlreadyCommitted",
@@ -148,6 +149,10 @@ func (s *Service) reconcileShipment(ctx context.Context, sh store.Shipment, rep 
 		return
 	}
 	if e.DecisionPass && e.CommitTxHash != "" && int(f.NextMilestone) == e.MilestoneIndex {
+		// A held epoch stays held (its centroid cannot move); only a later epoch from inside the place releases.
+		if _, held := s.placeHold(ctx, canon, id, *e); held {
+			return
+		}
 		s.retry(ctx, canon, rep, intent{
 			kind: "RELEASE", key: fmt.Sprintf("release:%s:%d:%d", canon, e.MilestoneIndex, e.Sequence), benign: "MilestoneAlreadyReleased",
 			send: func() (chain.TxResult, error) {

@@ -76,6 +76,33 @@
         "name": "compliant",
         "type": "bool",
         "internalType": "bool"
+      },
+      {
+        "name": "telemetry",
+        "type": "tuple",
+        "internalType": "struct IEvidenceRegistry.EpochTelemetry",
+        "components": [
+          {
+            "name": "latE6",
+            "type": "int32",
+            "internalType": "int32"
+          },
+          {
+            "name": "lonE6",
+            "type": "int32",
+            "internalType": "int32"
+          },
+          {
+            "name": "maxHumidityX100",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "maxShockX100",
+            "type": "uint16",
+            "internalType": "uint16"
+          }
+        ]
       }
     ],
     "outputs": [
@@ -186,6 +213,26 @@
             "name": "proofVerified",
             "type": "bool",
             "internalType": "bool"
+          },
+          {
+            "name": "latE6",
+            "type": "int32",
+            "internalType": "int32"
+          },
+          {
+            "name": "lonE6",
+            "type": "int32",
+            "internalType": "int32"
+          },
+          {
+            "name": "maxHumidityX100",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "maxShockX100",
+            "type": "uint16",
+            "internalType": "uint16"
           }
         ]
       }
@@ -275,6 +322,49 @@
         "type": "bytes32",
         "indexed": true,
         "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "EvidenceTelemetryCommitted",
+    "inputs": [
+      {
+        "name": "shipmentId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "epochId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "latE6",
+        "type": "int32",
+        "indexed": false,
+        "internalType": "int32"
+      },
+      {
+        "name": "lonE6",
+        "type": "int32",
+        "indexed": false,
+        "internalType": "int32"
+      },
+      {
+        "name": "maxHumidityX100",
+        "type": "uint16",
+        "indexed": false,
+        "internalType": "uint16"
+      },
+      {
+        "name": "maxShockX100",
+        "type": "uint16",
+        "indexed": false,
+        "internalType": "uint16"
       }
     ],
     "anonymous": false

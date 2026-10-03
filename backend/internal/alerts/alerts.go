@@ -24,10 +24,14 @@ const (
 	Delivered = "DELIVERED"
 	Settled   = "SETTLED"
 	Defaulted = "DEFAULTED"
+	// default cover (contracts v2)
+	CoverOffered  = "COVER_OFFERED"
+	CoverAccepted = "COVER_ACCEPTED"
+	CoverClaimed  = "COVER_CLAIMED"
 )
 
 // Events lists every alertable event.
-var Events = []string{Paused, Released, Resumed, Disputed, Delivered, Settled, Defaulted}
+var Events = []string{Paused, Released, Resumed, Disputed, Delivered, Settled, Defaulted, CoverOffered, CoverAccepted, CoverClaimed}
 
 // Alert is one notable chain event on a shipment. It marshals to exactly the webhook payload.
 type Alert struct {
@@ -157,13 +161,16 @@ func (d *Dispatcher) deliver(ctx context.Context, sender Sender, sub store.Subsc
 
 // headlines describes each event for people.
 var headlines = map[string]string{
-	Paused:    "financing was paused",
-	Released:  "a milestone advance was released",
-	Resumed:   "financing resumed",
-	Disputed:  "a dispute was opened",
-	Delivered: "delivery was confirmed",
-	Settled:   "the facility was settled",
-	Defaulted: "the facility defaulted",
+	Paused:        "financing was paused",
+	Released:      "a milestone advance was released",
+	Resumed:       "financing resumed",
+	Disputed:      "a dispute was opened",
+	Delivered:     "delivery was confirmed",
+	Settled:       "the facility was settled",
+	Defaulted:     "the facility defaulted",
+	CoverOffered:  "an insurer offered default cover",
+	CoverAccepted: "the financier accepted default cover",
+	CoverClaimed:  "the default cover paid out to the financier",
 }
 
 // Subject is a one-line summary of an alert, for an email subject.

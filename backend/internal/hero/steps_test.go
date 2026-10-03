@@ -39,8 +39,8 @@ func TestSceneTimesContinueTheJourneyAndJumpForwardAfterALongPause(t *testing.T)
 
 func TestBackToBackScenesNeverProduceFutureReadings(t *testing.T) {
 	now := int64(10_000)
-	last := journeyAnchor(now)           // set by setup
-	for _, n := range []int{16, 8, 16} { // healthy, excursion, finish sent within the same second
+	last := journeyAnchor(now)                   // set by setup
+	for _, n := range []int{16, 8, 8, 8, 8, 8} { // healthy, excursion, recover, finish (three sends) within the same second
 		start := sceneStart(last, now, n)
 		end := start + int64(n-1)*stepSeconds
 		if end > now {

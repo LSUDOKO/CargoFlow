@@ -54,6 +54,8 @@ type Result struct {
 	MaxRouteDeviationM int64 // -1 when no route was supplied
 	ReadingCount       int
 	SensorCount        int
+	MaxHumidityX100    int // highest relative humidity in the epoch, % x 100
+	MaxShockX100       int // highest shock in the epoch, g x 100
 }
 
 // Penalty caps (points). Together with the base of 100 they make the score formula explicit:
@@ -91,6 +93,10 @@ func Evaluate(in EpochInput) Result {
 	res := Result{Fused: Vacuous, MaxRouteDeviationM: -1, ReadingCount: len(in.Points)}
 	if len(in.Points) == 0 {
 		return res
+	}
+	for _, p := range in.Points {
+		res.MaxHumidityX100 = max(res.MaxHumidityX100, int(p.HumidityX100))
+		res.MaxShockX100 = max(res.MaxShockX100, int(p.ShockX100))
 	}
 	streams := map[string][]telemetry.Point{}
 	for _, p := range in.Points {

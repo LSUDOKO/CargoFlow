@@ -76,6 +76,32 @@
   },
   {
     "type": "function",
+    "name": "MAX_RADIUS_M",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MIN_RADIUS_M",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "POLICIES",
     "inputs": [],
     "outputs": [
@@ -164,6 +190,21 @@
             "name": "checkpointCommitment",
             "type": "bytes32",
             "internalType": "bytes32"
+          },
+          {
+            "name": "latE6",
+            "type": "int32",
+            "internalType": "int32"
+          },
+          {
+            "name": "lonE6",
+            "type": "int32",
+            "internalType": "int32"
+          },
+          {
+            "name": "radiusM",
+            "type": "uint32",
+            "internalType": "uint32"
           }
         ]
       }
@@ -318,6 +359,21 @@
             "name": "checkpointCommitment",
             "type": "bytes32",
             "internalType": "bytes32"
+          },
+          {
+            "name": "latE6",
+            "type": "int32",
+            "internalType": "int32"
+          },
+          {
+            "name": "lonE6",
+            "type": "int32",
+            "internalType": "int32"
+          },
+          {
+            "name": "radiusM",
+            "type": "uint32",
+            "internalType": "uint32"
           }
         ]
       }
@@ -390,6 +446,45 @@
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "placeCheck",
+    "inputs": [
+      {
+        "name": "shipmentId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "milestoneIndex",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "seq",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "required",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "inside",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "distanceM",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -782,6 +877,11 @@
   },
   {
     "type": "error",
+    "name": "EvidenceBelowPolicy",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "EvidenceBelowThreshold",
     "inputs": []
   },
@@ -823,6 +923,11 @@
   {
     "type": "error",
     "name": "InvalidCounterparty",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidMilestonePlace",
     "inputs": []
   },
   {
@@ -894,6 +999,11 @@
   {
     "type": "error",
     "name": "NotFinancier",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OutsideMilestonePlace",
     "inputs": []
   },
   {

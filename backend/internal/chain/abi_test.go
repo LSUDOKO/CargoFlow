@@ -18,15 +18,16 @@ func TestEmbeddedABIsExposeEverythingTheBackendUses(t *testing.T) {
 		"FinancingController": {
 			funcs: []string{"createFacility", "depositCapital", "startTransit", "evaluateAndReleaseMilestone",
 				"pauseFinancing", "resumeWithProof", "resumeByVerifier", "openDispute", "markDelivered", "settle",
-				"getFacility", "getMilestone", "proofContext"},
+				"getFacility", "getMilestone", "proofContext", "placeCheck", "markDefaulted"},
 			events: []string{"FacilityCreated", "StatusChanged", "MilestoneAdvanceReleased", "FinancingPaused",
 				"FinancingResumed", "DisputeOpened", "DisputeResolved", "DeliveryConfirmed", "DefaultDeclared"},
 			errs: []string{"InvalidProof", "InvalidProofContext", "StaleRecoveryEvidence", "FacilityPaused",
-				"EvidenceBelowThreshold", "EvidenceConflictTooHigh", "MilestoneOutOfOrder", "InvalidState"},
+				"EvidenceBelowThreshold", "EvidenceConflictTooHigh", "MilestoneOutOfOrder", "InvalidState",
+				"InvalidMilestonePlace", "OutsideMilestonePlace", "EvidenceBelowPolicy"},
 		},
 		"EvidenceRegistry": {
 			funcs:  []string{"commitEpoch", "getEpoch", "epochIdFor", "markProofVerified"},
-			events: []string{"EvidenceEpochCommitted", "EvidenceProofVerified"},
+			events: []string{"EvidenceEpochCommitted", "EvidenceTelemetryCommitted", "EvidenceProofVerified"},
 			errs:   []string{"EpochAlreadyCommitted", "EpochNotFound", "InvalidEpoch"},
 		},
 		"ShipmentRegistry": {
@@ -43,6 +44,13 @@ func TestEmbeddedABIsExposeEverythingTheBackendUses(t *testing.T) {
 			funcs:  []string{"getFacility"},
 			events: []string{"FacilityOpened", "CapitalDeposited", "AdvanceReleased", "FacilitySettled", "FacilityDefaulted", "FacilityPauseSet"},
 			errs:   []string{"ExceedsCommittedFacility"},
+		},
+		"CoverPool": {
+			funcs: []string{"offerCover", "withdrawOffer", "acceptCover", "release", "claim", "withdraw",
+				"getOffer", "getCover", "claimable", "totalOpenOffers", "totalActiveCover", "totalClaimable", "MAX_PREMIUM_BPS"},
+			events: []string{"CoverOffered", "OfferWithdrawn", "CoverAccepted", "CoverReleased", "CoverClaimed", "Withdrawn"},
+			errs: []string{"InvalidCover", "InvalidState", "InvalidCounterparty", "NotFinancier", "OfferExists", "OfferNotFound",
+				"CoverAlreadyAccepted", "CoverNotActive", "NothingToWithdraw", "UnsupportedToken"},
 		},
 		"ERC20": {
 			funcs:  []string{"balanceOf", "approve", "allowance", "decimals", "symbol", "transfer"},
@@ -76,7 +84,7 @@ func TestEmbeddedABIsExposeEverythingTheBackendUses(t *testing.T) {
 // When the contracts have been built locally, the embedded ABIs must equal the compiler's output, so a
 // contract change that forgets `make abi` fails here instead of breaking the backend at runtime.
 func TestEmbeddedABIsMatchTheBuiltArtifactsWhenPresent(t *testing.T) {
-	for _, name := range []string{"FinancingController", "EvidenceRegistry", "ShipmentRegistry", "PolicyEngine", "ReceivableVault"} {
+	for _, name := range []string{"FinancingController", "EvidenceRegistry", "ShipmentRegistry", "PolicyEngine", "ReceivableVault", "CoverPool"} {
 		artifact := filepath.Join("..", "..", "..", "contracts", "out", name+".sol", name+".json")
 		raw, err := os.ReadFile(artifact)
 		if err != nil {

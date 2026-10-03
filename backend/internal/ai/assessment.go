@@ -60,6 +60,7 @@ var allowedReasons = map[string]bool{
 	"OK": true, "SENSOR_PATTERN_ANOMALY": true,
 	string(decision.ScoreBelowThreshold): true, string(decision.NotCompliant): true,
 	string(decision.ConflictTooHigh): true, string(decision.RiskTooHigh): true, string(decision.FraudSignals): true,
+	string(decision.HumidityLimit): true, string(decision.ShockLimit): true,
 }
 
 var allowedSeverities = map[string]bool{SeverityInfo: true, SeverityWarning: true, SeverityCritical: true}

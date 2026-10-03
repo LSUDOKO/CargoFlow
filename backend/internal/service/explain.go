@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -38,7 +39,19 @@ type Explanation struct {
 	Causes    []string   `json:"causes"`
 	NextSteps []NextStep `json:"nextSteps"`
 	Forecast  *Forecast  `json:"forecast"`
+	Hold      *PlaceHold `json:"hold"`   // set while the next milestone waits for evidence from its place
 	Source    string     `json:"source"` // rules, or ai when a model reworded it
+}
+
+// PlaceHold says why a milestone waits: its evidence passed, but the cargo is outside the milestone's place.
+type PlaceHold struct {
+	MilestoneIndex int    `json:"milestoneIndex"`
+	PlaceLabel     string `json:"placeLabel"`
+	LatE6          int32  `json:"latE6"`
+	LonE6          int32  `json:"lonE6"`
+	RadiusM        uint32 `json:"radiusM"`
+	DistanceM      int64  `json:"distanceM"` // from the latest epoch's centroid, as the controller measured it
+	Message        string `json:"message"`
 }
 
 // Forecast tuning.
@@ -57,6 +70,7 @@ func (s *Service) Explain(ctx context.Context, shipmentID string) (Explanation, 
 		return Explanation{}, err
 	}
 	x := explainRules(v.Shipment, v.Facility, v.LatestEvidence)
+	applyHold(&x, v.Milestones, v.LatestEvidence)
 	readings, err := s.o.Store.LatestReadings(ctx, v.Shipment.ID, forecastReadings)
 	if err != nil {
 		return Explanation{}, err
@@ -69,6 +83,11 @@ func (s *Service) Explain(ctx context.Context, shipmentID string) (Explanation, 
 		if w, ok := s.reword(ctx, x.Status, ai.Wording{Headline: x.Headline, Causes: x.Causes}); ok {
 			x.Headline, x.Causes, x.Source = w.Headline, w.Causes, "ai"
 		}
+	}
+	// The hold names the place by the label a client posted, so it joins the causes only after any rewording:
+	// party text never reaches the model.
+	if x.Hold != nil {
+		x.Causes = append(x.Causes, x.Hold.Message+".")
 	}
 	return x, nil
 }
@@ -157,6 +176,10 @@ func explainRules(sh store.Shipment, f *FacilityView, ev *EpochSummary) Explanat
 				x.Causes = append(x.Causes, fmt.Sprintf("The sensors disagree: conflict reached %s, above the %s the policy allows.", percent(ev.ConflictBps), percent(p.MaxConflictBps)))
 			case "RISK_TOO_HIGH":
 				x.Causes = append(x.Causes, fmt.Sprintf("Composite risk reached %s, above the policy limit of %s.", percent(ev.RiskBps), percent(p.MaxRiskBps)))
+			case "HUMIDITY_LIMIT":
+				x.Causes = append(x.Causes, fmt.Sprintf("Humidity reached %s, above the policy limit of %s.", percent(ev.MaxHumidityX100), percent(p.MaxHumidityX100)))
+			case "SHOCK_LIMIT":
+				x.Causes = append(x.Causes, fmt.Sprintf("A shock of %s g was recorded, above the policy limit of %s g.", celsius(ev.MaxShockX100), celsius(p.MaxShockX100)))
 			case "FRAUD_SIGNALS":
 				x.Causes = append(x.Causes, "The readings show signs of tampering: frozen, duplicated or physically impossible data.")
 			case "AI_REQUESTED":
@@ -205,11 +228,26 @@ func explainRules(sh store.Shipment, f *FacilityView, ev *EpochSummary) Explanat
 		}
 	case "PAUSED":
 		x.Headline = "Financing is paused because the evidence failed the policy."
-		if failed && len(ev.Reasons) > 0 && ev.Reasons[0] == "NOT_COMPLIANT" {
-			x.Headline = fmt.Sprintf("Financing is paused: the cargo left its %s to %s °C band.", celsius(p.MinTempX100), celsius(p.MaxTempX100))
+		physicalOnly := false // humidity or shock, which the temperature proof cannot clear
+		if failed && len(ev.Reasons) > 0 {
+			switch {
+			case ev.Reasons[0] == "NOT_COMPLIANT":
+				x.Headline = fmt.Sprintf("Financing is paused: the cargo left its %s to %s °C band.", celsius(p.MinTempX100), celsius(p.MaxTempX100))
+			case slices.Contains(ev.Reasons, "HUMIDITY_LIMIT"):
+				x.Headline = "Financing is paused: the humidity went above the policy limit."
+			case slices.Contains(ev.Reasons, "SHOCK_LIMIT"):
+				x.Headline = "Financing is paused: the cargo took a shock above the policy limit."
+			}
+			physicalOnly = !slices.Contains(ev.Reasons, "NOT_COMPLIANT") &&
+				(slices.Contains(ev.Reasons, "HUMIDITY_LIMIT") || slices.Contains(ev.Reasons, "SHOCK_LIMIT"))
 		}
 		evidenceCauses()
-		step("exporter", "Upload fresh in-band readings from an independent probe and request a recovery proof.")
+		if physicalOnly {
+			step("exporter", "Send fresh readings within the humidity and shock limits and ask the arbiter to review the cargo.")
+			step("arbiter", "Inspect the cargo and resume the facility if it is sound.")
+		} else {
+			step("exporter", "Upload fresh in-band readings from an independent probe and request a recovery proof.")
+		}
 		step("financier", "Review the evidence; open a dispute if the cargo cannot be saved.")
 	case "DISPUTED":
 		x.Headline = "In dispute; releases are frozen until the arbiter rules."
@@ -226,6 +264,26 @@ func explainRules(sh store.Shipment, f *FacilityView, ev *EpochSummary) Explanat
 		x.Headline = "Status " + x.Status + "."
 	}
 	return x
+}
+
+// applyHold explains a held milestone: the latest evidence passed, but its centroid is outside the next milestone's
+// place, so the release waits for evidence from there. The hold's message (which may carry a client-posted place
+// label) is added to the causes by Explain, after any model rewording.
+func applyHold(x *Explanation, ms []store.Milestone, ev *EpochSummary) {
+	if x.Status != "ACTIVE" || ev == nil || ev.DecisionAction != store.HeldNotAtPlace || ev.HeldDistanceM == nil {
+		return
+	}
+	for _, m := range ms {
+		if m.Index != ev.MilestoneIndex || m.RadiusM == 0 {
+			continue
+		}
+		msg := holdMessage(m, uint64(*ev.HeldDistanceM))
+		x.Hold = &PlaceHold{MilestoneIndex: m.Index, PlaceLabel: m.PlaceLabel, LatE6: m.LatE6, LonE6: m.LonE6, RadiusM: m.RadiusM,
+			DistanceM: *ev.HeldDistanceM, Message: msg}
+		x.Headline = fmt.Sprintf("In transit; the evidence passes (score %d) but milestone %d waits for the cargo to reach its place.", ev.Score, m.Index+1)
+		x.NextSteps = []NextStep{{"exporter", "Keep the logger reporting: the milestone releases automatically on the first passing evidence from inside its place."}}
+		return
+	}
 }
 
 // forecast fits a least-squares line to each sensor's latest readings and reports the sensor closest to leaving the

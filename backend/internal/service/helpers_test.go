@@ -87,8 +87,14 @@ const (
 
 func (e *env) onChain(t *testing.T, ref string, route []store.RoutePoint, upTo stage) [32]byte {
 	t.Helper()
+	return e.onChainWith(t, ref, route, upTo, testPolicy, nil)
+}
+
+// onChainWith is onChain with a chosen policy and milestone schedule (nil: five 8,000 USDG milestones, no places).
+func (e *env) onChainWith(t *testing.T, ref string, route []store.RoutePoint, upTo stage, pol chain.Policy, ms []chain.MilestoneSpec) [32]byte {
+	t.Helper()
 	ctx := context.Background()
-	commitment, err := e.chain.HashPolicy(ctx, testPolicy)
+	commitment, err := e.chain.HashPolicy(ctx, pol)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -106,20 +112,26 @@ func (e *env) onChain(t *testing.T, ref string, route []store.RoutePoint, upTo s
 	rc := service.RouteCommitment(route)
 	must(e.chain.Transact(ctx, e.exporter, "registry", "registerShipment", [32]byte(refHash), e.buyer.Address(),
 		[32]byte(crypto.Keccak256Hash([]byte("invoice"))), rc, commitment, usdg(100_000)))
-	must(e.chain.Transact(ctx, e.exporter, "policies", "setPolicy", id, testPolicy))
+	must(e.chain.Transact(ctx, e.exporter, "policies", "setPolicy", id, pol))
 	if upTo == registered {
 		return id
 	}
-	ms := make([]chain.MilestoneSpec, 5)
-	for i := range ms {
-		ms[i] = chain.MilestoneSpec{Allocation: usdg(8_000), EvidenceThreshold: 75, CheckpointCommitment: [32]byte{byte(i + 1)}}
+	if ms == nil {
+		ms = make([]chain.MilestoneSpec, 5)
+		for i := range ms {
+			ms[i] = chain.MilestoneSpec{Allocation: usdg(8_000), EvidenceThreshold: 75, CheckpointCommitment: [32]byte{byte(i + 1)}}
+		}
+	}
+	total := new(big.Int)
+	for _, m := range ms {
+		total.Add(total, m.Allocation)
 	}
 	must(e.chain.Transact(ctx, e.exporter, "controller", "createFacility", id, e.financier.Address(), uint16(300), ms))
 	if upTo == withFacility {
 		return id
 	}
-	must(e.chain.Transact(ctx, e.financier, "usdg", "mint", e.financier.Address(), usdg(40_000)))
-	must(e.chain.Transact(ctx, e.financier, "usdg", "approve", e.chain.M.Vault, usdg(40_000)))
+	must(e.chain.Transact(ctx, e.financier, "usdg", "mint", e.financier.Address(), total))
+	must(e.chain.Transact(ctx, e.financier, "usdg", "approve", e.chain.M.Vault, total))
 	must(e.chain.Transact(ctx, e.financier, "controller", "depositCapital", id))
 	if upTo == funded {
 		return id
