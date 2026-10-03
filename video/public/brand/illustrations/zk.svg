@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="A shield over a sealed proof">
+  <rect x="40" y="96" width="132" height="92" rx="10" fill="#F7F9F4" stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M40 104l66 48 66-48" fill="none" stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="106" cy="160" r="14" fill="#FFB020" stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M150 44l46 16v40c0 34-22 56-46 66-24-10-46-32-46-66V60z" fill="#13293D" stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M150 56l34 12v32c0 26-16 44-34 52" fill="none" stroke="#1D3A55" stroke-width="6"/>
+  <path d="M130 100l14 14 26-30" fill="none" stroke="#C6F432" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

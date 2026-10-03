@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="An escrow vault holding USDG">
+  <rect x="34" y="40" width="172" height="160" rx="18" fill="#13293D" stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="120" cy="120" r="56" fill="#1D3A55" stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="120" cy="120" r="20" fill="#F7F9F4" stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M120 64v20M120 156v20M64 120h20M156 120h20M81 81l14 14M145 145l14 14M159 81l-14 14M95 145l-14 14" stroke="#C6F432" stroke-width="6" stroke-linecap="round"/>
+  <path d="M206 92h10v56h-10" fill="none" stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <g stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="62" cy="206" rx="22" ry="7" fill="#C6F432"/><ellipse cx="62" cy="198" rx="22" ry="7" fill="#C6F432"/>
+    <ellipse cx="180" cy="206" rx="22" ry="7" fill="#00C46A"/>
+  </g>
+</svg>

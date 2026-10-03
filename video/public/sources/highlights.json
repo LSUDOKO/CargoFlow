@@ -1,0 +1,227 @@
+{
+  "meta": {
+    "capturedAt": "2026-10-03",
+    "tool": "Playwright 1.63 (frontend/node_modules/@playwright/test), Chromium headless, viewport 1920x1080, deviceScaleFactor 1 and 2",
+    "cookieBanners": "dismissed (ADB: Accept; Atradius: Reject all)",
+    "notes": [
+      "Each <id>-top.png is the page at scroll 0 (title, date, publisher) for the establishing beat; each quote file is scrolled so the quoted sentence sits at about 42% of frame height.",
+      "Boxes are the union of the sentence's line boxes; use lines[] for per-line highlighter strokes.",
+      "Atradius: the 50% / 52 days figures are stated in the official PDF (page 3), not in the web article text; use atradius-india-top.png to establish the source and atradius-india-pdf-terms.png for the quote.",
+      "Air Cargo News shows third-party ads; crop to safeCrop."
+    ],
+    "extraFrames": [
+      "adb-news-top.png (both ADB quotes visible on one frame: gap at about y=543-624, SME at y=939-1030)",
+      "adb-survey-top.png",
+      "atradius-india-top.png",
+      "atradius-india-pdf-cover.png",
+      "aircargonews-iqvia-top.png",
+      "cargoflow-readme-top.png"
+    ]
+  },
+  "highlights": [
+    {
+      "file": "adb-news-gap.png",
+      "file2x": "adb-news-gap@2x.png",
+      "sourceUrl": "https://www.adb.org/news/demand-trade-finance-rise-amid-supply-chain-realignment-adb-report",
+      "quote": "the global trade finance gap remained at $2.5 trillion in 2025—unchanged from 2023—and represents about 10% of global trade",
+      "x": 428,
+      "y": 454,
+      "w": 799,
+      "h": 74,
+      "lines": [
+        {
+          "x": 1103,
+          "y": 454,
+          "w": 124,
+          "h": 20
+        },
+        {
+          "x": 428,
+          "y": 481,
+          "w": 792,
+          "h": 20
+        },
+        {
+          "x": 428,
+          "y": 508,
+          "w": 94,
+          "h": 20
+        }
+      ],
+      "units": "CSS px in the 1920x1080 frame (multiply by 2 for the @2x file)",
+      "safeCrop": {
+        "x": 300,
+        "y": 0,
+        "w": 1320,
+        "h": 1080,
+        "why": "article + header"
+      }
+    },
+    {
+      "file": "adb-news-sme.png",
+      "file2x": "adb-news-sme@2x.png",
+      "sourceUrl": "https://www.adb.org/news/demand-trade-finance-rise-amid-supply-chain-realignment-adb-report",
+      "quote": "SME rejection rates for trade finance (41%) have fallen to nearly the same level as those for large and mid-cap corporates (40%)",
+      "x": 428,
+      "y": 454,
+      "w": 843,
+      "h": 47,
+      "lines": [
+        {
+          "x": 566,
+          "y": 454,
+          "w": 705,
+          "h": 20
+        },
+        {
+          "x": 428,
+          "y": 481,
+          "w": 313,
+          "h": 20
+        }
+      ],
+      "units": "CSS px in the 1920x1080 frame (multiply by 2 for the @2x file)"
+    },
+    {
+      "file": "adb-survey-gap.png",
+      "file2x": "adb-survey-gap@2x.png",
+      "sourceUrl": "https://www.adb.org/publications/adb-global-trade-finance-gap-survey",
+      "quote": "the estimated global trade finance gap remains at $2.5 trillion, as in 2023",
+      "x": 550,
+      "y": 405,
+      "w": 543,
+      "h": 47,
+      "lines": [
+        {
+          "x": 765,
+          "y": 405,
+          "w": 328,
+          "h": 20
+        },
+        {
+          "x": 550,
+          "y": 432,
+          "w": 286,
+          "h": 20
+        }
+      ],
+      "units": "CSS px in the 1920x1080 frame (multiply by 2 for the @2x file)"
+    },
+    {
+      "file": "atradius-india-overdue.png",
+      "file2x": "atradius-india-overdue@2x.png",
+      "sourceUrl": "https://group.atradius.com/knowledge-and-research/reports/b2b-payment-practices-trends-india-2025",
+      "quote": "overdue invoices now affect an average 63% of all credit-based B2B sales",
+      "x": 630,
+      "y": 454,
+      "w": 618,
+      "h": 48,
+      "lines": [
+        {
+          "x": 666,
+          "y": 454,
+          "w": 582,
+          "h": 20
+        },
+        {
+          "x": 630,
+          "y": 482,
+          "w": 43,
+          "h": 20
+        }
+      ],
+      "units": "CSS px in the 1920x1080 frame (multiply by 2 for the @2x file)"
+    },
+    {
+      "file": "aircargonews-iqvia-loss.png",
+      "file2x": "aircargonews-iqvia-loss@2x.png",
+      "sourceUrl": "https://www.aircargonews.net/pharma-logistics/2019/07/failures-in-temperature-controlled-logistics-cost-biopharma-industry-billions/",
+      "quote": "The biopharma industry loses approximately $35 billion annually as a result of failures in temperature-controlled logistics, according to IQVIA Institute for Human Data Science.",
+      "x": 391,
+      "y": 454,
+      "w": 772,
+      "h": 54,
+      "lines": [
+        {
+          "x": 391,
+          "y": 454,
+          "w": 772,
+          "h": 26
+        },
+        {
+          "x": 391,
+          "y": 482,
+          "w": 433,
+          "h": 26
+        }
+      ],
+      "units": "CSS px in the 1920x1080 frame (multiply by 2 for the @2x file)",
+      "safeCrop": {
+        "x": 375,
+        "y": 0,
+        "w": 854,
+        "h": 1080,
+        "why": "article column only; excludes third-party ad units"
+      }
+    },
+    {
+      "file": "cargoflow-readme-lender.png",
+      "file2x": "cargoflow-readme-lender@2x.png",
+      "sourceUrl": "https://github.com/LSUDOKO/CargoFlow#the-problem-in-one-paragraph",
+      "quote": "A lender advancing money against a reefer container sees paperwork, not the container, so it either lends blind or does not lend. CargoFlow lets the cargo",
+      "x": 385,
+      "y": 453,
+      "w": 820,
+      "h": 46,
+      "lines": [
+        {
+          "x": 769,
+          "y": 453,
+          "w": 436,
+          "h": 22
+        },
+        {
+          "x": 385,
+          "y": 477,
+          "w": 714,
+          "h": 22
+        }
+      ],
+      "units": "CSS px in the 1920x1080 frame (multiply by 2 for the @2x file)",
+      "safeCrop": {
+        "x": 353,
+        "y": 290,
+        "w": 903,
+        "h": 250,
+        "why": "problem paragraph only"
+      }
+    },
+    {
+      "file": "atradius-india-pdf-terms.png",
+      "file2x": "atradius-india-pdf-terms@2x.png",
+      "sourceUrl": "https://group.atradius.com/dam/jcr:b693e087-ee4d-427e-9075-892bfa10ee04/payment-practices-barometer-asia-2025-india-en.pdf",
+      "sourcePage": 3,
+      "quote": "50% of all B2B sales are currently made on credit, with average payment terms standing at 52 days.",
+      "x": 924,
+      "y": 452,
+      "w": 512,
+      "h": 50,
+      "lines": [
+        {
+          "x": 1047,
+          "y": 452,
+          "w": 389,
+          "h": 24
+        },
+        {
+          "x": 924,
+          "y": 478,
+          "w": 390,
+          "h": 24
+        }
+      ],
+      "units": "CSS px in the 1920x1080 frame (multiply by 2 for the @2x file)",
+      "note": "Rendered from the official PDF (page 3) with pdftoppm on a neutral grey PDF-viewer backdrop; the web article itself does not state the 50% / 52 days figures in its text."
+    }
+  ]
+}

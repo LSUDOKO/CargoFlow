@@ -1,0 +1,688 @@
+[
+  {
+    "id": "c001",
+    "scene": "S00",
+    "startMs": 500,
+    "endMs": 2983,
+    "text": "This reefer carries vaccines to Singapore."
+  },
+  {
+    "id": "c002",
+    "scene": "S00",
+    "startMs": 3283,
+    "endMs": 5766,
+    "text": "It's at five point two degrees."
+  },
+  {
+    "id": "c003",
+    "scene": "S00",
+    "startMs": 6066,
+    "endMs": 8134,
+    "text": "Its lenders can't see that."
+  },
+  {
+    "id": "c004",
+    "scene": "S00",
+    "startMs": 8434,
+    "endMs": 9676,
+    "text": "They see paperwork."
+  },
+  {
+    "id": "c005",
+    "scene": "S01",
+    "startMs": 10900,
+    "endMs": 13797,
+    "text": "Meet Meera. She exports vaccines from Pune."
+  },
+  {
+    "id": "c006",
+    "scene": "S01",
+    "startMs": 14097,
+    "endMs": 18648,
+    "text": "She pays for the vials, the reefer and the freight today."
+  },
+  {
+    "id": "c007",
+    "scene": "S01",
+    "startMs": 18948,
+    "endMs": 22259,
+    "text": "Her buyer in Singapore, Wei Lin, pays later."
+  },
+  {
+    "id": "c008",
+    "scene": "S01",
+    "startMs": 22559,
+    "endMs": 26697,
+    "text": "In India, half of B2B sales are made on credit,"
+  },
+  {
+    "id": "c009",
+    "scene": "S01",
+    "startMs": 26797,
+    "endMs": 29279,
+    "text": "with payment terms averaging fifty-two days."
+  },
+  {
+    "id": "c010",
+    "scene": "S01",
+    "startMs": 29579,
+    "endMs": 32476,
+    "text": "About two months of cash, at sea."
+  },
+  {
+    "id": "c011",
+    "scene": "S02",
+    "startMs": 33900,
+    "endMs": 35969,
+    "text": "Daniel runs a credit fund."
+  },
+  {
+    "id": "c012",
+    "scene": "S02",
+    "startMs": 36269,
+    "endMs": 39579,
+    "text": "He'd finance it, but he can't see it."
+  },
+  {
+    "id": "c013",
+    "scene": "S02",
+    "startMs": 39879,
+    "endMs": 43603,
+    "text": "He gets an invoice and a bill of lading:"
+  },
+  {
+    "id": "c014",
+    "scene": "S02",
+    "startMs": 43703,
+    "endMs": 45359,
+    "text": "paperwork, not the container."
+  },
+  {
+    "id": "c015",
+    "scene": "S02",
+    "startMs": 45659,
+    "endMs": 48969,
+    "text": "So he lends blind, or not at all."
+  },
+  {
+    "id": "c016",
+    "scene": "S02",
+    "startMs": 49269,
+    "endMs": 52993,
+    "text": "The Asian Development Bank puts the trade finance gap"
+  },
+  {
+    "id": "c017",
+    "scene": "S02",
+    "startMs": 53093,
+    "endMs": 55990,
+    "text": "at two and a half trillion dollars."
+  },
+  {
+    "id": "c018",
+    "scene": "S02",
+    "startMs": 56290,
+    "endMs": 59600,
+    "text": "Small firms see forty-one percent of requests rejected."
+  },
+  {
+    "id": "c019",
+    "scene": "S03",
+    "startMs": 60900,
+    "endMs": 62969,
+    "text": "And the cargo is fragile."
+  },
+  {
+    "id": "c020",
+    "scene": "S03",
+    "startMs": 63269,
+    "endMs": 66579,
+    "text": "Biopharma loses about thirty-five billion dollars a year"
+  },
+  {
+    "id": "c021",
+    "scene": "S03",
+    "startMs": 66679,
+    "endMs": 68748,
+    "text": "to failures in temperature-controlled logistics."
+  },
+  {
+    "id": "c022",
+    "scene": "S03",
+    "startMs": 69048,
+    "endMs": 71117,
+    "text": "The logger records every degree."
+  },
+  {
+    "id": "c023",
+    "scene": "S03",
+    "startMs": 71417,
+    "endMs": 73486,
+    "text": "The money never reads it."
+  },
+  {
+    "id": "c024",
+    "scene": "S04",
+    "startMs": 74400,
+    "endMs": 77297,
+    "text": "A lender sees paperwork, not the container."
+  },
+  {
+    "id": "c025",
+    "scene": "S04",
+    "startMs": 77597,
+    "endMs": 80907,
+    "text": "CargoFlow lets the cargo's own sensor evidence decide"
+  },
+  {
+    "id": "c026",
+    "scene": "S04",
+    "startMs": 81007,
+    "endMs": 83076,
+    "text": "how much capital is available."
+  },
+  {
+    "id": "c027",
+    "scene": "S04",
+    "startMs": 83376,
+    "endMs": 85445,
+    "text": "On chain, milestone by milestone."
+  },
+  {
+    "id": "c028",
+    "scene": "S05a",
+    "startMs": 86400,
+    "endMs": 89297,
+    "text": "Meera registers the shipment and its policy:"
+  },
+  {
+    "id": "c029",
+    "scene": "S05a",
+    "startMs": 89397,
+    "endMs": 91052,
+    "text": "two to eight degrees."
+  },
+  {
+    "id": "c030",
+    "scene": "S05a",
+    "startMs": 91352,
+    "endMs": 93834,
+    "text": "Daniel escrows the facility in USDG."
+  },
+  {
+    "id": "c031",
+    "scene": "S05a",
+    "startMs": 94134,
+    "endMs": 96203,
+    "text": "It pays out in milestones,"
+  },
+  {
+    "id": "c032",
+    "scene": "S05a",
+    "startMs": 96303,
+    "endMs": 100441,
+    "text": "each one optionally tied to a place on the route."
+  },
+  {
+    "id": "c033",
+    "scene": "S05b",
+    "startMs": 101400,
+    "endMs": 105538,
+    "text": "The reefer's logger signs its readings with a device key."
+  },
+  {
+    "id": "c034",
+    "scene": "S05b",
+    "startMs": 105838,
+    "endMs": 108321,
+    "text": "Eight per sensor close an epoch."
+  },
+  {
+    "id": "c035",
+    "scene": "S05b",
+    "startMs": 108621,
+    "endMs": 111931,
+    "text": "CargoFlow fuses the two probes, measures their disagreement,"
+  },
+  {
+    "id": "c036",
+    "scene": "S05b",
+    "startMs": 112031,
+    "endMs": 115341,
+    "text": "and scores the epoch out of a hundred."
+  },
+  {
+    "id": "c037",
+    "scene": "S05b",
+    "startMs": 115641,
+    "endMs": 119366,
+    "text": "Only a fingerprint goes on chain, with the score."
+  },
+  {
+    "id": "c038",
+    "scene": "S05c",
+    "startMs": 120400,
+    "endMs": 123297,
+    "text": "Pass the policy in the right place,"
+  },
+  {
+    "id": "c039",
+    "scene": "S05c",
+    "startMs": 123397,
+    "endMs": 125879,
+    "text": "and a tranche goes to Meera."
+  },
+  {
+    "id": "c040",
+    "scene": "S05c",
+    "startMs": 126179,
+    "endMs": 127834,
+    "text": "Wrong place? It waits."
+  },
+  {
+    "id": "c041",
+    "scene": "S05c",
+    "startMs": 128134,
+    "endMs": 130617,
+    "text": "Humidity and shock have limits too."
+  },
+  {
+    "id": "c042",
+    "scene": "S05d",
+    "startMs": 132400,
+    "endMs": 136952,
+    "text": "Off Sri Lanka, probe one climbs to eleven point seven degrees."
+  },
+  {
+    "id": "c043",
+    "scene": "S05d",
+    "startMs": 137252,
+    "endMs": 140148,
+    "text": "Probe two holds at four point six."
+  },
+  {
+    "id": "c044",
+    "scene": "S05d",
+    "startMs": 140448,
+    "endMs": 143759,
+    "text": "The sensors disagree, the score falls to forty-eight,"
+  },
+  {
+    "id": "c045",
+    "scene": "S05d",
+    "startMs": 143859,
+    "endMs": 145514,
+    "text": "and the facility pauses."
+  },
+  {
+    "id": "c046",
+    "scene": "S05d",
+    "startMs": 145814,
+    "endMs": 148710,
+    "text": "An AI monitor can make things stricter."
+  },
+  {
+    "id": "c047",
+    "scene": "S05d",
+    "startMs": 149010,
+    "endMs": 149910,
+    "text": "Never looser."
+  },
+  {
+    "id": "c048",
+    "scene": "S05e",
+    "startMs": 151400,
+    "endMs": 155124,
+    "text": "Once probe two has eight fresh readings in band,"
+  },
+  {
+    "id": "c049",
+    "scene": "S05e",
+    "startMs": 155224,
+    "endMs": 158948,
+    "text": "CargoFlow proves they're inside the band, in zero knowledge,"
+  },
+  {
+    "id": "c050",
+    "scene": "S05e",
+    "startMs": 159048,
+    "endMs": 161117,
+    "text": "without revealing any of them."
+  },
+  {
+    "id": "c051",
+    "scene": "S05e",
+    "startMs": 161417,
+    "endMs": 163900,
+    "text": "Meera gets a notification and signs."
+  },
+  {
+    "id": "c052",
+    "scene": "S05e",
+    "startMs": 164200,
+    "endMs": 166269,
+    "text": "The contract checks the proof."
+  },
+  {
+    "id": "c053",
+    "scene": "S05e",
+    "startMs": 166569,
+    "endMs": 167469,
+    "text": "Releases resume."
+  },
+  {
+    "id": "c054",
+    "scene": "S05f",
+    "startMs": 168400,
+    "endMs": 171710,
+    "text": "In Singapore, Wei Lin confirms delivery and pays."
+  },
+  {
+    "id": "c055",
+    "scene": "S05f",
+    "startMs": 172010,
+    "endMs": 175321,
+    "text": "That one payment repays Daniel with his fee,"
+  },
+  {
+    "id": "c056",
+    "scene": "S05f",
+    "startMs": 175421,
+    "endMs": 177076,
+    "text": "sends Meera the rest,"
+  },
+  {
+    "id": "c057",
+    "scene": "S05f",
+    "startMs": 177176,
+    "endMs": 180900,
+    "text": "and hands Wei Lin the electronic bill of lading:"
+  },
+  {
+    "id": "c058",
+    "scene": "S05f",
+    "startMs": 181000,
+    "endMs": 182655,
+    "text": "title to the cargo."
+  },
+  {
+    "id": "c059",
+    "scene": "S05f",
+    "startMs": 182955,
+    "endMs": 185852,
+    "text": "Documents against payment, enforced by the contract."
+  },
+  {
+    "id": "c060",
+    "scene": "S05g",
+    "startMs": 187400,
+    "endMs": 191952,
+    "text": "If it goes wrong, an insurer can cover Daniel's drawn principal."
+  },
+  {
+    "id": "c061",
+    "scene": "S05g",
+    "startMs": 192252,
+    "endMs": 196390,
+    "text": "Parametric cover pays after a set run of failed epochs,"
+  },
+  {
+    "id": "c062",
+    "scene": "S05g",
+    "startMs": 196490,
+    "endMs": 198972,
+    "text": "proven from the evidence on chain."
+  },
+  {
+    "id": "c063",
+    "scene": "S05g",
+    "startMs": 199272,
+    "endMs": 200928,
+    "text": "The arbiter resolves disputes,"
+  },
+  {
+    "id": "c064",
+    "scene": "S05g",
+    "startMs": 201028,
+    "endMs": 203510,
+    "text": "but can never release a tranche."
+  },
+  {
+    "id": "c065",
+    "scene": "S06",
+    "startMs": 204400,
+    "endMs": 207710,
+    "text": "Here's the live app, on Robinhood Chain testnet."
+  },
+  {
+    "id": "c066",
+    "scene": "S06",
+    "startMs": 208300,
+    "endMs": 212438,
+    "text": "As Meera, I register the shipment, pick the pharma template,"
+  },
+  {
+    "id": "c067",
+    "scene": "S06",
+    "startMs": 212538,
+    "endMs": 215848,
+    "text": "and ask for twenty USDG in five milestones."
+  },
+  {
+    "id": "c068",
+    "scene": "S06",
+    "startMs": 217300,
+    "endMs": 220610,
+    "text": "Daniel approves and deposits twenty USDG into escrow."
+  },
+  {
+    "id": "c069",
+    "scene": "S06",
+    "startMs": 222300,
+    "endMs": 226024,
+    "text": "The carrier issues the bill of lading on chain,"
+  },
+  {
+    "id": "c070",
+    "scene": "S06",
+    "startMs": 226124,
+    "endMs": 229021,
+    "text": "and Meera binds it to the facility."
+  },
+  {
+    "id": "c071",
+    "scene": "S06",
+    "startMs": 229321,
+    "endMs": 232217,
+    "text": "Transit starts. The logger's readings come in,"
+  },
+  {
+    "id": "c072",
+    "scene": "S06",
+    "startMs": 232317,
+    "endMs": 234800,
+    "text": "two epochs pass, two tranches paid."
+  },
+  {
+    "id": "c073",
+    "scene": "S06",
+    "startMs": 236300,
+    "endMs": 240438,
+    "text": "Then the excursion. Paused, with the reasons in plain words,"
+  },
+  {
+    "id": "c074",
+    "scene": "S06",
+    "startMs": 240538,
+    "endMs": 242193,
+    "text": "and who acts next."
+  },
+  {
+    "id": "c075",
+    "scene": "S06",
+    "startMs": 243300,
+    "endMs": 246197,
+    "text": "The proof is ready. I review, sign,"
+  },
+  {
+    "id": "c076",
+    "scene": "S06",
+    "startMs": 246297,
+    "endMs": 248779,
+    "text": "and the facility is active again."
+  },
+  {
+    "id": "c077",
+    "scene": "S06",
+    "startMs": 250300,
+    "endMs": 254852,
+    "text": "Wei Lin signs in with a passkey, no extension, gas sponsored."
+  },
+  {
+    "id": "c078",
+    "scene": "S06",
+    "startMs": 255152,
+    "endMs": 257221,
+    "text": "She confirms and pays. Settled."
+  },
+  {
+    "id": "c079",
+    "scene": "S06",
+    "startMs": 257521,
+    "endMs": 260417,
+    "text": "And a settlement certificate for the records."
+  },
+  {
+    "id": "c080",
+    "scene": "S06",
+    "startMs": 261000,
+    "endMs": 263897,
+    "text": "Other shipments find capital in the market,"
+  },
+  {
+    "id": "c081",
+    "scene": "S06",
+    "startMs": 263997,
+    "endMs": 265652,
+    "text": "with a suggested fee."
+  },
+  {
+    "id": "c082",
+    "scene": "S07",
+    "startMs": 266400,
+    "endMs": 268469,
+    "text": "CargoFlow also works inside Claude."
+  },
+  {
+    "id": "c083",
+    "scene": "S07",
+    "startMs": 268769,
+    "endMs": 273734,
+    "text": "Add the remote MCP server as a custom connector, then just ask."
+  },
+  {
+    "id": "c084",
+    "scene": "S07",
+    "startMs": 274034,
+    "endMs": 276931,
+    "text": "It reads the fleet, explains a pause,"
+  },
+  {
+    "id": "c085",
+    "scene": "S07",
+    "startMs": 277031,
+    "endMs": 281583,
+    "text": "and prepares transactions with a link to sign in the app."
+  },
+  {
+    "id": "c086",
+    "scene": "S07",
+    "startMs": 282400,
+    "endMs": 284469,
+    "text": "It never holds a key."
+  },
+  {
+    "id": "c087",
+    "scene": "S08",
+    "startMs": 286400,
+    "endMs": 289710,
+    "text": "For developers: an OpenAPI reference, a TypeScript SDK,"
+  },
+  {
+    "id": "c088",
+    "scene": "S08",
+    "startMs": 289810,
+    "endMs": 292293,
+    "text": "a gateway agent for data loggers,"
+  },
+  {
+    "id": "c089",
+    "scene": "S08",
+    "startMs": 292393,
+    "endMs": 296531,
+    "text": "a Python SDK for portfolio risk, and GS1 EPCIS export."
+  },
+  {
+    "id": "c090",
+    "scene": "S09",
+    "startMs": 297400,
+    "endMs": 301538,
+    "text": "Built on Robinhood Chain, with Paxos USDG as the money."
+  },
+  {
+    "id": "c091",
+    "scene": "S09",
+    "startMs": 301838,
+    "endMs": 305148,
+    "text": "ZeroDev passkeys, Alchemy and QuickNode RPC, OpenZeppelin contracts."
+  },
+  {
+    "id": "c092",
+    "scene": "S09",
+    "startMs": 305448,
+    "endMs": 309586,
+    "text": "Dune analytics, and Fhenix and GMX extensions on Arbitrum Sepolia."
+  },
+  {
+    "id": "c093",
+    "scene": "S10",
+    "startMs": 310400,
+    "endMs": 311300,
+    "text": "It's live."
+  },
+  {
+    "id": "c094",
+    "scene": "S10",
+    "startMs": 311600,
+    "endMs": 315738,
+    "text": "A shipment settled end to end on the v3 contracts."
+  },
+  {
+    "id": "c095",
+    "scene": "S10",
+    "startMs": 316038,
+    "endMs": 317279,
+    "text": "Ten contracts, source-verified."
+  },
+  {
+    "id": "c096",
+    "scene": "S10",
+    "startMs": 317579,
+    "endMs": 319648,
+    "text": "Three hundred sixty-six contract tests."
+  },
+  {
+    "id": "c097",
+    "scene": "S11",
+    "startMs": 320600,
+    "endMs": 321500,
+    "text": "CargoFlow."
+  },
+  {
+    "id": "c098",
+    "scene": "S11",
+    "startMs": 321800,
+    "endMs": 327179,
+    "text": "Working capital that releases only when the cargo's own evidence says it should."
+  }
+]

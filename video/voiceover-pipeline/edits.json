@@ -1,0 +1,9 @@
+{
+ "S1-07": {
+  "appliesToText": "Worldwide, that's a two-and-a-half-trillion-dollar gap.",
+  "fromWord": 1,
+  "spokenText": "That's a two-and-a-half-trillion-dollar gap.",
+  "why": "The full line runs 3.3 s of speech in a 2.0 s window (the caption budget counted the hyphenated number as one word). \"Worldwide,\" is cut at its comma pause; the on-screen card ($2.5 trillion trade finance gap) and the zoom-out to the world map still carry the global scope. No phrasing that keeps both \"worldwide\" and the full number fits 2.0 s.",
+  "maxTempo": 1.12
+ }
+}

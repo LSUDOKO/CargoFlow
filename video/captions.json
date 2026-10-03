@@ -1,0 +1,392 @@
+[
+  {
+    "scene": "S0",
+    "startMs": 400,
+    "endMs": 4500,
+    "text": "Off Sri Lanka, these vaccines are three degrees from worthless."
+  },
+  {
+    "scene": "S0",
+    "startMs": 4700,
+    "endMs": 7600,
+    "text": "The money behind them can't see it."
+  },
+  {
+    "scene": "S1",
+    "startMs": 8300,
+    "endMs": 12000,
+    "text": "Meet Meera. She ships vaccines from Pune to Singapore,"
+  },
+  {
+    "scene": "S1",
+    "startMs": 12000,
+    "endMs": 14000,
+    "text": "at two to eight degrees."
+  },
+  {
+    "scene": "S1",
+    "startMs": 14200,
+    "endMs": 18300,
+    "text": "She sells on credit. In India, terms average fifty-two days."
+  },
+  {
+    "scene": "S1",
+    "startMs": 18500,
+    "endMs": 22600,
+    "text": "But the vaccines, reefer and freight are paid for today."
+  },
+  {
+    "scene": "S1",
+    "startMs": 22800,
+    "endMs": 25200,
+    "text": "Her bank can't see the container,"
+  },
+  {
+    "scene": "S1",
+    "startMs": 25200,
+    "endMs": 28900,
+    "text": "so it lends late, expensive, or not at all."
+  },
+  {
+    "scene": "S1",
+    "startMs": 29100,
+    "endMs": 31100,
+    "text": "Worldwide, that's a two-and-a-half-trillion-dollar gap."
+  },
+  {
+    "scene": "S1",
+    "startMs": 31300,
+    "endMs": 35000,
+    "text": "Pharma loses thirty-five billion a year to temperature failures."
+  },
+  {
+    "scene": "S1",
+    "startMs": 35200,
+    "endMs": 37200,
+    "text": "Her logger records every degree."
+  },
+  {
+    "scene": "S1",
+    "startMs": 37400,
+    "endMs": 39400,
+    "text": "The money never reads it."
+  },
+  {
+    "scene": "S2",
+    "startMs": 40300,
+    "endMs": 43600,
+    "text": "What if the money could see the cargo?"
+  },
+  {
+    "scene": "S2",
+    "startMs": 43800,
+    "endMs": 44800,
+    "text": "That's CargoFlow."
+  },
+  {
+    "scene": "S2",
+    "startMs": 45000,
+    "endMs": 47900,
+    "text": "A financier escrows USDG for one shipment."
+  },
+  {
+    "scene": "S2",
+    "startMs": 48100,
+    "endMs": 51800,
+    "text": "It releases in tranches, and each one unlocks only"
+  },
+  {
+    "scene": "S2",
+    "startMs": 51800,
+    "endMs": 54700,
+    "text": "when the cargo's own signed sensor evidence"
+  },
+  {
+    "scene": "S2",
+    "startMs": 54700,
+    "endMs": 57100,
+    "text": "passes the policy both sides agreed."
+  },
+  {
+    "scene": "S3",
+    "startMs": 58300,
+    "endMs": 59900,
+    "text": "Meera opens a facility."
+  },
+  {
+    "scene": "S3",
+    "startMs": 60100,
+    "endMs": 62500,
+    "text": "Her financier escrows forty thousand USDG."
+  },
+  {
+    "scene": "S3",
+    "startMs": 64600,
+    "endMs": 67900,
+    "text": "Signed readings are scored and committed on chain."
+  },
+  {
+    "scene": "S3",
+    "startMs": 68100,
+    "endMs": 70500,
+    "text": "Each passing batch releases a tranche."
+  },
+  {
+    "scene": "S3",
+    "startMs": 71000,
+    "endMs": 73000,
+    "text": "Overheat, and releases pause automatically."
+  },
+  {
+    "scene": "S3",
+    "startMs": 73200,
+    "endMs": 76500,
+    "text": "An AI monitor double-checks, and can only tighten."
+  },
+  {
+    "scene": "S3",
+    "startMs": 77400,
+    "endMs": 79400,
+    "text": "A backup probe stayed cold."
+  },
+  {
+    "scene": "S3",
+    "startMs": 79600,
+    "endMs": 82000,
+    "text": "Meera's wallet submits a zero-knowledge proof,"
+  },
+  {
+    "scene": "S3",
+    "startMs": 82000,
+    "endMs": 83200,
+    "text": "and releases resume."
+  },
+  {
+    "scene": "S3",
+    "startMs": 83800,
+    "endMs": 87900,
+    "text": "The buyer pays. One transaction repays the financier, plus fee,"
+  },
+  {
+    "scene": "S3",
+    "startMs": 87900,
+    "endMs": 89900,
+    "text": "and sends Meera the rest."
+  },
+  {
+    "scene": "S4",
+    "startMs": 90400,
+    "endMs": 93300,
+    "text": "The live app, on Robinhood Chain Testnet."
+  },
+  {
+    "scene": "S4",
+    "startMs": 93500,
+    "endMs": 95500,
+    "text": "I'll play Meera, the exporter."
+  },
+  {
+    "scene": "S4",
+    "startMs": 96300,
+    "endMs": 99600,
+    "text": "I register the shipment: Nhava Sheva to Singapore,"
+  },
+  {
+    "scene": "S4",
+    "startMs": 99600,
+    "endMs": 102900,
+    "text": "a thirty USDG invoice, two to eight degrees,"
+  },
+  {
+    "scene": "S4",
+    "startMs": 102900,
+    "endMs": 105800,
+    "text": "a twenty USDG facility in five tranches."
+  },
+  {
+    "scene": "S4",
+    "startMs": 107300,
+    "endMs": 109700,
+    "text": "Switch to the financier. Approve, deposit:"
+  },
+  {
+    "scene": "S4",
+    "startMs": 109900,
+    "endMs": 112300,
+    "text": "twenty USDG in this shipment's escrow."
+  },
+  {
+    "scene": "S4",
+    "startMs": 113300,
+    "endMs": 117000,
+    "text": "Start transit, add the reefer's logger as a gateway,"
+  },
+  {
+    "scene": "S4",
+    "startMs": 117000,
+    "endMs": 118200,
+    "text": "upload its readings."
+  },
+  {
+    "scene": "S4",
+    "startMs": 118400,
+    "endMs": 120800,
+    "text": "Two epochs pass, two tranches paid."
+  },
+  {
+    "scene": "S4",
+    "startMs": 123300,
+    "endMs": 127400,
+    "text": "Next leg, probe one climbs to eleven point seven degrees."
+  },
+  {
+    "scene": "S4",
+    "startMs": 127600,
+    "endMs": 130900,
+    "text": "The epoch fails and the facility pauses itself."
+  },
+  {
+    "scene": "S4",
+    "startMs": 132300,
+    "endMs": 134300,
+    "text": "The arbiter console flags it."
+  },
+  {
+    "scene": "S4",
+    "startMs": 134500,
+    "endMs": 136500,
+    "text": "I can fix this myself."
+  },
+  {
+    "scene": "S4",
+    "startMs": 137300,
+    "endMs": 140200,
+    "text": "Probe two stayed at four point six."
+  },
+  {
+    "scene": "S4",
+    "startMs": 140400,
+    "endMs": 143700,
+    "text": "I sign, CargoFlow proves it in zero knowledge,"
+  },
+  {
+    "scene": "S4",
+    "startMs": 143700,
+    "endMs": 146100,
+    "text": "and my wallet submits the proof."
+  },
+  {
+    "scene": "S4",
+    "startMs": 146300,
+    "endMs": 148300,
+    "text": "Verified on chain. Releases resume."
+  },
+  {
+    "scene": "S4",
+    "startMs": 150300,
+    "endMs": 152700,
+    "text": "The rest of the voyage clears."
+  },
+  {
+    "scene": "S4",
+    "startMs": 152900,
+    "endMs": 154500,
+    "text": "All five tranches released."
+  },
+  {
+    "scene": "S4",
+    "startMs": 156300,
+    "endMs": 158700,
+    "text": "The buyer confirms delivery and pays."
+  },
+  {
+    "scene": "S4",
+    "startMs": 158900,
+    "endMs": 162200,
+    "text": "One transaction: twenty point six to the financier,"
+  },
+  {
+    "scene": "S4",
+    "startMs": 162200,
+    "endMs": 163800,
+    "text": "the rest to me."
+  },
+  {
+    "scene": "S5",
+    "startMs": 165300,
+    "endMs": 167300,
+    "text": "Why Robinhood Chain and USDG?"
+  },
+  {
+    "scene": "S5",
+    "startMs": 167500,
+    "endMs": 170800,
+    "text": "USDG is a dollar stablecoin issued in Singapore,"
+  },
+  {
+    "scene": "S5",
+    "startMs": 170800,
+    "endMs": 172400,
+    "text": "where Meera's cargo lands."
+  },
+  {
+    "scene": "S5",
+    "startMs": 172600,
+    "endMs": 175000,
+    "text": "It carries escrow, tranches and settlement."
+  },
+  {
+    "scene": "S5",
+    "startMs": 175200,
+    "endMs": 178500,
+    "text": "Blocks land in a fraction of a second,"
+  },
+  {
+    "scene": "S5",
+    "startMs": 178500,
+    "endMs": 182200,
+    "text": "at a few millionths of an ETH per transaction."
+  },
+  {
+    "scene": "S5",
+    "startMs": 182400,
+    "endMs": 184000,
+    "text": "Every contract is source-verified."
+  },
+  {
+    "scene": "S6",
+    "startMs": 185300,
+    "endMs": 189800,
+    "text": "It's live. A shipment just settled end to end on testnet,"
+  },
+  {
+    "scene": "S6",
+    "startMs": 189800,
+    "endMs": 193100,
+    "text": "every step signed by its party's own wallet."
+  },
+  {
+    "scene": "S7",
+    "startMs": 195500,
+    "endMs": 196500,
+    "text": "CargoFlow."
+  },
+  {
+    "scene": "S7",
+    "startMs": 196700,
+    "endMs": 198700,
+    "text": "Working capital that releases only"
+  },
+  {
+    "scene": "S7",
+    "startMs": 198700,
+    "endMs": 202000,
+    "text": "when the cargo's own evidence says it should."
+  },
+  {
+    "scene": "S7",
+    "startMs": 202200,
+    "endMs": 203400,
+    "text": "Try it today."
+  }
+]

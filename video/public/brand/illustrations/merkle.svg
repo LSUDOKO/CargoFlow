@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="A Merkle tree of committed readings">
+  <path d="M120 70v20M120 90H70v20M120 90h50v20M70 140H44v20M70 140h26v20M170 140h-26v20M170 140h26v20M70 130v10M170 130v10" fill="none" stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="96" y="34" width="48" height="36" rx="8" fill="#C6F432" stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="50" y="110" width="40" height="22" rx="6" fill="#13293D" stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="150" y="110" width="40" height="22" rx="6" fill="#13293D" stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <g fill="#F7F9F4" stroke="#0B1B2B" stroke-width="4">
+    <rect x="28" y="160" width="32" height="26" rx="5"/><rect x="80" y="160" width="32" height="26" rx="5"/>
+    <rect x="128" y="160" width="32" height="26" rx="5"/><rect x="180" y="160" width="32" height="26" rx="5"/>
+  </g>
+  <path d="M36 173h16M88 173h16M136 173h16M188 173h16" stroke="#00C46A" stroke-width="4" stroke-linecap="round"/>
+  <path d="M110 52l6 6 12-12" fill="none" stroke="#0B1B2B" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

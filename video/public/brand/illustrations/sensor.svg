@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="A temperature sensor on a container door">
+  <rect x="34" y="40" width="172" height="164" rx="10" fill="#F7F9F4" stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M62 52v140M90 52v140M150 52v140M178 52v140" stroke="#DCE3DA" stroke-width="6"/>
+  <path d="M120 40v164" stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="96" y="96" width="48" height="64" rx="12" fill="#13293D" stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="110" y="108" width="20" height="40" rx="10" fill="#F7F9F4" stroke="#0B1B2B" stroke-width="3"/>
+  <rect x="116" y="124" width="8" height="20" rx="4" fill="#FFB020"/>
+  <path d="M110 96V78M130 96V70" stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="110" cy="74" r="5" fill="#C6F432" stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="130" cy="66" r="5" fill="#C6F432" stroke="#0B1B2B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M150 58q14 14 0 28M162 48q26 24 0 48" fill="none" stroke="#C6F432" stroke-width="6" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,31 @@
+node_modules
+out
+dist
+.DS_Store
+.env
+# generated from ../captions.json by remotion.config.ts
+public/captions.json
+public/demo/recording.mp4
+public/audio/voiceover-raw.wav
+public/audio/*.wav
+# demo/voice pipeline outputs (scripts/), regenerated from the founder's files
+public/demo/demo-75s.mp4
+public/demo/manifest.json
+public/demo/recording-proxy.mp4
+public/audio/voiceover-align.json
+# synthetic test stand-ins (scripts/make-synthetic.sh)
+public/**/*-synthetic.*
+public/**/*-synthetic-*
+synthetic/
+# v1 generated audio and rejected AI stills (kept locally, not in git)
+public/audio/vo/
+public/audio/*.srt
+public/assets/*.webp
+# v2 voice pipeline: venv, auditions and raw takes are regenerated
+voiceover-v2/.venv/
+voiceover-v2/auditions/
+voiceover-v2/raw/
+voiceover-v2/models/
+voiceover-pipeline/raw/
+voiceover-pipeline/auditions/
+voiceover-pipeline/music-src/
