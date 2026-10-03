@@ -58,7 +58,10 @@ export async function obtainPasskey(mode: "register" | "login", name: string): P
     spki = b64(pub);
   } else {
     const options = await post<{ options: Parameters<typeof startRegistration>[0]; userId: string }>("/register/options", { username: name, rpID });
-    const cred = await startRegistration(options.options);
+    // the Kernel WebAuthn validator verifies P-256 only, so offer ES256 alone: given -8 (Ed25519) first, some
+    // authenticators pick it and the account can never sign
+    const es256Only = { ...options.options, pubKeyCredParams: [{ type: "public-key" as const, alg: -7 }] };
+    const cred = await startRegistration(es256Only);
     authenticatorId = cred.id;
     const verify = await post<{ verified?: boolean }>("/register/verify", { userId: options.userId, username: name, cred, rpID });
     if (!verify.verified) throw new Error("The new passkey could not be verified. Try again.");

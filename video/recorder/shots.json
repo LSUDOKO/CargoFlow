@@ -2,19 +2,25 @@
   {
     "shotId": "D1-landing",
     "file": "video/public/footage/D1-landing.mp4",
-    "durationSec": 6,
+    "durationSec": 5,
     "plannedSec": 4,
     "handlesSec": 1,
     "recordedAt": "2026-10-03T15:33:10.949Z",
     "txHashes": [],
-    "edit": "jump cuts and speed ramps from takes/D1-landing.take.mp4; segment speeds 1.93, 1.49",
+    "edit": "jump cuts and speed ramps from takes/D1-landing.take.mp4; segment speeds 1.50, 2.39; action from 0 s, 1 s tail handle",
     "notes": [],
-    "extraNotes": []
+    "extraNotes": [],
+    "marksAt": {
+      "hero": 0.4,
+      "pill": 2.33,
+      "scroll": 2.6,
+      "trackbar": 4.75
+    }
   },
   {
     "shotId": "D2-exporter-wizard",
     "file": "video/public/footage/D2-exporter-wizard.mp4",
-    "durationSec": 11,
+    "durationSec": 10.03,
     "plannedSec": 9,
     "handlesSec": 1,
     "recordedAt": "2026-10-03T16:07:28.470Z",
@@ -23,24 +29,39 @@
       "0xa2fa7ae11c676837b8ecdc8887b5a0cd4a97d3a929ab720768f4c0971ce9b028",
       "0x5a9fe4b23d2128ce5bd9550145c2ebc1c29a11726d6c2400c3926e8eaee52abe"
     ],
-    "edit": "jump cuts and speed ramps from takes/D2-exporter-wizard.take.mp4; segment speeds 4.88, 1.95, 3.48, 3.62, 2.23, 9.75, 1.67",
+    "edit": "jump cuts and speed ramps from takes/D2-exporter-wizard.take.mp4; segment speeds 1.30, 1.30, 1.50, 2.00, 2.00, 1.56, 1.56, 1.56, 1.00; action from 0 s, 1 s tail handle",
     "notes": [
       "Pharma is the wizard's default cargo type, so the Pharma chip is already selected when the policy step opens; the click confirms it.",
-      "Buyer is the BUYER_KEY demo wallet (0x6248…1d4a), not a passkey account: ZeroDev passkey registration fails on the live origin.",
+      "Buyer is the BUYER_KEY demo wallet (0x6248\u20261d4a), not a passkey account: ZeroDev passkey registration fails on the live origin.",
       "No browser wallet pop-ups exist with the injected demo wallet; the three signatures show as the on-chain timeline ticks and toasts.",
       "reference CF-SG-VAX-0202",
       "shipment 0xc99131cb35886c991398b53530e1cfedb12fa1f7205a3f95f49b13cd1f7d761a"
     ],
     "extraNotes": [
       "Pharma is the wizard's default cargo type, so the Pharma chip is already selected when the policy step opens; the click confirms it.",
-      "Buyer is the BUYER_KEY demo wallet (0x6248…1d4a), not a passkey account: ZeroDev passkey registration fails on the live origin.",
+      "Buyer is the BUYER_KEY demo wallet (0x6248\u20261d4a), not a passkey account: ZeroDev passkey registration fails on the live origin.",
       "No browser wallet pop-ups exist with the injected demo wallet; the three signatures show as the on-chain timeline ticks and toasts."
-    ]
+    ],
+    "marksAt": {
+      "shipment": 0.08,
+      "filled1": 1.46,
+      "policy": 1.75,
+      "pharma": 3.26,
+      "financing": 3.71,
+      "tranches": 5.72,
+      "places": 6.24,
+      "review": 6.44,
+      "signing": 6.95,
+      "tick1": 7.24,
+      "tick2": 7.62,
+      "tick3": 8.01,
+      "ready": 8.3
+    }
   },
   {
     "shotId": "D3-financier-funds",
     "file": "video/public/footage/D3-financier-funds.mp4",
-    "durationSec": 7,
+    "durationSec": 6,
     "plannedSec": 5,
     "handlesSec": 1,
     "recordedAt": "2026-10-03T16:27:36.249Z",
@@ -48,18 +69,25 @@
       "0xf77e1c21a999a3d3641b3e26e9f1b6736e1d7323a2d54d6d481acf825123ba7d",
       "0xdb32bb6a22a7aa52265b03df3d46e1d78e27948e5bcdb933e1e8944691ce360b"
     ],
-    "edit": "jump cuts and speed ramps from takes/D3-financier-funds.take.mp4; segment speeds 1.92, 4.80, 3.20, 4.80, 1.60",
+    "edit": "jump cuts and speed ramps from takes/D3-financier-funds.take.mp4; segment speeds 1.40, 7.99, 2.00, 7.99, 1.00; action from 0 s, 1 s tail handle",
     "notes": [
       "Settlement preview on the card reads: financier 20.6 USDG, exporter 9.4 USDG when fully drawn and paid."
     ],
     "extraNotes": [
       "Settlement preview on the card reads: financier 20.6 USDG, exporter 9.4 USDG when fully drawn and paid."
-    ]
+    ],
+    "marksAt": {
+      "preview": 0.21,
+      "approve": 0.98,
+      "approved": 2.34,
+      "deposit": 3.59,
+      "funded": 4.5
+    }
   },
   {
     "shotId": "D4-carrier-ebl",
     "file": "video/public/footage/D4-carrier-ebl.mp4",
-    "durationSec": 8.97,
+    "durationSec": 8.07,
     "plannedSec": 7,
     "handlesSec": 1,
     "recordedAt": "2026-10-03T16:28:53.374Z",
@@ -68,81 +96,122 @@
       "0x7827d14406bebecde2fe1ba6a9dbd02998b908ab6c2e249b4bc9bec1fa6b1b38",
       "0xc13143ddd3ebd67249e6e24df969eb29723f844711d05258bd0f887be30f4707"
     ],
-    "edit": "jump cuts and speed ramps from takes/D4-carrier-ebl.take.mp4; segment speeds 2.70, 4.51, 6.01, 1.50, 3.60, 6.01, 1.95",
+    "edit": "jump cuts and speed ramps from takes/D4-carrier-ebl.take.mp4; segment speeds 2.00, 7.59, 7.59, 1.30, 7.59, 7.59, 1.20, 0.55; action from 0 s, 1 s tail handle",
     "notes": [
       "Carrier = deployer wallet holding CARRIER_ROLE. Bill #2 (bill #1 was the dry run). Shows bill public page, then Meera approves and binds; title card 'In escrow'.",
       "bill #2"
     ],
     "extraNotes": [
       "Carrier = deployer wallet holding CARRIER_ROLE. Bill #2 (bill #1 was the dry run). Shows bill public page, then Meera approves and binds; title card 'In escrow'."
-    ]
+    ],
+    "marksAt": {
+      "ebl": 0.2,
+      "fingerprint": 1.1,
+      "filled": 1.7,
+      "issue": 1.84,
+      "issued": 2.61,
+      "billpage": 2.85,
+      "meera": 3.55,
+      "approve": 4.02,
+      "approved": 4.53,
+      "bind": 4.8,
+      "bound": 5.24,
+      "inescrow": 6.54,
+      "end": 8
+    }
   },
   {
     "shotId": "D5-transit-releases",
     "file": "video/public/footage/D5-transit-releases.mp4",
-    "durationSec": 9,
+    "durationSec": 8,
     "plannedSec": 7,
     "handlesSec": 1,
     "recordedAt": "2026-10-03T16:30:16.034Z",
     "txHashes": [
       "0xd592d1c7cf36e855ec77b480ea29a685cdd6585d27d51cea1f7632476fae9d87"
     ],
-    "edit": "jump cuts and speed ramps from takes/D5-transit-releases.take.mp4; segment speeds 2.72, 7.78, 7.78, 11.66, 4.28, 4.28",
+    "edit": "jump cuts and speed ramps from takes/D5-transit-releases.take.mp4; segment speeds 1.20, 12.12, 1.20, 12.12, 1.00, 12.12, 1.10, 1.20; action from 0 s, 1 s tail handle",
     "notes": [
       "Milestones 1 and 2 released by the leg-1 readings (CSV generated seconds before upload, timestamps under 2 min old).",
       "leg 1 32 readings 2026-10-03T16:27:54.000Z..2026-10-03T16:29:09.000Z",
-      "Result 32 readings accepted. Epoch Score Outcome Transaction #1 (milestone 1) 100 Passed: milestone released 0x5a9c…ea94 #1 (milestone 2) 100 Passed: milestone released 0xe6ba…dcdc"
+      "Result 32 readings accepted. Epoch Score Outcome Transaction #1 (milestone 1) 100 Passed: milestone released 0x5a9c\u2026ea94 #1 (milestone 2) 100 Passed: milestone released 0xe6ba\u2026dcdc"
     ],
     "extraNotes": [
       "Milestones 1 and 2 released by the leg-1 readings (CSV generated seconds before upload, timestamps under 2 min old)."
-    ]
+    ],
+    "marksAt": {
+      "transit": 0.42,
+      "intransit": 1.24,
+      "csv": 1.53,
+      "send": 2.63,
+      "result": 3.21,
+      "rows": 5.06,
+      "map": 6.83
+    }
   },
   {
     "shotId": "D6-excursion-pause",
     "file": "video/public/footage/D6-excursion-pause.mp4",
-    "durationSec": 9.03,
+    "durationSec": 8.03,
     "plannedSec": 7,
     "handlesSec": 1,
     "recordedAt": "2026-10-03T16:31:15.296Z",
     "txHashes": [],
-    "edit": "jump cuts and speed ramps from takes/D6-excursion-pause.take.mp4; segment speeds 2.89, 10.34, 4.55, 2.48, 4.14, 3.31",
+    "edit": "jump cuts and speed ramps from takes/D6-excursion-pause.take.mp4; segment speeds 1.20, 3.40, 1.00, 14.00, 1.00, 1.00, 1.20, 3.40; action from 0 s, 1 s tail handle",
     "notes": [
       "Epoch score 48: Failed, facility paused (score below threshold, not compliant, conflict too high). Ends on the Evidence tab temperature chart with the excursion.",
       "leg 2 16 readings 2026-10-03T16:29:24.000Z..2026-10-03T16:29:59.000Z",
-      "Result 16 readings accepted. Epoch Score Outcome Transaction #1 (milestone 3) 48 Failed: facility paused score below threshold, not compliant, conflict too high 0x0bac…a9dc"
+      "Result 16 readings accepted. Epoch Score Outcome Transaction #1 (milestone 3) 48 Failed: facility paused score below threshold, not compliant, conflict too high 0x0bac\u2026a9dc"
     ],
     "extraNotes": [
       "Epoch score 48: Failed, facility paused (score below threshold, not compliant, conflict too high). Ends on the Evidence tab temperature chart with the excursion."
-    ]
+    ],
+    "marksAt": {
+      "warning": 0.33,
+      "send": 1.29,
+      "result": 2.28,
+      "paused": 4.2,
+      "pill": 5,
+      "explain": 5.75,
+      "chart": 7.76
+    }
   },
   {
     "shotId": "D7-recovery",
     "file": "video/public/footage/D7-recovery.mp4",
-    "durationSec": 9,
+    "durationSec": 8,
     "plannedSec": 7,
     "handlesSec": 1,
     "recordedAt": "2026-10-03T16:33:01.219Z",
     "txHashes": [
       "0x79c68fc0a35fc23f08678215e858a1d16af38ce61b13307524e67802af8a232f"
     ],
-    "edit": "jump cuts and speed ramps from takes/D7-recovery.take.mp4; segment speeds 2.06, 2.21, 9.49, 3.16, 2.06",
+    "edit": "jump cuts and speed ramps from takes/D7-recovery.take.mp4; segment speeds 1.20, 1.20, 1.50, 4.12, 1.00, 1.20; action from 0 s, 1 s tail handle",
     "notes": [
       "Real automatic ZK recovery on the same shipment: RECOVERY_READY arrived 45 s after leg 3; bell -> Review and sign -> Sign and resume (one signature + one tx).",
       "Milestone 3 was then released by the backend automatically (12 USDG drawn). In the raw take a mis-aimed click opened (and closed) the 'Open a dispute' dialog; it is cut out and nothing was submitted.",
-      "Not recorded on CF-LIVE-1791034258807 (0x6d86…): its recovery evidence ended 13:19 UTC, older than the policy's 30-minute evidence age, so resumeWithProof would revert (EvidenceStale). Left untouched.",
+      "Not recorded on CF-LIVE-1791034258807 (0x6d86\u2026): its recovery evidence ended 13:19 UTC, older than the policy's 30-minute evidence age, so resumeWithProof would revert (EvidenceStale). Left untouched.",
       "leg 3 16 readings 2026-10-03T16:30:29.000Z..2026-10-03T16:31:04.000Z",
       "RECOVERY_READY after 45 s"
     ],
     "extraNotes": [
       "Real automatic ZK recovery on the same shipment: RECOVERY_READY arrived 45 s after leg 3; bell -> Review and sign -> Sign and resume (one signature + one tx).",
       "Milestone 3 was then released by the backend automatically (12 USDG drawn). In the raw take a mis-aimed click opened (and closed) the 'Open a dispute' dialog; it is cut out and nothing was submitted.",
-      "Not recorded on CF-LIVE-1791034258807 (0x6d86…): its recovery evidence ended 13:19 UTC, older than the policy's 30-minute evidence age, so resumeWithProof would revert (EvidenceStale). Left untouched."
-    ]
+      "Not recorded on CF-LIVE-1791034258807 (0x6d86\u2026): its recovery evidence ended 13:19 UTC, older than the policy's 30-minute evidence age, so resumeWithProof would revert (EvidenceStale). Left untouched."
+    ],
+    "marksAt": {
+      "ready": 0.25,
+      "review": 1.25,
+      "panel": 1.67,
+      "signed": 2.91,
+      "resumed": 4.69,
+      "proofcard": 7.5
+    }
   },
   {
     "shotId": "D8-buyer-passkey-settled",
     "file": "video/public/footage/D8-buyer-passkey-settled.mp4",
-    "durationSec": 9.27,
+    "durationSec": 8.3,
     "plannedSec": 7.3,
     "handlesSec": 1,
     "recordedAt": "2026-10-03T16:34:46.457Z",
@@ -151,121 +220,194 @@
       "0x51781a185884a6a532cc4b4d906d6aa7e57957785b0210aba10594bc071abf8b",
       "0xabba66b6f602ed9e04bbabcd1a56e118cf188ae8bd9934b3f7e405e341f6e562"
     ],
-    "edit": "jump cuts and speed ramps from takes/D8-buyer-passkey-settled.take.mp4; segment speeds 3.66, 3.33, 8.32, 6.66, 6.66, 3.66",
+    "edit": "jump cuts and speed ramps from takes/D8-buyer-passkey-settled.take.mp4; segment speeds 2.20, 11.00, 11.00, 11.00, 11.00, 1.00, 1.00; action from 0 s, 1 s tail handle",
     "notes": [
-      "Passkey not possible on the live site: passkeys.zerodev.app returns rpId 'localhost' for this project, so Chromium refuses ('The RP ID \"localhost\" is invalid for this domain'). The clip hovers 'Continue with passkey' and connects 'CargoFlow Demo Wallet · Wei Lin' instead; change the D8 line to drop 'passkey' and 'gas sponsored'. Fix: set the deployed domain in the ZeroDev dashboard.",
+      "Passkey not possible on the live site: passkeys.zerodev.app returns rpId 'localhost' for this project, so Chromium refuses ('The RP ID \"localhost\" is invalid for this domain'). The clip hovers 'Continue with passkey' and connects 'CargoFlow Demo Wallet \u00b7 Wei Lin' instead; change the D8 line to drop 'passkey' and 'gas sponsored'. Fix: set the deployed domain in the ZeroDev dashboard.",
       "Leg 4 (milestones 4 and 5 released) was uploaded just before this shot; that take is takes/D7b-leg4-releases.take.mp4.",
-      "Buyer connected with the injected demo wallet: ZeroDev passkey registration on the live origin fails (rpId 'localhost')."
+      "Buyer connected with the injected demo wallet: ZeroDev passkey registration on the live origin fails (rpId 'localhost').",
+      "Re-test after the passkey domain fix (3 Oct, ~17:00 UTC): passkey creation now works, but the bundler RPC refuses the origin (403 allowlist), so the passkey buyer cannot confirm or pay. This injected-wallet clip is kept."
     ],
     "extraNotes": [
-      "Passkey not possible on the live site: passkeys.zerodev.app returns rpId 'localhost' for this project, so Chromium refuses ('The RP ID \"localhost\" is invalid for this domain'). The clip hovers 'Continue with passkey' and connects 'CargoFlow Demo Wallet · Wei Lin' instead; change the D8 line to drop 'passkey' and 'gas sponsored'. Fix: set the deployed domain in the ZeroDev dashboard.",
+      "Passkey not possible on the live site: passkeys.zerodev.app returns rpId 'localhost' for this project, so Chromium refuses ('The RP ID \"localhost\" is invalid for this domain'). The clip hovers 'Continue with passkey' and connects 'CargoFlow Demo Wallet \u00b7 Wei Lin' instead; change the D8 line to drop 'passkey' and 'gas sponsored'. Fix: set the deployed domain in the ZeroDev dashboard.",
       "Leg 4 (milestones 4 and 5 released) was uploaded just before this shot; that take is takes/D7b-leg4-releases.take.mp4."
-    ]
+    ],
+    "marksAt": {
+      "modal": 0.18,
+      "connected": 3.85,
+      "confirm": 4.32,
+      "delivered": 4.86,
+      "approve": 4.89,
+      "approved": 5.34,
+      "pay": 5.36,
+      "settled": 5.85,
+      "pill": 6.3,
+      "title": 7.7
+    }
   },
   {
     "shotId": "D9-certificate",
     "file": "video/public/footage/D9-certificate.mp4",
-    "durationSec": 5.5,
+    "durationSec": 4.53,
     "plannedSec": 3.5,
     "handlesSec": 1,
     "recordedAt": "2026-10-03T16:35:03.181Z",
     "txHashes": [],
-    "edit": "jump cuts and speed ramps from takes/D9-certificate.take.mp4; segment speeds 2.04, 1.89",
+    "edit": "jump cuts and speed ramps from takes/D9-certificate.take.mp4; segment speeds 1.20, 3.04; action from 0 s, 1 s tail handle",
     "notes": [
       "Downloaded PDF opened from disk in Chromium's PDF viewer in a new tab (no download bar is visible in a page capture); scrolls to the settlement waterfall (20.6 financier / 9.4 exporter).",
       "certificate dl-buyer-cargoflow-settlement-certificate-CF-SG-VAX-0202.pdf"
     ],
     "extraNotes": [
       "Downloaded PDF opened from disk in Chromium's PDF viewer in a new tab (no download bar is visible in a page capture); scrolls to the settlement waterfall (20.6 financier / 9.4 exporter)."
-    ]
+    ],
+    "marksAt": {
+      "download": 0.5,
+      "downloaded": 1.5,
+      "pdf": 1.82,
+      "scrolled": 4.5
+    }
   },
   {
     "shotId": "D10-market",
     "file": "video/public/footage/D10-market.mp4",
-    "durationSec": 7.17,
+    "durationSec": 6.2,
     "plannedSec": 5.2,
     "handlesSec": 1,
     "recordedAt": "2026-10-03T16:02:53.927Z",
     "txHashes": [],
-    "edit": "jump cuts and speed ramps from takes/D10-market.take.mp4; segment speeds 1.53, 1.78, 1.27, 1.27",
+    "edit": "jump cuts and speed ramps from takes/D10-market.take.mp4; segment speeds 1.60, 1.20, 1.20, 1.19; action from 0 s, 1 s tail handle",
     "notes": [
       "Suggested fee band on this request is 7.25-10.25% but the exporter's maximum is 4%, so a fee inside the band is refused by the form; 3.8% was typed and the offer not sent.",
       "Offer typed (3.8%), not sent. The request's maximum fee is 4%, below the suggested band, so a fee inside the band would be refused by the form."
     ],
     "extraNotes": [
       "Suggested fee band on this request is 7.25-10.25% but the exporter's maximum is 4%, so a fee inside the band is refused by the form; 3.8% was typed and the offer not sent."
-    ]
+    ],
+    "marksAt": {
+      "market": 0.12,
+      "band": 1.55,
+      "modal": 2.67,
+      "fee": 3.02,
+      "reasons": 4.35,
+      "typed": 5.61
+    }
   },
   {
     "shotId": "M1-developers-copy-url",
     "file": "video/public/footage/M1-developers-copy-url.mp4",
-    "durationSec": 4.83,
+    "durationSec": 3.83,
     "plannedSec": 2.8,
     "handlesSec": 1,
     "recordedAt": "2026-10-03T15:59:50.178Z",
     "txHashes": [],
-    "edit": "jump cuts and speed ramps from takes/M1-developers-copy-url.take.mp4; segment speeds 1.05",
+    "edit": "jump cuts and speed ramps from takes/M1-developers-copy-url.take.mp4; segment speeds 1.30; action from 0 s, 1 s tail handle",
     "notes": [
       "Copy confirmation is the icon turning into a check (1.5 s)."
     ],
     "extraNotes": [
       "Copy confirmation is the icon turning into a check (1.5 s)."
-    ]
+    ],
+    "marksAt": {
+      "panel": 0.49,
+      "copied": 2.01
+    }
   },
   {
     "shotId": "R3-docs-reference",
     "file": "video/public/footage/R3-docs-reference.mp4",
-    "durationSec": 5.4,
-    "plannedSec": 3.4,
+    "durationSec": 10.5,
+    "plannedSec": 9.5,
     "handlesSec": 1,
     "recordedAt": "2026-10-03T16:00:11.433Z",
     "txHashes": [],
-    "edit": "jump cuts and speed ramps from takes/R3-docs-reference.take.mp4; segment speeds 1.87, 1.56",
+    "edit": "jump cuts and speed ramps from takes/R3-docs-reference.take.mp4; segment speeds 0.90; action from 0 s, 1 s tail handle",
     "notes": [
       "Marketplace -> 'Post a financing request (exporter)': shows the wallet-signed message template 'CargoFlow financing request / shipment / amount / max fee bps / milestones / issued'."
     ],
     "extraNotes": [
       "Marketplace -> 'Post a financing request (exporter)': shows the wallet-signed message template 'CargoFlow financing request / shipment / amount / max fee bps / milestones / issued'."
-    ]
+    ],
+    "marksAt": {
+      "reference": 0.7,
+      "group": 3.11,
+      "operation": 6,
+      "signed": 8.84,
+      "end": 10.5
+    }
   },
   {
     "shotId": "R4a-track-settled",
     "file": "video/public/footage/R4a-track-settled.mp4",
-    "durationSec": 6.33,
-    "plannedSec": 4.3,
+    "durationSec": 5.7,
+    "plannedSec": 4.7,
     "handlesSec": 1,
     "recordedAt": "2026-10-03T15:35:03.575Z",
     "txHashes": [],
-    "edit": "jump cuts and speed ramps from takes/R4a-track-settled.take.mp4; segment speeds 1.24, 1.99",
+    "edit": "jump cuts and speed ramps from takes/R4a-track-settled.take.mp4; segment speeds 1.20, 0.88; action from 0 s, 1 s tail handle",
     "notes": [],
-    "extraNotes": []
+    "extraNotes": [],
+    "marksAt": {
+      "header": 0.5,
+      "pill": 2.3,
+      "journey": 3.65
+    }
   },
   {
     "shotId": "R4a-explorer-tx",
     "file": "video/public/footage/R4a-explorer-tx.mp4",
-    "durationSec": 3,
-    "plannedSec": 1,
+    "durationSec": 2.2,
+    "plannedSec": 1.2,
     "handlesSec": 1,
     "recordedAt": "2026-10-03T15:35:25.450Z",
     "txHashes": [],
-    "edit": "jump cuts and speed ramps from takes/R4a-explorer-tx.take.mp4; segment speeds 1.05",
+    "edit": "jump cuts and speed ramps from takes/R4a-explorer-tx.take.mp4; segment speeds 1.52; action from 0 s, 1 s tail handle",
     "notes": [
-      "Explorer page for settle tx 0x37571b49…cf4e365a35, status Success."
+      "Explorer page for settle tx 0x37571b49\u2026cf4e365a35, status Success."
     ],
     "extraNotes": [
-      "Explorer page for settle tx 0x37571b49…cf4e365a35, status Success."
-    ]
+      "Explorer page for settle tx 0x37571b49\u2026cf4e365a35, status Success."
+    ],
+    "marksAt": {
+      "status": 0.26,
+      "end": 2.2
+    }
   },
   {
     "shotId": "R4b-deployments",
     "file": "video/public/footage/R4b-deployments.mp4",
-    "durationSec": 3.5,
-    "plannedSec": 1.5,
+    "durationSec": 5.13,
+    "plannedSec": 4.1,
     "handlesSec": 1,
     "recordedAt": "2026-10-03T15:35:53.209Z",
     "txHashes": [],
-    "edit": "jump cuts and speed ramps from takes/R4b-deployments.take.mp4; segment speeds 2.31",
+    "edit": "jump cuts and speed ramps from takes/R4b-deployments.take.mp4; segment speeds 1.49; action from 0 s, 1 s tail handle",
     "notes": [],
-    "extraNotes": []
+    "extraNotes": [],
+    "marksAt": {
+      "top": 0.27,
+      "scrolled": 4.7
+    }
+  },
+  {
+    "shotId": "D8-passkey-signin",
+    "file": "video/public/footage/D8-passkey-signin.mp4",
+    "durationSec": 6,
+    "handlesSec": 1,
+    "recordedAt": "2026-10-03T17:17:10.081Z",
+    "txHashes": [],
+    "edit": "jump cuts and speed ramps from takes/D8-passkey-signin.take.mp4; segment speeds 3.65, 3.65, 3.65, 1.00; action from 0 s, 1 s tail handle",
+    "marksAt": {
+      "modal": 0.08,
+      "passkey": 1.61,
+      "create": 3.48,
+      "account": 4.55
+    },
+    "notes": [
+      "Passkey account created on the live site; ZeroDev bundler RPC answers 403 'Access denied: Neither IP nor domain is on the allowlist.', so no user operation can be sent.",
+      "Optional insert for D8 (not in footage.ts): live passkey sign-in up to where it works: 'Continue with passkey' -> 'Create a passkey account' -> header 'Passkey account 0x2ff\u2026F90c'.",
+      "Virtual authenticator limited to ES256 by an init script: Chromium's virtual authenticator otherwise picks Ed25519 (alg -8, listed first in ZeroDev's options), which the Kernel WebAuthn validator cannot use; the app then shows 'The passkey account could not be opened.' after a WebCrypto DataError.",
+      "No transaction possible: rpc.zerodev.app (bundler and paymaster) returns HTTP 403 'Access denied: Neither IP nor domain is on the allowlist.' for zd_getUserOperationGasPrice; the wallet menu says 'Gas sponsorship isn't on; this account needs a little testnet ETH.'"
+    ],
+    "plannedSec": 5
   }
 ]

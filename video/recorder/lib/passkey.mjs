@@ -10,7 +10,30 @@ fs.mkdirSync(PASSKEY_DIR, { recursive: true, mode: 0o700 });
 const CRED = path.join(PASSKEY_DIR, "credentials.json");
 export const PASSKEY_STATE = path.join(PASSKEY_DIR, "storage-state.json");
 
+/**
+ * Chromium's virtual authenticator also implements Ed25519 and picks it first when the relying party lists it
+ * (ZeroDev's options list -8, -7, -257). Phone and laptop platform authenticators (iCloud Keychain, Google Password
+ * Manager) create ES256 passkeys only, which is what the Kernel WebAuthn validator needs. This init script makes the
+ * virtual authenticator behave like those: creation requests offer it ES256 only.
+ */
+export async function es256Only(context) {
+  await context.addInitScript(() => {
+    const c = navigator.credentials;
+    if (!c || !c.create) return;
+    const create = c.create.bind(c);
+    c.create = (opts) => {
+      const pk = opts && opts.publicKey;
+      if (pk && Array.isArray(pk.pubKeyCredParams)) {
+        const es = pk.pubKeyCredParams.filter((p) => p.alg === -7);
+        if (es.length) opts = { ...opts, publicKey: { ...pk, pubKeyCredParams: es } };
+      }
+      return create(opts);
+    };
+  });
+}
+
 export async function addAuthenticator(page) {
+  await es256Only(page.context());
   const s = await page.context().newCDPSession(page);
   await s.send("WebAuthn.enable", { enableUI: false });
   const { authenticatorId } = await s.send("WebAuthn.addVirtualAuthenticator", {

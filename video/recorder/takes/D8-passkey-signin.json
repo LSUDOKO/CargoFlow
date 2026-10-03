@@ -1,0 +1,40 @@
+{
+  "id": "D8-passkey-signin",
+  "take": "D8-passkey-signin.take.mp4",
+  "recordedAt": "2026-10-03T17:17:10.081Z",
+  "durationSec": 25.24,
+  "marks": [
+    {
+      "name": "start",
+      "t": 0
+    },
+    {
+      "name": "modal",
+      "t": 2.785
+    },
+    {
+      "name": "passkey",
+      "t": 8.373
+    },
+    {
+      "name": "create",
+      "t": 15.183
+    },
+    {
+      "name": "account",
+      "t": 19.061
+    },
+    {
+      "name": "menu",
+      "t": 23.739
+    },
+    {
+      "name": "end",
+      "t": 25.239
+    }
+  ],
+  "txs": [],
+  "notes": [
+    "Passkey account created on the live site; ZeroDev bundler RPC answers 403 'Access denied: Neither IP nor domain is on the allowlist.', so no user operation can be sent."
+  ]
+}
