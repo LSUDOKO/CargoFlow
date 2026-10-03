@@ -28,6 +28,7 @@ flowchart LR
         RV["ReceivableVault<br/>sole USDG custodian"]
         GV["Groth16Verifier"]
         AC["CargoFlowAccess<br/>roles"]
+        CP["CoverPool (v2)<br/>default cover, no role"]
     end
     SENSORS["Sensors / simulator"] --> ING --> EV --> POS
     EV --> PG
@@ -45,6 +46,8 @@ flowchart LR
     AC -.roles.-> FC
     AC -.roles.-> ER
     AC -.roles.-> RV
+    CP -.reads state.-> FC
+    CP -.reads drawn.-> RV
     IDX -->|logs| DB
     FC -.events.-> IDX
     DB --> API
@@ -62,7 +65,7 @@ stateDiagram-v2
     [*] --> CREATED: exporter createFacility
     CREATED --> FINANCED: financier depositCapital
     FINANCED --> ACTIVE: startTransit
-    ACTIVE --> ACTIVE: release milestone (evidence passes policy)
+    ACTIVE --> ACTIVE: release milestone (evidence passes policy, centroid inside the place if any)
     ACTIVE --> PAUSED: pause (monitor / dispute role)
     PAUSED --> ACTIVE: resumeWithProof (Groth16, exporter or manager) or resumeByVerifier (arbiter)
     ACTIVE --> DISPUTED: openDispute
@@ -80,18 +83,34 @@ stateDiagram-v2
 Release is binary and sequential: a milestone releases its exact tranche or nothing, strictly in order, once.
 Settlement is a fixed waterfall: invoice -> financier (drawn principal + fee + undrawn) -> exporter (residual).
 
+Contracts v2 adds three conditions without adding a state:
+
+- **Place-based milestones.** A milestone may carry a place (`latE6`, `lonE6`, `radiusM`, 1-1,000 km). Evidence
+  that passes the policy but whose epoch centroid lies outside the radius reverts `OutsideMilestonePlace`; the
+  facility stays ACTIVE and the milestone waits for later evidence (`HELD_NOT_AT_PLACE` off chain). The distance
+  is computed on chain in integer math (`GeoDistance`), and `placeCheck` exposes the exact value.
+- **Humidity and shock limits.** The policy carries `maxHumidityX100` and `maxShockX100` (0 = no limit); each
+  epoch commits its maxima. A breach reverts `EvidenceBelowPolicy` like a low score and the service pauses with
+  `HUMIDITY_LIMIT` / `SHOCK_LIMIT`. The ZK circuit still proves only temperature, so such a pause is recovered by
+  the arbiter or fresh evidence; a proof cannot resume a facility whose recovery epoch breaches either limit.
+- **Default cover.** `CoverPool` lets an insurer escrow cover before transit and the financier buy it (premium
+  paid directly to the insurer, at most 20%). On SETTLED the cover is credited back to the insurer; on DEFAULTED
+  the financier is credited `min(cover, drawn)` and the insurer the rest; payouts are pulled with `withdraw()`.
+  The pool holds no role and cannot touch the vault.
+
 ## Who may do what
 
 | Actor | Authority | Cannot |
 |---|---|---|
 | Exporter | register shipment, set policy, create facility, start transit, trigger release | change a committed policy, redirect funds (recipient is fixed to the exporter) |
-| Financier | deposit the committed amount, trigger release | withdraw once deposited |
+| Financier | deposit the committed amount, trigger release, accept a cover offer (pays the premium) | withdraw once deposited |
+| Insurer (v2, any address) | offer default cover before transit, withdraw an unaccepted offer, withdraw credited payouts | take back an accepted cover, or be paid before the facility settles or defaults |
 | Buyer | confirm delivery, pay the invoice | settle on someone else's behalf (`NotBuyer`) |
 | Worker key (`EVIDENCE_VERIFIER`) | commit evidence epochs | release, pause, resume |
 | Monitor key (`MONITOR`) | request a pause | anything else; the service refuses to start if it holds another role |
 | Manager key (`FACILITY_MANAGER`) | start transit, release, submit recovery proofs | resume without a proof, change policy, move funds elsewhere |
 | Arbiter (`DISPUTE`) | pause, resume by verifier (the trusted fallback), open and resolve disputes, declare default | release |
-| Admin | grant and revoke roles (two-step, delayed transfer) | touch a facility or the vault |
+| Admin | grant and revoke roles (two-step, delayed transfer) | touch a facility, the vault or the cover pool |
 | AI model | recommend a stricter outcome | hold any key or call anything: the service acts on its behalf only through the monitor key, and only to pause |
 
 ## Trust boundaries
@@ -112,10 +131,11 @@ Settlement is a fixed waterfall: invoice -> financier (drawn principal + fee + u
 2. Penalties (physical, conflict, freshness, route, source reliability, fraud, coverage) make a 0-100 score
    with a published formula.
 3. Eight readings close an epoch whose salted Poseidon Merkle root is committed on-chain with score,
-   conflict and risk; the readings themselves stay in Postgres.
+   conflict and risk, and (v2) the epoch's aggregates: centroid, highest humidity, highest shock. The readings
+   themselves stay in Postgres.
 4. The policy gate decides approve, request secondary proof, or pause. The model may only tighten that.
-5. The controller releases only if the committed epoch satisfies the on-chain policy, regardless of what the
-   backend asked for.
+5. The controller releases only if the committed epoch satisfies the on-chain policy (and, for a place-based
+   milestone, lies inside its place), regardless of what the backend asked for.
 6. After a pause, a Groth16 proof that eight committed-after-the-pause readings of the unaffected probe lie in
    the policy band, bound to this exact pause, resumes the facility.
 

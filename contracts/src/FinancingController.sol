@@ -9,6 +9,7 @@ import {IPolicyEngine} from "./interfaces/IPolicyEngine.sol";
 import {IReceivableVault} from "./interfaces/IReceivableVault.sol";
 import {IGroth16Verifier} from "./interfaces/IGroth16Verifier.sol";
 import {IShipmentRegistry} from "./interfaces/IShipmentRegistry.sol";
+import {GeoDistance} from "./libraries/GeoDistance.sol";
 import {ProofContext} from "./libraries/ProofContext.sol";
 import {Roles} from "./libraries/Roles.sol";
 
@@ -19,6 +20,8 @@ import {Roles} from "./libraries/Roles.sol";
 contract FinancingController is Controlled, ReentrancyGuard, IFinancingController {
     uint8 public constant MAX_MILESTONES = 16;
     uint16 private constant MAX_SCORE = 100;
+    uint32 public constant MIN_RADIUS_M = 1_000;
+    uint32 public constant MAX_RADIUS_M = 1_000_000;
 
     IShipmentRegistry public immutable REGISTRY;
     IPolicyEngine public immutable POLICIES;
@@ -68,15 +71,18 @@ contract FinancingController is Controlled, ReentrancyGuard, IFinancingControlle
         uint256 count = milestones.length;
         if (count == 0 || count > MAX_MILESTONES) revert InvalidMilestones();
         uint256 committed;
-        MilestoneSpec[] storage stored = _milestones[shipmentId];
         for (uint256 i; i < count; ++i) {
             MilestoneSpec calldata m = milestones[i];
             if (
                 m.allocation == 0 || m.evidenceThreshold < policy.minEvidenceScore
                     || m.evidenceThreshold > MAX_SCORE
             ) revert InvalidMilestones();
+            if (
+                !GeoDistance.isValidCoordinate(m.latE6, m.lonE6)
+                    || (m.radiusM != 0 && (m.radiusM < MIN_RADIUS_M || m.radiusM > MAX_RADIUS_M))
+            ) revert InvalidMilestonePlace();
             committed += m.allocation;
-            stored.push(m);
+            _milestones[shipmentId].push(m);
         }
 
         _facilities[shipmentId] = FacilityState({
@@ -146,6 +152,7 @@ contract FinancingController is Controlled, ReentrancyGuard, IFinancingControlle
         IPolicyEngine.Policy memory policy = POLICIES.getPolicy(shipmentId);
         _requireEvidencePasses(policy, m, e);
         if (policy.requiresZK && !e.proofVerified) revert ProofRequired();
+        _requireAtPlace(m, e);
 
         f.nextMilestone = milestoneIndex + 1;
         VAULT.release(shipmentId, m.allocation);
@@ -167,6 +174,21 @@ contract FinancingController is Controlled, ReentrancyGuard, IFinancingControlle
         if (p.maxEvidenceAgeSec != 0 && block.timestamp > uint256(e.endTime) + p.maxEvidenceAgeSec)
         {
             revert EvidenceStale();
+        }
+        if (
+            (p.maxHumidityX100 != 0 && e.maxHumidityX100 > p.maxHumidityX100)
+                || (p.maxShockX100 != 0 && e.maxShockX100 > p.maxShockX100)
+        ) revert EvidenceBelowPolicy();
+    }
+
+    /// @dev Checked after the policy so OutsideMilestonePlace means "healthy evidence, wrong place".
+    function _requireAtPlace(MilestoneSpec storage m, IEvidenceRegistry.EvidenceEpoch memory e)
+        internal
+        view
+    {
+        uint32 r = m.radiusM;
+        if (r != 0 && !GeoDistance.withinRadius(e.latE6, e.lonE6, m.latE6, m.lonE6, r)) {
+            revert OutsideMilestonePlace();
         }
     }
 
@@ -195,7 +217,9 @@ contract FinancingController is Controlled, ReentrancyGuard, IFinancingControlle
         if (e.committedAt <= f.pausedAt) revert StaleRecoveryEvidence();
 
         IPolicyEngine.Policy memory policy = POLICIES.getPolicy(shipmentId);
-        _requireEvidencePasses(policy, _milestones[shipmentId][milestoneIndex], e);
+        MilestoneSpec storage m = _milestones[shipmentId][milestoneIndex];
+        _requireEvidencePasses(policy, m, e);
+        _requireAtPlace(m, e);
 
         uint256[4] memory signals =
             _publicSignals(shipmentId, epochId, e.merkleRoot, policy, f.pauseCount);
@@ -377,6 +401,22 @@ contract FinancingController is Controlled, ReentrancyGuard, IFinancingControlle
     /// @inheritdoc IFinancingController
     function getFacility(bytes32 shipmentId) external view returns (FacilityState memory) {
         return _load(shipmentId);
+    }
+
+    /// @inheritdoc IFinancingController
+    function placeCheck(bytes32 shipmentId, uint8 milestoneIndex, uint32 seq)
+        external
+        view
+        returns (bool required, bool inside, uint256 distanceM)
+    {
+        FacilityState storage f = _load(shipmentId);
+        if (milestoneIndex >= f.milestoneCount) revert InvalidMilestones();
+        MilestoneSpec storage m = _milestones[shipmentId][milestoneIndex];
+        if (m.radiusM == 0) return (false, true, 0);
+        IEvidenceRegistry.EvidenceEpoch memory e =
+            EVIDENCE.getEpoch(EVIDENCE.epochIdFor(shipmentId, milestoneIndex, seq));
+        distanceM = GeoDistance.distanceM(e.latE6, e.lonE6, m.latE6, m.lonE6);
+        return (true, distanceM <= m.radiusM, distanceM);
     }
 
     /// @inheritdoc IFinancingController

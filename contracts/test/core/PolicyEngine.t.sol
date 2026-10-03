@@ -25,7 +25,9 @@ contract PolicyEngineTest is Test {
             minEvidenceScore: 75,
             maxConflictBps: 3000,
             maxRiskBps: 3500,
-            requiresZK: false
+            requiresZK: false,
+            maxHumidityX100: 8500,
+            maxShockX100: 500
         });
         bytes32 commitment = engine.hashPolicy(coldChain);
         vm.prank(exporter);
@@ -50,6 +52,42 @@ contract PolicyEngineTest is Test {
         assertEq(p.maxTempX100, 800);
         assertEq(p.minEvidenceScore, 75);
         assertFalse(p.requiresZK);
+        assertEq(p.maxHumidityX100, 8500);
+        assertEq(p.maxShockX100, 500);
+    }
+
+    function test_humidityAndShockLimitsAreCommitted() public {
+        IPolicyEngine.Policy memory p = coldChain;
+        p.maxHumidityX100 = 9000; // loosened humidity
+        assertTrue(engine.hashPolicy(p) != engine.hashPolicy(coldChain));
+        p = coldChain;
+        p.maxShockX100 = 0; // shock limit removed
+        assertTrue(engine.hashPolicy(p) != engine.hashPolicy(coldChain));
+
+        coldChain.maxHumidityX100 = 9000;
+        vm.prank(exporter);
+        vm.expectRevert(IPolicyEngine.PolicyCommitmentMismatch.selector);
+        engine.setPolicy(shipmentId, coldChain);
+    }
+
+    /// Cross-language vector: hashPolicy is keccak256 of the ten ABI-encoded fields in declaration
+    /// order, so off-chain code can commit to a policy without calling the contract.
+    function test_policyHashIsTheAbiEncodingOfAllTenFields() public view {
+        bytes32 expected = keccak256(
+            abi.encode(
+                int32(200),
+                int32(800),
+                uint32(1800),
+                uint32(25_000),
+                uint16(75),
+                uint16(3000),
+                uint16(3500),
+                false,
+                uint16(8500),
+                uint16(500)
+            )
+        );
+        assertEq(engine.hashPolicy(coldChain), expected);
     }
 
     function test_onlyExporterMaySetPolicy() public {
@@ -103,6 +141,28 @@ contract PolicyEngineTest is Test {
         p = coldChain;
         p.maxRiskBps = 10_001;
         _expectInvalid(p);
+
+        p = coldChain;
+        p.maxHumidityX100 = 10_001;
+        _expectInvalid(p);
+    }
+
+    function test_humidityLimitOfExactly100PercentAndAnyShockLimitAreValid() public {
+        IPolicyEngine.Policy memory p = coldChain;
+        p.maxHumidityX100 = 10_000;
+        p.maxShockX100 = type(uint16).max;
+        vm.startPrank(exporter);
+        bytes32 id = registry.registerShipment(
+            keccak256("CF-EXTREME"),
+            buyer,
+            keccak256("inv"),
+            keccak256("route"),
+            engine.hashPolicy(p),
+            1e6
+        );
+        engine.setPolicy(id, p);
+        vm.stopPrank();
+        assertEq(engine.getPolicy(id).maxHumidityX100, 10_000);
     }
 
     function test_frozenCargoAllowsNegativeTemperatures() public {
@@ -129,7 +189,14 @@ contract PolicyEngineTest is Test {
         vm.startPrank(exporter);
         bytes32 id = registry.registerShipment(
             keccak256(
-                abi.encode("bad", p.minTempX100, p.minEvidenceScore, p.maxConflictBps, p.maxRiskBps)
+                abi.encode(
+                    "bad",
+                    p.minTempX100,
+                    p.minEvidenceScore,
+                    p.maxConflictBps,
+                    p.maxRiskBps,
+                    p.maxHumidityX100
+                )
             ),
             buyer,
             keccak256("inv"),

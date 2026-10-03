@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {FinancingController} from "../../src/FinancingController.sol";
 import {Groth16Verifier} from "../../generated/Groth16Verifier.sol";
+import {IEvidenceRegistry} from "../../src/interfaces/IEvidenceRegistry.sol";
 import {IFinancingController} from "../../src/interfaces/IFinancingController.sol";
 import {ControllerBase} from "../core/ControllerBase.sol";
 
@@ -19,6 +20,13 @@ contract RealProofTest is ControllerBase {
     string internal constant EPOCH_FIXTURE = "../circuits/test/fixtures/epoch_fixture.json";
     string internal constant INPUTS = "test/fixtures/proof_inputs.json";
     string internal constant PROOF = "test/fixtures/real_proof.json";
+
+    // Aggregates of the fixture's eight readings (circuits/test/fixtures/epoch_fixture.json): the mean
+    // position, and the highest humidity (67.84%) and shock (0.25 g), all inside the base policy.
+    int32 internal constant CENTROID_LAT = 18_940_782;
+    int32 internal constant CENTROID_LON = 72_966_092;
+    uint16 internal constant MAX_HUMIDITY = 6784;
+    uint16 internal constant MAX_SHOCK = 25;
 
     uint256[2] internal a;
     uint256[2][2] internal b;
@@ -57,7 +65,13 @@ contract RealProofTest is ControllerBase {
             89,
             400,
             1200,
-            true
+            true,
+            IEvidenceRegistry.EpochTelemetry({
+                latE6: CENTROID_LAT,
+                lonE6: CENTROID_LON,
+                maxHumidityX100: MAX_HUMIDITY,
+                maxShockX100: MAX_SHOCK
+            })
         );
     }
 
@@ -175,7 +189,13 @@ contract RealProofTest is ControllerBase {
             89,
             400,
             1200,
-            true
+            true,
+            IEvidenceRegistry.EpochTelemetry({
+                latE6: CENTROID_LAT,
+                lonE6: CENTROID_LON,
+                maxHumidityX100: MAX_HUMIDITY,
+                maxShockX100: MAX_SHOCK
+            })
         );
         vm.prank(exporter);
         vm.expectRevert(IFinancingController.InvalidProof.selector);

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 interface IReceivableVault {
     struct Facility {
         address financier;
@@ -80,4 +82,7 @@ interface IReceivableVault {
     function closeDefaulted(bytes32 shipmentId) external;
 
     function getFacility(bytes32 shipmentId) external view returns (Facility memory);
+
+    /// @notice The settlement token (USDG, 6 decimals) this vault custodies.
+    function USDG() external view returns (IERC20);
 }

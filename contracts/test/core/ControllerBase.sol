@@ -8,6 +8,7 @@ import {PolicyEngine} from "../../src/PolicyEngine.sol";
 import {EvidenceRegistry} from "../../src/EvidenceRegistry.sol";
 import {ReceivableVault} from "../../src/ReceivableVault.sol";
 import {FinancingController} from "../../src/FinancingController.sol";
+import {IEvidenceRegistry} from "../../src/interfaces/IEvidenceRegistry.sol";
 import {IFinancingController} from "../../src/interfaces/IFinancingController.sol";
 import {IPolicyEngine} from "../../src/interfaces/IPolicyEngine.sol";
 import {MockUSDG} from "../../src/mocks/MockUSDG.sol";
@@ -82,7 +83,9 @@ abstract contract ControllerBase is Test {
             minEvidenceScore: 75,
             maxConflictBps: 3000,
             maxRiskBps: 3500,
-            requiresZK: false
+            requiresZK: false,
+            maxHumidityX100: 8500,
+            maxShockX100: 500
         });
     }
 
@@ -133,14 +136,20 @@ abstract contract ControllerBase is Test {
             m[i] = IFinancingController.MilestoneSpec({
                 allocation: TRANCHE,
                 evidenceThreshold: 75,
-                checkpointCommitment: keccak256(abi.encode("checkpoint", i))
+                checkpointCommitment: keccak256(abi.encode("checkpoint", i)),
+                latE6: 0,
+                lonE6: 0,
+                radiusM: 0
             });
         }
     }
 
     function _createFacility() internal {
+        _createFacilityWith(_milestones());
+    }
+
+    function _createFacilityWith(IFinancingController.MilestoneSpec[] memory m) internal {
         _registerAndSetPolicy();
-        IFinancingController.MilestoneSpec[] memory m = _milestones();
         vm.prank(exporter);
         controller.createFacility(id, financier, FEE_BPS, m);
     }
@@ -157,10 +166,54 @@ abstract contract ControllerBase is Test {
         controller.startTransit(id);
     }
 
+    // Default epoch telemetry: centroid at the JNPT berth, humidity 65%, shock 0.30 g (inside the
+    // base policy's 85% / 5 g limits).
+    int32 internal constant JNPT_LAT = 18_950_000;
+    int32 internal constant JNPT_LON = 72_950_000;
+    uint16 internal constant HUMIDITY = 6500;
+    uint16 internal constant SHOCK = 30;
+
     function _commitEvidence(uint8 milestone, uint32 seq, uint32 score, uint32 conflictBps)
         internal
         returns (bytes32 epochId)
     {
+        return _commitTelemetry(
+            milestone, seq, score, conflictBps, JNPT_LAT, JNPT_LON, HUMIDITY, SHOCK
+        );
+    }
+
+    /// Commits an epoch with an explicit centroid and humidity / shock maxima.
+    function _commitTelemetry(
+        uint8 milestone,
+        uint32 seq,
+        uint32 score,
+        uint32 conflictBps,
+        int32 latE6,
+        int32 lonE6,
+        uint16 maxHumidityX100,
+        uint16 maxShockX100
+    ) internal returns (bytes32) {
+        return _commitWith(
+            milestone,
+            seq,
+            score,
+            conflictBps,
+            IEvidenceRegistry.EpochTelemetry({
+                latE6: latE6,
+                lonE6: lonE6,
+                maxHumidityX100: maxHumidityX100,
+                maxShockX100: maxShockX100
+            })
+        );
+    }
+
+    function _commitWith(
+        uint8 milestone,
+        uint32 seq,
+        uint32 score,
+        uint32 conflictBps,
+        IEvidenceRegistry.EpochTelemetry memory t
+    ) internal returns (bytes32 epochId) {
         vm.prank(worker);
         epochId = evidence.commitEpoch(
             id,
@@ -173,7 +226,8 @@ abstract contract ControllerBase is Test {
             score,
             conflictBps,
             1200,
-            score >= 75
+            score >= 75,
+            t
         );
     }
 }

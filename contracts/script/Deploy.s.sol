@@ -7,12 +7,14 @@ import {PolicyEngine} from "../src/PolicyEngine.sol";
 import {EvidenceRegistry} from "../src/EvidenceRegistry.sol";
 import {ReceivableVault} from "../src/ReceivableVault.sol";
 import {FinancingController} from "../src/FinancingController.sol";
+import {CoverPool} from "../src/CoverPool.sol";
 import {MockUSDG} from "../src/mocks/MockUSDG.sol";
 import {Groth16Verifier} from "../generated/Groth16Verifier.sol";
 import {Roles} from "../src/libraries/Roles.sol";
 import {ScriptBase} from "./ScriptBase.sol";
 
-/// @notice Deploys the full CargoFlow core and writes `deployments/<network>.json`.
+/// @notice Deploys the full CargoFlow core (v2: with the CoverPool) and writes
+///         `deployments/<network>.json`. The manifest keeps every v1 key; v2 adds `contracts.coverPool`.
 ///
 ///   Local:    anvil &  then  forge script script/Deploy.s.sol --rpc-url local --broadcast
 ///   Testnet:  forge script script/Deploy.s.sol --rpc-url robinhood_testnet --broadcast
@@ -30,6 +32,7 @@ contract Deploy is ScriptBase {
         address controller;
         address verifier;
         address usdg;
+        address coverPool;
     }
 
     function run() external returns (Deployed memory d) {
@@ -61,6 +64,9 @@ contract Deploy is ScriptBase {
             verifier
         );
 
+        // Default cover reads facility state from the controller; it is granted no role at all.
+        CoverPool coverPool = new CoverPool(address(access), address(controller));
+
         // The controller is the only contract that may drive the vault or mark proofs verified.
         access.grantRole(Roles.CONTROLLER_ROLE, address(controller));
         access.grantRole(Roles.PROOF_VERIFIER_ROLE, address(controller));
@@ -79,7 +85,8 @@ contract Deploy is ScriptBase {
             vault: address(vault),
             controller: address(controller),
             verifier: verifier,
-            usdg: usdg
+            usdg: usdg,
+            coverPool: address(coverPool)
         });
         _writeManifest(d, deployer);
     }
@@ -118,6 +125,7 @@ contract Deploy is ScriptBase {
         vm.serializeAddress(c, "evidenceRegistry", d.evidence);
         vm.serializeAddress(c, "receivableVault", d.vault);
         vm.serializeAddress(c, "groth16Verifier", d.verifier);
+        vm.serializeAddress(c, "coverPool", d.coverPool);
         string memory contractsJson = vm.serializeAddress(c, "financingController", d.controller);
 
         string memory root = "manifest";

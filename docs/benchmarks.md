@@ -11,22 +11,28 @@ Machine: 16 x AMD Ryzen 7 5700U, Node 22.22.2, Foundry 1.4.2 (solc 0.8.28, optim
 | Function | Gas | Notes |
 |---|---:|---|
 | `ShipmentRegistry.registerShipment` | 183,483 | |
-| `PolicyEngine.setPolicy` | 93,278 | revealed once per shipment, then immutable |
-| `FinancingController.createFacility` | 711,723 | five milestones, opens the vault facility |
-| `FinancingController.depositCapital` | 89,474 | pulls 40,000 USDG from the financier |
-| `EvidenceRegistry.commitEpoch` | ~125,700 | per 8-reading epoch; stores roots and scores, never readings |
-| `FinancingController.evaluateAndReleaseMilestone` | 30,068 - 154,939 (median 120,751) | low end is a revert path |
-| `FinancingController.pauseFinancing` | 99,835 | |
-| `FinancingController.resumeWithProof` | **247,611** (344,551 under `--gas-report`) | real Groth16 verification, `RealProof.t.sol`; see the caveat below |
-| `FinancingController.resumeByVerifier` | 60,337 | trusted-verifier fallback path |
-| `FinancingController.settle` | 114,964 | pays financier and exporter |
+| `PolicyEngine.setPolicy` | 94,935 | revealed once per shipment, then immutable (v2: ten fields) |
+| `FinancingController.createFacility` | 732,546 - 752,890 | five milestones, opens the vault facility; the high end has one place-based milestone |
+| `FinancingController.depositCapital` | 89,452 | pulls 40,000 USDG from the financier |
+| `EvidenceRegistry.commitEpoch` | ~132,300 | per 8-reading epoch; stores roots, scores and (v2) centroid / humidity / shock maxima, never readings |
+| `FinancingController.evaluateAndReleaseMilestone` | 30,046 - 158,772 (median 124,584) | low end is a revert path; the place check adds a few thousand |
+| `FinancingController.placeCheck` | ~11,900 | v2 view: on-chain distance to a milestone's place |
+| `FinancingController.pauseFinancing` | 99,802 | |
+| `FinancingController.resumeWithProof` | **249,435** | real Groth16 verification, `RealProof.t.sol`, measured with `gasleft()`; see the caveat below |
+| `FinancingController.resumeByVerifier` | 60,315 | trusted-verifier fallback path |
+| `FinancingController.settle` | 115,036 | pays financier and exporter |
+| `CoverPool.offerCover` | ~162,400 | v2; escrows the cover (first offer, cold storage) |
+| `CoverPool.acceptCover` | ~210,800 | v2; records the cover and pays the premium to the insurer |
+| `CoverPool.release` / `claim` | ~123,500 / ~193,800 | v2; credit the payouts (claim also reads the vault) |
+| `CoverPool.withdraw` | ~46,400 | v2; pays the caller's credits |
 
-**Caveat on method.** The table comes from `forge --gas-report`. In that mode the same `resumeWithProof` call reads
-344,551 gas, against 247,611 when measured with `gasleft()` inside the test with no report flag, so the table
-should be read as an upper bound, not a prediction. Real figures need a transaction on the target chain; the
+**Caveat on method.** The table comes from `forge --gas-report` (re-measured for contracts v2; CoverPool rows are
+the success-path maxima from `test/core/CoverPool.t.sol`). Under v1 the same `resumeWithProof` call read 344,551
+gas in that mode against 247,611 with `gasleft()`, so the table should be read as an upper bound, not a
+prediction. Real figures need a transaction on the target chain; the
 testnet deployment run (P7) will record them.
 
-A full five-milestone run therefore costs on the order of 5 epoch commits (~0.63 M) + 5 releases (~0.60 M) + the
+A full five-milestone run therefore costs on the order of 5 epoch commits (~0.66 M) + 5 releases (~0.62 M) + the
 proof resume (0.25 to 0.34 M): roughly 1.5 M gas on top of setup, settlement and the pause.
 
 ## ZK recovery circuit (`circuits/scripts/bench.js`)

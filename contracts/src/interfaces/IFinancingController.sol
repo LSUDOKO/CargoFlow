@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
+import {IReceivableVault} from "./IReceivableVault.sol";
+
 interface IFinancingController {
     enum Status {
         NONE,
@@ -18,6 +20,9 @@ interface IFinancingController {
         uint256 allocation; // USDG base units released when this milestone clears
         uint16 evidenceThreshold; // minimum evidence score (0..100)
         bytes32 checkpointCommitment; // hash of the off-chain checkpoint description
+        int32 latE6; // centre of the milestone's place, degrees x 1e6 (+-90e6)
+        int32 lonE6; // degrees x 1e6 (+-180e6)
+        uint32 radiusM; // 0 = no place condition (v1 behaviour), else 1_000..1_000_000 metres
     }
 
     struct FacilityState {
@@ -85,8 +90,14 @@ interface IFinancingController {
     error InvalidProof();
     error InvalidProofContext();
     error StaleRecoveryEvidence();
+    error InvalidMilestonePlace();
+    error OutsideMilestonePlace();
+    error EvidenceBelowPolicy();
 
     /// @notice Exporter proposes the facility: the nominated financier, fee, and milestone schedule.
+    ///         A milestone with `radiusM > 0` only releases on evidence whose centroid lies within
+    ///         `radiusM` of (latE6, lonE6). Coordinates are range-checked for every milestone and a
+    ///         non-zero radius must be 1 km..1,000 km, else InvalidMilestonePlace.
     function createFacility(
         bytes32 shipmentId,
         address financier,
@@ -103,6 +114,10 @@ interface IFinancingController {
     /// @notice Releases the next milestone's tranche to the exporter if the committed evidence epoch
     ///         `(shipmentId, milestoneIndex, seq)` satisfies the policy. Callable by the exporter,
     ///         the financier or a facility manager; the recipient is fixed regardless of caller.
+    ///         Policy checks come first (score, compliance, conflict, risk, age, then humidity and
+    ///         shock maxima: EvidenceBelowPolicy), then the proof requirement, then the place: an epoch
+    ///         that passes the policy but whose centroid is outside the milestone's place reverts
+    ///         OutsideMilestonePlace and the milestone simply waits for later evidence.
     function evaluateAndReleaseMilestone(bytes32 shipmentId, uint8 milestoneIndex, uint32 seq)
         external;
 
@@ -117,7 +132,9 @@ interface IFinancingController {
     ///         recovery epoch (shipment, milestone, seq) holds readings all inside the policy range.
     ///         The caller supplies only the proof; every public signal is derived from chain state, so the
     ///         proof is bound to this facility, epoch, policy, pause, contract, chain and submitter.
-    ///         Callable by the exporter or a facility manager.
+    ///         The circuit proves only the temperature band, so the recovery epoch must also pass every
+    ///         other policy check (including the humidity and shock limits) and lie inside the
+    ///         milestone's place. Callable by the exporter or a facility manager.
     function resumeWithProof(
         bytes32 shipmentId,
         uint8 milestoneIndex,
@@ -150,6 +167,18 @@ interface IFinancingController {
 
     /// @notice Buyer pays the invoice in USDG; the vault runs the waterfall and the facility settles.
     function settle(bytes32 shipmentId) external;
+
+    /// @notice Whether epoch (shipmentId, milestoneIndex, seq) satisfies the milestone's place.
+    /// @return required False when the milestone has no place (then inside is true, distanceM 0).
+    /// @return inside True when the epoch centroid is within the radius (inclusive).
+    /// @return distanceM On-chain distance from the epoch centroid to the place, whole metres.
+    function placeCheck(bytes32 shipmentId, uint8 milestoneIndex, uint32 seq)
+        external
+        view
+        returns (bool required, bool inside, uint256 distanceM);
+
+    /// @notice The vault this controller drives (read by the CoverPool).
+    function VAULT() external view returns (IReceivableVault);
 
     function getFacility(bytes32 shipmentId) external view returns (FacilityState memory);
 

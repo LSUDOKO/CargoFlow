@@ -31,7 +31,10 @@ contract FinancingControllerReleaseTest is ControllerBase {
             score,
             conflictBps,
             riskBps,
-            compliant
+            compliant,
+            IEvidenceRegistry.EpochTelemetry({
+                latE6: JNPT_LAT, lonE6: JNPT_LON, maxHumidityX100: HUMIDITY, maxShockX100: SHOCK
+            })
         );
     }
 

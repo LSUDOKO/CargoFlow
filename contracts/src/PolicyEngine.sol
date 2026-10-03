@@ -29,6 +29,7 @@ contract PolicyEngine is IPolicyEngine {
         if (
             policy.minTempX100 >= policy.maxTempX100 || policy.minEvidenceScore > MAX_SCORE
                 || policy.maxConflictBps > MAX_BPS || policy.maxRiskBps > MAX_BPS
+                || policy.maxHumidityX100 > MAX_BPS // humidity % x 100 shares the 10_000 ceiling
         ) revert InvalidPolicy();
 
         bytes32 commitment = hashPolicy(policy);

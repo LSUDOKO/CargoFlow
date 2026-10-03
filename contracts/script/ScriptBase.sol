@@ -24,6 +24,8 @@ abstract contract ScriptBase is Script {
         "0x8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba";
     string internal constant ANVIL_KEY_6 =
         "0x92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b2b4ec1564e";
+    string internal constant ANVIL_KEY_7 =
+        "0x4bbbf85ce3377467afe5d46f804f221813b2bb87f24d81f60f1fcdbf7cbf4356";
 
     function _isLocal() internal view returns (bool) {
         return block.chainid == LOCAL_CHAIN_ID;
@@ -50,7 +52,16 @@ abstract contract ScriptBase is Script {
         return vm.toString(block.chainid);
     }
 
+    /// @dev Set only by in-process tests, so parallel suites never race on the DEPLOYMENT_FILE env var.
+    string internal manifestOverride;
+
+    /// @notice Test hook: read and write the manifest at `path` instead of the env / network default.
+    function useManifest(string calldata path) external {
+        manifestOverride = path;
+    }
+
     function _manifestPath() internal view returns (string memory) {
+        if (bytes(manifestOverride).length != 0) return manifestOverride;
         return vm.envOr("DEPLOYMENT_FILE", string.concat("deployments/", _networkName(), ".json"));
     }
 }

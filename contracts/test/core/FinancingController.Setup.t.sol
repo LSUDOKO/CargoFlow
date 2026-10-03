@@ -94,7 +94,14 @@ contract FinancingControllerSetupTest is ControllerBase {
         IFinancingController.MilestoneSpec[] memory tooMany =
             new IFinancingController.MilestoneSpec[](17);
         for (uint256 i; i < 17; ++i) {
-            tooMany[i] = IFinancingController.MilestoneSpec(1e6, 75, bytes32(uint256(i + 1)));
+            tooMany[i] = IFinancingController.MilestoneSpec({
+                allocation: 1e6,
+                evidenceThreshold: 75,
+                checkpointCommitment: bytes32(uint256(i + 1)),
+                latE6: 0,
+                lonE6: 0,
+                radiusM: 0
+            });
         }
         vm.expectRevert(IFinancingController.InvalidMilestones.selector);
         controller.createFacility(id, financier, FEE_BPS, tooMany);

@@ -7,6 +7,7 @@ import {PolicyEngine} from "../../src/PolicyEngine.sol";
 import {EvidenceRegistry} from "../../src/EvidenceRegistry.sol";
 import {ReceivableVault} from "../../src/ReceivableVault.sol";
 import {FinancingController} from "../../src/FinancingController.sol";
+import {IEvidenceRegistry} from "../../src/interfaces/IEvidenceRegistry.sol";
 import {IFinancingController} from "../../src/interfaces/IFinancingController.sol";
 import {IPolicyEngine} from "../../src/interfaces/IPolicyEngine.sol";
 import {MockUSDG} from "../../src/mocks/MockUSDG.sol";
@@ -76,7 +77,9 @@ contract CargoFlowHandler is Test {
             minEvidenceScore: 75,
             maxConflictBps: 3000,
             maxRiskBps: 3500,
-            requiresZK: false
+            requiresZK: false,
+            maxHumidityX100: 8500,
+            maxShockX100: 500
         });
     }
 
@@ -102,7 +105,14 @@ contract CargoFlowHandler is Test {
         uint16 fee = uint16(bound(feeSeed, 0, 2_000));
         IFinancingController.MilestoneSpec[] memory m = new IFinancingController.MilestoneSpec[](5);
         for (uint256 i; i < 5; ++i) {
-            m[i] = IFinancingController.MilestoneSpec(8_000e6, 75, keccak256(abi.encode(i)));
+            m[i] = IFinancingController.MilestoneSpec({
+                allocation: 8_000e6,
+                evidenceThreshold: 75,
+                checkpointCommitment: keccak256(abi.encode(i)),
+                latE6: 0,
+                lonE6: 0,
+                radiusM: 0
+            });
         }
         vm.prank(ex);
         controller.createFacility(id, financier, fee, m);
@@ -129,7 +139,9 @@ contract CargoFlowHandler is Test {
     function release(uint256 s, uint256 score, uint256 conflict, uint256 risk, bool compliant)
         external
     {
-        _release(bound(s, 0, N - 1), score, conflict, risk, compliant);
+        // humidity and shock are drawn from the same entropy so hostile epochs also breach limits
+        uint256 h = uint256(keccak256(abi.encode(score, conflict, risk)));
+        _release(bound(s, 0, N - 1), score, conflict, risk, compliant, h % 10_001, (h >> 16) % 1000);
     }
 
     /// Guided happy-path walker with occasional injected chaos. Keeps the run deep enough to reach
@@ -148,9 +160,19 @@ contract CargoFlowHandler is Test {
         } else if (st == IFinancingController.Status.ACTIVE) {
             if (pre.next < controller.getFacility(ids[s]).milestoneCount) {
                 if (chaos) {
-                    _release(s, seed, seed >> 8, seed >> 16, seed % 2 == 0);
+                    _release(
+                        s, seed, seed >> 8, seed >> 16, seed % 2 == 0, seed % 10_001, seed % 1000
+                    );
                 } else {
-                    _release(s, 75 + (seed % 26), seed % 3_001, seed % 3_501, true);
+                    _release(
+                        s,
+                        75 + (seed % 26),
+                        seed % 3_001,
+                        seed % 3_501,
+                        true,
+                        seed % 8_501,
+                        seed % 501
+                    );
                 }
                 return;
             }
@@ -171,18 +193,56 @@ contract CargoFlowHandler is Test {
         _post(s, pre);
     }
 
-    function _release(uint256 s, uint256 score, uint256 conflict, uint256 risk, bool compliant)
-        internal
-    {
+    function _release(
+        uint256 s,
+        uint256 score,
+        uint256 conflict,
+        uint256 risk,
+        bool compliant,
+        uint256 humidity,
+        uint256 shock
+    ) internal {
         if (!created[s]) return;
         Snap memory pre = _pre(s);
         if (pre.next >= controller.getFacility(ids[s]).milestoneCount) return;
 
         uint32 seq = ++seqs[s];
+        if (!_commit(s, pre.next, seq, score, conflict, risk, compliant, _tel(humidity, shock))) {
+            return;
+        }
+        vm.prank(exporters[s]);
+        try controller.evaluateAndReleaseMilestone(ids[s], pre.next, seq) {} catch {}
+        _post(s, pre);
+    }
+
+    /// Epoch centroid at the JNPT berth; humidity and shock maxima as given (bounded to their types).
+    function _tel(uint256 humidity, uint256 shock)
+        internal
+        pure
+        returns (IEvidenceRegistry.EpochTelemetry memory t)
+    {
+        t.latE6 = 18_950_000;
+        t.lonE6 = 72_950_000;
+        // forge-lint: disable-next-line(unsafe-typecast)
+        t.maxHumidityX100 = uint16(humidity % 65_536); // reduced into range first
+        // forge-lint: disable-next-line(unsafe-typecast)
+        t.maxShockX100 = uint16(shock % 65_536);
+    }
+
+    function _commit(
+        uint256 s,
+        uint8 milestone,
+        uint32 seq,
+        uint256 score,
+        uint256 conflict,
+        uint256 risk,
+        bool compliant,
+        IEvidenceRegistry.EpochTelemetry memory t
+    ) internal returns (bool ok) {
         vm.prank(worker);
         try evidence.commitEpoch(
             ids[s],
-            pre.next,
+            milestone,
             seq,
             keccak256(abi.encode(ids[s], seq)),
             uint64(block.timestamp - 600),
@@ -190,14 +250,11 @@ contract CargoFlowHandler is Test {
             uint32(bound(score, 0, 100)),
             uint32(bound(conflict, 0, 10_000)),
             uint32(bound(risk, 0, 10_000)),
-            compliant
-        ) {}
-        catch {
-            return;
-        }
-        vm.prank(exporters[s]);
-        try controller.evaluateAndReleaseMilestone(ids[s], pre.next, seq) {} catch {}
-        _post(s, pre);
+            compliant,
+            t
+        ) {
+            ok = true;
+        } catch {}
     }
 
     function pause(uint256 s, bool byArbiter) external {

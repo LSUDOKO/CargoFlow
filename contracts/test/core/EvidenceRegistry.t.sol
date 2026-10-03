@@ -16,6 +16,8 @@ contract EvidenceRegistryTest is Test {
     address internal proofVerifier = makeAddr("proofVerifier");
     bytes32 internal constant SHIPMENT = keccak256("shipment");
     bytes32 internal constant ROOT = keccak256("root");
+    int32 internal constant LAT = 18_940_782;
+    int32 internal constant LON = 72_966_092;
 
     function setUp() public {
         vm.warp(1_800_000_000);
@@ -39,7 +41,10 @@ contract EvidenceRegistryTest is Test {
             94,
             500,
             1200,
-            true
+            true,
+            IEvidenceRegistry.EpochTelemetry({
+                latE6: LAT, lonE6: LON, maxHumidityX100: 6784, maxShockX100: 25
+            })
         );
     }
 
@@ -47,6 +52,8 @@ contract EvidenceRegistryTest is Test {
         bytes32 id = registry.epochIdFor(SHIPMENT, 0, 1);
         vm.expectEmit(true, true, false, true);
         emit IEvidenceRegistry.EvidenceEpochCommitted(SHIPMENT, id, 0, 1, ROOT, 94, 500, 1200, true);
+        vm.expectEmit(true, true, false, true);
+        emit IEvidenceRegistry.EvidenceTelemetryCommitted(SHIPMENT, id, LAT, LON, 6784, 25);
         assertEq(_commit(1), id);
 
         IEvidenceRegistry.EvidenceEpoch memory e = registry.getEpoch(id);
@@ -59,6 +66,10 @@ contract EvidenceRegistryTest is Test {
         assertTrue(e.compliant);
         assertFalse(e.proofVerified);
         assertEq(e.committedAt, block.timestamp);
+        assertEq(e.latE6, LAT);
+        assertEq(e.lonE6, LON);
+        assertEq(e.maxHumidityX100, 6784);
+        assertEq(e.maxShockX100, 25);
     }
 
     /// Same vector as backend/internal/proof.EpochID (computed with cast).
@@ -80,7 +91,21 @@ contract EvidenceRegistryTest is Test {
         _commit(1);
         vm.prank(verifier);
         vm.expectRevert(IEvidenceRegistry.EpochAlreadyCommitted.selector);
-        registry.commitEpoch(SHIPMENT, 0, 1, ROOT, 1, 2, 94, 0, 0, true);
+        registry.commitEpoch(
+            SHIPMENT,
+            0,
+            1,
+            ROOT,
+            1,
+            2,
+            94,
+            0,
+            0,
+            true,
+            IEvidenceRegistry.EpochTelemetry({
+                latE6: 0, lonE6: 0, maxHumidityX100: 0, maxShockX100: 0
+            })
+        );
     }
 
     function test_onlyEvidenceVerifierMayCommit() public {
@@ -91,7 +116,21 @@ contract EvidenceRegistryTest is Test {
                 Controlled.Unauthorized.selector, Roles.EVIDENCE_VERIFIER_ROLE, stranger
             )
         );
-        registry.commitEpoch(SHIPMENT, 0, 1, ROOT, 1, 2, 94, 0, 0, true);
+        registry.commitEpoch(
+            SHIPMENT,
+            0,
+            1,
+            ROOT,
+            1,
+            2,
+            94,
+            0,
+            0,
+            true,
+            IEvidenceRegistry.EpochTelemetry({
+                latE6: 0, lonE6: 0, maxHumidityX100: 0, maxShockX100: 0
+            })
+        );
     }
 
     function test_invalidEpochsRejected() public {
@@ -99,18 +138,221 @@ contract EvidenceRegistryTest is Test {
         vm.startPrank(verifier);
 
         vm.expectRevert(IEvidenceRegistry.InvalidEpoch.selector); // empty root
-        registry.commitEpoch(SHIPMENT, 0, 1, bytes32(0), 1, 2, 94, 0, 0, true);
+        registry.commitEpoch(
+            SHIPMENT,
+            0,
+            1,
+            bytes32(0),
+            1,
+            2,
+            94,
+            0,
+            0,
+            true,
+            IEvidenceRegistry.EpochTelemetry({
+                latE6: 0, lonE6: 0, maxHumidityX100: 0, maxShockX100: 0
+            })
+        );
         vm.expectRevert(IEvidenceRegistry.InvalidEpoch.selector); // end before start
-        registry.commitEpoch(SHIPMENT, 0, 1, ROOT, 10, 9, 94, 0, 0, true);
+        registry.commitEpoch(
+            SHIPMENT,
+            0,
+            1,
+            ROOT,
+            10,
+            9,
+            94,
+            0,
+            0,
+            true,
+            IEvidenceRegistry.EpochTelemetry({
+                latE6: 0, lonE6: 0, maxHumidityX100: 0, maxShockX100: 0
+            })
+        );
         vm.expectRevert(IEvidenceRegistry.InvalidEpoch.selector); // evidence from the future
-        registry.commitEpoch(SHIPMENT, 0, 1, ROOT, 1, nowTs + 1, 94, 0, 0, true);
+        registry.commitEpoch(
+            SHIPMENT,
+            0,
+            1,
+            ROOT,
+            1,
+            nowTs + 1,
+            94,
+            0,
+            0,
+            true,
+            IEvidenceRegistry.EpochTelemetry({
+                latE6: 0, lonE6: 0, maxHumidityX100: 0, maxShockX100: 0
+            })
+        );
         vm.expectRevert(IEvidenceRegistry.InvalidEpoch.selector); // score > 100
-        registry.commitEpoch(SHIPMENT, 0, 1, ROOT, 1, 2, 101, 0, 0, true);
+        registry.commitEpoch(
+            SHIPMENT,
+            0,
+            1,
+            ROOT,
+            1,
+            2,
+            101,
+            0,
+            0,
+            true,
+            IEvidenceRegistry.EpochTelemetry({
+                latE6: 0, lonE6: 0, maxHumidityX100: 0, maxShockX100: 0
+            })
+        );
         vm.expectRevert(IEvidenceRegistry.InvalidEpoch.selector); // conflict > 100%
-        registry.commitEpoch(SHIPMENT, 0, 1, ROOT, 1, 2, 94, 10_001, 0, true);
+        registry.commitEpoch(
+            SHIPMENT,
+            0,
+            1,
+            ROOT,
+            1,
+            2,
+            94,
+            10_001,
+            0,
+            true,
+            IEvidenceRegistry.EpochTelemetry({
+                latE6: 0, lonE6: 0, maxHumidityX100: 0, maxShockX100: 0
+            })
+        );
         vm.expectRevert(IEvidenceRegistry.InvalidEpoch.selector); // risk > 100%
-        registry.commitEpoch(SHIPMENT, 0, 1, ROOT, 1, 2, 94, 0, 10_001, true);
+        registry.commitEpoch(
+            SHIPMENT,
+            0,
+            1,
+            ROOT,
+            1,
+            2,
+            94,
+            0,
+            10_001,
+            true,
+            IEvidenceRegistry.EpochTelemetry({
+                latE6: 0, lonE6: 0, maxHumidityX100: 0, maxShockX100: 0
+            })
+        );
+        vm.expectRevert(IEvidenceRegistry.InvalidEpoch.selector); // latitude beyond the pole
+        registry.commitEpoch(
+            SHIPMENT,
+            0,
+            1,
+            ROOT,
+            1,
+            2,
+            94,
+            0,
+            0,
+            true,
+            IEvidenceRegistry.EpochTelemetry({
+                latE6: 90_000_001, lonE6: 0, maxHumidityX100: 0, maxShockX100: 0
+            })
+        );
+        vm.expectRevert(IEvidenceRegistry.InvalidEpoch.selector);
+        registry.commitEpoch(
+            SHIPMENT,
+            0,
+            1,
+            ROOT,
+            1,
+            2,
+            94,
+            0,
+            0,
+            true,
+            IEvidenceRegistry.EpochTelemetry({
+                latE6: -90_000_001, lonE6: 0, maxHumidityX100: 0, maxShockX100: 0
+            })
+        );
+        vm.expectRevert(IEvidenceRegistry.InvalidEpoch.selector); // longitude beyond 180
+        registry.commitEpoch(
+            SHIPMENT,
+            0,
+            1,
+            ROOT,
+            1,
+            2,
+            94,
+            0,
+            0,
+            true,
+            IEvidenceRegistry.EpochTelemetry({
+                latE6: 0, lonE6: 180_000_001, maxHumidityX100: 0, maxShockX100: 0
+            })
+        );
+        vm.expectRevert(IEvidenceRegistry.InvalidEpoch.selector);
+        registry.commitEpoch(
+            SHIPMENT,
+            0,
+            1,
+            ROOT,
+            1,
+            2,
+            94,
+            0,
+            0,
+            true,
+            IEvidenceRegistry.EpochTelemetry({
+                latE6: 0, lonE6: -180_000_001, maxHumidityX100: 0, maxShockX100: 0
+            })
+        );
+        vm.expectRevert(IEvidenceRegistry.InvalidEpoch.selector); // humidity above 100%
+        registry.commitEpoch(
+            SHIPMENT,
+            0,
+            1,
+            ROOT,
+            1,
+            2,
+            94,
+            0,
+            0,
+            true,
+            IEvidenceRegistry.EpochTelemetry({
+                latE6: 0, lonE6: 0, maxHumidityX100: 10_001, maxShockX100: 0
+            })
+        );
         vm.stopPrank();
+    }
+
+    function test_extremeButValidTelemetryIsAccepted() public {
+        vm.startPrank(verifier);
+        registry.commitEpoch(
+            SHIPMENT,
+            0,
+            1,
+            ROOT,
+            1,
+            2,
+            94,
+            0,
+            0,
+            true,
+            IEvidenceRegistry.EpochTelemetry({
+                latE6: 90_000_000,
+                lonE6: -180_000_000,
+                maxHumidityX100: 10_000,
+                maxShockX100: 65_535
+            })
+        );
+        registry.commitEpoch(
+            SHIPMENT,
+            0,
+            2,
+            ROOT,
+            1,
+            2,
+            94,
+            0,
+            0,
+            true,
+            IEvidenceRegistry.EpochTelemetry({
+                latE6: -90_000_000, lonE6: 180_000_000, maxHumidityX100: 0, maxShockX100: 0
+            })
+        );
+        vm.stopPrank();
+        assertEq(registry.getEpoch(registry.epochIdFor(SHIPMENT, 0, 1)).maxShockX100, 65_535);
     }
 
     function test_getUnknownEpochReverts() public {

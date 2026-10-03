@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {Deploy} from "../../script/Deploy.s.sol";
 import {CargoFlowAccess} from "../../src/access/CargoFlowAccess.sol";
 import {FinancingController} from "../../src/FinancingController.sol";
+import {CoverPool} from "../../src/CoverPool.sol";
 import {ReceivableVault} from "../../src/ReceivableVault.sol";
 import {MockUSDG} from "../../src/mocks/MockUSDG.sol";
 import {Groth16Verifier} from "../../generated/Groth16Verifier.sol";
@@ -83,7 +84,40 @@ contract DeployScriptTest is Test {
         assertEq(vm.parseJsonAddress(json, ".contracts.financingController"), d.controller);
         assertEq(vm.parseJsonAddress(json, ".contracts.receivableVault"), d.vault);
         assertEq(vm.parseJsonAddress(json, ".contracts.groth16Verifier"), d.verifier);
+        assertEq(vm.parseJsonAddress(json, ".contracts.coverPool"), d.coverPool);
         assertEq(vm.parseJsonAddress(json, ".usdg"), d.usdg);
         assertEq(vm.parseJsonUint(json, ".chainId"), block.chainid);
+    }
+
+    function test_coverPoolIsWiredAndHoldsNoRole() public view {
+        CoverPool pool = CoverPool(d.coverPool);
+        assertEq(address(pool.CONTROLLER()), d.controller);
+        assertEq(address(pool.VAULT()), d.vault);
+        assertEq(address(pool.USDG()), d.usdg);
+        assertEq(address(pool.ACCESS()), d.access);
+        CargoFlowAccess access = CargoFlowAccess(d.access);
+        assertFalse(
+            access.hasRole(Roles.CONTROLLER_ROLE, d.coverPool), "pool must not drive the vault"
+        );
+        assertFalse(access.hasRole(Roles.PROOF_VERIFIER_ROLE, d.coverPool));
+        assertFalse(access.hasRole(Roles.DISPUTE_ROLE, d.coverPool));
+    }
+
+    /// The Go backend's manifest loader reads these keys; v2 only adds coverPool.
+    function test_manifestKeepsEveryV1Key() public view {
+        string memory json = vm.readFile(FILE);
+        string[7] memory keys = [
+            ".contracts.access",
+            ".contracts.shipmentRegistry",
+            ".contracts.policyEngine",
+            ".contracts.evidenceRegistry",
+            ".contracts.receivableVault",
+            ".contracts.groth16Verifier",
+            ".contracts.financingController"
+        ];
+        for (uint256 i; i < keys.length; ++i) {
+            assertTrue(vm.parseJsonAddress(json, keys[i]) != address(0), keys[i]);
+        }
+        assertEq(vm.parseJsonString(json, ".network"), "local");
     }
 }

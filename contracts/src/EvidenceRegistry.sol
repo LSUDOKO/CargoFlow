@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {Controlled} from "./access/Controlled.sol";
 import {IEvidenceRegistry} from "./interfaces/IEvidenceRegistry.sol";
+import {GeoDistance} from "./libraries/GeoDistance.sol";
 import {Roles} from "./libraries/Roles.sol";
 
 /// @title EvidenceRegistry
@@ -12,6 +13,7 @@ import {Roles} from "./libraries/Roles.sol";
 contract EvidenceRegistry is Controlled, IEvidenceRegistry {
     uint32 private constant MAX_SCORE = 100;
     uint32 private constant MAX_BPS = 10_000;
+    uint16 private constant MAX_HUMIDITY_X100 = 10_000;
 
     mapping(bytes32 epochId => EvidenceEpoch) private _epochs;
 
@@ -28,11 +30,14 @@ contract EvidenceRegistry is Controlled, IEvidenceRegistry {
         uint32 score,
         uint32 conflictBps,
         uint32 riskBps,
-        bool compliant
+        bool compliant,
+        EpochTelemetry calldata telemetry
     ) external onlyRole(Roles.EVIDENCE_VERIFIER_ROLE) returns (bytes32 epochId) {
         if (
             merkleRoot == 0 || startTime > endTime || endTime > block.timestamp || score > MAX_SCORE
                 || conflictBps > MAX_BPS || riskBps > MAX_BPS
+                || telemetry.maxHumidityX100 > MAX_HUMIDITY_X100
+                || !GeoDistance.isValidCoordinate(telemetry.latE6, telemetry.lonE6)
         ) revert InvalidEpoch();
 
         epochId = epochIdFor(shipmentId, milestoneIndex, seq);
@@ -49,7 +54,11 @@ contract EvidenceRegistry is Controlled, IEvidenceRegistry {
             riskBps: riskBps,
             milestoneIndex: milestoneIndex,
             compliant: compliant,
-            proofVerified: false
+            proofVerified: false,
+            latE6: telemetry.latE6,
+            lonE6: telemetry.lonE6,
+            maxHumidityX100: telemetry.maxHumidityX100,
+            maxShockX100: telemetry.maxShockX100
         });
 
         emit EvidenceEpochCommitted(
@@ -62,6 +71,14 @@ contract EvidenceRegistry is Controlled, IEvidenceRegistry {
             conflictBps,
             riskBps,
             compliant
+        );
+        emit EvidenceTelemetryCommitted(
+            shipmentId,
+            epochId,
+            telemetry.latE6,
+            telemetry.lonE6,
+            telemetry.maxHumidityX100,
+            telemetry.maxShockX100
         );
     }
 
