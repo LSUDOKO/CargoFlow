@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
+	"github.com/LSUDOKO/CargoFlow/backend/internal/alerts"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/chain"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/store"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/ws"
@@ -45,12 +47,14 @@ func (s *Service) onChainEvent(ctx context.Context, ev store.ChainEvent) error {
 	if shipment == "" {
 		return nil
 	}
-	if _, err := s.o.Store.GetShipment(ctx, shipment); err != nil {
+	sh, err := s.o.Store.GetShipment(ctx, shipment)
+	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return nil // a shipment this backend does not track
 		}
 		return err
 	}
+	defer s.alert(ev, sh)
 
 	switch ev.Name {
 	case "FacilityCreated":
@@ -65,6 +69,12 @@ func (s *Service) onChainEvent(ctx context.Context, ev store.ChainEvent) error {
 			return err
 		}
 		s.publish(ws.Event{Type: ws.ShipmentUpdated, ShipmentID: shipment, Data: withTx(ev, map[string]any{"status": status})})
+		// a marketplace request is funded once its facility holds the financier's capital
+		if to := uint8(num(ev.Args["to"])); to >= chain.StatusFinanced && to <= chain.StatusDefaulted {
+			if _, err := s.o.Store.MarkRequestsFunded(ctx, shipment); err != nil {
+				return err
+			}
+		}
 
 	case "MilestoneAdvanceReleased":
 		idx := int(num(ev.Args["milestoneIndex"]))
@@ -100,6 +110,36 @@ func (s *Service) onChainEvent(ctx context.Context, ev store.ChainEvent) error {
 		s.publish(ws.Event{Type: ws.ShipmentUpdated, ShipmentID: shipment, Data: withTx(ev, map[string]any{"change": ev.Name})})
 	}
 	return nil
+}
+
+// alertEvents maps the chain events parties can subscribe to onto alert names and the status they leave the
+// facility in ("" keeps the mirrored status).
+var alertEvents = map[string][2]string{
+	"FinancingPaused":          {alerts.Paused, "PAUSED"},
+	"MilestoneAdvanceReleased": {alerts.Released, ""},
+	"FinancingResumed":         {alerts.Resumed, "ACTIVE"},
+	"DisputeOpened":            {alerts.Disputed, "DISPUTED"},
+	"DeliveryConfirmed":        {alerts.Delivered, "DELIVERED"},
+	"FacilitySettled":          {alerts.Settled, "SETTLED"},
+	"DefaultDeclared":          {alerts.Defaulted, "DEFAULTED"},
+}
+
+// alert queues an alert for an alertable event. It never blocks or fails event handling.
+func (s *Service) alert(ev store.ChainEvent, sh store.Shipment) {
+	m, ok := alertEvents[ev.Name]
+	if !ok || s.o.Alerts == nil {
+		return
+	}
+	status := m[1]
+	if status == "" {
+		status = sh.Status
+	}
+	at := ev.CreatedAt
+	if at.IsZero() {
+		at = time.Now().UTC()
+	}
+	s.o.Alerts.Notify(alerts.Alert{Event: m[0], ShipmentID: sh.ID, ExternalRef: sh.ExternalRef, Status: status, TxHash: ev.TxHash,
+		At: at.UTC().Truncate(time.Second), Key: fmt.Sprintf("%s#%d", ev.TxHash, ev.LogIndex)})
 }
 
 func withTx(ev store.ChainEvent, data map[string]any) map[string]any {

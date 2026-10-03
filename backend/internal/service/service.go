@@ -17,6 +17,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/LSUDOKO/CargoFlow/backend/internal/ai"
+	"github.com/LSUDOKO/CargoFlow/backend/internal/alerts"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/chain"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/evidence"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/proof"
@@ -46,6 +47,13 @@ type Options struct {
 	Prover proof.Prover // nil disables ZK recovery
 	AI     *ai.Monitor  // nil disables the model; the deterministic policy gate then decides alone
 
+	// Alerts receives an alert for every alertable chain event; nil sends none.
+	Alerts Notifier
+
+	// Wording optionally rephrases shipment explanations; nil serves the rule wording. The facts never come from it.
+	Wording        ai.Rewriter
+	WordingTimeout time.Duration // default 8s
+
 	Worker  *chain.Signer // commits evidence (EVIDENCE_VERIFIER_ROLE)
 	Monitor *chain.Signer // requests pauses (MONITOR_ROLE); no other authority
 	Manager *chain.Signer // releases milestones and submits recovery proofs (FACILITY_MANAGER_ROLE)
@@ -59,6 +67,11 @@ type Options struct {
 	ReconcileBackoff     time.Duration // base wait between retries, multiplied by the attempt number (default 30s)
 }
 
+// Notifier receives alerts about chain events. It must not block (alerts.Dispatcher queues them).
+type Notifier interface {
+	Notify(alerts.Alert)
+}
+
 // Service is the orchestrator. It is safe for concurrent use; work on one shipment is serialised.
 type Service struct {
 	o Options
@@ -66,6 +79,8 @@ type Service struct {
 	mu    sync.Mutex
 	locks map[string]*sync.Mutex
 	state map[string]*shipmentState
+
+	rewording rewordState
 }
 
 // New builds a Service.

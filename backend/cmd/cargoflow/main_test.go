@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"io"
 	"log/slog"
@@ -86,4 +87,53 @@ func TestTheAIMonitorExistsOnlyWhenAModelKeyIsConfigured(t *testing.T) {
 	if !m.Enabled() {
 		t.Fatal("no monitor although a key is configured")
 	}
+}
+
+func TestOptionalIntegrationsAreWiredOnlyWhenConfigured(t *testing.T) {
+	log := slog.New(slog.NewTextHandler(io.Discard, nil))
+	bare := config.Config{ChainID: 1, GasDripWei: 1000, GasDripDaily: 5}
+	d, ch := alerting(context.Background(), bare, nil, log)
+	if len(d.Senders) != 1 || d.Senders["webhook"] == nil || ch.TelegramBot != "" || ch.Email || ch.AllowPrivateWebhooks {
+		t.Fatalf("bare alerting = %+v %+v", d.Senders, ch)
+	}
+	if aisTracker(bare, nil, log).Enabled() {
+		t.Fatal("AIS is live without a key")
+	}
+	if drip, err := gasDrip(bare, nil, log); drip != nil || err != nil {
+		t.Fatalf("a gas drip without a key: %v %v", drip, err)
+	}
+	if wording(bare) != nil {
+		t.Fatal("a rewording model without a Groq key")
+	}
+
+	dev := bare
+	dev.ChainID = 31337
+	dev.ResendAPIKey, dev.AlertEmailFrom = "re_x", "alerts@example.com"
+	dev.AISStreamAPIKey = "ais"
+	dev.GasDripKey = mustHex(t, "7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6")
+	dev.GroqAPIKey = "gsk_x"
+	d, ch = alerting(context.Background(), dev, nil, log)
+	if d.Senders["email"] == nil || !ch.Email || !ch.AllowPrivateWebhooks {
+		t.Fatalf("dev alerting = %+v %+v", d.Senders, ch)
+	}
+	if !aisTracker(dev, nil, log).Enabled() || wording(dev) == nil {
+		t.Fatal("AIS or rewording is off although configured")
+	}
+	drip, err := gasDrip(dev, nil, log)
+	if err != nil || drip == nil || drip.AmountWei.Int64() != 1000 || drip.Daily != 5 {
+		t.Fatalf("gas drip = %+v %v", drip, err)
+	}
+	dev.ManagerKey = dev.GasDripKey
+	if _, err := gasDrip(dev, nil, log); err == nil {
+		t.Fatal("the gas drip shared a role key")
+	}
+}
+
+func mustHex(t *testing.T, s string) config.Key {
+	t.Helper()
+	b, err := hex.DecodeString(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return config.Key(b)
 }

@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/LSUDOKO/CargoFlow/backend/internal/ais"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/auth"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/chain"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/service"
@@ -31,6 +32,10 @@ type Config struct {
 	Hub      *ws.Hub
 	Verifier *auth.Verifier // authenticates telemetry sources
 
+	Alerts AlertChannels // which alert channels can deliver; webhooks always can
+	AIS    *ais.Tracker  // follows vessels through AIS; nil or without a stream when AISSTREAM_API_KEY is unset
+	Gas    *GasDrip      // nil when GAS_DRIP_KEY is unset
+
 	AdminKey    string   // required for administrative endpoints
 	CORSOrigins []string // exact browser origins allowed cross-origin
 	MaxBody     int64
@@ -41,6 +46,7 @@ type Config struct {
 	MirrorPerMinute    int // public shipment mirroring, per client address; default 30
 	GatewayPerMinute   int // gateway registrations, per client address; default 20
 	RecoveryPerMinute  int // exporter recovery preparations, per shipment; default 3
+	GasPerMinute       int // gas drip requests, per client address; default 10
 	// ShipmentReadingsPerHour caps the readings one shipment may receive per hour from all of its sources, which
 	// bounds the evidence commits the worker pays for. Default 20,000: a 30-day, two-probe logger export at
 	// 10-minute intervals fits in one go.
@@ -53,6 +59,7 @@ type Config struct {
 type Server struct {
 	c       Config
 	limiter *limiter
+	codes   codeCache
 }
 
 // NewServer builds the API server.
@@ -75,6 +82,9 @@ func NewServer(c Config) *Server {
 	if c.RecoveryPerMinute == 0 {
 		c.RecoveryPerMinute = 3
 	}
+	if c.GasPerMinute == 0 {
+		c.GasPerMinute = 10
+	}
 	if c.ShipmentReadingsPerHour == 0 {
 		c.ShipmentReadingsPerHour = 20_000
 	}
@@ -87,6 +97,13 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /v1/health", s.handle(s.health))
 	mux.HandleFunc("GET /v1/config", s.handle(s.config))
 	mux.HandleFunc("GET /v1/stats", s.handle(s.stats))
+	mux.HandleFunc("GET /v1/parties/{address}", s.handle(s.party))
+	mux.HandleFunc("POST /v1/gas", s.handle(s.gas))
+	mux.HandleFunc("POST /v1/requests", s.handle(s.createRequest))
+	mux.HandleFunc("GET /v1/requests", s.handle(s.listRequests))
+	mux.HandleFunc("POST /v1/requests/{rid}/offers", s.handle(s.placeOffer))
+	mux.HandleFunc("POST /v1/requests/{rid}/accept", s.handle(s.acceptOffer))
+	mux.HandleFunc("POST /v1/requests/{rid}/close", s.handle(s.closeRequest))
 	mux.HandleFunc("POST /v1/sources", s.handle(s.admin(s.createSource)))
 	mux.HandleFunc("POST /v1/shipments", s.handle(s.admin(s.createShipment)))
 	mux.HandleFunc("POST /v1/shipments/mirror", s.handle(s.mirror))
@@ -95,6 +112,15 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /v1/shipments/{id}", s.handle(s.getShipment))
 	mux.HandleFunc("POST /v1/shipments/{id}/telemetry", s.handle(s.telemetry))
 	mux.HandleFunc("GET /v1/shipments/{id}/telemetry", s.handle(s.telemetrySummary))
+	mux.HandleFunc("GET /v1/shipments/{id}/track", s.handle(s.track))
+	mux.HandleFunc("GET /v1/shipments/{id}/explanation", s.handle(s.explanation))
+	mux.HandleFunc("POST /v1/shipments/{id}/documents", s.handle(s.attestDocument))
+	mux.HandleFunc("GET /v1/shipments/{id}/documents", s.handle(s.listDocuments))
+	mux.HandleFunc("POST /v1/shipments/{id}/subscriptions", s.handle(s.subscribe))
+	mux.HandleFunc("GET /v1/shipments/{id}/subscriptions", s.handle(s.listSubscriptions))
+	mux.HandleFunc("DELETE /v1/shipments/{id}/subscriptions/{sid}", s.handle(s.unsubscribe))
+	mux.HandleFunc("POST /v1/shipments/{id}/vessel", s.handle(s.setVessel))
+	mux.HandleFunc("GET /v1/shipments/{id}/vessel", s.handle(s.getVessel))
 	mux.HandleFunc("POST /v1/shipments/{id}/sources", s.handle(s.registerGateway))
 	mux.HandleFunc("GET /v1/shipments/{id}/sources", s.handle(s.listGateways))
 	mux.HandleFunc("POST /v1/shipments/{id}/recovery", s.handle(s.prepareRecovery))
@@ -172,6 +198,11 @@ func (s *Server) config(w http.ResponseWriter, _ *http.Request) error {
 			"policyEngine": hexAddr(m.Policies), "evidenceRegistry": hexAddr(m.Evidence),
 			"receivableVault": hexAddr(m.Vault), "financingController": hexAddr(m.Controller), "groth16Verifier": hexAddr(m.Verifier),
 		},
+		"alerts": map[string]any{
+			"webhook": true, "telegram": s.c.Alerts.TelegramBot != "", "email": s.c.Alerts.Email, "telegramBot": s.c.Alerts.TelegramBot,
+		},
+		"gasDrip": s.c.Gas != nil,
+		"ais":     s.c.AIS.Enabled(),
 	})
 	return nil
 }

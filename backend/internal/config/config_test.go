@@ -1,6 +1,7 @@
 package config_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -193,6 +194,65 @@ func TestReconcileIntervalDefaultsParsesAndCanBeDisabled(t *testing.T) {
 		e["RECONCILE_INTERVAL"] = bad
 		if _, err := config.Load(env(e)); err == nil || !strings.Contains(err.Error(), "RECONCILE_INTERVAL") {
 			t.Fatalf("accepted %q: %v", bad, err)
+		}
+	}
+}
+
+func TestOptionalIntegrationsAreOffByDefault(t *testing.T) {
+	c, err := config.Load(env(valid()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c.TelegramEnabled() || c.EmailEnabled() || c.AISEnabled() || c.GasDripEnabled() {
+		t.Fatalf("an integration is on without credentials: %+v", c)
+	}
+	if c.GasDripWei != 50_000_000_000_000 || c.GasDripDaily != 200 {
+		t.Fatalf("gas drip defaults = %d wei, %d a day", c.GasDripWei, c.GasDripDaily)
+	}
+}
+
+func TestOptionalIntegrationsParseAndStayUnprintable(t *testing.T) {
+	e := valid()
+	e["TELEGRAM_BOT_TOKEN"] = "123456:telegram-token-value"
+	e["RESEND_API_KEY"] = "re_resend_key_value"
+	e["ALERT_EMAIL_FROM"] = "CargoFlow <alerts@cargoflow.dev>"
+	e["AISSTREAM_API_KEY"] = "ais-key-value"
+	e["GAS_DRIP_KEY"] = key1
+	e["GAS_DRIP_WEI"] = "1000"
+	e["GAS_DRIP_DAILY"] = "5"
+	c, err := config.Load(env(e))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !c.TelegramEnabled() || !c.EmailEnabled() || !c.AISEnabled() || !c.GasDripEnabled() || c.GasDripWei != 1000 || c.GasDripDaily != 5 ||
+		c.AlertEmailFrom != "CargoFlow <alerts@cargoflow.dev>" || len(c.GasDripKey) != 32 {
+		t.Fatalf("integrations = %+v", c)
+	}
+	printed := strings.Join([]string{c.String(), fmt.Sprintf("%v %+v %#v", c, c, c)}, " ")
+	for _, secret := range []string{"telegram-token-value", "re_resend_key_value", "ais-key-value", key1[:16]} {
+		if strings.Contains(printed, secret) {
+			t.Fatalf("a secret is printable: %q", secret)
+		}
+	}
+}
+
+func TestOptionalIntegrationsAreValidated(t *testing.T) {
+	for name, tc := range map[string]struct {
+		set  map[string]string
+		want string
+	}{
+		"email without a sender":      {map[string]string{"RESEND_API_KEY": "re_x"}, "ALERT_EMAIL_FROM"},
+		"a sender that is no address": {map[string]string{"RESEND_API_KEY": "re_x", "ALERT_EMAIL_FROM": "nobody"}, "ALERT_EMAIL_FROM"},
+		"a bad drip key":              {map[string]string{"GAS_DRIP_KEY": "0x1234"}, "GAS_DRIP_KEY"},
+		"a zero drip":                 {map[string]string{"GAS_DRIP_WEI": "0"}, "GAS_DRIP_WEI"},
+		"a zero daily cap":            {map[string]string{"GAS_DRIP_DAILY": "0"}, "GAS_DRIP_DAILY"},
+	} {
+		e := valid()
+		for k, v := range tc.set {
+			e[k] = v
+		}
+		if _, err := config.Load(env(e)); err == nil || !strings.Contains(err.Error(), tc.want) {
+			t.Errorf("%s: err = %v, want a mention of %s", name, err, tc.want)
 		}
 	}
 }

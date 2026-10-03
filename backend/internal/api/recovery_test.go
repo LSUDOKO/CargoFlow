@@ -91,8 +91,9 @@ func TestRecoveryPreparationIsRateLimitedPerShipment(t *testing.T) {
 	shipment := idHex(id)
 	exporter := strings.ToLower(crypto.PubkeyToAddress(e.keys["exporter"].PublicKey).Hex())
 	var last int
-	for range 4 {
-		last = e.do(t, "POST", "/v1/shipments/"+shipment+"/recovery", recoveryRequest(t, e.keys["exporter"], shipment, exporter, time.Now().Unix()), nil, nil).StatusCode
+	now := time.Now().Unix()
+	for i := range 4 {
+		last = e.do(t, "POST", "/v1/shipments/"+shipment+"/recovery", recoveryRequest(t, e.keys["exporter"], shipment, exporter, now+int64(i)), nil, nil).StatusCode
 	}
 	if last != http.StatusTooManyRequests {
 		t.Fatalf("the fourth preparation in a minute = %d, want 429", last)

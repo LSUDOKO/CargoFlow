@@ -72,3 +72,40 @@ func (s *Server) telemetrySummary(w http.ResponseWriter, r *http.Request) error 
 	writeJSON(w, http.StatusOK, sum)
 	return nil
 }
+
+// track returns one position-and-temperature centroid per evidence epoch, oldest first: aggregates only.
+func (s *Server) track(w http.ResponseWriter, r *http.Request) error {
+	points, err := s.c.Service.Track(r.Context(), r.PathValue("id"))
+	if err != nil {
+		return err
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"points": points})
+	return nil
+}
+
+// party returns an address's track record as exporter, financier and buyer, with a summary grade.
+func (s *Server) party(w http.ResponseWriter, r *http.Request) error {
+	addr := strings.TrimSpace(r.PathValue("address"))
+	if !addressPattern.MatchString(addr) {
+		return ErrBadRequest("address must be a 0x address")
+	}
+	p, err := s.c.Store.PartyStats(r.Context(), addr)
+	if err != nil {
+		return err
+	}
+	writeJSON(w, http.StatusOK, struct {
+		store.PartyStats
+		Grade string `json:"grade"`
+	}{p, p.Grade()})
+	return nil
+}
+
+// explanation says why a shipment is where it is, who can move it on, and where its temperature is heading.
+func (s *Server) explanation(w http.ResponseWriter, r *http.Request) error {
+	x, err := s.c.Service.Explain(r.Context(), r.PathValue("id"))
+	if err != nil {
+		return err
+	}
+	writeJSON(w, http.StatusOK, x)
+	return nil
+}

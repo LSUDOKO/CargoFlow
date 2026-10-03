@@ -112,40 +112,49 @@ func (g *Groq) Assess(ctx context.Context, b Brief) (Assessment, error) {
 	if err != nil {
 		return Assessment{}, err
 	}
+	content, err := g.chat(ctx, systemPrompt, string(facts))
+	if err != nil {
+		return Assessment{}, err
+	}
+	return ParseAssessment([]byte(content), b)
+}
+
+// chat sends one system and one user message in JSON mode and returns the reply's content, unvalidated.
+func (g *Groq) chat(ctx context.Context, system, user string) (string, error) {
 	req := chatRequest{
 		Model: g.model,
 		Messages: []chatMessage{
-			{Role: "system", Content: systemPrompt},
-			{Role: "user", Content: string(facts)},
+			{Role: "system", Content: system},
+			{Role: "user", Content: user},
 		},
 		MaxTokens:      2048,
 		ResponseFormat: map[string]string{"type": "json_object"},
 	}
 	if strings.HasPrefix(g.model, "openai/gpt-oss") {
-		req.ReasoningEffort = "low" // the task is classification; deep reasoning only adds latency
+		req.ReasoningEffort = "low" // the tasks are classification and rephrasing; deep reasoning only adds latency
 	}
 	payload, err := json.Marshal(req)
 	if err != nil {
-		return Assessment{}, err
+		return "", err
 	}
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, g.baseURL+"/chat/completions", bytes.NewReader(payload))
 	if err != nil {
-		return Assessment{}, err
+		return "", err
 	}
 	httpReq.Header.Set("Authorization", "Bearer "+g.key.Reveal())
 	httpReq.Header.Set("Content-Type", "application/json")
 
 	resp, err := g.http.Do(httpReq)
 	if err != nil {
-		return Assessment{}, fmt.Errorf("groq request: %s", g.redact(err.Error()))
+		return "", fmt.Errorf("groq request: %s", g.redact(err.Error()))
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(io.LimitReader(resp.Body, maxResponseBytes+1))
 	if err != nil {
-		return Assessment{}, fmt.Errorf("groq response: %s", g.redact(err.Error()))
+		return "", fmt.Errorf("groq response: %s", g.redact(err.Error()))
 	}
 	if len(body) > maxResponseBytes {
-		return Assessment{}, errors.New("groq response exceeds the size limit")
+		return "", errors.New("groq response exceeds the size limit")
 	}
 
 	var out chatResponse
@@ -155,15 +164,15 @@ func (g *Groq) Assess(ctx context.Context, b Brief) (Assessment, error) {
 		if jsonErr == nil && out.Error != nil {
 			msg = ": " + g.redact(out.Error.Message)
 		}
-		return Assessment{}, fmt.Errorf("groq returned status %d%s", resp.StatusCode, msg)
+		return "", fmt.Errorf("groq returned status %d%s", resp.StatusCode, msg)
 	}
 	if jsonErr != nil {
-		return Assessment{}, fmt.Errorf("groq response is not JSON: %w", jsonErr)
+		return "", fmt.Errorf("groq response is not JSON: %w", jsonErr)
 	}
 	if len(out.Choices) == 0 {
-		return Assessment{}, errors.New("groq response has no choices")
+		return "", errors.New("groq response has no choices")
 	}
-	return ParseAssessment([]byte(out.Choices[0].Message.Content), b)
+	return out.Choices[0].Message.Content, nil
 }
 
 // redact removes the API key from text and bounds its length so errors are safe to log.

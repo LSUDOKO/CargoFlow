@@ -41,5 +41,7 @@ func mapErr(err error) error {
 	return err
 }
 
+func isNotFound(err error) bool { return errors.Is(err, ErrNotFound) }
+
 // Ping checks that the database is reachable.
 func (s *Store) Ping(ctx context.Context) error { return s.pool.Ping(ctx) }

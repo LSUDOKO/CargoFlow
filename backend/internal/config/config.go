@@ -57,7 +57,32 @@ type Config struct {
 	GroqModel       string // empty selects the provider default
 	AITimeout       time.Duration
 	AIMinConfidence float64 // confidence a stricter model opinion needs to be honoured
+
+	// Alerts (optional channels; webhooks need no credentials).
+	TelegramBotToken Secret // enables Telegram alerts
+	ResendAPIKey     Secret // enables email alerts through Resend
+	AlertEmailFrom   string // the From of alert emails, e.g. "CargoFlow <alerts@example.com>"
+
+	// AIS (optional): follows registered vessels through aisstream.io.
+	AISStreamAPIKey Secret
+
+	// Gas drip (optional): sends GasDripWei to wallets holding less, once per address a day, GasDripDaily in all.
+	GasDripKey   Key
+	GasDripWei   uint64
+	GasDripDaily int
 }
+
+// TelegramEnabled reports whether Telegram alerts are configured.
+func (c Config) TelegramEnabled() bool { return c.TelegramBotToken != "" }
+
+// EmailEnabled reports whether email alerts are configured.
+func (c Config) EmailEnabled() bool { return c.ResendAPIKey != "" && c.AlertEmailFrom != "" }
+
+// AISEnabled reports whether the AIS feed is configured.
+func (c Config) AISEnabled() bool { return c.AISStreamAPIKey != "" }
+
+// GasDripEnabled reports whether the gas drip has a funded key.
+func (c Config) GasDripEnabled() bool { return len(c.GasDripKey) == 32 }
 
 // AIEnabled reports whether a model provider is configured.
 func (c Config) AIEnabled() bool { return c.GroqAPIKey != "" }
@@ -193,6 +218,25 @@ func Load(getenv func(string) string) (Config, error) {
 		fail("SALT_SECRET", fmt.Sprintf("must be at least %d characters", minSaltSecretLen))
 	}
 	c.SaltSecret = Secret(salt)
+
+	c.TelegramBotToken = Secret(strings.TrimSpace(getenv("TELEGRAM_BOT_TOKEN")))
+	c.ResendAPIKey = Secret(strings.TrimSpace(getenv("RESEND_API_KEY")))
+	c.AlertEmailFrom = str("ALERT_EMAIL_FROM", "")
+	if c.ResendAPIKey != "" && !strings.Contains(c.AlertEmailFrom, "@") {
+		fail("ALERT_EMAIL_FROM", "must be a sender address such as \"CargoFlow <alerts@example.com>\" when RESEND_API_KEY is set")
+	}
+	c.AISStreamAPIKey = Secret(strings.TrimSpace(getenv("AISSTREAM_API_KEY")))
+	if strings.TrimSpace(getenv("GAS_DRIP_KEY")) != "" {
+		c.GasDripKey = key("GAS_DRIP_KEY")
+	}
+	c.GasDripWei = uintVal("GAS_DRIP_WEI", 50_000_000_000_000, false) // 0.00005 ETH
+	if c.GasDripWei == 0 {
+		fail("GAS_DRIP_WEI", "must be a positive amount of wei")
+	}
+	c.GasDripDaily = int(uintVal("GAS_DRIP_DAILY", 200, false))
+	if c.GasDripDaily <= 0 {
+		fail("GAS_DRIP_DAILY", "must be a positive number of drips")
+	}
 
 	c.WorkerKey = key("WORKER_KEY")
 	c.MonitorKey = key("MONITOR_KEY")

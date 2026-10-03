@@ -15,9 +15,6 @@ import (
 	"github.com/LSUDOKO/CargoFlow/backend/internal/store"
 )
 
-// authorizationWindow is how far a signed authorization's issuedAt may be from the server clock.
-const authorizationWindow = 10 * time.Minute
-
 // maxGatewaysPerShipment bounds how many evidence sources an exporter can bind to one shipment.
 const maxGatewaysPerShipment = 8
 
@@ -48,26 +45,6 @@ func SourceIDFor(pub []byte) string {
 	return "src-" + hex.EncodeToString(sum[:])[:16]
 }
 
-// walletSigner checks a wallet-signed authorization: the time window, then the signature, and returns the signer.
-func (s *Server) walletSigner(message, signature string, issuedAt int64) (string, error) {
-	now := time.Now()
-	if s.c.Now != nil {
-		now = s.c.Now()
-	}
-	if d := now.Sub(time.Unix(issuedAt, 0)); d > authorizationWindow || d < -authorizationWindow {
-		return "", ErrUnauthorized("the authorization has expired or is dated in the future; sign it again")
-	}
-	sig, err := hex.DecodeString(strings.TrimPrefix(signature, "0x"))
-	if err != nil {
-		return "", ErrUnauthorized("the signature is not hex")
-	}
-	addr, err := auth.VerifyWalletSignature(message, sig)
-	if err != nil {
-		return "", ErrUnauthorized("the signature could not be verified")
-	}
-	return strings.ToLower(addr.Hex()), nil
-}
-
 // shipmentFor loads a shipment by its path id; an unknown id is a 404.
 func (s *Server) shipmentFor(r *http.Request) (store.Shipment, error) {
 	sh, err := s.c.Store.GetShipment(r.Context(), strings.ToLower(strings.TrimSpace(r.PathValue("id"))))
@@ -80,9 +57,6 @@ func (s *Server) shipmentFor(r *http.Request) (store.Shipment, error) {
 // registerGateway lets a shipment's exporter authorize an evidence source with a wallet signature. The source is
 // bound to that shipment: it can never report for another one.
 func (s *Server) registerGateway(w http.ResponseWriter, r *http.Request) error {
-	if err := s.rateLimit(w, "gateway:"+clientIP(r), s.c.GatewayPerMinute); err != nil {
-		return err
-	}
 	var req gatewayRequest
 	if err := decodeJSON(r, &req); err != nil {
 		return err
@@ -106,12 +80,13 @@ func (s *Server) registerGateway(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	signer, err := s.walletSigner(auth.SourceAuthorization(sh.ID, req.PublicKey, req.SensorIDs, req.IssuedAt), req.Signature, req.IssuedAt)
-	if err != nil {
+	if _, err := s.walletSigner(r.Context(), auth.SourceAuthorization(sh.ID, req.PublicKey, req.SensorIDs, req.IssuedAt), req.Signature, req.IssuedAt,
+		"only the shipment's exporter can add an evidence source", strings.ToLower(sh.Exporter)); err != nil {
 		return err
 	}
-	if signer != strings.ToLower(sh.Exporter) {
-		return ErrUnauthorized("only the shipment's exporter can add an evidence source")
+	// after authorization, so nobody else can use up the exporter's allowance
+	if err := s.rateLimit(w, "gateway:"+sh.ID, s.c.GatewayPerMinute); err != nil {
+		return err
 	}
 	existing, err := s.c.Store.SourcesForShipment(r.Context(), sh.ID)
 	if err != nil {
@@ -129,12 +104,23 @@ func (s *Server) registerGateway(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
+	if !created && !sameSensors(src.SensorIDs, req.SensorIDs) {
+		return ErrConflictMsg("this device key is already registered with other sensors; generate a new key for a different sensor set")
+	}
 	status := http.StatusOK
 	if created {
 		status = http.StatusCreated
 	}
 	writeJSON(w, status, toSourceDTO(src))
 	return nil
+}
+
+// sameSensors reports whether two sensor lists name the same sensors, in any order.
+func sameSensors(a, b []string) bool {
+	x, y := slices.Clone(a), slices.Clone(b)
+	slices.Sort(x)
+	slices.Sort(y)
+	return slices.Equal(slices.Compact(x), slices.Compact(y))
 }
 
 func (s *Server) listGateways(w http.ResponseWriter, r *http.Request) error {

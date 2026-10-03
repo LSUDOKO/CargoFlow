@@ -65,8 +65,12 @@ func TestExportersRegisterShipmentBoundGatewaysWithTheirWallet(t *testing.T) {
 	if !strings.HasPrefix(created.ID, "src-") || created.ShipmentID != shipment {
 		t.Fatalf("%+v", created)
 	}
-	if resp := e.do(t, "POST", path, gatewayBody(t, e.keys["exporter"], shipment, pub, now), nil, nil); resp.StatusCode != http.StatusOK {
-		t.Fatalf("repeat registration = %d, want 200", resp.StatusCode)
+	var replay errResp
+	if resp := e.do(t, "POST", path, gatewayBody(t, e.keys["exporter"], shipment, pub, now), nil, &replay); resp.StatusCode != http.StatusConflict || replay.Error.Code != "replayed" {
+		t.Fatalf("the same signed registration again = %d %q, want 409 replayed", resp.StatusCode, replay.Error.Code)
+	}
+	if resp := e.do(t, "POST", path, gatewayBody(t, e.keys["exporter"], shipment, pub, now+1), nil, nil); resp.StatusCode != http.StatusOK {
+		t.Fatalf("a freshly signed repeat registration = %d, want 200", resp.StatusCode)
 	}
 
 	other, _, _ := ed25519.GenerateKey(rand.Reader)
@@ -205,5 +209,64 @@ func TestReadingsArePacedPerShipmentAndNeverFromTheFuture(t *testing.T) {
 	// the budget is the shipment's, not the gateway's: another gateway cannot widen it
 	if resp := e.signedRaw(t, b, path, readingsBody(now-70, now-60), privB, nowFunc().Unix(), nil); resp.StatusCode != http.StatusTooManyRequests {
 		t.Fatalf("over the shipment's hourly budget = %d, want 429", resp.StatusCode)
+	}
+}
+
+func TestGatewayRegistrationIsRateLimitedPerShipmentAfterAuthorization(t *testing.T) {
+	e := newEnvWith(t, nil, func(_ *env, c *api.Config) { c.GatewayPerMinute = 2 })
+	id := e.onChain(t, "api-gw-rate", true)
+	other := e.onChain(t, "api-gw-rate-2", true)
+	e.registerShipment(t, id, "api-gw-rate")
+	e.registerShipment(t, other, "api-gw-rate-2")
+	path := "/v1/shipments/" + idHex(id) + "/sources"
+	now := time.Now().Unix()
+	// strangers signing for the shipment cannot use up the exporter's allowance
+	for i := range 4 {
+		pub, _, _ := ed25519.GenerateKey(rand.Reader)
+		if resp := e.do(t, "POST", path, gatewayBody(t, e.keys["financier"], idHex(id), pub, now+int64(i)), nil, nil); resp.StatusCode != http.StatusUnauthorized {
+			t.Fatalf("a stranger's registration = %d, want 401", resp.StatusCode)
+		}
+	}
+	var codes []int
+	for i := range 3 {
+		pub, _, _ := ed25519.GenerateKey(rand.Reader)
+		codes = append(codes, e.do(t, "POST", path, gatewayBody(t, e.keys["exporter"], idHex(id), pub, now+int64(i)), nil, nil).StatusCode)
+	}
+	if codes[0] != http.StatusCreated || codes[1] != http.StatusCreated || codes[2] != http.StatusTooManyRequests {
+		t.Fatalf("exporter registrations = %v, want 201 201 429", codes)
+	}
+	pub, _, _ := ed25519.GenerateKey(rand.Reader)
+	if resp := e.do(t, "POST", "/v1/shipments/"+idHex(other)+"/sources", gatewayBody(t, e.keys["exporter"], idHex(other), pub, now), nil, nil); resp.StatusCode != http.StatusCreated {
+		t.Fatalf("another shipment's allowance = %d, want 201", resp.StatusCode)
+	}
+}
+
+func TestReRegisteringAKeyWithDifferentSensorsIsAConflict(t *testing.T) {
+	e := newEnv(t, nil)
+	id := e.onChain(t, "api-gw-sensors", true)
+	e.registerShipment(t, id, "api-gw-sensors")
+	shipment := idHex(id)
+	path := "/v1/shipments/" + shipment + "/sources"
+	pub, _, _ := ed25519.GenerateKey(rand.Reader)
+	now := time.Now().Unix()
+	if resp := e.do(t, "POST", path, gatewayBody(t, e.keys["exporter"], shipment, pub, now), nil, nil); resp.StatusCode != http.StatusCreated {
+		t.Fatalf("first registration = %d", resp.StatusCode)
+	}
+	pubB64 := base64.RawURLEncoding.EncodeToString(pub)
+	sensors := []string{"sensor-1", "sensor-9"}
+	body := sourceBody{Label: "Reefer logger", PublicKey: pubB64, SensorIDs: sensors, IssuedAt: now + 1,
+		Signature: walletSign(t, e.keys["exporter"], auth.SourceAuthorization(shipment, pubB64, sensors, now+1))}
+	var apiErr errResp
+	if resp := e.do(t, "POST", path, body, nil, &apiErr); resp.StatusCode != http.StatusConflict || apiErr.Error.Code != "conflict" {
+		t.Fatalf("the same key with other sensors = %d %q, want 409 conflict", resp.StatusCode, apiErr.Error.Code)
+	}
+	var list struct {
+		Sources []struct {
+			SensorIDs []string `json:"sensorIds"`
+		} `json:"sources"`
+	}
+	e.do(t, "GET", path, nil, nil, &list)
+	if len(list.Sources) != 1 || list.Sources[0].SensorIDs[1] != "sensor-2" {
+		t.Fatalf("the stored sensors changed: %+v", list)
 	}
 }

@@ -156,3 +156,56 @@ func (c *Client) waitConfirmations(ctx context.Context, block uint64) error {
 		}
 	}
 }
+
+// SendValue transfers native currency from s to `to`, waits for it to be mined and confirmed, and returns the
+// transaction. The gas limit is estimated, so a contract wallet with a receive hook can be paid too.
+func (c *Client) SendValue(ctx context.Context, s *Signer, to common.Address, wei *big.Int) (TxResult, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	nonce, err := c.Eth.PendingNonceAt(ctx, s.addr)
+	if err != nil {
+		return TxResult{}, fmt.Errorf("send value: nonce: %w", err)
+	}
+	gas, err := c.Eth.EstimateGas(ctx, ethereum.CallMsg{From: s.addr, To: &to, Value: wei})
+	if err != nil {
+		return TxResult{}, fmt.Errorf("send value: estimate gas: %w", wrapRevert(err))
+	}
+	chainID := new(big.Int).SetUint64(c.M.ChainID)
+	var tx *types.Transaction
+	head, err := c.Eth.HeaderByNumber(ctx, nil)
+	if err != nil {
+		return TxResult{}, fmt.Errorf("send value: head: %w", err)
+	}
+	if head.BaseFee != nil {
+		tip, err := c.Eth.SuggestGasTipCap(ctx)
+		if err != nil {
+			return TxResult{}, fmt.Errorf("send value: tip: %w", err)
+		}
+		feeCap := new(big.Int).Add(tip, new(big.Int).Mul(head.BaseFee, big.NewInt(2)))
+		tx = types.NewTx(&types.DynamicFeeTx{ChainID: chainID, Nonce: nonce, GasTipCap: tip, GasFeeCap: feeCap, Gas: gas, To: &to, Value: wei})
+	} else {
+		price, err := c.Eth.SuggestGasPrice(ctx)
+		if err != nil {
+			return TxResult{}, fmt.Errorf("send value: gas price: %w", err)
+		}
+		tx = types.NewTx(&types.LegacyTx{Nonce: nonce, GasPrice: price, Gas: gas, To: &to, Value: wei})
+	}
+	signed, err := types.SignTx(tx, types.LatestSignerForChainID(chainID), s.key)
+	if err != nil {
+		return TxResult{}, err
+	}
+	if err := c.Eth.SendTransaction(ctx, signed); err != nil {
+		return TxResult{}, fmt.Errorf("send value: %w", err)
+	}
+	receipt, err := c.waitMined(ctx, signed)
+	if err != nil {
+		return TxResult{}, fmt.Errorf("send value: waiting for %s: %w", signed.Hash().Hex(), err)
+	}
+	if receipt.Status != types.ReceiptStatusSuccessful {
+		return TxResult{}, fmt.Errorf("send value: transaction %s failed", signed.Hash().Hex())
+	}
+	if err := c.waitConfirmations(ctx, receipt.BlockNumber.Uint64()); err != nil {
+		return TxResult{}, err
+	}
+	return TxResult{Hash: signed.Hash(), Block: receipt.BlockNumber.Uint64(), GasUsed: receipt.GasUsed}, nil
+}

@@ -47,6 +47,10 @@ The image compiles the circuit at build time and runs as a non-root user on a re
 | `WORKER_KEY`, `MONITOR_KEY`, `MANAGER_KEY` | yes | the three role keys; **use three different wallets** |
 | `GROQ_API_KEY`, `GROQ_MODEL`, `AI_TIMEOUT`, `AI_MIN_CONFIDENCE` | no | enable and tune the [AI monitor](#ai-monitor); without a key the policy gate decides alone |
 | `RECONCILE_INTERVAL` | no | how often failed chain actions are retried (default `30s`, `0s` disables) |
+| `TELEGRAM_BOT_TOKEN` | no | enables [Telegram alerts](#alerts); the bot's username (from `getMe`) builds the `t.me` start links |
+| `RESEND_API_KEY`, `ALERT_EMAIL_FROM` | no (both together) | enable [email alerts](#alerts) through Resend; `ALERT_EMAIL_FROM` is the sender, e.g. `"CargoFlow <alerts@example.com>"` |
+| `AISSTREAM_API_KEY` | no | follows registered vessels through aisstream.io ([vessels](#vessels-and-ais)); without it vessels are shown without live positions |
+| `GAS_DRIP_KEY`, `GAS_DRIP_WEI`, `GAS_DRIP_DAILY` | no | enables the [gas drip](#gas-drip) from a dedicated funded key; default 50000000000000 wei (0.00005 ETH) per drip, 200 drips a day |
 | `HTTP_ADDR`, `LOG_LEVEL`, `CORS_ORIGINS`, `START_BLOCK`, `CONFIRMATIONS`, `INDEXER_POLL`, `CIRCUITS_DIR` | no | see `.env.example` |
 
 Every problem in the configuration is reported at once, weak secrets are rejected, and secrets cannot be
@@ -66,20 +70,36 @@ Public reads need no credentials. Everything that writes is authenticated.
 | Method and path | Auth | Purpose |
 |---|---|---|
 | `GET /v1/health` | none | database and chain reachability, head block |
-| `GET /v1/config` | none | chain id, USDG decimals, contract addresses, whether demo mode is on |
+| `GET /v1/config` | none | chain id, USDG decimals, contract addresses, and which optional integrations are on: `alerts {webhook, telegram, email, telegramBot}`, `gasDrip`, `ais` |
 | `GET /v1/stats` | none | shipments by status, committed epochs, verified proofs |
 | `POST /v1/sources` | admin key | register an evidence source (Ed25519 public key, its sensors, reliability) |
 | `POST /v1/shipments` | admin key | mirror a shipment that already exists on chain |
 | `POST /v1/shipments/mirror` | none, 30/min per client | the same mirroring for the web app; safe because nothing the chain does not confirm is stored; a repeat returns the existing record |
 | `GET /v1/shipments`, `GET /v1/shipments/{id}` | none | list (filters: `party=0x..`, `ref=`, `status=PAUSED,DISPUTED`; `limit` up to 200, `offset`); combined view (store + live chain state) |
 | `POST /v1/shipments/{id}/telemetry` | **signed by a source** | submit up to 500 readings, none dated more than 5 minutes ahead; each shipment accepts at most 20,000 readings an hour across all its sources, which bounds the evidence commits the worker pays for |
-| `POST /v1/shipments/{id}/sources` | **the exporter's wallet signature** | register an evidence gateway (Ed25519 public key and its sensors) bound to this shipment; idempotent; at most 8 per shipment |
+| `POST /v1/shipments/{id}/sources` | **the exporter's wallet signature** | register an evidence gateway (Ed25519 public key and its sensors) bound to this shipment; a repeat with the same sensors returns it (200), the same key with other sensors is 409; at most 8 per shipment, 20 registrations a minute per shipment |
 | `GET /v1/shipments/{id}/sources` | none | the shipment's evidence gateways |
 | `POST /v1/shipments/{id}/recovery` | **the exporter's wallet signature** | prepare a ZK recovery bound to the exporter's wallet; returns the calldata for `resumeWithProof` (3 per minute per shipment) |
 | `POST /v1/shipments/{id}/proof` | admin key | ZK recovery of a paused facility from a sensor's fresh readings |
 | `GET /v1/shipments/{id}/epochs` | none | evidence epochs (scores and roots; **never raw readings**) |
 | `GET /v1/shipments/{id}/telemetry` | none | per-epoch, per-sensor min / mean / max temperature and the latest position; aggregates only |
 | `GET /v1/shipments/{id}/audit` | none | merged, time-ordered trail of chain events, decisions, epochs and sent transactions |
+| `GET /v1/shipments/{id}/track` | none | one centroid per stored epoch, oldest first: `{points:[{epochId, milestoneIndex, sequence, startTime, endTime, latE6, lonE6, minTempX100, maxTempX100, pass, committed}]}`; aggregates only |
+| `GET /v1/shipments/{id}/explanation` | none | why the shipment is where it is: `{status, headline, causes, nextSteps:[{role, action}], forecast:{sensorId, trend, minutesToLimit}\|null, source}`; rule-derived, optionally reworded by the model |
+| `POST /v1/shipments/{id}/documents` | **a party's wallet signature** | attest a file by its SHA-256 and keccak256 (the file is never uploaded); 201, or 200 with the existing record when the signer attested that file before; at most 100 per shipment |
+| `GET /v1/shipments/{id}/documents` | none | the attestations, each with `matchesInvoiceHash` (its keccak256 equals the on-chain `invoiceHash`) |
+| `POST /v1/shipments/{id}/subscriptions` | **a party's wallet signature** | subscribe to [alerts](#alerts) by webhook, Telegram or email; 503 `channel_unavailable` for a channel without credentials; at most 10 per address per shipment |
+| `GET /v1/shipments/{id}/subscriptions?address=0x..` | none | that address's subscriptions, targets masked |
+| `DELETE /v1/shipments/{id}/subscriptions/{sid}` | **the subscriber's wallet signature** | remove a subscription; answers `{id, deleted: true}` |
+| `POST /v1/shipments/{id}/vessel` | **the exporter's wallet signature** | name the vessel by its 9-digit MMSI (and a display name); naming it again replaces it (200) |
+| `GET /v1/shipments/{id}/vessel` | none | `{mmsi, name, live, last, track, crossCheck}`; 404 when no vessel is named |
+| `GET /v1/parties/{address}` | none | an address's track record as exporter, financier and buyer, and a grade (`A`, `B`, `C` or `new`) |
+| `POST /v1/requests` | **the exporter's wallet signature** | post a [financing request](#financing-marketplace) for a mirrored, policy-set shipment without a facility |
+| `GET /v1/requests?status=&exporter=` | none | requests newest first, with their offers cheapest first |
+| `POST /v1/requests/{rid}/offers` | **a financier's wallet signature** | offer a fee (anyone but the exporter and buyer); offering again replaces your fee (200) |
+| `POST /v1/requests/{rid}/accept` | **the exporter's wallet signature** | accept one offer |
+| `POST /v1/requests/{rid}/close` | **the exporter's wallet signature** | withdraw an open or accepted request |
+| `POST /v1/gas` | **the receiving wallet's signature** | the [gas drip](#gas-drip); 10 requests a minute per client |
 | `GET /v1/ws?shipment=0x..` | none | WebSocket event stream |
 
 **Shipment registration mirrors the chain.** The caller supplies only the id, the external reference, the
@@ -100,6 +120,34 @@ ids cannot be enumerated, and a source may only report the sensors it was regist
 time window are harmless: readings are idempotent on `(shipment, sensor, timestamp)` and a repeat is
 quarantined as `REPLAYED_PACKET`.
 
+**Wallet-signed requests.** Parties sign with their own wallets (EIP-191 `personal_sign`); the backend holds no
+party key. Each message is fixed text, lines joined by `\n` with no trailing newline, ids and addresses lower
+case, and ends with `issued: <unix seconds>`, which must be within 10 minutes of the server clock. Every signed
+request is **single-use**: the backend remembers each (signer, message) until it could no longer pass the time
+window (at least 15 minutes, in Postgres, so a restart or a second replica does not forget) and answers a reuse
+with 409 `replayed`. A refused request (wrong signer, tampered body) is not remembered, so it cannot burn the
+genuine one. A signature that does not recover to an allowed signer is checked against each allowed address with
+EIP-1271 `isValidSignature(bytes32,bytes)` (the EIP-191 hash), so contract wallets can sign too; whether an
+account holds code is cached for 10 minutes so bad signatures cannot turn into a stream of chain calls. The
+messages:
+
+```
+CargoFlow evidence source\nshipment: <id>\npublic key: <base64url>\nsensors: <a,b>\nissued: <t>
+CargoFlow recovery\nshipment: <id>\nsensor: <sensor>\nsubmitter: <address>\nissued: <t>
+CargoFlow document\nshipment: <id>\nkind: <kind>\nsha256: <0x..>\nissued: <t>
+CargoFlow alerts\nshipment: <id>\nchannel: <channel>\ntarget: <target as sent>\nissued: <t>
+CargoFlow alerts off\nsubscription: <sid>\nissued: <t>
+CargoFlow vessel\nshipment: <id>\nmmsi: <mmsi>\nissued: <t>
+CargoFlow financing request\nshipment: <id>\namount: <base units>\nmax fee bps: <n>\nmilestones: <n>\nissued: <t>
+CargoFlow offer\nrequest: <rid>\nfee bps: <n>\nissued: <t>
+CargoFlow accept\nrequest: <rid>\noffer: <offer id>\nissued: <t>
+CargoFlow close request\nrequest: <rid>\nissued: <t>
+CargoFlow gas\naddress: <address>\nissued: <t>
+```
+
+An offer may name `address` (optional) so a contract wallet's signature can be checked through EIP-1271; an
+externally owned account needs no address because it is recovered from the signature.
+
 **Errors** are `{"error": {"code": "...", "message": "..."}}` with stable codes; unclassified failures return
 a generic 500 and never leak internals.
 
@@ -110,6 +158,51 @@ a generic 500 and never leak internals.
 `FACILITY_SETTLED` (from the chain). Each carries a hub-assigned `seq`; chain-derived events include `txHash`
 and `logIndex` so a client can drop a redelivered duplicate. A client that cannot keep up is dropped with
 close code 1013 and should refetch over REST and reconnect.
+
+## Financing marketplace
+
+A request is an exporter asking for capital against a shipment that is registered on chain, has its policy set,
+is mirrored here (`POST /v1/shipments/mirror` accepts a shipment without a facility), and has no facility yet.
+The amount (USDG base units, a string) may not exceed the invoice; `maxFeeBps` is at most 2000 (the vault's
+ceiling) and `milestoneCount` 1 to 16. One live (open or accepted) request per shipment. Financiers offer a fee
+up to the maximum; the exporter accepts one, then sends `createFacility` naming that financier, and the indexer
+marks the request `funded` when the facility's status reaches FINANCED. Nothing here moves money or binds anyone:
+the chain does.
+
+## Alerts
+
+Shipment parties subscribe to `PAUSED`, `RELEASED`, `RESUMED`, `DISPUTED`, `DELIVERED`, `SETTLED` and `DEFAULTED`
+(from `FinancingPaused`, `MilestoneAdvanceReleased`, `FinancingResumed`, `DisputeOpened`, `DeliveryConfirmed`,
+`FacilitySettled` and `DefaultDeclared`). The chain-event sink only queues alerts; a dispatcher delivers them, three
+attempts with doubling backoff, and records each (subscription, event) once so a redelivered chain event never
+alerts twice.
+
+- **Webhook**: `POST` JSON `{event, shipmentId, externalRef, status, txHash, at}` with
+  `X-CargoFlow-Signature: hex(hmac_sha256(secret, body))`; the secret is returned once, at creation. 5 s per
+  attempt, no redirects, no proxy, and outside a local chain (31337) https only and never a private, loopback,
+  link-local or otherwise internal address, checked when subscribing and again at every connection (so DNS cannot
+  be used to reach the backend's own network).
+- **Telegram** (`TELEGRAM_BOT_TOKEN`): the response carries `linkUrl` (`https://t.me/<bot>?start=<code>`); the
+  subscription activates when the subscriber presses Start, which the backend sees by long-polling `getUpdates`.
+- **Email** (`RESEND_API_KEY`, `ALERT_EMAIL_FROM`): plain-text email through Resend's HTTP API.
+
+## Vessels and AIS
+
+The exporter names the vessel by MMSI. With `AISSTREAM_API_KEY` the backend subscribes to aisstream.io for the
+vessels of every live shipment (resubscribing when the set changes, reconnecting with backoff, never with an empty
+filter), stores at most one position per vessel per minute for 14 days, and compares each fix with the shipment's
+latest logger reading. A disagreement of more than 50 km between fixes less than 30 minutes apart records an
+advisory `AIS_MISMATCH` in the audit trail (at most one per shipment per 30 minutes). It never moves money.
+`live` is true when the newest AIS fix is under 30 minutes old; without the key `live` is false, `last` and
+`crossCheck` are null and `track` is empty.
+
+## Gas drip
+
+`POST /v1/gas` sends `GAS_DRIP_WEI` from `GAS_DRIP_KEY` to a wallet holding less than that, so a new participant
+can pay for their own first transactions: once per address per 24 hours (429 `rate_limited`), at most
+`GAS_DRIP_DAILY` drips a day overall (429), 409 when the wallet already holds enough, 503 `gas_unavailable` when
+unconfigured or when the drip wallet runs dry. It answers `{txHash, amountWei, address}`. The key must be
+dedicated: the service refuses to start if it equals a role key.
 
 ## AI monitor
 
@@ -139,6 +232,19 @@ the floor and the smart contracts decide what is legal.
   do not.
 
 `make ai-live` runs an opt-in smoke test against the real API with synthetic data; it is excluded from CI.
+
+### Shipment explanations
+
+`GET /v1/shipments/{id}/explanation` is written by rules from the facility state, the latest epoch's decision and
+the policy: a headline, the causes (score, band, conflict, risk, tampering, gaps, route, coverage, each with its
+numbers) and who can do what next. The forecast fits a least-squares line to each sensor's 12 newest stored
+readings and reports the sensor closest to leaving the band: `trend` is `steady` under 0.2 °C per hour, and
+`minutesToLimit` is the time to the band edge at that trend (0 when already outside, null when not heading out or
+more than a week away). With `GROQ_API_KEY` the headline and causes may be reworded by the model under the same
+discipline as the monitor: it receives only the rule text (numbers and fixed phrases, never telemetry or party
+text), every number of each sentence must survive, the count and order of causes must match, and the next steps
+and forecast are never sent to it. Rewrites are cached by their input and the model is called at most 30 times a
+minute; any failure serves the rule wording (`source: "rules"`).
 
 ## Operational guarantees
 
@@ -212,7 +318,9 @@ Runs are reproducible: the same `-seed` gives byte-identical output.
 | `internal/service` | orchestration: shipment mirroring, ingestion, epoch handling, ZK recovery, chain-event sink, views |
 | `internal/chain` | contract ABIs, typed reads, role-limited tx sender, revert decoding, log indexer |
 | `internal/store` | Postgres migrations and repositories (points, epochs, outbox, events, audit) |
-| `internal/auth` | Ed25519 evidence-source authentication |
+| `internal/auth` | Ed25519 evidence-source authentication; wallet-signed messages and EIP-1271 verification |
+| `internal/alerts` | alert dispatcher, signed webhooks with an SSRF guard, Telegram bot, Resend email |
+| `internal/ais` | aisstream.io client and the tracker that stores positions and cross-checks them with the logger |
 | `internal/ws` | non-blocking event hub and WebSocket handler |
 | `internal/config` | validated environment configuration with unprintable secrets |
 | `internal/telemetry` | `Point` (fixed-point), stateless validation, stateful ordering / replay / equivocation gate |

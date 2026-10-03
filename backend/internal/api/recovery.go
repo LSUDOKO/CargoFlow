@@ -34,12 +34,10 @@ func (s *Server) prepareRecovery(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	submitter := strings.ToLower(req.Submitter)
-	signer, err := s.walletSigner(auth.RecoveryAuthorization(sh.ID, req.SensorID, submitter, req.IssuedAt), req.Signature, req.IssuedAt)
+	signer, err := s.walletSigner(r.Context(), auth.RecoveryAuthorization(sh.ID, req.SensorID, submitter, req.IssuedAt), req.Signature, req.IssuedAt,
+		"only the shipment's exporter can request a recovery", strings.ToLower(sh.Exporter))
 	if err != nil {
 		return err
-	}
-	if signer != strings.ToLower(sh.Exporter) {
-		return ErrUnauthorized("only the shipment's exporter can request a recovery")
 	}
 	if signer != submitter {
 		return ErrUnauthorized("the proof is bound to the wallet that submits it; sign with the submitter's wallet")

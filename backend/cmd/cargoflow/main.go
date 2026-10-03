@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"math/big"
 	"net"
 	"net/http"
 	"os"
@@ -31,6 +32,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/LSUDOKO/CargoFlow/backend/internal/ai"
+	"github.com/LSUDOKO/CargoFlow/backend/internal/ais"
+	"github.com/LSUDOKO/CargoFlow/backend/internal/alerts"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/api"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/auth"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/chain"
@@ -161,10 +164,20 @@ func serve(ctx context.Context, getenv func(string) string, out io.Writer) error
 		return err
 	}
 
+	drip, err := gasDrip(cfg, client, log)
+	if err != nil {
+		return err
+	}
+	dispatcher, channels := alerting(ctx, cfg, st, log)
+	go func() { _ = dispatcher.Run(ctx) }()
+	tracker := aisTracker(cfg, st, log)
+	go func() { _ = tracker.Run(ctx) }()
+
 	hub := ws.NewHub(256)
 	svc := service.New(service.Options{
-		Store: st, Chain: client, Hub: hub, Prover: prover(cfg, log), AI: aiMonitor(cfg, log),
+		Store: st, Chain: client, Hub: hub, Prover: prover(cfg, log), AI: aiMonitor(cfg, log), Wording: wording(cfg), WordingTimeout: cfg.AITimeout,
 		Worker: worker, Monitor: monitor, Manager: manager, SaltSecret: []byte(cfg.SaltSecret.Reveal()), Log: log,
+		Alerts: dispatcher,
 	})
 
 	idx := &chain.Indexer{
@@ -182,6 +195,7 @@ func serve(ctx context.Context, getenv func(string) string, out io.Writer) error
 	server := api.NewServer(api.Config{
 		Service: svc, Store: st, Chain: client, Hub: hub, AdminKey: cfg.AdminAPIKey.Reveal(), CORSOrigins: cfg.CORSOrigins, Log: log,
 		Verifier: &auth.Verifier{Lookup: st.GetSource, Now: time.Now, MaxSkew: 5 * time.Minute},
+		Alerts:   channels, AIS: tracker, Gas: drip,
 	})
 	ln, err := net.Listen("tcp", cfg.HTTPAddr)
 	if err != nil {
@@ -214,6 +228,77 @@ func serve(ctx context.Context, getenv func(string) string, out io.Writer) error
 	}
 	<-indexerDone
 	return nil
+}
+
+// devChainID is anvil's chain: there, webhooks may target local addresses.
+const devChainID = 31337
+
+// alerting builds the alert dispatcher and says which channels deliver. Webhooks always do. Telegram needs the bot's
+// username for its links, so a token the Bot API refuses leaves Telegram off instead of failing the start; once on,
+// a long poll links chats to subscriptions. Email needs a Resend key and a sender.
+func alerting(ctx context.Context, cfg config.Config, st *store.Store, log *slog.Logger) (*alerts.Dispatcher, api.AlertChannels) {
+	d := &alerts.Dispatcher{Store: st, Log: log, Senders: map[string]alerts.Sender{"webhook": alerts.NewWebhook(cfg.ChainID == devChainID)}}
+	ch := api.AlertChannels{AllowPrivateWebhooks: cfg.ChainID == devChainID}
+	if cfg.TelegramEnabled() {
+		tg := alerts.NewTelegram(cfg.TelegramBotToken, "")
+		tg.Log = log
+		mctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		name, err := tg.BotUsername(mctx)
+		cancel()
+		if err != nil {
+			log.Warn("Telegram alerts disabled: the Bot API refused the token", "err", err)
+		} else {
+			d.Senders["telegram"], ch.TelegramBot = tg, name
+			go func() { _ = tg.Listen(ctx, alerts.LinkTelegram(st)) }()
+			log.Info("Telegram alerts enabled", "bot", name)
+		}
+	}
+	if cfg.EmailEnabled() {
+		d.Senders["email"], ch.Email = alerts.NewEmail(cfg.ResendAPIKey, cfg.AlertEmailFrom, ""), true
+		log.Info("email alerts enabled", "from", cfg.AlertEmailFrom)
+	}
+	return d, ch
+}
+
+// aisTracker follows registered vessels through aisstream.io when AISSTREAM_API_KEY is set; otherwise it is a
+// tracker without a stream, and vessels are shown without live positions.
+func aisTracker(cfg config.Config, st *store.Store, log *slog.Logger) *ais.Tracker {
+	t := &ais.Tracker{Store: st, Log: log}
+	if cfg.AISEnabled() {
+		c := ais.NewClient(cfg.AISStreamAPIKey, "")
+		c.Log = log
+		t.Stream = c
+		log.Info("AIS vessel tracking enabled")
+	}
+	return t
+}
+
+// gasDrip returns the gas drip when GAS_DRIP_KEY is set. The key must be dedicated: sharing a role key would race
+// that role's transaction nonces.
+func gasDrip(cfg config.Config, client *chain.Client, log *slog.Logger) (*api.GasDrip, error) {
+	if !cfg.GasDripEnabled() {
+		return nil, nil
+	}
+	for _, role := range []config.Key{cfg.WorkerKey, cfg.MonitorKey, cfg.ManagerKey} {
+		if string(role) == string(cfg.GasDripKey) {
+			return nil, errors.New("GAS_DRIP_KEY must be a dedicated key, not one of the role keys")
+		}
+	}
+	key, err := crypto.ToECDSA(cfg.GasDripKey)
+	if err != nil {
+		return nil, errors.New("GAS_DRIP_KEY is not a valid secp256k1 private key")
+	}
+	d := &api.GasDrip{Chain: client, Signer: chain.NewSigner(key), AmountWei: new(big.Int).SetUint64(cfg.GasDripWei), Daily: cfg.GasDripDaily}
+	log.Info("gas drip enabled", "address", d.Signer.Address().Hex(), "wei", cfg.GasDripWei, "daily", cfg.GasDripDaily)
+	return d, nil
+}
+
+// wording returns the model that may rephrase shipment explanations, or nil without a Groq key.
+func wording(cfg config.Config) ai.Rewriter {
+	if !cfg.AIEnabled() {
+		return nil
+	}
+	return ai.NewGroq(ai.GroqConfig{APIKey: cfg.GroqAPIKey, Model: cfg.GroqModel})
 }
 
 func signers(cfg config.Config) (worker, monitor, manager *chain.Signer, err error) {

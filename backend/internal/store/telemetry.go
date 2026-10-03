@@ -125,3 +125,25 @@ func (s *Store) Quarantined(ctx context.Context, shipmentID string, limit int) (
 	}
 	return out, rows.Err()
 }
+
+// LatestReadings returns up to perSensor of each sensor's newest readings, oldest first within a sensor.
+func (s *Store) LatestReadings(ctx context.Context, shipmentID string, perSensor int) (map[string][]telemetry.Point, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT sensor_id, ts, temperature_x100, humidity_x100, latitude_e6, longitude_e6, shock_x100 FROM (
+			SELECT *, row_number() OVER (PARTITION BY sensor_id ORDER BY ts DESC) AS rn
+			FROM telemetry_points WHERE shipment_id = $1) recent
+		WHERE rn <= $2 ORDER BY sensor_id, ts`, shipmentID, perSensor)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := map[string][]telemetry.Point{}
+	for rows.Next() {
+		var p telemetry.Point
+		if err := rows.Scan(&p.SensorID, &p.Timestamp, &p.TemperatureX100, &p.HumidityX100, &p.LatitudeE6, &p.LongitudeE6, &p.ShockX100); err != nil {
+			return nil, err
+		}
+		out[p.SensorID] = append(out[p.SensorID], p)
+	}
+	return out, rows.Err()
+}
