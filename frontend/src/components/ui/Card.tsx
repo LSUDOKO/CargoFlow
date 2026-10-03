@@ -64,7 +64,8 @@ export function CardHeader({
         <H id={id} className="font-display text-h3">{title}</H>
         {description && <p className="mt-0.5 text-small text-text-muted">{description}</p>}
       </div>
-      {children && <div className="flex shrink-0 flex-wrap items-center gap-2 text-small text-text-muted">{children}</div>}
+      {/* min-w-0 + max-w-full: wide trailing content (a CopyField, a tab row) wraps onto its own line and shrinks instead of overflowing a phone */}
+      {children && <div className="flex max-w-full min-w-0 flex-wrap items-center gap-2 text-small text-text-muted">{children}</div>}
     </div>
   );
 }

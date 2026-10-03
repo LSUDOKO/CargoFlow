@@ -40,9 +40,9 @@ export function CopyButton({ text, label = "Copy", className, big }: { text: str
 export function CodeBlock({ code, label, className }: { code: string; label?: string; className?: string }) {
   return (
     <div className={cx("surface-ink relative w-full max-w-full min-w-0 overflow-hidden rounded-tile bg-ink text-paper [contain:inline-size]", className)}>
-      {label && <div className="border-b border-paper/10 px-4 py-2 font-mono text-[0.6875rem] tracking-wide text-paper/55 uppercase">{label}</div>}
+      {label && <div className="border-b border-border-ink px-4 py-2 font-mono text-micro tracking-wide text-text-on-ink-muted uppercase">{label}</div>}
       <div className="flex items-start gap-3 p-4">
-        <pre tabIndex={0} aria-label={label ? `${label} code` : "Code"} className="min-w-0 flex-1 overflow-x-auto rounded-md font-mono text-[0.8125rem] leading-relaxed whitespace-pre"><code>{code}</code></pre>
+        <pre tabIndex={0} aria-label={label ? `${label} code` : "Code"} className="min-w-0 flex-1 overflow-x-auto rounded-md font-mono text-small leading-relaxed whitespace-pre"><code>{code}</code></pre>
         <CopyButton text={code} className="text-paper" />
       </div>
     </div>

@@ -32,11 +32,12 @@ type Props = {
   className?: string;
 };
 
-const valueSize = { sm: "text-xl", md: "text-[1.75rem]", lg: "text-metric" } as const;
+const valueSize = { sm: "text-xl", md: "text-metric-md", lg: "text-metric" } as const;
 
 /**
  * One headline number. The label says what it is, the value is the biggest thing in the tile, the delta and hint
- * qualify it. The value animates (a short lime wash) only when it changes.
+ * qualify it. The value animates (a short lime wash) only when it changes. Values are Inter with tabular numerals
+ * (`.num`), never the display face: Space Grotesk's 1 reads like a 7 in an amount.
  */
 export function Stat({ label, value, unit, delta, hint, chart, size = "md", onDark, loading, tile = true, className }: Props) {
   const changed = useValueChange(typeof value === "string" || typeof value === "number" ? value : null);
@@ -55,9 +56,9 @@ export function Stat({ label, value, unit, delta, hint, chart, size = "md", onDa
         {loading ? (
           <Skeleton className={cx("h-8 w-28", onDark && "bg-paper/15")} />
         ) : (
-          <p className={cx("num font-display leading-none font-semibold tracking-tight", valueSize[size], onDark ? "text-paper" : "text-ink")}>
+          <p className={cx("num font-sans leading-none font-semibold", valueSize[size], onDark ? "text-paper" : "text-ink")}>
             <span className={cx("-mx-1 rounded-md px-1", changed > 0 && "animate-update")}>{value}</span>
-            {unit && <span className={cx("ml-1 font-sans text-sm font-semibold tracking-normal", onDark ? "text-paper/70" : "text-text-muted")}>{unit}</span>}
+            {unit && <span className={cx("ml-1 text-sm font-semibold tracking-normal", onDark ? "text-paper/70" : "text-text-muted")}>{unit}</span>}
           </p>
         )}
         {chart && !loading && <div className="shrink-0">{chart}</div>}

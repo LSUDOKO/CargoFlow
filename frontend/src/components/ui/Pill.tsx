@@ -57,7 +57,7 @@ export function Badge({ variant = "neutral", size = "md", shape = "pill", dot, p
     <span
       className={cx(
         "inline-flex max-w-full items-center gap-1.5 font-semibold whitespace-nowrap ring-1 ring-inset",
-        size === "sm" ? "h-5 px-2 text-[0.6875rem]" : "h-6 px-2.5 text-xs",
+        size === "sm" ? "h-5 px-2 text-micro" : "h-6 px-2.5 text-xs",
         shape === "pill" ? "rounded-full" : "rounded-md",
         onDark ? dark[variant] : light[variant],
         className,

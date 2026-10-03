@@ -29,8 +29,12 @@ text ≥ 4.5:1 (`/design` prints every ratio). On navy, muted text is `text-pape
 
 ### Type
 
-Families: `font-display` Space Grotesk (headings, big numerals), `font-sans` Inter (everything read),
+Families: `font-display` Space Grotesk (**headings only**), `font-sans` Inter (everything read, **every number**),
 `font-mono` JetBrains Mono (**hashes, keys, code only**).
+
+**Numbers rule.** Amounts, counts, scores and percentages are Inter with tabular numerals (`.num`), at every size,
+including headline metrics. Never set a figure in Space Grotesk: its 1 reads like a 7 ("17,111" looks like "77,777").
+`Stat` does this for you; hand-set metrics use `num text-metric` (no `font-display`). Never `font-mono` for amounts.
 
 | Utility | Size / line-height / tracking / weight | Use |
 |---|---|---|
@@ -44,7 +48,9 @@ Families: `font-display` Space Grotesk (headings, big numerals), `font-sans` Int
 | `text-small` | 13 / 1.45 | Secondary copy, hints, meta |
 | `text-caption` | 12 / 1.35 / +0.01em | Footnotes, chart labels (minimum for running text) |
 | `eyebrow` (class) | 11 / 600 / +0.08em / uppercase, muted | Label above a value or a title. Minimum size anywhere. |
-| `font-display text-metric num` | clamp 28→36 / 1.05 / −0.03em / 600 | Headline numbers (Stat lg) |
+| `text-micro` | 11 / 1.2 | The same minimum size without the uppercase tracking: `Badge size="sm"`, `Kbd`, `CodeBlock` label |
+| `text-metric num` | clamp 28→36 / 1.05 / −0.02em / 600, Inter | Headline numbers (Stat lg, party scores) |
+| `text-metric-md num` | 28 / 1.05 / −0.02em / 600, Inter | Stat md |
 | `num` (class) | tabular + slashed zero | **Every amount, count, percentage, time in a column** |
 
 `.h-section` and `.lede` remain for the landing sections. Body copy max width: `max-w-reading` (42rem ≈ 70ch).
@@ -66,7 +72,8 @@ Families: `font-display` Space Grotesk (headings, big numerals), `font-sans` Int
 `rounded-chip` 8 px (hash chips, kbd, small wells) · `rounded-control` 12 px (inputs, selects, menu items) ·
 `rounded-tile` 12 px (tiles and wells inside a card, toasts, callouts, code) · `rounded-card` 20 px (cards, panels;
 was 28) · `rounded-sheet` 24 px (modals, drawers, hero panels) · `rounded-pill` (buttons, tabs, badges).
-Inner radius ≤ outer radius minus padding. No arbitrary radii.
+Inner radius ≤ outer radius minus padding. No arbitrary radii. Tailwind's `rounded-md` (6 px) is allowed only for
+small parts inside a chip or row: copy/explorer buttons in `CopyField`, square badges, `Kbd`.
 
 ### Elevation
 
@@ -153,34 +160,35 @@ All in `src/components/ui/`, typed, keyboard-accessible, unit-tested in `ui.test
 | `LinkButton` | `href`, `external`, `variant`, `size`, `icon`, `iconEnd` | Navigation that looks like a button. |
 | `buttonClass(v, s, cls, iconOnly)` | | Styling a non-button element as a button. |
 | `Card` / `cardClass()` | `tone: white\|paper\|ink\|sunken`, `elevation: 0\|1\|2`, `padded: true\|false\|"sm"\|"md"\|"lg"`, `interactive`, `as` | Grouping related content. `sunken` for wells inside a card. Don't nest white cards. |
-| `CardHeader` | `title`, `description`, `children` (trailing meta/actions), `as: h2\|h3` | Title row inside a card. |
+| `CardHeader` | `title`, `description`, `children` (trailing meta/actions), `as: h2\|h3` | Title row inside a card. The trailing slot is `min-w-0` and wraps, so a CopyField or tab row there drops under the title and shrinks on phones instead of overflowing. |
 | `PageHeader` | `title`, `description`, `eyebrow`, `actions`, `back`, `meta` | Top of every app page (template A). |
 | `Section` / `SectionHeader` | `title`, `description`, `eyebrow`, `actions`, `as` | A labelled page section (`<section aria-labelledby>`). |
 | `Badge` | `variant: success\|warning\|danger\|info\|neutral\|ink\|signal`, `size: sm\|md`, `shape: pill\|square`, `dot`, `pulse`, `onDark`, `icon` | Status (pill) or category/tag (square). |
 | `Pill` / `StatusPill` | v1: `tone: verified\|alert\|ink\|danger\|slate\|info`; `StatusPill status` keeps `data-testid="status-pill"` | Existing call sites; facility status. |
 | `Tabs` / `TabPanel` | `tabs: {id,label,count?,disabled?}[]`, `value`, `onChange`, `label`, `variant: segmented\|underline`, `size: sm\|md\|lg`, `idBase`, `scroll`, `controls` | Segmented for filters; underline for page sections. Give each tab set on a page its own `idBase`; `controls={false}` when no panel is rendered. |
-| `Stepper` | `steps: {id,label,description?}[]`, `current`, `done?(i)`, `orientation`, `label` | Wizards only. |
-| `Timeline` | `items: {id,title,eyebrow?,description?,time?,state,meta?}[]`, `state: done\|active\|held\|failed\|pending`, `orientation: vertical\|horizontal`, `label`, `showState`, `onDark` | Milestones, journeys, recovery history, audit summaries. |
-| `DataTable<T>` | `columns: Column<T>[]` (`key, header, cell?, numeric?, align?, width?, primary?, hideOnCard?, cardLabel?, sortable?, sortValue?`), `rows`, `rowKey`, `caption`, `captionVisible`, `loading`, `loadingRows`, `empty`, `rowHref`, `density: compact\|regular`, `maxHeight`, `sort`/`onSortChange`, `cards` | Any list people scan or compare. Wrap in `<Card padded={false} className="overflow-hidden">`. Numbers: `numeric`. Whole-row links: `rowHref`. Under 640 px rows become cards (cells render twice; don't put ids inside cells). Sticky header applies inside its scroller, so pass `maxHeight` for long tables. |
-| `Stat` | `label`, `value`, `unit`, `delta: {value, direction: up\|down\|flat, good?, context?}`, `hint`, `chart`, `size: sm\|md\|lg`, `onDark`, `loading`, `tile` | One headline number. Colour of delta follows `good`, not direction. |
+| `Stepper` | `steps: {id,label,description?}[]`, `current` (`= steps.length` when all done), `done?(i)`, `orientation`, `label` | Wizards only. Horizontal: one row from 640 px with truncated labels and descriptions (full text in `title`); on phones a compact "Step 2 of 4" header, the current step and a segmented bar. Give every step a short description. |
+| `Timeline` | `items: {id,title,eyebrow?,description?,time?,state,meta?}[]`, `state: done\|active\|held\|failed\|pending`, `orientation: vertical\|horizontal`, `fill`, `label`, `showState`, `onDark` | Milestones, journeys, recovery history, audit summaries. Horizontal steps are 176 px each; `fill` makes them share the width (min 112 px) so 6–8 steps fit a card; it still scrolls below that. |
+| `DataTable<T>` | `columns: Column<T>[]` (`key, header, cell?, numeric?, align?, width?, primary?, hideOnCard?, hideBelow?: sm\|md\|lg, cardLabel?, sortable?, sortValue?`), `rows`, `rowKey`, `caption`, `captionVisible`, `loading`, `loadingRows`, `empty`, `rowHref`, `onRowClick(row)`, `rowClassName(row)`, `density: compact\|regular`, `maxHeight`, `sort`/`onSortChange`, `cards` | Any list people scan or compare. Wrap in `<Card padded={false} className="overflow-hidden">`. Numbers: `numeric`. Row goes to a page: `rowHref` (primary cell becomes a covering link). Row acts in place (drawer): `onRowClick` (a click anywhere on the row or card, except on links/buttons/inputs inside it; the primary cell becomes the button keyboard users reach), never a click-catching wrapper. Selected row: `rowClassName`. Secondary columns on tablets: `hideBelow="md"`. Under 640 px rows become cards; server HTML carries both variants switched by CSS, and after hydration only the one matching the viewport stays in the DOM (no duplicate text for screen readers or tests). Sticky header applies inside its scroller, so pass `maxHeight` for long tables. |
+| `Stat` | `label`, `value`, `unit`, `delta: {value, direction: up\|down\|flat, good?, context?}`, `hint`, `chart`, `size: sm\|md\|lg`, `onDark`, `loading`, `tile` | One headline number, in Inter tabular figures. Colour of delta follows `good`, not direction. |
 | `Sparkline` | `values`, `label` (makes it an img), `width`, `height`, `tone`, `area`, `band` | Word-sized trend in Stat or a table cell. Use a real chart when values must be read. |
 | `KeyValue` | `items: {label,value,hint?,numeric?,id?}[]`, `layout: inline\|stacked\|grid`, `columns`, `labelWidth`, `onDark`, `dense` | One record's fields (terms, waterfall, parties). |
-| `CopyField` | `value`, `label`, `kind: address\|tx\|hash\|text`, `chainId`, `display: short\|full`, `size: sm\|md`, `onDark` | Addresses, tx hashes, keys, URLs. Replaces HashBadge in new code (HashBadge stays for v1). |
+| `CopyField` | `value`, `label`, `kind: address\|tx\|hash\|text`, `chainId`, `explorerBase`, `href`, `srLabel`, `display: short\|full`, `size: sm\|md`, `onDark` | Addresses, tx hashes, keys, URLs. Explorer link from `chainId` (Robinhood); for other chains pass `explorerBase` (Arbitrum Sepolia: `https://sepolia.arbiscan.io`, builds `/address/` or `/tx/` from `kind`), or an exact `href`. `srLabel` names the value in the action labels when there is no visible label (a table row). Replaces HashBadge in new code (HashBadge stays for v1). |
 | `CodeBlock` / `CopyButton` | `code`, `label` | Code and commands; scrolls inside, never widens the page. |
 | `Kbd` | `keys?: string[]` or children, `onDark` | Shortcuts. |
 | `Tooltip` | `content`, single focusable child, `side: top\|bottom`, `align`, `delay` | Supplementary hints on hover/focus (gauge "?", truncated labels). Never the only copy of essential info. |
 | `Callout` / `Banner` | `variant: info\|success\|warning\|danger\|neutral`, `title`, `children`, `action`, `onDismiss`, `live: polite\|assertive`, `onDark`, `icon` | Callout: guidance inside content. Banner: page-wide condition (offline, wrong network). `live="assertive"` only for problems needing action now. |
-| `EmptyState` | `title`, `description`, `icon`, `action`, `frame: dashed\|plain`, `size`, `as` | No data yet, or filters match nothing (action: "Clear filters"). |
+| `EmptyState` | `title`, `description`, `icon`, `action`, `frame: dashed\|plain`, `size`, `as: h1\|h2\|h3\|p` | No data yet, or filters match nothing (action: "Clear filters"). `as="h1"` when it is the whole page (not found, failed to load). |
 | `Skeleton` / `SkeletonText` | `className` / `lines` | Loading, shaped like the content; set `aria-busy` on the container. |
 | `Spinner` | `className` | Inside buttons only; elsewhere use Skeleton. |
-| `Field` | `label`, `help`/`hint`, `error`, `suffix`, `prefix`, `optional`, `hideLabel` + input props | Text and number inputs. |
+| `Field` | `label`, `help`/`hint`, `error`, `suffix`, `prefix`, `optional`, `hideLabel`, `inputClassName` + input props | Text and number inputs. `className` styles the wrapper, `inputClassName` the input (e.g. `font-mono` for addresses; never `[&_input]:…`). |
 | `Select` / `Textarea` | same shell props + native props | Native select (keeps phone pickers); multi-line text. |
 | `FormField` / `controlClass()` | render-prop `{id, describedBy, invalid}` | Custom controls in the same shell. |
 | `Modal` | `open`, `onClose`, `title`, `description`, `size: sm\|md\|lg` (`wide` = lg), `footer` | A decision that blocks the flow. Primary action last in `footer`. |
 | `Drawer` / `Sheet` | `open`, `onClose`, `title`, `description`, `side: right\|left\|bottom`, `size: md\|lg`, `footer` | Detail beside the page (Drawer); phone pickers (Sheet). |
 | `useToast().toast` | `{tone, title, body?, href?, hrefLabel?, action?: {label,onClick}, duration?}` → id; `dismiss(id)` | Confirmation that something happened. Never for errors the user must fix (use inline error or Callout). |
 | `StateIcon` | `kind: success\|warning\|danger\|info\|pending\|active\|held` | Shared state glyphs. |
-| `Accordion`, `Portal`, `useDialog`, `useValueChange`, `cx` | | Utilities. |
+| `Accordion` | `items: {id,title,body}[]` | FAQ-style disclosure; one open at a time; 32 px sunken plus/cross marker (`ToggleIcon`). |
+| `Portal`, `useDialog`, `useValueChange`, `useMediaQuery`, `cx` | | Utilities. `useMediaQuery(q)` returns `null` until the viewport is known (server, hydration, jsdom): render both layouts with CSS then. |
 
 ### Usage rules (when to use which)
 - **List of records → DataTable.** One record → KeyValue. One number → Stat. Sequence over time → Timeline. Wizard → Stepper.
@@ -207,8 +215,10 @@ All in `src/components/ui/`, typed, keyboard-accessible, unit-tested in `ui.test
    `rounded-2xl`→`rounded-card` (cards) or `rounded-tile` (wells) or `rounded-control` (inputs);
    `rounded-[var(--radius-card)]`→`rounded-card`; `text-[0.8125rem]`→`text-small`; `text-[0.6875rem] uppercase tracking…`→`eyebrow`;
    `text-[#00733e]`→`text-success-fg`, `text-[#8a5300]`→`text-warning-fg`, `text-[#a1191e]`/`text-danger` (text)→`text-danger-fg`;
+   `text-[0.9375rem]`→`text-body`, `text-[0.75rem]`→`text-caption`, `text-[0.6875rem]` (no uppercase)→`text-micro`; `bg-white`→`bg-surface`;
    `text-slate`→`text-text-muted`; `shadow-[var(--shadow-card)]`→`shadow-1`; `shadow-[var(--shadow-lift)]`→`shadow-3`.
-6. Amounts in `.num` Inter, not `font-mono`. Mono stays for hashes, keys and code.
+6. Amounts in `.num` Inter, not `font-mono` and not `font-display` (Space Grotesk's 1 reads as 7). Mono stays for
+   hashes, keys and code.
 7. Every grid/flex child holding text: `min-w-0`. Side-by-side cards: `items-start` unless bottoms must align.
 8. Motion: remove `animate-rise` from app pages (keep on landing); use `Stat`/`useValueChange` + `animate-update` for live values; `animate-confirm` on the success element after a transaction.
 9. Keep every label, heading text, button name and `data-testid` that `frontend/e2e/*.ts` uses (grep the specs and

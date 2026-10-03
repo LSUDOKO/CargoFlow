@@ -73,12 +73,12 @@ export function Tabs({ tabs, value, onChange, label, className, size = "md", var
               seg
                 ? cx(
                     "rounded-full",
-                    size === "lg" ? "h-11 px-5 text-[0.9375rem]" : size === "sm" ? "h-8 px-3 text-xs" : "h-9 px-4 text-sm",
+                    size === "lg" ? "h-11 px-5 text-body" : size === "sm" ? "h-8 px-3 text-xs" : "h-9 px-4 text-sm",
                     selected ? "bg-ink text-paper shadow-1" : "text-ink/70 hover:bg-ink/6 hover:text-ink",
                   )
                 : cx(
                     "-mb-px border-b-2",
-                    size === "lg" ? "h-12 text-[0.9375rem]" : size === "sm" ? "h-9 text-xs" : "h-11 text-sm",
+                    size === "lg" ? "h-12 text-body" : size === "sm" ? "h-9 text-xs" : "h-11 text-sm",
                     selected ? "border-ink text-ink" : "border-transparent text-text-muted hover:border-border-strong hover:text-ink",
                   ),
             )}

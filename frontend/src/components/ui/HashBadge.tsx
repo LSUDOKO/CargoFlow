@@ -22,7 +22,7 @@ export function HashBadge({ value, chainId, kind = "hash", label, className, com
     }
   };
   return (
-    <span className={cx("inline-flex items-center gap-1 rounded-lg py-0.5 pl-2 font-mono text-[0.8rem] whitespace-nowrap", onDark ? "bg-paper/10 text-paper" : "bg-ink/5", compact ? "pr-2" : "pr-0.5", className)} title={value}>
+    <span className={cx("inline-flex items-center gap-1 rounded-chip py-0.5 pl-2 font-mono text-small whitespace-nowrap", onDark ? "bg-paper/10 text-paper" : "bg-ink/5", compact ? "pr-2" : "pr-0.5", className)} title={value}>
       {label && <span className={cx("font-sans text-xs", onDark ? "text-paper/75" : "text-slate")}>{label}</span>}
       {href ? (
         <a href={href} target="_blank" rel="noreferrer" className="underline decoration-ink/25 underline-offset-2 hover:decoration-ink">
@@ -31,7 +31,7 @@ export function HashBadge({ value, chainId, kind = "hash", label, className, com
       ) : (
         <span>{text}</span>
       )}
-      <button type="button" onClick={copy} hidden={compact} className={cx("rounded-md px-1.5 py-0.5 font-sans text-[0.7rem] font-semibold", onDark ? "text-paper/80 hover:bg-paper/15 hover:text-paper" : "text-slate hover:bg-ink/10 hover:text-ink")} aria-label={copied ? "Copied" : `Copy ${value}`}>
+      <button type="button" onClick={copy} hidden={compact} className={cx("rounded-md px-1.5 py-0.5 font-sans text-caption font-semibold", onDark ? "text-paper/80 hover:bg-paper/15 hover:text-paper" : "text-slate hover:bg-ink/10 hover:text-ink")} aria-label={copied ? "Copied" : `Copy ${value}`}>
         {copied ? "Copied" : "Copy"}
       </button>
     </span>

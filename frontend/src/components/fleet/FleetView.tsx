@@ -83,10 +83,8 @@ export function FleetView() {
       primary: true,
       cell: (r) => (
         <span className="flex min-w-0 flex-col">
-          <button type="button" data-open-row onClick={() => setOpen(r.id)} className="w-fit max-w-full truncate text-left font-semibold text-ink underline-offset-2 hover:underline">
-            {r.ref}
-          </button>
-          <span className="font-mono text-caption text-text-muted">{shortHash(r.id)}</span>
+          <span className="truncate">{r.ref}</span>
+          <span className="font-mono text-caption font-normal text-text-muted">{shortHash(r.id)}</span>
         </span>
       ),
     },
@@ -204,26 +202,19 @@ export function FleetView() {
           )
         ) : (
           <>
-            {/* a row opens the container drawer; the reference button inside it is the keyboard target */}
-            <div
-              className="[&_tbody_tr]:cursor-pointer"
-              onClick={(e) => {
-                const t = e.target as HTMLElement;
-                if (t.closest("a, button, input, select")) return;
-                t.closest("tr, li")?.querySelector<HTMLButtonElement>("[data-open-row]")?.click();
-              }}
-            >
-              <Card padded={false} className="overflow-hidden max-sm:border-0 max-sm:bg-transparent max-sm:shadow-none">
-                <DataTable
-                  caption="Shipments in the fleet"
-                  columns={columns}
-                  rows={shown}
-                  rowKey={(r) => r.id}
-                  loading={isPending}
-                  loadingRows={4}
-                />
-              </Card>
-            </div>
+            {/* a row opens the container drawer; the reference (a button) is the keyboard target */}
+            <Card padded={false} className="overflow-hidden max-sm:border-0 max-sm:bg-transparent max-sm:shadow-none">
+              <DataTable
+                caption="Shipments in the fleet"
+                columns={columns}
+                rows={shown}
+                rowKey={(r) => r.id}
+                onRowClick={(r) => setOpen(r.id)}
+                rowClassName={(r) => (r.id === open ? "bg-neutral-25" : undefined)}
+                loading={isPending}
+                loadingRows={4}
+              />
+            </Card>
             {hasNextPage && (
               <div className="text-center">
                 <Button variant="secondary" loading={isFetchingNextPage} onClick={() => fetchNextPage()}>Load more</Button>

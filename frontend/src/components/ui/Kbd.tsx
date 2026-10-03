@@ -6,8 +6,8 @@ export function Kbd({ keys, children, onDark, className }: { keys?: string[]; ch
     <kbd
       key={i}
       className={cx(
-        "inline-grid h-5 min-w-5 place-items-center rounded-[0.3125rem] px-1.5 font-mono text-[0.6875rem] leading-none font-semibold",
-        onDark ? "bg-paper/12 text-paper ring-1 ring-paper/20 ring-inset" : "bg-surface text-ink shadow-[inset_0_-1px_0_var(--color-border-strong)] ring-1 ring-border-strong ring-inset",
+        "inline-grid h-5 min-w-5 place-items-center rounded-md px-1.5 font-mono text-micro leading-none font-semibold",
+        onDark ? "bg-paper/12 text-paper ring-1 ring-paper/20 ring-inset" : "border-b border-border-strong bg-surface text-ink ring-1 ring-border-strong ring-inset",
         className,
       )}
     >

@@ -11,6 +11,13 @@ type Props = {
   label?: string;
   kind?: "address" | "tx" | "hash" | "text";
   chainId?: number;
+  /** Explorer root for chains the app's explorer map does not know, e.g. "https://sepolia.arbiscan.io" for Arbitrum
+   * Sepolia. Builds `${explorerBase}/address/…` or `/tx/…` from `kind`, and wins over `chainId`. */
+  explorerBase?: string;
+  /** The exact link for the explorer action, for anything else (a token page, a block). Wins over both. */
+  href?: string;
+  /** Names the value in the copy and explorer actions when there is no visible label, e.g. the contract name in a table. */
+  srLabel?: string;
   /** full: the whole value (wraps); short: 0x1234…abcd (default for addresses and hashes). */
   display?: "full" | "short";
   onDark?: boolean;
@@ -23,9 +30,12 @@ type Props = {
  * A value people copy or check: an address, a transaction, a key, a URL. Shows it in mono, offers Copy (announced
  * to screen readers) and, for on-chain values, an explorer link. HashBadge stays for v1 call sites.
  */
-export function CopyField({ value, label, kind = "address", chainId, display, onDark, size = "md", className }: Props) {
+export function CopyField({ value, label, kind = "address", chainId, explorerBase, href: hrefProp, srLabel, display, onDark, size = "md", className }: Props) {
   const [copied, setCopied] = useState(false);
-  const href = kind === "tx" ? explorerTx(chainId, value) : kind === "address" ? explorerAddress(chainId, value) : null;
+  const base = explorerBase?.replace(/\/+$/, "");
+  const path = kind === "tx" ? "tx" : kind === "address" ? "address" : null;
+  const href = hrefProp ?? (base && path ? `${base}/${path}/${value}` : kind === "tx" ? explorerTx(chainId, value) : kind === "address" ? explorerAddress(chainId, value) : null);
+  const name = label ?? srLabel;
   const short = (display ?? (kind === "text" ? "full" : "short")) === "short";
   const text = short ? shortHash(value) : value;
   const copy = async () => {
@@ -42,7 +52,7 @@ export function CopyField({ value, label, kind = "address", chainId, display, on
     <span
       className={cx(
         "inline-flex max-w-full min-w-0 items-center gap-1 rounded-chip ring-1 ring-inset",
-        sm ? "h-7 pl-2 text-[0.75rem]" : "h-10 pl-3 text-[0.8125rem]",
+        sm ? "h-7 pl-2 text-caption" : "h-10 pl-3 text-small",
         onDark ? "bg-paper/8 text-paper ring-paper/15" : "bg-surface text-ink ring-border",
         className,
       )}
@@ -55,7 +65,7 @@ export function CopyField({ value, label, kind = "address", chainId, display, on
         <button
           type="button"
           onClick={copy}
-          aria-label={copied ? "Copied" : `Copy ${label ? `${label} ` : ""}${value}`}
+          aria-label={copied ? "Copied" : `Copy ${name ? `${name} ` : ""}${value}`}
           className={cx(
             "grid place-items-center rounded-md transition-colors duration-(--duration-fast)",
             sm ? "h-6 w-6" : "h-8 w-8",
@@ -72,7 +82,7 @@ export function CopyField({ value, label, kind = "address", chainId, display, on
             href={href}
             target="_blank"
             rel="noreferrer"
-            aria-label={`View ${label ? `${label} ` : ""}on the explorer (opens in a new tab)`}
+            aria-label={`View ${name ? `${name} ` : ""}on the explorer (opens in a new tab)`}
             className={cx(
               "grid place-items-center rounded-md transition-colors duration-(--duration-fast)",
               sm ? "h-6 w-6" : "h-8 w-8",

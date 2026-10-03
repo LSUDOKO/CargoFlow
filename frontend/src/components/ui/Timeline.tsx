@@ -38,6 +38,9 @@ type Props = {
   /** Show the state word ("Done", "On hold") next to each title. Screen readers always get it. */
   showState?: boolean;
   onDark?: boolean;
+  /** Horizontal only: steps share the width (flex-1, at least 7rem each) instead of a fixed 11rem, so 6–8 steps fit a
+   * card at desktop widths. Below the minimum it still scrolls sideways. */
+  fill?: boolean;
   className?: string;
 };
 
@@ -46,12 +49,12 @@ type Props = {
  * Vertical for histories and detail panels; horizontal for a short journey across the top of a page (it scrolls
  * sideways on phones). Each node has a distinct shape as well as colour.
  */
-export function Timeline({ items, orientation = "vertical", label, showState, onDark, className }: Props) {
+export function Timeline({ items, orientation = "vertical", label, showState, onDark, fill, className }: Props) {
   const horizontal = orientation === "horizontal";
   return (
     // a horizontal timeline scrolls on phones, so its scroller is a focusable, named region (keyboard users can scroll it)
     <div className={cx(horizontal && "scroll-x -mx-1 px-1", className)} {...(horizontal ? { role: "region", "aria-label": label, tabIndex: 0 } : {})}>
-      <ol aria-label={label} className={cx(horizontal ? "flex min-w-max gap-0 pb-1" : "flex flex-col")}>
+      <ol aria-label={label} className={cx(horizontal ? cx("flex gap-0 pb-1", fill ? "w-full" : "min-w-max") : "flex flex-col")}>
         {items.map((it, i) => {
           const last = i === items.length - 1;
           const nodeCls = (onDark && darkNode[it.state]) || node[it.state];
@@ -59,7 +62,7 @@ export function Timeline({ items, orientation = "vertical", label, showState, on
             <li
               key={it.id}
               aria-current={it.state === "active" ? "step" : undefined}
-              className={cx("relative", horizontal ? "flex w-44 shrink-0 flex-col pr-4" : "flex gap-3 pb-6 last:pb-0")}
+              className={cx("relative", horizontal ? cx("flex flex-col pr-4", fill ? "min-w-28 flex-1" : "w-44 shrink-0") : "flex gap-3 pb-6 last:pb-0")}
             >
               {/* connector to the next node */}
               {!last && (

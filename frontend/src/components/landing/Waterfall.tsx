@@ -28,16 +28,16 @@ export function Waterfall({ committed = "40000000000", invoice = "100000000000",
           <dl className="mt-8 grid max-w-md grid-cols-2 gap-6 border-t border-border pt-6">
             <div>
               <dt className="text-small font-medium text-text-muted">Exporter receives in total</dt>
-              <dd className="num mt-1.5 font-display text-metric">
+              <dd className="num mt-1.5 text-metric">
                 {formatUSDG(w.principal + w.residual)}
-                <span className="ml-1.5 font-sans text-small font-semibold tracking-normal text-text-muted">USDG</span>
+                <span className="ml-1.5 text-small font-semibold tracking-normal text-text-muted">USDG</span>
               </dd>
             </div>
             <div>
               <dt className="text-small font-medium text-text-muted">Financier receives</dt>
-              <dd className="num mt-1.5 font-display text-metric">
+              <dd className="num mt-1.5 text-metric">
                 {formatUSDG(w.financier)}
-                <span className="ml-1.5 font-sans text-small font-semibold tracking-normal text-text-muted">USDG</span>
+                <span className="ml-1.5 text-small font-semibold tracking-normal text-text-muted">USDG</span>
               </dd>
             </div>
           </dl>

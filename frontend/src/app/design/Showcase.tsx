@@ -142,13 +142,14 @@ const TYPE = [
   ["text-small", "text-small text-text-muted", "Logger fix 36 min ago · 18.9° N, 73.0° E", "13 / 1.45"],
   ["text-caption", "text-caption text-text-muted", "Fixed at registration: no party can change these terms.", "12 / 1.35 / +0.01em"],
   ["eyebrow", "eyebrow", "Where the cargo is", "11 / 600 / +0.08em / uppercase"],
-  ["text-metric num", "font-display text-metric num", "40,000.50", "clamp 28→36 / tabular"],
+  ["text-metric num", "text-metric num", "40,111.70", "clamp 28→36 / Inter, tabular (never Space Grotesk: its 1 reads as 7)"],
+  ["text-metric-md num", "text-metric-md num", "17,411.17", "28 / Inter, tabular (Stat md)"],
   ["font-mono", "font-mono text-sm", "0x8e6877…102f", "hashes, code, keys only"],
 ] as const;
 
 const SPACE = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 24];
 const RADII = [
-  ["rounded-chip", "0.5rem", "hash chips, kbd"],
+  ["rounded-chip", "0.5rem", "hash chips, small wells"],
   ["rounded-control", "0.75rem", "inputs, selects"],
   ["rounded-tile", "0.75rem", "wells in a card"],
   ["rounded-card", "1.25rem", "cards, panels"],
@@ -198,6 +199,7 @@ export function Showcase() {
   const [modal, setModal] = useState(false);
   const [drawer, setDrawer] = useState(false);
   const [sheet, setSheet] = useState(false);
+  const [picked, setPicked] = useState<string | null>(null);
   const [value, setValue] = useState(24_000);
   const [confirmKey, setConfirmKey] = useState(0);
   const [enterKey, setEnterKey] = useState(0);
@@ -474,7 +476,8 @@ export function Showcase() {
               <Field label="Shipment reference" placeholder="CF-2026-SG01-…" help="Your own reference; it is shown to every party." />
               <Field label="Invoice value (USDG)" inputMode="decimal" defaultValue="100000" suffix="USDG" />
               <Field label="Total facility (USDG)" defaultValue="140000" suffix="USDG" error="The facility must not exceed the invoice value." />
-              <Field label="Buyer address" placeholder="0x…" disabled help="Disabled until a wallet is connected." />
+              <Field label="Buyer address" placeholder="0x…" inputClassName="font-mono" spellCheck={false} help="inputClassName=&quot;font-mono&quot;: the address is mono, the label is not." />
+              <Field label="Financier address" placeholder="0x…" inputClassName="font-mono" disabled help="Disabled until a wallet is connected." />
               <Select label="Sort" defaultValue="new">
                 <option value="new">Newest first</option>
                 <option value="amount">Largest amount</option>
@@ -500,9 +503,9 @@ export function Showcase() {
             </div>
           </Surface>
           <div className="grid gap-4 md:grid-cols-2">
-            <Surface>
-              <Label>Stepper · horizontal</Label>
-              <Stepper current={1} steps={[{ id: "a", label: "Shipment" }, { id: "b", label: "Cold chain" }, { id: "c", label: "Financing" }, { id: "d", label: "Review" }]} />
+            <Surface className="md:col-span-2">
+              <Label>Stepper · horizontal (one row; descriptions truncate; &quot;Step 2 of 4&quot; on phones)</Label>
+              <Stepper current={1} steps={[{ id: "a", label: "Shipment", description: "Reference, buyer and invoice" }, { id: "b", label: "Cold-chain policy", description: "Temperature band and probes" }, { id: "c", label: "Financing", description: "Financier and milestones" }, { id: "d", label: "Sign", description: "Review and submit on chain" }]} />
             </Surface>
             <Surface>
               <Label>Stepper · vertical</Label>
@@ -526,7 +529,9 @@ export function Showcase() {
           </Surface>
           <div className="grid gap-4 lg:grid-cols-2">
             <Card>
-              <CardHeader title="What was agreed" description="Fixed at registration" />
+              <CardHeader title="What was agreed" description="Fixed at registration">
+                <CopyField size="sm" label="Policy" kind="hash" value="0x1fc4cf6a9e0d3b7c2f18a4d5e6b7c8d9e0f1a2b3c4d5e6f708192a3b4c5d6e7f" />
+              </CardHeader>
               <KeyValue items={[
                 { label: "Temperature", value: "2.0 °C to 8.0 °C" },
                 { label: "Readings", value: "At least every 30 min, from 2+ probes" },
@@ -546,6 +551,7 @@ export function Showcase() {
               <div className="mt-5 flex flex-col gap-3">
                 <CopyField label="Deployer" value="0xA6C05ec62A222b0fb65BD30B2d2f9B2fd378911b" chainId={46630} display="full" />
                 <CopyField label="MCP URL" kind="text" value="https://cargoflow-mcp.adoranto737.workers.dev/mcp" />
+                <CopyField label="Hedge vault" value="0x5FbDB2315678afecb367f032d93F642f64180aa3" explorerBase="https://sepolia.arbiscan.io" />
               </div>
             </Card>
           </div>
@@ -565,7 +571,7 @@ export function Showcase() {
               <p className="flex flex-wrap items-center gap-2 text-sm">Find a shipment <Kbd keys={["Ctrl", "K"]} /> · close <Kbd>Esc</Kbd></p>
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 <Tooltip content="Needs 75 or more to release the next tranche.">
-                  <button type="button" className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border-strong px-3 text-sm font-semibold">Evidence score <span className="grid h-4 w-4 place-items-center rounded-full bg-ink/8 text-[0.625rem]" aria-hidden="true">?</span></button>
+                  <button type="button" className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border-strong px-3 text-sm font-semibold">Evidence score <span className="grid h-4 w-4 place-items-center rounded-full bg-ink/8 text-micro" aria-hidden="true">?</span></button>
                 </Tooltip>
                 <Tooltip content="Below the button" side="bottom" align="start">
                   <Button size="sm" variant="secondary">Bottom tooltip</Button>
@@ -583,6 +589,20 @@ export function Showcase() {
         <Block id="table" title="Data table" description="Sticky header, numbers right-aligned in tabular figures, whole-row links, sortable columns, loading and empty states. Below 640px each row becomes a card.">
           <Card padded={false} className="overflow-hidden">
             <DataTable<Shipment> caption="Shipments" columns={COLUMNS} rows={SHIPMENTS} rowKey={(r) => r.id} rowHref={() => "#table"} maxHeight="22rem" />
+          </Card>
+          <Card padded={false} className="overflow-hidden">
+            <p className="border-b border-border px-4 py-3 text-small text-text-muted">
+              <code className="font-mono">onRowClick</code> + <code className="font-mono">rowClassName</code>: click a row (or its reference) to select it. &quot;Updated&quot; uses <code className="font-mono">hideBelow=&quot;md&quot;</code>.{" "}
+              <span className="font-semibold text-ink">{picked ? `Selected ${SHIPMENTS.find((s) => s.id === picked)?.ref}` : "Nothing selected"}</span>
+            </p>
+            <DataTable<Shipment>
+              caption="Selectable shipments"
+              columns={COLUMNS.map((c) => (c.key === "updated" ? { ...c, hideBelow: "md" as const } : c))}
+              rows={SHIPMENTS}
+              rowKey={(r) => r.id}
+              onRowClick={(r) => setPicked(r.id)}
+              rowClassName={(r) => (r.id === picked ? "bg-signal-soft hover:bg-signal-soft" : undefined)}
+            />
           </Card>
           <div className="grid gap-4 lg:grid-cols-2">
             <Card padded={false} className="overflow-hidden">
@@ -605,6 +625,10 @@ export function Showcase() {
           <Surface>
             <Label>Horizontal · journey</Label>
             <Timeline orientation="horizontal" label="Journey" items={JOURNEY} showState />
+          </Surface>
+          <Surface>
+            <Label>Horizontal · fill (seven steps share the width)</Label>
+            <Timeline orientation="horizontal" fill label="Journey, seven steps" items={[...JOURNEY.slice(0, 4), { id: "m4b", eyebrow: "Milestone 5", title: "Checkpoint 5", state: "pending" }, ...JOURNEY.slice(4, 5), { id: "m7", eyebrow: "Payment", title: "Buyer pays the invoice", state: "pending" }]} />
           </Surface>
           <div className="grid gap-4 md:grid-cols-2">
             <Surface>

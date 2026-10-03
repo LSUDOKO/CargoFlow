@@ -37,10 +37,10 @@ import { limitsText, matchTemplate, TEMPLATES } from "@/lib/templates";
 import { MilestonePlaces } from "./MilestonePlaces";
 
 const steps = [
-  { id: "details", label: "Shipment" },
-  { id: "policy", label: "Cold-chain policy" },
-  { id: "facility", label: "Financing" },
-  { id: "sign", label: "Sign" },
+  { id: "details", label: "Shipment", description: "Reference, buyer and invoice" },
+  { id: "policy", label: "Cold-chain policy", description: "Temperature band and probes" },
+  { id: "facility", label: "Financing", description: "Financier and milestones" },
+  { id: "sign", label: "Sign", description: "Review and submit on chain" },
 ];
 
 type InvoiceFile = { name: string; size: number; hash: Hex };
@@ -267,7 +267,7 @@ export function ExporterWizard() {
                 <div className="grid gap-5 md:grid-cols-2">
                   <Field label="Shipment reference" value={d.ref} onChange={(e) => setD({ ...d, ref: e.target.value })} onBlur={leave("ref")} placeholder="CF-2026-SG02" hint="Your own reference. With your wallet it fixes the shipment's on-chain id." error={err(detailErr.ref, "ref")} autoComplete="off" />
                   <Field label="Invoice value (USDG)" value={d.invoice} onChange={(e) => setD({ ...d, invoice: e.target.value })} onBlur={leave("invoice")} inputMode="decimal" placeholder="100000" suffix="USDG" hint="What the buyer pays at delivery." error={err(detailErr.invoice, "invoice")} />
-                  <Field label="Buyer address" value={d.buyer} onChange={(e) => setD({ ...d, buyer: e.target.value })} onBlur={leave("buyer")} placeholder="0x…" hint="The buyer confirms delivery and pays the invoice." error={err(detailErr.buyer, "buyer")} className="md:col-span-2 [&_input]:font-mono" spellCheck={false} autoComplete="off" />
+                  <Field label="Buyer address" value={d.buyer} onChange={(e) => setD({ ...d, buyer: e.target.value })} onBlur={leave("buyer")} placeholder="0x…" hint="The buyer confirms delivery and pays the invoice." error={err(detailErr.buyer, "buyer")} className="md:col-span-2" inputClassName="font-mono" spellCheck={false} autoComplete="off" />
                 </div>
               </fieldset>
               <fieldset>
@@ -374,7 +374,7 @@ export function ExporterWizard() {
                 <fieldset>
                   <legend className={legend}>Facility</legend>
                   <div className="grid gap-5 md:grid-cols-2">
-                    <Field label="Financier address" value={f.financier} onChange={(e) => setF({ ...f, financier: e.target.value })} onBlur={leave("financier")} placeholder="0x…" hint="The financier deposits the capital into escrow." error={err(fe.financier, "financier")} className="md:col-span-2 [&_input]:font-mono" spellCheck={false} autoComplete="off" />
+                    <Field label="Financier address" value={f.financier} onChange={(e) => setF({ ...f, financier: e.target.value })} onBlur={leave("financier")} placeholder="0x…" hint="The financier deposits the capital into escrow." error={err(fe.financier, "financier")} className="md:col-span-2" inputClassName="font-mono" spellCheck={false} autoComplete="off" />
                     <Field label="Total facility (USDG)" value={f.total} onChange={(e) => setF({ ...f, total: e.target.value })} onBlur={leave("total")} inputMode="decimal" placeholder="40000" suffix="USDG" error={err(fe.total, "total")} hint={invoice ? `Up to the invoice (${formatUSDG(invoice)} USDG) less the fee.` : undefined} />
                     <Field label="Financing fee" value={f.feePct} onChange={(e) => setF({ ...f, feePct: e.target.value })} onBlur={leave("feePct")} inputMode="decimal" suffix="%" hint={total ? `${formatUSDG(fee)} USDG if fully drawn` : "0% to 10%"} error={err(fe.feePct, "feePct")} />
                     <Field label="Milestones" value={f.count} onChange={(e) => setF({ ...f, count: e.target.value })} onBlur={leave("count")} inputMode="numeric" hint={total && Number.isInteger(count) && count > 0 ? `${count} tranches of about ${formatUSDG(total / BigInt(count))} USDG` : "1 to 8 evidence-gated tranches"} error={err(fe.count, "count")} />

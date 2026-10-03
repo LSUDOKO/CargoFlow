@@ -312,3 +312,159 @@ describe("Tooltip", () => {
     expect(screen.queryByRole("tooltip")).toBeNull();
   });
 });
+
+/* ── kit cleanup: new props ─────────────────────────────────────────────── */
+
+/** Stub window.matchMedia so viewport-dependent components pick one layout; returns a restore function. */
+function mockViewport(width: number) {
+  const prev = window.matchMedia;
+  window.matchMedia = ((q: string) => {
+    const min = Number(/min-width:\s*(\d+)px/.exec(q)?.[1] ?? 0);
+    return { matches: width >= min, media: q, addEventListener: () => {}, removeEventListener: () => {}, onchange: null, addListener: () => {}, removeListener: () => {}, dispatchEvent: () => false } as MediaQueryList;
+  }) as typeof window.matchMedia;
+  return () => { window.matchMedia = prev; };
+}
+
+describe("CardHeader and EmptyState", () => {
+  it("lets wide trailing content shrink and wrap", async () => {
+    const { CardHeader } = await import("./Card");
+    render(<CardHeader title="Parties"><span>trailing</span></CardHeader>);
+    const trailing = screen.getByText("trailing").parentElement!;
+    expect(trailing.className).toContain("min-w-0");
+    expect(trailing.className).toContain("flex-wrap");
+    expect(trailing.className).not.toContain("shrink-0");
+  });
+  it("can carry the page's h1", async () => {
+    const { EmptyState } = await import("./EmptyState");
+    render(<EmptyState as="h1" title="We couldn't find that shipment" />);
+    expect(screen.getByRole("heading", { level: 1, name: "We couldn't find that shipment" })).toBeTruthy();
+  });
+});
+
+describe("Stat value type", () => {
+  it("sets amounts in Inter with tabular numerals, not the display face", async () => {
+    const { Stat } = await import("./Stat");
+    render(<Stat label="Released" value="17,111" unit="USDG" />);
+    const p = screen.getByText("17,111").parentElement!;
+    expect(p.className).toContain("num");
+    expect(p.className).toContain("font-sans");
+    expect(p.className).not.toContain("font-display");
+  });
+});
+
+describe("Timeline fill", () => {
+  it("shares the width between horizontal steps", async () => {
+    const { Timeline } = await import("./Timeline");
+    const items = Array.from({ length: 7 }, (_, i) => ({ id: `s${i}`, title: `Step ${i + 1}`, state: "pending" as const }));
+    render(<Timeline orientation="horizontal" fill label="Journey" items={items} />);
+    const lis = within(screen.getByRole("list", { name: "Journey" })).getAllByRole("listitem");
+    expect(lis).toHaveLength(7);
+    expect(lis.every((li) => li.className.includes("flex-1") && !li.className.includes("w-44"))).toBe(true);
+  });
+});
+
+describe("DataTable row clicks, row classes and responsive columns", () => {
+  type Row = { id: string; ref: string; amount: number };
+  const rows: Row[] = [{ id: "1", ref: "CF-A", amount: 30 }, { id: "2", ref: "CF-B", amount: 120 }];
+  it("calls onRowClick from the row and from the primary button, but not from controls inside the row", async () => {
+    const { DataTable } = await import("./DataTable");
+    const onRowClick = vi.fn();
+    const action = vi.fn();
+    render(
+      <DataTable<Row>
+        caption="Fleet"
+        rows={rows}
+        rowKey={(r) => r.id}
+        cards={false}
+        onRowClick={onRowClick}
+        rowClassName={(r) => (r.id === "2" ? "is-picked" : undefined)}
+        columns={[
+          { key: "ref", header: "Shipment", primary: true },
+          { key: "amount", header: "Amount", numeric: true, hideBelow: "md" },
+          { key: "go", header: "Go", cell: (r) => <button type="button" onClick={() => action(r.id)}>Open {r.ref}</button> },
+        ]}
+      />,
+    );
+    const table = screen.getByRole("table", { name: "Fleet" });
+    const [, first, second] = within(table).getAllByRole("row");
+    fireEvent.click(within(first!).getByText("30"));
+    expect(onRowClick).toHaveBeenLastCalledWith(rows[0]);
+    fireEvent.click(within(table).getByRole("button", { name: "CF-B" }));
+    expect(onRowClick).toHaveBeenLastCalledWith(rows[1]);
+    expect(onRowClick).toHaveBeenCalledTimes(2);
+    fireEvent.click(within(table).getByRole("button", { name: "Open CF-A" }));
+    expect(action).toHaveBeenCalledWith("1");
+    expect(onRowClick).toHaveBeenCalledTimes(2);
+    expect(second!.className).toContain("is-picked");
+    expect(second!.className).toContain("cursor-pointer");
+    expect(within(table).getByRole("columnheader", { name: "Amount" }).className).toContain("max-md:hidden");
+  });
+  it("keeps only the variant that matches the viewport, so rows are never in the DOM twice", async () => {
+    const { DataTable } = await import("./DataTable");
+    const cols = [{ key: "ref", header: "Shipment", primary: true }, { key: "amount", header: "Amount", numeric: true }];
+    let restore = mockViewport(1280);
+    const { unmount } = render(<DataTable<Row> caption="Shipments" rows={rows} rowKey={(r) => r.id} columns={cols} />);
+    expect(screen.getByRole("table", { name: "Shipments" })).toBeTruthy();
+    expect(screen.queryByRole("list", { name: "Shipments" })).toBeNull();
+    expect(screen.getAllByText("CF-A")).toHaveLength(1);
+    unmount();
+    restore();
+    restore = mockViewport(390);
+    render(<DataTable<Row> caption="Shipments" rows={rows} rowKey={(r) => r.id} columns={cols} />);
+    expect(screen.queryByRole("table")).toBeNull();
+    expect(screen.getByRole("list", { name: "Shipments" })).toBeTruthy();
+    expect(screen.getAllByText("CF-A")).toHaveLength(1);
+    restore();
+  });
+});
+
+describe("CopyField explorers", () => {
+  const a = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+  it("links to an explorer the app does not know through explorerBase", async () => {
+    const { CopyField } = await import("./CopyField");
+    render(<CopyField value={a} explorerBase="https://sepolia.arbiscan.io/" srLabel="GMXHedgeVault" size="sm" />);
+    const link = screen.getByRole("link", { name: "View GMXHedgeVault on the explorer (opens in a new tab)" });
+    expect(link.getAttribute("href")).toBe(`https://sepolia.arbiscan.io/address/${a}`);
+    expect(screen.getByRole("button", { name: `Copy GMXHedgeVault ${a}` })).toBeTruthy();
+  });
+  it("uses an explicit href over everything else", async () => {
+    const { CopyField } = await import("./CopyField");
+    render(<CopyField value={a} kind="tx" chainId={46630} href="https://example.org/tx/1" />);
+    expect(screen.getByRole("link").getAttribute("href")).toBe("https://example.org/tx/1");
+  });
+});
+
+describe("Stepper horizontal", () => {
+  const steps = [{ id: "a", label: "Shipment", description: "Reference, buyer and invoice" }, { id: "b", label: "Cold-chain policy", description: "Temperature band" }, { id: "c", label: "Financing" }, { id: "d", label: "Sign" }];
+  it("shows descriptions in one row on wide screens", async () => {
+    const restore = mockViewport(1280);
+    const { Stepper } = await import("./Stepper");
+    render(<Stepper steps={steps} current={1} label="Registration steps" />);
+    const list = screen.getByRole("list", { name: "Registration steps" });
+    expect(list.className).not.toContain("flex-wrap");
+    expect(within(list).getByText("Temperature band").className).toContain("truncate");
+    expect(within(list).getAllByRole("listitem")[1]!.getAttribute("aria-current")).toBe("step");
+    expect(screen.queryByText("Step 2 of 4")).toBeNull();
+    restore();
+  });
+  it("collapses to “Step 2 of 4” on phones", async () => {
+    const restore = mockViewport(390);
+    const { Stepper } = await import("./Stepper");
+    render(<Stepper steps={steps} current={1} label="Registration steps" />);
+    expect(screen.queryByRole("list")).toBeNull();
+    expect(screen.getByText("Step 2 of 4")).toBeTruthy();
+    expect(screen.getByText("Cold-chain policy")).toBeTruthy();
+    restore();
+  });
+});
+
+describe("Field inputClassName", () => {
+  it("styles the input, not the wrapper", async () => {
+    const { Field } = await import("./Field");
+    const { container } = render(<Field label="Buyer address" className="md:col-span-2" inputClassName="font-mono" />);
+    const input = screen.getByLabelText("Buyer address");
+    expect(input.className).toContain("font-mono");
+    expect((container.firstChild as HTMLElement).className).toContain("md:col-span-2");
+    expect((container.firstChild as HTMLElement).className).not.toContain("font-mono");
+  });
+});

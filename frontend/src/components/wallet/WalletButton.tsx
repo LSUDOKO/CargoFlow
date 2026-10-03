@@ -79,9 +79,9 @@ export function WalletButton({ compact, onDark }: { compact?: boolean; onDark?: 
         aria-haspopup="menu"
         className="inline-flex h-11 items-center gap-2.5 rounded-full border-2 border-current/25 pr-4 pl-1.5 text-sm font-semibold whitespace-nowrap transition-colors hover:border-current/50"
       >
-        <span className={`relative grid h-8 w-8 place-items-center rounded-full ${wrongChain ? "bg-alert" : "bg-signal"}`} aria-hidden="true">
+        <span className={`relative grid h-8 w-8 place-items-center rounded-full ${wrongChain ? "bg-warning" : "bg-signal"}`} aria-hidden="true">
           <span className="h-2.5 w-2.5 rounded-full bg-ink" />
-          {gas.low && !wrongChain && <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-alert ring-2 ring-ink" />}
+          {gas.low && !wrongChain && <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-warning ring-2 ring-ink" />}
         </span>
         {gas.low && !wrongChain && <span className="sr-only">Low on gas.</span>}
         {isPasskey && <span className="hidden rounded-full bg-current/10 px-2 py-0.5 text-xs font-semibold md:inline">Passkey account</span>}
@@ -89,21 +89,21 @@ export function WalletButton({ compact, onDark }: { compact?: boolean; onDark?: 
         {!compact && balance !== undefined && <span className="hidden opacity-70 lg:inline">{formatUSDG(balance as bigint)} USDG</span>}
       </button>
       {menu && (
-        <div role="menu" className="surface-light absolute right-0 z-40 mt-2 w-72 rounded-tile border border-border bg-white p-2 text-ink shadow-3">
+        <div role="menu" className="surface-light absolute right-0 z-(--z-overlay) mt-2 w-72 rounded-tile border border-border bg-surface p-2 text-ink shadow-3">
           <div className="px-3 py-2 text-sm">
-            <p className="font-semibold">{wrongChain ? "Wrong network" : chainName(chainId)}{isEmail && <span className="ml-2 rounded-full bg-mist px-2 py-0.5 text-xs font-semibold text-text-muted">Email wallet</span>}{isPasskey && <span className="ml-2 rounded-full bg-mist px-2 py-0.5 text-xs font-semibold text-text-muted">Passkey account</span>}</p>
+            <p className="font-semibold">{wrongChain ? "Wrong network" : chainName(chainId)}{isEmail && <span className="ml-2 rounded-full bg-surface-sunken px-2 py-0.5 text-xs font-semibold text-text-muted">Email wallet</span>}{isPasskey && <span className="ml-2 rounded-full bg-surface-sunken px-2 py-0.5 text-xs font-semibold text-text-muted">Passkey account</span>}</p>
             <p className="font-mono text-xs break-all text-text-muted">{address}</p>
             {balance !== undefined && <p className="mt-1 text-text-muted">{formatUSDG(balance as bigint)} USDG</p>}
           </div>
           {isPasskey && <PasskeyGasNote sponsorship={passkey.sponsorship} />}
           {!wrongChain && !(isPasskey && passkey.sponsorship === "on") && <GasHelper address={address} />}
-          <Link href={`/parties/${address.toLowerCase()}`} role="menuitem" onClick={() => setMenu(false)} className="block w-full rounded-control px-3 py-2 text-left text-sm font-semibold hover:bg-ink/5">
+          <Link href={`/parties/${address.toLowerCase()}`} role="menuitem" onClick={() => setMenu(false)} className="block w-full rounded-control px-3 py-2 text-left text-sm font-semibold hover:bg-ink/6">
             Your track record
           </Link>
-          <button type="button" role="menuitem" onClick={() => navigator.clipboard?.writeText(address)} className="w-full rounded-control px-3 py-2 text-left text-sm font-semibold hover:bg-ink/5">
+          <button type="button" role="menuitem" onClick={() => navigator.clipboard?.writeText(address)} className="w-full rounded-control px-3 py-2 text-left text-sm font-semibold hover:bg-ink/6">
             Copy address
           </button>
-          <button type="button" role="menuitem" onClick={() => { disconnect(); if (isEmail) void logoutEmail(); setMenu(false); }} className="w-full rounded-control px-3 py-2 text-left text-sm font-semibold text-danger-fg hover:bg-danger/5">
+          <button type="button" role="menuitem" onClick={() => { disconnect(); if (isEmail) void logoutEmail(); setMenu(false); }} className="w-full rounded-control px-3 py-2 text-left text-sm font-semibold text-danger-fg hover:bg-danger-bg">
             Disconnect
           </button>
         </div>
@@ -117,7 +117,7 @@ export function PasskeyGasNote({ sponsorship }: { sponsorship: ReturnType<typeof
   if (sponsorship === "on") {
     return (
       <p className="mx-1 my-1 flex items-center gap-2 rounded-control bg-success-bg px-3 py-2 text-sm font-semibold text-success-fg" role="status">
-        <span className="grid h-4 w-4 place-items-center rounded-full bg-verified text-[0.625rem] text-white" aria-hidden="true">✓</span>
+        <span className="grid h-4 w-4 place-items-center rounded-full bg-success-solid text-micro text-white" aria-hidden="true">✓</span>
         Gas paid by CargoFlow
       </p>
     );
@@ -126,7 +126,7 @@ export function PasskeyGasNote({ sponsorship }: { sponsorship: ReturnType<typeof
     return (
       <p className="mx-1 my-1 rounded-control bg-warning-bg px-3 py-2 text-sm" role="status">
         <span className="font-semibold">Gas sponsorship isn&apos;t on; this account needs a little testnet ETH.</span>{" "}
-        <span className="text-ink/75">Send some to the address above, or use “Get testnet gas” once the account is set up.</span>
+        <span className="text-text-muted">Send some to the address above, or use “Get testnet gas” once the account is set up.</span>
       </p>
     );
   }

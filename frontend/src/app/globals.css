@@ -144,11 +144,18 @@
   --text-overline--line-height: 1.2;
   --text-overline--letter-spacing: 0.08em;
   --text-overline--font-weight: 600;
-  /* big numerals in Stat and headers */
+  /* the smallest text anywhere: Badge sm, Kbd, code labels (no tracking; use .eyebrow for uppercase labels) */
+  --text-micro: 0.6875rem;
+  --text-micro--line-height: 1.2;
+  /* big numerals in Stat and headers. Set them in Inter (font-sans) with .num: Space Grotesk's 1 reads like a 7 */
   --text-metric: clamp(1.75rem, 1.4rem + 1.2vw, 2.25rem);
   --text-metric--line-height: 1.05;
-  --text-metric--letter-spacing: -0.03em;
+  --text-metric--letter-spacing: -0.02em;
   --text-metric--font-weight: 600;
+  --text-metric-md: 1.75rem; /* Stat md */
+  --text-metric-md--line-height: 1.05;
+  --text-metric-md--letter-spacing: -0.02em;
+  --text-metric-md--font-weight: 600;
 
   /* ── Radius: four shapes, nothing in between ─────────────────────────────── */
   --radius-chip: 0.5rem; /* hash badges, kbd, small inline wells */

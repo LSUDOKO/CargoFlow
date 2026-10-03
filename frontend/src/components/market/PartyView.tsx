@@ -150,9 +150,9 @@ export function PartyView({ address }: { address: string }) {
                 {active.map((r) => (
                   <Card key={r.id} as="section" aria-label={r.title}>
                     <CardHeader title={r.title} as="h3" />
-                    <p className="num font-display text-metric text-ink">
+                    <p className="num text-metric text-ink">
                       {r.headline}
-                      <span className="ml-1.5 font-sans text-sm font-semibold tracking-normal text-text-muted">{r.headlineUnit}</span>
+                      <span className="ml-1.5 text-sm font-semibold tracking-normal text-text-muted">{r.headlineUnit}</span>
                     </p>
                     <KeyValue className="mt-4" dense layout={active.length === 1 ? "grid" : "inline"} columns={4} items={r.rows.map(([label, value]) => ({ label, value, numeric: true }))} />
                   </Card>

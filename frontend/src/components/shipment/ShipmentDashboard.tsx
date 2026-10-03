@@ -357,15 +357,11 @@ export function ShipmentDashboard({ id }: { id: string }) {
   );
 }
 
-/** A full-page problem state with the page's one h1 (EmptyState's heading stops at h2). */
+/** A full-page problem state: the empty state carries the page's one h1. */
 function NotFound({ title, description, action }: { title: string; description: React.ReactNode; action: React.ReactNode }) {
   return (
     <div className="container-page py-(--space-page-y)">
-      <div className="mx-auto flex max-w-2xl flex-col items-center rounded-card border border-dashed border-border-strong bg-neutral-25 px-6 py-14 text-center">
-        <h1 className="font-display text-h2">{title}</h1>
-        <p className="mt-2 max-w-reading text-body text-text-muted">{description}</p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">{action}</div>
-      </div>
+      <EmptyState as="h1" title={title} description={description} action={action} className="mx-auto max-w-2xl" />
     </div>
   );
 }

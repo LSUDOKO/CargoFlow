@@ -61,10 +61,12 @@ type FieldProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, "prefix"> & 
   prefix?: React.ReactNode;
   optional?: boolean;
   hideLabel?: boolean;
+  /** Classes for the <input> itself (className styles the wrapper), e.g. "font-mono" for an address field. */
+  inputClassName?: string;
 };
 
 /** A labelled text input with help and inline error. */
-export function Field({ label, hint, help, error, suffix, prefix, optional, hideLabel, className, id, disabled, ...rest }: FieldProps) {
+export function Field({ label, hint, help, error, suffix, prefix, optional, hideLabel, className, inputClassName, id, disabled, ...rest }: FieldProps) {
   return (
     <FormField label={label} hint={hint} help={help} error={error} optional={optional} hideLabel={hideLabel} id={id} className={className}>
       {({ id: fid, describedBy, invalid }) => (
@@ -75,7 +77,7 @@ export function Field({ label, hint, help, error, suffix, prefix, optional, hide
             aria-invalid={invalid || undefined}
             aria-describedby={describedBy}
             disabled={disabled}
-            className={cx("h-11 w-full min-w-0 rounded-control bg-transparent px-3.5 text-[0.9375rem] outline-none placeholder:text-neutral-500 disabled:cursor-not-allowed", prefix ? "pl-2" : "")}
+            className={cx("h-11 w-full min-w-0 rounded-control bg-transparent px-3.5 text-body outline-none placeholder:text-neutral-500 disabled:cursor-not-allowed", prefix ? "pl-2" : "", inputClassName)}
             {...rest}
           />
           {suffix && <span className="shrink-0 pr-3.5 text-sm font-semibold text-text-muted">{suffix}</span>}
@@ -105,7 +107,7 @@ export function Select({ label, help, hint, error, optional, hideLabel, classNam
             aria-invalid={invalid || undefined}
             aria-describedby={describedBy}
             disabled={disabled}
-            className="h-11 w-full min-w-0 cursor-pointer appearance-none rounded-control bg-transparent pr-10 pl-3.5 text-[0.9375rem] font-medium outline-none disabled:cursor-not-allowed"
+            className="h-11 w-full min-w-0 cursor-pointer appearance-none rounded-control bg-transparent pr-10 pl-3.5 text-body font-medium outline-none disabled:cursor-not-allowed"
             {...rest}
           >
             {children}
@@ -137,7 +139,7 @@ export function Textarea({ label, help, hint, error, optional, hideLabel, classN
             aria-invalid={invalid || undefined}
             aria-describedby={describedBy}
             disabled={disabled}
-            className="w-full min-w-0 resize-y rounded-control bg-transparent px-3.5 py-2.5 text-[0.9375rem] leading-relaxed outline-none placeholder:text-neutral-500"
+            className="w-full min-w-0 resize-y rounded-control bg-transparent px-3.5 py-2.5 text-body leading-relaxed outline-none placeholder:text-neutral-500"
             {...rest}
           />
         </div>

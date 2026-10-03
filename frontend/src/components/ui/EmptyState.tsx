@@ -11,8 +11,8 @@ type Props = {
   frame?: "dashed" | "plain";
   size?: "sm" | "md";
   className?: string;
-  /** Heading level for the title, to fit the page outline. */
-  as?: "h2" | "h3" | "p";
+  /** Heading level for the title, to fit the page outline. "h1" when the empty state is the whole page (not found). */
+  as?: "h1" | "h2" | "h3" | "p";
 };
 
 /**
@@ -34,7 +34,7 @@ export function EmptyState({ title, description, icon, action, frame = "dashed",
           {icon}
         </span>
       )}
-      <H className={cx("font-display", size === "sm" ? "text-h4" : "text-h3")}>{title}</H>
+      <H className={cx("font-display", H === "h1" ? "text-h2" : size === "sm" ? "text-h4" : "text-h3")}>{title}</H>
       {description && <p className="mt-1.5 max-w-[42ch] text-small text-text-muted">{description}</p>}
       {action && <div className="mt-5 flex flex-wrap justify-center gap-2">{action}</div>}
     </div>

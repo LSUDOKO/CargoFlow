@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { cx } from "./cx";
 import { Skeleton } from "./Skeleton";
+import { useMediaQuery } from "./useMediaQuery";
 
 export type Align = "left" | "right" | "center";
 
@@ -21,6 +22,9 @@ export type Column<T> = {
   primary?: boolean;
   /** Hide on the phone card layout (secondary detail). */
   hideOnCard?: boolean;
+  /** Hide the table column below this breakpoint (sm 640, md 768, lg 1024). Only matters for widths that show the table:
+   * with `cards` on, "md" and "lg" drop the column on tablets; the phone cards follow `hideOnCard`. */
+  hideBelow?: "sm" | "md" | "lg";
   /** Label in the phone card; defaults to the header when it is a string. */
   cardLabel?: string;
   /** Makes the header a sort button. Give sortValue for anything that is not a plain string or number field. */
@@ -43,6 +47,12 @@ type Props<T> = {
   empty?: React.ReactNode;
   /** Each row links here: the primary cell becomes a link that covers the whole row. */
   rowHref?: (row: T) => string;
+  /** Each row does something in place (opens a drawer): a click anywhere on the row or card calls it, except on links,
+   * buttons and inputs inside it. The primary cell becomes a button, the keyboard and screen-reader target.
+   * Use rowHref instead when the row goes to a page. */
+  onRowClick?: (row: T) => void;
+  /** Extra classes per row and per phone card, e.g. to mark the selected row. */
+  rowClassName?: (row: T) => string | undefined;
   /** compact 40px rows (logs, audit trails), regular 52px (default). */
   density?: "compact" | "regular";
   /** Constrain height: the body scrolls and the header stays put. Without it the table grows with the page. */
@@ -55,6 +65,16 @@ type Props<T> = {
   className?: string;
 };
 
+const hideClass = { sm: "max-sm:hidden", md: "max-md:hidden", lg: "max-lg:hidden" } as const;
+const INTERACTIVE = "a, button, input, select, textarea, label, summary, [role='button'], [role='link'], [contenteditable='true']";
+
+/** A row click that did not land on a control inside the row, and is not the end of a text selection. */
+function isRowClick(e: React.MouseEvent<HTMLElement>) {
+  const hit = (e.target as HTMLElement).closest(INTERACTIVE);
+  if (hit && e.currentTarget.contains(hit)) return false;
+  return !(typeof window !== "undefined" && window.getSelection?.()?.toString());
+}
+
 const alignClass = (c: { numeric?: boolean; align?: Align }) =>
   c.align === "center" ? "text-center" : c.align === "right" || c.numeric ? "text-right" : "text-left";
 
@@ -66,6 +86,10 @@ function defaultCell<T>(row: T, key: string): React.ReactNode {
 /**
  * The data table. Sticky header, right-aligned tabular numbers, row hover, loading and empty states, and a card
  * layout on phones. Use it for any list a user scans or compares; use KeyValue for one record's fields.
+ *
+ * Phones get cards, wider screens the table. Server HTML (and the hydration pass) carries both, switched by CSS, so
+ * there is no flash; once the viewport is known only the matching one stays in the DOM, so screen readers and text
+ * queries never meet a row twice.
  */
 export function DataTable<T>({
   columns,
@@ -77,6 +101,8 @@ export function DataTable<T>({
   loadingRows = 5,
   empty,
   rowHref,
+  onRowClick,
+  rowClassName,
   density = "regular",
   maxHeight,
   sort: controlled,
@@ -88,6 +114,10 @@ export function DataTable<T>({
   const sort = controlled !== undefined ? controlled : internal;
   const setSort = (s: SortState) => (onSortChange ? onSortChange(s) : setInternal(s));
   const primaryKey = (columns.find((c) => c.primary) ?? columns[0])?.key;
+  // null until the viewport is known (server, hydration): render both variants and let CSS pick
+  const wide = useMediaQuery("(min-width: 640px)");
+  const showTable = !cards || wide !== false;
+  const showCards = cards && wide !== true;
 
   const sorted = useMemo(() => {
     if (!sort || controlled !== undefined) return rows;
@@ -108,6 +138,13 @@ export function DataTable<T>({
 
   const renderPrimary = (row: T, i: number, col: Column<T>) => {
     const content = col.cell ? col.cell(row, i) : defaultCell(row, col.key);
+    if (!rowHref && onRowClick) {
+      return (
+        <button type="button" onClick={() => onRowClick(row)} className="max-w-full text-left font-semibold text-ink underline-offset-2 hover:underline focus-visible:outline-offset-2">
+          {content}
+        </button>
+      );
+    }
     if (!rowHref) return content;
     return (
       <Link href={rowHref(row)} className="font-semibold text-ink underline-offset-2 after:absolute after:inset-0 after:content-[''] hover:underline focus-visible:outline-offset-[-2px]">
@@ -140,6 +177,7 @@ export function DataTable<T>({
                     "sticky top-0 z-(--z-sticky) border-b border-border bg-neutral-25 text-xs font-semibold whitespace-nowrap text-text-muted",
                     density === "compact" ? "h-9 px-3" : "h-10 px-4",
                     alignClass(c),
+                    c.hideBelow && hideClass[c.hideBelow],
                   )}
                 >
                   {c.sortable ? (
@@ -166,7 +204,7 @@ export function DataTable<T>({
             Array.from({ length: loadingRows }, (_, i) => (
               <tr key={`sk-${i}`}>
                 {columns.map((c) => (
-                  <td key={c.key} className={cx(cellPad, "border-b border-border")}>
+                  <td key={c.key} className={cx(cellPad, "border-b border-border", c.hideBelow && hideClass[c.hideBelow])}>
                     <Skeleton className={cx("h-3.5", c.numeric ? "ml-auto w-16" : "w-3/4")} />
                   </td>
                 ))}
@@ -181,9 +219,13 @@ export function DataTable<T>({
           )}
           {!loading &&
             sorted.map((row, i) => (
-              <tr key={rowKey(row, i)} className={cx("group transition-colors duration-(--duration-fast) hover:bg-neutral-25", rowHref && "relative")}>
+              <tr
+                key={rowKey(row, i)}
+                onClick={onRowClick && !rowHref ? (e) => isRowClick(e) && onRowClick(row) : undefined}
+                className={cx("group transition-colors duration-(--duration-fast) hover:bg-neutral-25", rowHref && "relative", onRowClick && !rowHref && "cursor-pointer", rowClassName?.(row))}
+              >
                 {columns.map((c) => (
-                  <td key={c.key} className={cx(cellPad, "border-b border-border align-middle group-last:border-b-0", alignClass(c), c.numeric && "num whitespace-nowrap")}>
+                  <td key={c.key} className={cx(cellPad, "border-b border-border align-middle group-last:border-b-0", alignClass(c), c.numeric && "num whitespace-nowrap", c.hideBelow && hideClass[c.hideBelow])}>
                     {c.key === primaryKey ? renderPrimary(row, i, c) : c.cell ? c.cell(row, i) : defaultCell(row, c.key)}
                   </td>
                 ))}
@@ -195,12 +237,13 @@ export function DataTable<T>({
   );
 
   if (!cards) return <div className={className}>{table}</div>;
+  if (!showCards) return <div className={className}>{showTable && table}</div>;
 
   const cardCols = columns.filter((c) => c.key !== primaryKey && !c.hideOnCard);
   const primaryCol = columns.find((c) => c.key === primaryKey);
   return (
     <div className={className}>
-      {table}
+      {showTable && table}
       <div className="sm:hidden">
         {captionVisible && <p className="mb-3 font-display text-h3">{caption}</p>}
         {isEmpty ? (
@@ -216,8 +259,12 @@ export function DataTable<T>({
                   </li>
                 ))
               : sorted.map((row, i) => (
-                  <li key={rowKey(row, i)} className={cx("rounded-tile border border-border bg-surface p-4", rowHref && "relative active:bg-neutral-25")}>
-                    {primaryCol && <div className="text-[0.9375rem] font-semibold">{renderPrimary(row, i, primaryCol)}</div>}
+                  <li
+                    key={rowKey(row, i)}
+                    onClick={onRowClick && !rowHref ? (e) => isRowClick(e) && onRowClick(row) : undefined}
+                    className={cx("rounded-tile border border-border bg-surface p-4", (rowHref || onRowClick) && "relative cursor-pointer active:bg-neutral-25", rowClassName?.(row))}
+                  >
+                    {primaryCol && <div className="text-body font-semibold">{renderPrimary(row, i, primaryCol)}</div>}
                     {cardCols.length > 0 && (
                       <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
                         {cardCols.map((c) => (
