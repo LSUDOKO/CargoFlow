@@ -17,13 +17,13 @@ supported testnet and this page says so. Nothing bridges the chains: the shared 
 |---|---|---|---|
 | Robinhood Chain | settlement layer for every facility | Robinhood Chain Testnet (46630) | live |
 | Paxos USDG | the money: escrow, advances, settlement, cover | Robinhood Chain Testnet | live |
-| OpenZeppelin | access control, safe transfers, reentrancy guards, pause, ERC-721 | Robinhood Chain Testnet | live (v3 additions in progress) |
-| QuickNode | primary RPC with failover | Robinhood Chain Testnet | in progress (backend) |
-| Alchemy | fallback RPC, webhooks, bundler and gas manager | Robinhood Chain Testnet | in progress, needs keys |
-| ZeroDev | passkey smart accounts with sponsored gas | Robinhood Chain Testnet | in progress, needs project id |
-| Dune | public analytics: volume, TVL, pauses, yield | Robinhood Chain (decoded) or uploaded tables | built, awaiting keys |
-| Fhenix | encrypted invoice margin and penalty schedule | Arbitrum Sepolia (421614) | built, awaiting testnet gas |
-| GMX | optional financier hedge with the financier's own collateral | Arbitrum Sepolia (421614) | built, awaiting testnet gas |
+| OpenZeppelin | access control, safe transfers, reentrancy guards, pause, ERC-721 | Robinhood Chain Testnet | live (v3 deployed 2026-10-03) |
+| QuickNode | primary RPC with failover | Robinhood Chain Testnet | live (backend primary RPC) |
+| Alchemy | fallback RPC and indexer webhook | Robinhood Chain Testnet | live as RPC tier; webhook endpoint deployed, created once the Alchemy auth token is supplied |
+| ZeroDev | passkey smart accounts with sponsored gas | Robinhood Chain Testnet | live (passkey accounts; sponsorship through the CargoFlow policy webhook) |
+| Dune | public analytics: volume, TVL, pauses, yield | uploaded tables | built and enabled; the account plan does not yet allow API uploads |
+| Fhenix | encrypted invoice margin and penalty schedule | Arbitrum Sepolia (421614) | deployed `0x5c1C12448D27c2E8519c1E471078Bf42E685D207` (Sourcify verified) |
+| GMX | optional financier hedge with the financier's own collateral | Arbitrum Sepolia (421614) | deployed `0xE0E90F3E57e3a040AD99FE4384bE96Dd97002f74` (Sourcify verified) |
 
 ---
 

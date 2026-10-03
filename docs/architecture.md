@@ -193,3 +193,18 @@ Contracts v3 (one redeploy; additive: every v2 function, struct, event and error
 A public trusted-setup ceremony (or a transparent proof system), attested hardware sources instead of
 signing keys, a multi-instance backend with a distributed lock and a proof queue, calibrated scoring, an
 independent audit, and a governance story for the admin and verifier roles.
+
+## OpenZeppelin dependency matrix (v5.4.0, vendored)
+
+| Contract | OpenZeppelin modules |
+|---|---|
+| CargoFlowAccess | `AccessControlDefaultAdminRules` |
+| Controlled (base of every role-gated contract) | `IAccessControl` |
+| FinancingController | `ReentrancyGuard`, `Pausable`, `IERC721` |
+| ReceivableVault | `SafeERC20`, `IERC20`, `ReentrancyGuard` |
+| CoverPool | `SafeERC20`, `IERC20`, `ReentrancyGuard`, `Pausable` |
+| EBLRegistry | `ERC721` (with `ERC165`) |
+| DeviceRegistry | `Pausable` |
+| EvidenceRegistry, ShipmentRegistry, PolicyEngine | none beyond `Controlled` |
+| libraries/GeoDistance | `Math` |
+| mocks/MockUSDG (local chains only) | `ERC20` |

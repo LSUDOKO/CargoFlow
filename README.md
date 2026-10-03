@@ -15,7 +15,8 @@
   <a href="https://cargoflow.adoranto737.workers.dev"><img alt="Live on Robinhood Chain Testnet" src="https://img.shields.io/badge/live-Robinhood%20Chain%20Testnet-00C46A?style=flat-square&labelColor=0B1B2B"></a>
   <a href="#deployed-contracts-source-verified"><img alt="USDG settlement" src="https://img.shields.io/badge/settlement-USDG-C6F432?style=flat-square&labelColor=0B1B2B"></a>
   <a href="https://explorer.testnet.chain.robinhood.com"><img alt="Chain 46630" src="https://img.shields.io/badge/chain-46630-F7F9F4?style=flat-square&labelColor=0B1B2B"></a>
-  <a href="#measured-not-claimed"><img alt="Tests: 174 contract, 25 circuit, 78 frontend unit, 18 end-to-end" src="https://img.shields.io/badge/tests-174%20%C2%B7%2025%20%C2%B7%2078%20%C2%B7%2018-00C46A?style=flat-square&labelColor=0B1B2B"></a>
+  <a href="#measured-not-claimed"><img alt="Tests: 366 contract, 25 circuit, 245 frontend unit, 18 end-to-end" src="https://img.shields.io/badge/tests-366%20%C2%B7%2025%20%C2%B7%20245%20%C2%B7%2018-00C46A?style=flat-square&labelColor=0B1B2B"></a>
+  <a href="#use-cargoflow-in-claude"><img alt="MCP server" src="https://img.shields.io/badge/MCP-remote%20server-C6F432?style=flat-square&labelColor=0B1B2B"></a>
   <a href="https://github.com/LSUDOKO/CargoFlow/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/LSUDOKO/CargoFlow/actions/workflows/ci.yml/badge.svg"></a>
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-F7F9F4?style=flat-square&labelColor=0B1B2B"></a>
 </p>
@@ -30,7 +31,10 @@
 <p align="center">
   <a href="https://cargoflow.adoranto737.workers.dev"><b>Live app</b></a> ·
   <a href="https://cargoflow-api-75ul.onrender.com/v1/health"><b>API</b></a> ·
-  <a href="https://explorer.testnet.chain.robinhood.com/address/0xA2E708376CDDf0eb8fa746c43089611B4d49E210"><b>Explorer</b></a> ·
+  <a href="https://cargoflow.adoranto737.workers.dev/docs"><b>API docs</b></a> ·
+  <a href="#use-cargoflow-in-claude"><b>Use in Claude</b></a> ·
+  <a href="https://cargoflow.adoranto737.workers.dev/deployments"><b>Contracts</b></a> ·
+  <a href="https://explorer.testnet.chain.robinhood.com/address/0x06DaF9462eCF2434ED0314a005Bf762cCDEd7Fe1"><b>Explorer</b></a> ·
   <a href="docs/architecture.md"><b>Docs</b></a> ·
   <a href="#demo-video"><b>Demo video</b></a> (coming)
 </p>
@@ -44,8 +48,8 @@ PHYSICAL REALITY → CRYPTOGRAPHIC EVIDENCE → EVIDENCE CONFIDENCE → FINANCIA
 ```
 
 > [!NOTE]
-> **Status: testnet prototype with production-grade engineering.** Deployed and verified on Robinhood Chain
-> Testnet with testnet USDG (no monetary value). Not audited, not a regulated financial product, and the ZK
+> **Status: testnet prototype with production-grade engineering.** Contracts v3 deployed and verified on Robinhood Chain
+> Testnet (3 October 2026) with testnet USDG (no monetary value). Not audited, not a regulated financial product, and the ZK
 > trusted setup is single-party (testnet only). See [honest limits](#honest-limits).
 
 ## Contents
@@ -55,9 +59,11 @@ PHYSICAL REALITY → CRYPTOGRAPHIC EVIDENCE → EVIDENCE CONFIDENCE → FINANCIA
 - [Product tour](#product-tour)
 - [How each party uses it](#how-each-party-uses-it)
 - [Architecture](#architecture)
-- [Live on Robinhood Chain Testnet](#live-on-robinhood-chain-testnet)
+- [Live on Robinhood Chain Testnet](#live-on-robinhood-chain-testnet): services, every contract address, a live v3 run
+- [Use CargoFlow in Claude](#use-cargoflow-in-claude): the remote MCP server
 - [Under the hood](#under-the-hood): evidence engine, zero-knowledge recovery, AI monitor, disputes
-- [For developers](#for-developers)
+- [For developers](#for-developers): API reference, SDKs, gateway agent, Python analytics
+- [Sponsor and partner integrations](#sponsor-and-partner-integrations)
 - [Measured, not claimed](#measured-not-claimed)
 - [Security and honest limits](#security-and-honest-limits)
 
@@ -194,33 +200,102 @@ boundary are in [`docs/architecture.md`](docs/architecture.md).
 | `scripts/` | Key generation, funding, testnet deploy and explorer verification |
 | `docs/` | Architecture, runbooks, security, benchmarks, protocol knowledge base, design spec, roadmap |
 | `stylus/` | Optional Rust (Stylus) evidence engine for Arbitrum Sepolia, benchmarked against a Solidity reference |
-| `frontend/` | Next.js 16 web app: landing, live dashboard, fleet, exporter / financier / buyer portals, gateway onboarding and CSV upload, arbiter console |
+| `frontend/` | Next.js 16 web app: landing, live dashboard, fleet, market, exporter / financier / buyer / carrier portals, passkey accounts, API reference, arbiter console |
+| `packages/sdk` | `@cargoflow/sdk`: typed TypeScript client, ABIs, unsigned transaction builders, gateway signing (Ed25519 and P-256), Merkle proof checks |
+| `packages/mcp` | `@cargoflow/mcp`: MCP server (stdio, Streamable HTTP, and a Cloudflare Worker for the hosted endpoint) |
+| `packages/gateway` | `@cargoflow/gateway`: edge agent for data loggers (folder watch, USB mass storage, serial, offline queue) |
+| `packages/python` | `cargoflow` Python SDK: data frames, portfolio analytics, Monte Carlo of default and recovery |
+| `contracts/confidential` | Fhenix CoFHE extension: encrypted invoice margin and penalty terms (Arbitrum Sepolia) |
+| `contracts/hedge` | GMX v2 hedge vault for a financier's own collateral (Arbitrum Sepolia) |
+| `analytics/dune` | Dune SQL for volume, escrow, pause and recovery rates and lender yield |
 
 ## Live on Robinhood Chain Testnet
 
 Chain `46630` · RPC `https://rpc.testnet.chain.robinhood.com` · Explorer `https://explorer.testnet.chain.robinhood.com`
 
-**Use it now:** the web app is at **https://cargoflow.adoranto737.workers.dev** (Cloudflare Workers) and its API at
-**https://cargoflow-api-75ul.onrender.com** (Render; the free instance sleeps when idle, so the first request after a
-quiet spell takes about a minute). Connect any wallet on Robinhood Chain Testnet.
+**Use it now:** connect any wallet on Robinhood Chain Testnet, or sign in with a passkey (Face ID, fingerprint or a
+security key) through a ZeroDev smart account.
 
-### Deployed contracts (source-verified)
+| Service | URL |
+|---|---|
+| Web app (Cloudflare Workers) | **https://cargoflow.adoranto737.workers.dev** |
+| API (Render, Docker) | https://cargoflow-api-75ul.onrender.com ([health](https://cargoflow-api-75ul.onrender.com/v1/health), [OpenAPI 3.1](https://cargoflow-api-75ul.onrender.com/v1/openapi.json)) |
+| Interactive API reference | https://cargoflow.adoranto737.workers.dev/docs |
+| Remote MCP server (Cloudflare Workers) | `https://cargoflow-mcp.adoranto737.workers.dev/mcp` ([how to add it to Claude](#use-cargoflow-in-claude)) |
+| Every contract and service, with copy buttons | https://cargoflow.adoranto737.workers.dev/deployments |
+
+The free Render instance sleeps when idle, so the first request after a quiet spell can take up to a minute; a GitHub
+Action pings it every 10 minutes.
+
+### Deployed contracts, v3 (source-verified)
+
+Deployed on 3 October 2026 in blocks 128,127,715 to 128,127,723. Every contract's source is verified on the explorer.
+
+| Contract | What it does | Address |
+|---|---|---|
+| CargoFlowAccess | Roles (OpenZeppelin `AccessControlDefaultAdminRules`) | [`0x6b334b4C73c27CB297470140c86311075408b050`](https://explorer.testnet.chain.robinhood.com/address/0x6b334b4C73c27CB297470140c86311075408b050) |
+| ShipmentRegistry | Shipments, parties, invoice hash, route commitment | [`0x2B9E2B70b6fF48DaD9847944bbEcE16c9f4396F3`](https://explorer.testnet.chain.robinhood.com/address/0x2B9E2B70b6fF48DaD9847944bbEcE16c9f4396F3) |
+| PolicyEngine | Commit-reveal cold-chain policy (temperature, humidity, shock, route, evidence thresholds) | [`0x74be1E30bEeDc004447F0427Dd6EBC62CCDabA25`](https://explorer.testnet.chain.robinhood.com/address/0x74be1E30bEeDc004447F0427Dd6EBC62CCDabA25) |
+| EvidenceRegistry | Committed epochs: Poseidon root, score, centroid, maxima, source devices | [`0x3930f06dC9Deb7b7587AD5a04B05350CaACc7BA2`](https://explorer.testnet.chain.robinhood.com/address/0x3930f06dC9Deb7b7587AD5a04B05350CaACc7BA2) |
+| ReceivableVault | Escrow and the settlement waterfall | [`0x167783DB96E27f36f78C8E5F6f1575b0c45a8151`](https://explorer.testnet.chain.robinhood.com/address/0x167783DB96E27f36f78C8E5F6f1575b0c45a8151) |
+| FinancingController | Facility state machine, place-based milestones, pause, ZK resume, title binding, cancel | [`0x06DaF9462eCF2434ED0314a005Bf762cCDEd7Fe1`](https://explorer.testnet.chain.robinhood.com/address/0x06DaF9462eCF2434ED0314a005Bf762cCDEd7Fe1) |
+| Groth16Verifier | On-chain verification of the recovery proof | [`0xF00eE4c686cE4EaC0B161dEe757e19A1C600d0f6`](https://explorer.testnet.chain.robinhood.com/address/0xF00eE4c686cE4EaC0B161dEe757e19A1C600d0f6) |
+| CoverPool | Default cover and parametric cover, pull-based payouts | [`0x4e4f09Da01f466275b586b0cc32613a90b1B69e5`](https://explorer.testnet.chain.robinhood.com/address/0x4e4f09Da01f466275b586b0cc32613a90b1B69e5) |
+| DeviceRegistry | Evidence devices and their class (software key, passkey, secure element) | [`0xD176E4e02f97F12462e68014F92B2A13A664552e`](https://explorer.testnet.chain.robinhood.com/address/0xD176E4e02f97F12462e68014F92B2A13A664552e) |
+| EBLRegistry | Electronic bills of lading as ERC-721 titles ("CFEBL") | [`0x72278056f6537e4F3437b96898BB439ab7BF68A9`](https://explorer.testnet.chain.robinhood.com/address/0x72278056f6537e4F3437b96898BB439ab7BF68A9) |
+| USDG | Paxos testnet stablecoin, 6 decimals | [`0x7E955252E15c84f5768B83c41a71F9eba181802F`](https://explorer.testnet.chain.robinhood.com/address/0x7E955252E15c84f5768B83c41a71F9eba181802F) |
+
+Machine-readable manifest: [`contracts/deployments/robinhood-testnet.json`](contracts/deployments/robinhood-testnet.json).
+Passkey accounts use ZeroDev Kernel already deployed on this chain (EntryPoint v0.7
+`0x0000000071727De22E5E9d8BAf0edAc6f37da032`, Kernel v3.1 factory `0xd703aaE79538628d27099B8c4f621bE4CCd142d5`,
+WebAuthn validator `0x7ab16Ff354AcB328452F1D445b3Ddee9a91e9e69`) and the chain's RIP-7212 P-256 precompile.
+
+**Arbitrum Sepolia (sponsor extensions, verified on Sourcify):** Fhenix `ConfidentialInvoiceTerms`
+[`0x5c1C12448D27c2E8519c1E471078Bf42E685D207`](https://sepolia.arbiscan.io/address/0x5c1C12448D27c2E8519c1E471078Bf42E685D207),
+GMX `GMXHedgeVault` [`0xE0E90F3E57e3a040AD99FE4384bE96Dd97002f74`](https://sepolia.arbiscan.io/address/0xE0E90F3E57e3a040AD99FE4384bE96Dd97002f74)
+([manifest](contracts/deployments/arbitrum-sepolia.json)); optional Stylus `EvidenceEngine`
+[`0x2f7cac603654ec106da242cd0b16044b31f7608d`](https://sepolia.arbiscan.io/address/0x2f7cac603654ec106da242cd0b16044b31f7608d)
+and its Solidity reference [`0x5Ed4f105E3c3C0a67f916c0fc339B261E3De81d7`](https://sepolia.arbiscan.io/address/0x5Ed4f105E3c3C0a67f916c0fc339B261E3De81d7).
+
+### A live run on v3
+
+`CF-LIVE-1791029236301` went from registration to settlement on the v3 contracts through the hosted API, each step
+signed by the party's own key ([dashboard](https://cargoflow.adoranto737.workers.dev/track/0xc57490f8b1f0190b00197db978963899f55314865c0059eddaf8cfecdc8ff9e5)).
+Every evidence epoch also recorded its source device in the `EvidenceRegistry`, and the gateway key was registered
+in the `DeviceRegistry`.
+
+| Step | Transaction |
+|---|---|
+| Exporter registers the shipment | [`0x83665f92…ad1ec2`](https://explorer.testnet.chain.robinhood.com/tx/0x83665f924c0ed6639e6a39fa1e3642d02e516664498ae28fb533507244ad1ec2) |
+| Exporter reveals the policy (v3: humidity and shock limits) | [`0x0706fc0b…476c39`](https://explorer.testnet.chain.robinhood.com/tx/0x0706fc0bbe6781fb37fa73c99fd8c4e7bb3b9e12c924dc812e7b6636eb476c39) |
+| Exporter opens the facility (5 x 4 USDG) | [`0x9b987b0d…07c1c45`](https://explorer.testnet.chain.robinhood.com/tx/0x9b987b0dd54a1aea8f91c54a109f5d3ca9391180472b5112fb704fade07c1c45) |
+| Financier approves and deposits 20 USDG | [`0x4558a691…11dd26af`](https://explorer.testnet.chain.robinhood.com/tx/0x4558a69147fe4055518282c14027eeb97a59d3e3450214d3ba37a99811dd26af), [`0x035ed8b4…dc70d6cccd`](https://explorer.testnet.chain.robinhood.com/tx/0x035ed8b43aba8fffa439e59c50b69afa5e968a88e311f3643caf14dc70d6cccd) |
+| Transit starts | [`0x4e99c463…483a282ed`](https://explorer.testnet.chain.robinhood.com/tx/0x4e99c463e4cec7b9c93bc3cc347c40bd17f1bffa67ec8af33ffc183483a282ed) |
+| Milestones 1 and 2 release; the reefer fails and milestone 3 pauses the facility | (evidence committed by the backend; see the dashboard's audit trail) |
+| Recovery epoch committed | [`0xd65853ad…a1dd9876fe`](https://explorer.testnet.chain.robinhood.com/tx/0xd65853ad2c568ce68cc60e5cac97bce1939fdea679b3019aaaa507a1dd9876fe) |
+| Exporter resumes with a Groth16 proof | [`0xadfe3b2f…1f503a9f52`](https://explorer.testnet.chain.robinhood.com/tx/0xadfe3b2fa8c89d30f847232b35009373b3d4163dc75b321d6490631f503a9f52) |
+| Milestone 3 released, then 4 and 5 | [`0x920eb0b2…ac56380aa`](https://explorer.testnet.chain.robinhood.com/tx/0x920eb0b2319160aed02da939a2a18e5f059d52a3532a078a5325188ac56380aa) |
+| Buyer confirms delivery | [`0x7203cbe9…d933147990`](https://explorer.testnet.chain.robinhood.com/tx/0x7203cbe9751386d954e22b4f854c06081cbcdc1b4dc888da37f409d933147990) |
+| Buyer approves and pays the invoice; waterfall settles | [`0xa6fe0fb0…aed40aa28`](https://explorer.testnet.chain.robinhood.com/tx/0xa6fe0fb004a6ed7afec187a7f2d21b4ce982346df76fde68ed9e1faaed40aa28), [`0x37571b49…cf4e365a35`](https://explorer.testnet.chain.robinhood.com/tx/0x37571b49186b43f2f02df4d2034cd495ac7095766d113c20060cdecf4e365a35) |
+
+<details>
+<summary><b>History: the v1 deployment</b> (the runs below were made on it; still on chain)</summary>
 
 | Contract | Address |
 |---|---|
-| CargoFlowAccess (roles) | [`0x5Ed4f105E3c3C0a67f916c0fc339B261E3De81d7`](https://explorer.testnet.chain.robinhood.com/address/0x5Ed4f105E3c3C0a67f916c0fc339B261E3De81d7) |
+| CargoFlowAccess | [`0x5Ed4f105E3c3C0a67f916c0fc339B261E3De81d7`](https://explorer.testnet.chain.robinhood.com/address/0x5Ed4f105E3c3C0a67f916c0fc339B261E3De81d7) |
 | ShipmentRegistry | [`0x2f7cAc603654eC106dA242cD0b16044b31f7608d`](https://explorer.testnet.chain.robinhood.com/address/0x2f7cAc603654eC106dA242cD0b16044b31f7608d) |
 | PolicyEngine | [`0x93f2cd67f404f62Ff34F729aad1118ea9e1582d0`](https://explorer.testnet.chain.robinhood.com/address/0x93f2cd67f404f62Ff34F729aad1118ea9e1582d0) |
 | EvidenceRegistry | [`0x4aD47799586B4793b7952BA849013F5D0eC2e66a`](https://explorer.testnet.chain.robinhood.com/address/0x4aD47799586B4793b7952BA849013F5D0eC2e66a) |
 | ReceivableVault | [`0x5298dCdBDf6EC799475B09c2Ecd0f089bD4D6902`](https://explorer.testnet.chain.robinhood.com/address/0x5298dCdBDf6EC799475B09c2Ecd0f089bD4D6902) |
 | FinancingController | [`0xA2E708376CDDf0eb8fa746c43089611B4d49E210`](https://explorer.testnet.chain.robinhood.com/address/0xA2E708376CDDf0eb8fa746c43089611B4d49E210) |
 | Groth16Verifier | [`0x1BAa24a99A9Fe8Cd53feB30E5dF098D1334E0a8D`](https://explorer.testnet.chain.robinhood.com/address/0x1BAa24a99A9Fe8Cd53feB30E5dF098D1334E0a8D) |
-| USDG (Paxos testnet stablecoin, 6 decimals) | [`0x7E955252E15c84f5768B83c41a71F9eba181802F`](https://explorer.testnet.chain.robinhood.com/address/0x7E955252E15c84f5768B83c41a71F9eba181802F) |
 
-The machine-readable manifest is [`contracts/deployments/robinhood-testnet.json`](contracts/deployments/robinhood-testnet.json).
-On Arbitrum Sepolia (optional Stylus evidence engine): Stylus `EvidenceEngine` [`0x2f7cac603654ec106da242cd0b16044b31f7608d`](https://sepolia.arbiscan.io/address/0x2f7cac603654ec106da242cd0b16044b31f7608d), Solidity reference [`0x5Ed4f105E3c3C0a67f916c0fc339B261E3De81d7`](https://sepolia.arbiscan.io/address/0x5Ed4f105E3c3C0a67f916c0fc339B261E3De81d7).
+Manifest: [`contracts/deployments/robinhood-testnet-v1.json`](contracts/deployments/robinhood-testnet-v1.json).
 
-### A real user run through the hosted API
+</details>
+
+### A real user run through the hosted API (v1)
 
 The real-user flows are checked live by `frontend/scripts/testnet-lifecycle.ts`, which drives one shipment from
 registration to settlement through the hosted API with each party's own key: wallet-authorized logger, signed
@@ -233,7 +308,7 @@ Its output, line for line:
 
 <p align="center"><img src="docs/assets/term-testnet-run.png" alt="Terminal output of testnet-lifecycle.ts for shipment CF-LIVE-1790936950736: register shipment, set policy, create facility, financier approves and deposits, transit starts, a gateway is added; leg 1 releases milestones 1 and 2; leg 2, reefer fails, pauses at milestone 3; leg 3 skips while paused; the recovery epoch is committed, the exporter resumes with a proof, milestone 3 is released; leg 4 releases milestones 4 and 5; the buyer confirms delivery, approves and pays; final status SETTLED, drawn 20 USDG." width="100%"></p>
 
-### A complete facility, transaction by transaction
+### A complete facility, transaction by transaction (v1)
 
 A shipment from Nhava Sheva to Singapore financed with real testnet USDG: funding, two releases, a thermal
 excursion that paused the facility, a **Groth16 proof verified on-chain** that resumed it, the remaining releases,
@@ -309,6 +384,42 @@ default the vault returns any undrawn USDG to the financier. The arbiter can nev
 is a transaction with a hashed reference.
 Details: [facility state machine](docs/architecture.md#facility-state-machine), [`docs/project/05-roles-and-workflows.md`](docs/project/05-roles-and-workflows.md).
 
+### Contracts v3: title, devices, parametric cover
+
+- **Electronic bill of lading.** A carrier issues one ERC-721 token per bill (document hash, shipper, consignee,
+  possession history). Bound to a facility, the bill is held by the controller and moves under documents against
+  payment: to the buyer in the same transaction as their payment, to the financier on default, back to the exporter
+  on cancel. Designed around MLETR concepts (exclusive control, singularity, integrity); not a legal compliance claim.
+- **Device trust.** Gateways sign with Ed25519, P-256 keys in secure elements (X.509 chain checked against
+  manufacturer roots) or WebAuthn passkeys, so a phone can be a signed inspection device. The device class weights
+  source reliability, and every epoch records on chain which devices fed it.
+- **Parametric cover.** An insurer's cover can pay out after N consecutive failed epochs, proven from the
+  `EvidenceRegistry`'s commit order: the financier's drawn principal plus a salvage amount to the exporter.
+- **Place-based milestones, humidity and shock limits, default cover** (from v2), a **cancel path** for facilities
+  that never started, and an OpenZeppelin `Pausable` brake that can stop new risk only: settlement, delivery,
+  payouts and refunds can never be paused.
+- **Platform services.** Automatic ZK recovery (the proof is prepared as soon as a probe reads in range again; the
+  exporter signs once), in-app, Telegram, email, Slack and webhook notifications, GS1 EPCIS 2.0 export and import,
+  risk-adjusted fee guidance, and RPC failover (QuickNode, public RPC, Alchemy).
+
+## Use CargoFlow in Claude
+
+CargoFlow runs a public remote MCP server, so Claude can read shipments, evidence, cover and the market, and prepare
+unsigned transactions with a link to sign them in the web app. It holds no keys.
+
+**claude.ai (web, desktop, mobile):** Settings → Connectors → **Add custom connector** → paste
+`https://cargoflow-mcp.adoranto737.workers.dev/mcp` → Add. Then ask, for example: *"Using CargoFlow, summarise the
+fleet risk and explain any paused shipment."* The [developers page](https://cargoflow.adoranto737.workers.dev/developers)
+has a copy button, starter prompts that open Claude directly, and an "Add to Cursor" link.
+
+```bash
+claude mcp add --transport http cargoflow https://cargoflow-mcp.adoranto737.workers.dev/mcp   # Claude Code
+```
+
+25 tools: shipments, evidence, explanations, track, audit, parties, market, cover, documents (hash check against the
+on-chain invoice hash), fleet risk, pricing, EPCIS, bills of lading, and `prepare_*` tools for deposit, release,
+ZK resume, delivery, settlement, dispute, cover, cancel and parametric trigger. Source: [`packages/mcp`](packages/mcp).
+
 ## For developers
 
 ### Try it locally in five commands
@@ -330,6 +441,19 @@ Then open the web app and use it as each party with your own wallets:
 ```bash
 cd frontend && cp .env.example .env.local && sed -i 's#8080#8787#' .env.local && pnpm install && pnpm dev
 ```
+
+### Developer platform
+
+| Piece | What it gives you |
+|---|---|
+| [API reference](https://cargoflow.adoranto737.workers.dev/docs) | OpenAPI 3.1 generated from the Go route table (a test fails if a route is undocumented), with every wallet-signed message format |
+| [`@cargoflow/sdk`](packages/sdk) | Typed client for every endpoint, ABIs, `prepare*` transaction builders for any wallet, gateway signing, CSV parsing, Merkle proof checks |
+| [`@cargoflow/mcp`](packages/mcp) | The MCP server above, also runnable locally over stdio |
+| [`@cargoflow/gateway`](packages/gateway) | `cargoflow-gateway watch <folder>`: signs and sends logger exports with an offline queue; USB and serial modes; systemd unit and Docker image |
+| [`cargoflow` (Python)](packages/python) | Pandas or polars frames, portfolio exposure, excursion and conflict statistics, a seeded Monte Carlo of default and recovery, example notebooks |
+
+The packages build and pass their tests in this repository; they are not yet published to npm or PyPI, so install
+them from the repository until then.
 
 ### Checks
 
@@ -371,18 +495,37 @@ request signed like this (the shipment page shows the exact path and a complete 
 | Web app | Cloudflare Workers | Built with OpenNext and deployed with Wrangler: `cd frontend && pnpm cf:deploy` (config in [`frontend/wrangler.jsonc`](frontend/wrangler.jsonc); `NEXT_PUBLIC_API_URL` is compiled into the bundle) |
 | API, indexer, evidence pipeline, prover | Render (Docker) | [`infra/docker/backend.Dockerfile`](infra/docker/backend.Dockerfile): the Go binary plus the compiled circuit and snarkjs prover; serves on port 8080 with a `/v1/health` check |
 | Contracts | Robinhood Chain Testnet | `make testnet-deploy` (dry run), `BROADCAST=1 make testnet-deploy`, then `make testnet-verify`; see the [testnet runbook](docs/runbooks/testnet.md) |
+| Remote MCP server | Cloudflare Workers | `cd packages/mcp && pnpm deploy:worker` |
+| Database | Neon Postgres | migrations run on start |
+
+## Sponsor and partner integrations
+
+| Partner | How CargoFlow uses it | Where |
+|---|---|---|
+| **Robinhood Chain** | All core contracts, settlement and evidence commitments live on Robinhood Chain Testnet (46630) | [`contracts/`](contracts) |
+| **Paxos USDG** | Escrow, tranche releases, invoice payment and cover are real testnet USDG | `0x7E95…802F` |
+| **ZeroDev** | Passkey smart accounts (Kernel v3, WebAuthn validator) for buyers, exporters and arbiters; gas sponsored through a CargoFlow-controlled policy webhook that pays only for CargoFlow contract calls, with per-wallet daily caps | [`frontend/src/lib/passkey`](frontend/src/lib/passkey), [`backend/internal/sponsor`](backend/internal/sponsor) |
+| **Alchemy** | Third-tier RPC failover and a signed webhook endpoint that wakes the indexer within about a second (the payload is never trusted; logs are re-read from the chain) | [`backend/internal/api/webhooks.go`](backend/internal/api/webhooks.go), [`backend/cmd/alchemy-webhook`](backend/cmd/alchemy-webhook) |
+| **QuickNode** | Primary RPC for the backend | `RPC_URL` |
+| **OpenZeppelin** | v5.4: `AccessControlDefaultAdminRules`, `SafeERC20`, `ReentrancyGuard`, `Pausable`, `ERC721`, `Math` | [dependency matrix](docs/architecture.md) |
+| **Dune** | Queries for volume and escrow, pause and recovery rates, and lender yield, plus a backend uploader that pushes indexed events, shipments and epochs to Dune tables every 15 minutes (built and tested; the current Dune account plan does not allow API uploads yet, so the tables go live when it does) | [`analytics/dune`](analytics/dune), [`backend/internal/dune`](backend/internal/dune) |
+| **Fhenix** | `ConfidentialInvoiceTerms` keeps the invoice margin and penalty schedule encrypted and computes the penalty under FHE; complements the ZK proof, which protects the readings | [`contracts/confidential`](contracts/confidential), [ZK and FHE](docs/project/08-zk-and-privacy.md) |
+| **GMX** | `GMXHedgeVault` lets a financier hedge price exposure with their own collateral on GMX v2; escrowed USDG is never moved into a leveraged position | [`contracts/hedge`](contracts/hedge) |
+
+Details, status and limits for each: [`docs/sponsors/README.md`](docs/sponsors/README.md).
 
 ## Measured, not claimed
 
 | | |
 |---|---|
-| Contract tests | 174 (unit, fuzz, invariants I1-I8, real-proof integration) |
-| Frontend | 78 unit tests; 18 Playwright end-to-end and accessibility tests on the real stack, including one shipment from registration to settlement through wallets and logger CSVs |
-| Backend | 21 Go packages with `-race`; integration tests run a real anvil chain and Postgres; the end-to-end test drives the full story through the running service |
+| Contract tests | 366 (unit, fuzz, invariants, real-proof integration, smart-account callers, circuit breaker); Fhenix extension 19, GMX extension 20 including a fork test that places and cancels a real GMX order |
+| Frontend | 245 unit tests; 18 Playwright end-to-end and accessibility tests on the real stack, including one shipment from registration to settlement through wallets and logger CSVs |
+| Backend | Every Go package passes (devices, EPCIS validated against the official 2.0.1 schema, webhooks, sponsorship policy, Dune uploader); integration tests run a real anvil chain and Postgres; the end-to-end test drives the full story through the running service |
 | Circuit | 13,494 constraints; proves in about 1 s; 25 tests including tamper and wrong-context cases |
 | ZK resume on-chain | ~0.25 M gas (real Groth16 verification) |
 | Stylus vs Solidity (optional engine) | 128-reading epoch fusion: 611,945 vs 31,511 gas on Arbitrum Sepolia (19x; 32x cached); [method and caveats](stylus/README.md) |
-| Static analysis | Slither triaged: [`docs/security/slither-triage.md`](docs/security/slither-triage.md) |
+| Packages | SDK 92, MCP 27, gateway 36, Python 25 tests |
+| Static analysis | Slither triaged: [`docs/security/slither-triage.md`](docs/security/slither-triage.md), [v3](docs/security/slither-v3.md) |
 
 Every figure is reproducible with `make check`, `make bench` and `make slither`; method and caveats are in
 [`docs/benchmarks.md`](docs/benchmarks.md).
@@ -397,7 +540,9 @@ Report vulnerabilities as described in [`SECURITY.md`](SECURITY.md). The threat 
 
 - Testnet only. No audit. USDG here has no value.
 - The Groth16 setup is single-party: it must be replaced by a public ceremony before any real use.
-- Telemetry is simulated; there is no hardware. Source authentication is Ed25519 signatures, not attested hardware.
+- Telemetry in the demo runs is simulated. Secure-element (P-256 with X.509) and passkey device paths are implemented
+  and tested with test certificates, but no physical secure-element board has been run end to end.
+- Vendor logger presets in the gateway (Sensitech, Elitech, ELPRO) are marked experimental until checked against real exports.
 - The AI monitor's score weights and thresholds are design parameters, not statistically calibrated.
 - One backend instance per database; recovery proving runs inside the HTTP request.
 
