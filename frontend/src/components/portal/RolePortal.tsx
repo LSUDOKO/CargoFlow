@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useAccount } from "wagmi";
+import { PartyLink } from "@/components/market/PartyLink";
+import { Portfolio } from "@/components/market/Portfolio";
 import { PayAction } from "@/components/portal/PayAction";
 import { PortalHeader } from "@/components/portal/PortalHeader";
 import { Button, LinkButton } from "@/components/ui/Button";
@@ -26,7 +28,7 @@ const copy = {
     lede: "Your capital sits in a shipment-specific escrow and leaves it only when the cargo's evidence passes the policy you agreed to.",
     art: "vault" as const,
     guard: "Funding a facility is a transaction from your financier wallet.",
-    empty: "No facility names this wallet as its financier yet. Ask the exporter to open one with your address.",
+    empty: "No facility names this wallet as its financier yet. Offer on an open request in the market, or ask an exporter to open one with your address.",
   },
   buyer: {
     title: "Pay for cargo that",
@@ -47,39 +49,20 @@ export function RolePortal({ role }: { role: Role }) {
   const mine = views
     .map((q) => q.data)
     .filter((v): v is ShipmentView => !!v && !!address && !!v.facility && v.facility[role].toLowerCase() === address.toLowerCase());
-  const committed = mine.reduce((s, v) => s + BigInt(v.facility!.committed), 0n);
-  const drawn = mine.reduce((s, v) => s + BigInt(v.facility!.drawn), 0n);
-  // capital actually sitting in escrow: funded facilities that have not closed (settled or defaulted)
-  const inEscrow = mine.filter((v) => v.facility!.funded && !v.facility!.closed).reduce((s, v) => s + BigInt(v.facility!.remaining), 0n);
-
   return (
     <div className="container-page flex flex-col gap-6 py-10">
       <PortalHeader title={c.title} mark={c.mark} lede={c.lede} art={c.art} />
       <NetworkGuard purpose={c.guard}>
-        {role === "financier" && mine.length > 0 && (
-          <dl className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            {[
-              ["Facilities", String(mine.length)],
-              ["Committed", `${formatUSDG(committed, { compact: true })} USDG`],
-              ["Drawn by exporters", `${formatUSDG(drawn, { compact: true })} USDG`],
-              ["Still in escrow", `${formatUSDG(inEscrow, { compact: true })} USDG`],
-            ].map(([k, val]) => (
-              <div key={k} className="rounded-2xl border border-line bg-white p-5">
-                <dt className="text-sm font-semibold text-slate">{k}</dt>
-                <dd className="mt-1 font-display text-3xl font-bold tabular">{val}</dd>
-              </div>
-            ))}
-          </dl>
-        )}
+        {role === "financier" && mine.length > 0 && <Portfolio views={mine} address={address} />}
         {isPending && !!address ? (
           <Skeleton className="h-40" />
         ) : mine.length === 0 ? (
           <Card className="text-center">
             <p className="font-display text-2xl font-semibold">Nothing here yet</p>
             <p className="mx-auto mt-2 max-w-md text-slate">{c.empty}</p>
-            <div className="mt-6 flex justify-center gap-2">
+            <div className="mt-6 flex flex-wrap justify-center gap-2">
               <LinkButton href="/shipments" variant="secondary">Browse the fleet</LinkButton>
-              <LinkButton href="/exporter">Open the exporter portal</LinkButton>
+              {role === "financier" ? <LinkButton href="/market">Find shipments to fund</LinkButton> : <LinkButton href="/exporter">Open the exporter portal</LinkButton>}
             </div>
           </Card>
         ) : (
@@ -112,7 +95,11 @@ function FacilityCard({ view, role }: { view: ShipmentView; role: Role }) {
       <div className="flex items-start justify-between gap-3">
         <div>
           <Link href={`/track/${id}`} className="font-display text-xl font-semibold hover:underline">{view.shipment.externalRef}</Link>
-          <p className="mt-1 text-sm text-slate">Milestone {Math.min(f.nextMilestone + 1, f.milestoneCount)} of {f.milestoneCount}</p>
+          <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate">
+            <span>Milestone {Math.min(f.nextMilestone + 1, f.milestoneCount)} of {f.milestoneCount}</span>
+            <span aria-hidden="true" className="hidden sm:inline">·</span>
+            <span className="inline-flex items-center gap-1.5">Exporter <PartyLink address={f.exporter} /></span>
+          </p>
         </div>
         <StatusPill status={f.status} />
       </div>

@@ -12,8 +12,8 @@ export function Footer() {
             Working capital that releases only when the cargo&apos;s own evidence says it should.
           </p>
         </div>
-        <FooterCol title="Product" links={[["/shipments", "Fleet"], ["/exporter", "For exporters"], ["/financier", "For financiers"], ["/buyer", "For buyers"]]} />
-        <FooterCol title="Get started" links={[["/exporter", "Start a shipment"], ["/arbiter", "For arbiters"], ["/#how-it-works", "How it works"], ["/#faq", "Questions"]]} />
+        <FooterCol title="Product" links={[["/shipments", "Fleet"], ["/market", "Financing market"], ["/exporter", "For exporters"], ["/financier", "For financiers"], ["/buyer", "For buyers"]]} />
+        <FooterCol title="Get started" links={[["/exporter", "Start a shipment"], ["/market/new", "Request financing"], ["/arbiter", "For arbiters"], ["/#how-it-works", "How it works"], ["/#faq", "Questions"]]} />
         <FooterCol
           title="Verify"
           links={[

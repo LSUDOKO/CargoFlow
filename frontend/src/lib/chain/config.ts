@@ -1,6 +1,6 @@
 import { createConfig, http, type CreateConnectorFn } from "wagmi";
 import { injected, mock, walletConnect } from "wagmi/connectors";
-import { defineChain, type Address } from "viem";
+import { defineChain, type Address, type EIP1193Provider } from "viem";
 import { anvil } from "viem/chains";
 import { ROBINHOOD_EXPLORER } from "@/lib/explorer";
 
@@ -62,6 +62,24 @@ if (projectId) {
   );
 }
 if (e2e) for (const a of E2E_ACCOUNTS) connectors.push(e2eConnector(a.id, a.name, a.address));
+
+/**
+ * Email login (Privy embedded wallet). The connector is a plain EIP-1193 target whose provider is handed over at
+ * runtime by components/wallet/privy/PrivyBridge once the person has logged in, so this module never imports Privy
+ * and nothing about it exists when NEXT_PUBLIC_PRIVY_APP_ID is unset. It sits beside the other connectors (unlike
+ * @privy-io/wagmi, whose config and sync replace every non-Privy connector), so `wagmiConfig` and every
+ * `wagmi/actions` call site work unchanged with the embedded wallet.
+ */
+export const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? "";
+export const EMBEDDED_CONNECTOR_ID = "cargoflow-email";
+let embeddedProvider: EIP1193Provider | undefined;
+/** Set (or clear) the embedded wallet's EIP-1193 provider; called only by the Privy bridge. */
+export function setEmbeddedProvider(p: EIP1193Provider | undefined) {
+  embeddedProvider = p;
+}
+if (PRIVY_APP_ID) {
+  connectors.push(injected({ shimDisconnect: true, target: { id: EMBEDDED_CONNECTOR_ID, name: "Email wallet", provider: () => embeddedProvider } }));
+}
 
 export const wagmiConfig = createConfig({
   chains: supportedChains,
