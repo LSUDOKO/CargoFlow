@@ -107,7 +107,7 @@ export const Vessel = z.object({
     .transform((v) => v ?? null),
   track: list(Fix),
   crossCheck: z
-    .object({ loggerLatE6: z.number(), loggerLonE6: z.number(), distanceM: z.number(), ageSec: z.number(), agrees: z.boolean() })
+    .object({ loggerLatE6: z.number(), loggerLonE6: z.number(), distanceM: z.number(), ageSec: z.number(), agrees: z.boolean(), comparable: z.boolean().optional().default(true) })
     .nullish()
     .transform((v) => v ?? null),
 });

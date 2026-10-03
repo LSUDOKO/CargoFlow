@@ -81,10 +81,12 @@ function CrossCheck({ v, aisFeed }: { v: Vessel; aisFeed: boolean }) {
   return (
     <div className="flex flex-col gap-3">
       {c ? (
-        <div className={`rounded-2xl px-4 py-3 text-sm ${c.agrees ? "bg-verified/10" : "bg-alert/15"}`}>
-          <p className="font-semibold">{c.agrees ? "Logger and ship agree" : "Logger and ship disagree"}</p>
+        <div className={`rounded-2xl px-4 py-3 text-sm ${!c.comparable ? "bg-mist" : c.agrees ? "bg-verified/10" : "bg-alert/15"}`}>
+          <p className="font-semibold">{!c.comparable ? "Not compared yet" : c.agrees ? "Logger and ship agree" : "Logger and ship disagree"}</p>
           <p className="mt-0.5 text-ink/75">
-            {km(c.distanceM)} apart · AIS fix {ageText(c.ageSec)} old{c.agrees ? "" : ". Recorded as an advisory in the audit trail; it never moves money."}
+            {!c.comparable
+              ? `The logger and the ship last reported ${ageText(c.ageSec)} apart, too long to compare. The next logger reading is checked against the ship's position.`
+              : <>{km(c.distanceM)} apart · fixes {ageText(c.ageSec)} apart{c.agrees ? "" : ". Recorded as an advisory in the audit trail; it never moves money."}</>}
           </p>
         </div>
       ) : (

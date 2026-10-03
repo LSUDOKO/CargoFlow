@@ -35,7 +35,7 @@ export const Vessel = z.object({
     .transform((v) => v ?? null),
   track: list(z.object({ latE6: z.number(), lonE6: z.number(), timestamp: z.number() })),
   crossCheck: z
-    .object({ loggerLatE6: z.number(), loggerLonE6: z.number(), distanceM: z.number(), ageSec: z.number(), agrees: z.boolean() })
+    .object({ loggerLatE6: z.number(), loggerLonE6: z.number(), distanceM: z.number(), ageSec: z.number(), agrees: z.boolean(), comparable: z.boolean().optional().default(true) })
     .nullish()
     .transform((v) => v ?? null),
 });

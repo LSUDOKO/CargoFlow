@@ -34,6 +34,7 @@ type Check struct {
 	DistanceM   int64 `json:"distanceM"`
 	AgeSec      int64 `json:"ageSec"` // time between the two fixes
 	Agrees      bool  `json:"agrees"`
+	Comparable  bool  `json:"comparable"` // false when the fixes are too far apart in time to say either way
 }
 
 // CrossCheck compares a logger reading with an AIS position. Fixes more than 30 minutes apart cannot contradict
@@ -44,7 +45,8 @@ func CrossCheck(logger telemetry.Point, p store.VesselPosition) Check {
 		DistanceM: geo.DistanceMeters(logger.LatitudeE6, logger.LongitudeE6, p.LatE6, p.LonE6),
 		AgeSec:    max(logger.Timestamp-p.Timestamp, p.Timestamp-logger.Timestamp),
 	}
-	c.Agrees = !(c.DistanceM > MismatchMeters && c.AgeSec <= MismatchWindow)
+	c.Comparable = c.AgeSec <= MismatchWindow
+	c.Agrees = !(c.DistanceM > MismatchMeters && c.Comparable)
 	return c
 }
 

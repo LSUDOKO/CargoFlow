@@ -67,7 +67,7 @@ export function buildScene(input: {
       cogDeg: typeof v.last.cogDegX10 === "number" && v.last.cogDegX10 < 3600 ? v.last.cogDegX10 / 10 : null,
       track: unwrap(v.track.map((t) => place(t.latE6, t.lonE6))).map(([lo, la]) => [nearLon(lo, lon), la] as LonLat),
       gapKm,
-      agrees: v.crossCheck ? v.crossCheck.agrees : null,
+      agrees: v.crossCheck && v.crossCheck.comparable ? v.crossCheck.agrees : null,
     };
   }
 
