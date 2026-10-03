@@ -1,0 +1,93 @@
+{
+  "id": "D4-carrier-ebl",
+  "take": "D4-carrier-ebl.take.mp4",
+  "recordedAt": "2026-10-03T16:28:53.374Z",
+  "durationSec": 59.52,
+  "marks": [
+    {
+      "name": "start",
+      "t": 0
+    },
+    {
+      "name": "ebl",
+      "t": 0.729
+    },
+    {
+      "name": "fingerprint",
+      "t": 2.524
+    },
+    {
+      "name": "filled",
+      "t": 5.696
+    },
+    {
+      "name": "issue",
+      "t": 6.773
+    },
+    {
+      "name": "issued",
+      "t": 12.645
+    },
+    {
+      "name": "billpage",
+      "t": 18.07
+    },
+    {
+      "name": "meera",
+      "t": 42.329
+    },
+    {
+      "name": "approve",
+      "t": 45.868
+    },
+    {
+      "name": "approved",
+      "t": 49.763
+    },
+    {
+      "name": "bind",
+      "t": 51.786
+    },
+    {
+      "name": "bound",
+      "t": 55.169
+    },
+    {
+      "name": "inescrow",
+      "t": 58.72
+    },
+    {
+      "name": "end",
+      "t": 59.522
+    }
+  ],
+  "txs": [
+    {
+      "at": "2026-10-03T16:28:03.747Z",
+      "shot": "D4-carrier-ebl",
+      "role": "carrier",
+      "to": "0x72278056f6537e4f3437b96898bb439ab7bf68a9",
+      "selector": "0xdfef9e68",
+      "hash": "0x86b6319841759e126154dd71fb1959b6a34f085cdbd858ce3d2e0f07e34f11df"
+    },
+    {
+      "at": "2026-10-03T16:28:42.873Z",
+      "shot": "D4-carrier-ebl",
+      "role": "exporter",
+      "to": "0x72278056f6537e4f3437b96898bb439ab7bf68a9",
+      "selector": "0x095ea7b3",
+      "hash": "0x7827d14406bebecde2fe1ba6a9dbd02998b908ab6c2e249b4bc9bec1fa6b1b38"
+    },
+    {
+      "at": "2026-10-03T16:28:48.396Z",
+      "shot": "D4-carrier-ebl",
+      "role": "exporter",
+      "to": "0x06daf9462ecf2434ed0314a005bf762ccded7fe1",
+      "selector": "0x4fc6c42a",
+      "hash": "0xc13143ddd3ebd67249e6e24df969eb29723f844711d05258bd0f887be30f4707"
+    }
+  ],
+  "notes": [
+    "bill #2"
+  ]
+}

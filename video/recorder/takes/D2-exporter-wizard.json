@@ -1,0 +1,98 @@
+{
+  "id": "D2-exporter-wizard",
+  "take": "D2-exporter-wizard.take.mp4",
+  "recordedAt": "2026-10-03T16:07:28.470Z",
+  "durationSec": 51.66,
+  "marks": [
+    {
+      "name": "start",
+      "t": 0
+    },
+    {
+      "name": "shipment",
+      "t": 0.817
+    },
+    {
+      "name": "filled1",
+      "t": 8.595
+    },
+    {
+      "name": "policy",
+      "t": 10.563
+    },
+    {
+      "name": "pharma",
+      "t": 12.835
+    },
+    {
+      "name": "financing",
+      "t": 15.507
+    },
+    {
+      "name": "tranches",
+      "t": 19.519
+    },
+    {
+      "name": "places",
+      "t": 20.56
+    },
+    {
+      "name": "review",
+      "t": 25.378
+    },
+    {
+      "name": "signing",
+      "t": 26.389
+    },
+    {
+      "name": "tick1",
+      "t": 33.593
+    },
+    {
+      "name": "tick2",
+      "t": 39.525
+    },
+    {
+      "name": "tick3",
+      "t": 46.09
+    },
+    {
+      "name": "ready",
+      "t": 48.464
+    },
+    {
+      "name": "end",
+      "t": 51.654
+    }
+  ],
+  "txs": [
+    {
+      "at": "2026-10-03T16:07:08.330Z",
+      "shot": "D2-exporter-wizard",
+      "role": "exporter",
+      "to": "0x2b9e2b70b6ff48dad9847944bbece16c9f4396f3",
+      "selector": "0x519fcaed",
+      "hash": "0x40291f4eadf2b2014f042de8b6afbfeb12e0635c5b7f3cb6b5a25536793ff67d"
+    },
+    {
+      "at": "2026-10-03T16:07:15.085Z",
+      "shot": "D2-exporter-wizard",
+      "role": "exporter",
+      "to": "0x74be1e30beedc004447f0427dd6ebc62ccdaba25",
+      "selector": "0x616aaf76",
+      "hash": "0xa2fa7ae11c676837b8ecdc8887b5a0cd4a97d3a929ab720768f4c0971ce9b028"
+    },
+    {
+      "at": "2026-10-03T16:07:20.412Z",
+      "shot": "D2-exporter-wizard",
+      "role": "exporter",
+      "to": "0x06daf9462ecf2434ed0314a005bf762ccded7fe1",
+      "selector": "0x4ecab7ec",
+      "hash": "0x5a9fe4b23d2128ce5bd9550145c2ebc1c29a11726d6c2400c3926e8eaee52abe"
+    }
+  ],
+  "notes": [
+    "reference CF-SG-VAX-0202",
+    "shipment 0xc99131cb35886c991398b53530e1cfedb12fa1f7205a3f95f49b13cd1f7d761a"
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "id": "D6-excursion-pause",
+  "take": "D6-excursion-pause.take.mp4",
+  "recordedAt": "2026-10-03T16:31:15.296Z",
+  "durationSec": 57.78,
+  "marks": [
+    {
+      "name": "start",
+      "t": 0
+    },
+    {
+      "name": "upload",
+      "t": 2.471
+    },
+    {
+      "name": "csv",
+      "t": 5.629
+    },
+    {
+      "name": "warning",
+      "t": 8.927
+    },
+    {
+      "name": "send",
+      "t": 11.43
+    },
+    {
+      "name": "result",
+      "t": 14.802
+    },
+    {
+      "name": "paused",
+      "t": 26.171
+    },
+    {
+      "name": "closed",
+      "t": 31.399
+    },
+    {
+      "name": "top",
+      "t": 33.932
+    },
+    {
+      "name": "pill",
+      "t": 36.337
+    },
+    {
+      "name": "explain",
+      "t": 40.787
+    },
+    {
+      "name": "parties",
+      "t": 46.106
+    },
+    {
+      "name": "evidence",
+      "t": 49.636
+    },
+    {
+      "name": "chart",
+      "t": 56.98
+    },
+    {
+      "name": "end",
+      "t": 57.78
+    }
+  ],
+  "txs": [],
+  "notes": [
+    "leg 2 16 readings 2026-10-03T16:29:24.000Z..2026-10-03T16:29:59.000Z",
+    "Result 16 readings accepted. Epoch Score Outcome Transaction #1 (milestone 3) 48 Failed: facility paused score below threshold, not compliant, conflict too high 0x0bac…a9dc"
+  ]
+}

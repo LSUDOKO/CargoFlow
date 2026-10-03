@@ -1,0 +1,44 @@
+{
+  "id": "D10-market",
+  "take": "D10-market.take.mp4",
+  "recordedAt": "2026-10-03T16:02:53.927Z",
+  "durationSec": 18.86,
+  "marks": [
+    {
+      "name": "start",
+      "t": 0
+    },
+    {
+      "name": "market",
+      "t": 0.831
+    },
+    {
+      "name": "band",
+      "t": 3.103
+    },
+    {
+      "name": "modal",
+      "t": 4.899
+    },
+    {
+      "name": "fee",
+      "t": 7.777
+    },
+    {
+      "name": "reasons",
+      "t": 11.329
+    },
+    {
+      "name": "typed",
+      "t": 14.041
+    },
+    {
+      "name": "end",
+      "t": 18.865
+    }
+  ],
+  "txs": [],
+  "notes": [
+    "Offer typed (3.8%), not sent. The request's maximum fee is 4%, below the suggested band, so a fee inside the band would be refused by the form."
+  ]
+}

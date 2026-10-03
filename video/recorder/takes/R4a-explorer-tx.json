@@ -1,0 +1,22 @@
+{
+  "id": "R4a-explorer-tx",
+  "take": "R4a-explorer-tx.take.mp4",
+  "recordedAt": "2026-10-03T15:35:25.450Z",
+  "durationSec": 3.55,
+  "marks": [
+    {
+      "name": "start",
+      "t": 0
+    },
+    {
+      "name": "status",
+      "t": 0.609
+    },
+    {
+      "name": "end",
+      "t": 3.553
+    }
+  ],
+  "txs": [],
+  "notes": []
+}

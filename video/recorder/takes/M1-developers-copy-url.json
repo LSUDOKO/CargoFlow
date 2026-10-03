@@ -1,0 +1,26 @@
+{
+  "id": "M1-developers-copy-url",
+  "take": "M1-developers-copy-url.take.mp4",
+  "recordedAt": "2026-10-03T15:59:50.178Z",
+  "durationSec": 5.44,
+  "marks": [
+    {
+      "name": "start",
+      "t": 0
+    },
+    {
+      "name": "panel",
+      "t": 0.934
+    },
+    {
+      "name": "copied",
+      "t": 2.906
+    },
+    {
+      "name": "end",
+      "t": 5.438
+    }
+  ],
+  "txs": [],
+  "notes": []
+}

@@ -1,0 +1,82 @@
+{
+  "id": "D5-transit-releases",
+  "take": "D5-transit-releases.take.mp4",
+  "recordedAt": "2026-10-03T16:30:16.034Z",
+  "durationSec": 80.3,
+  "marks": [
+    {
+      "name": "start",
+      "t": 0
+    },
+    {
+      "name": "dashboard",
+      "t": 0.725
+    },
+    {
+      "name": "transit",
+      "t": 2.411
+    },
+    {
+      "name": "intransit",
+      "t": 7.82
+    },
+    {
+      "name": "gateway",
+      "t": 16.422
+    },
+    {
+      "name": "added",
+      "t": 29.391
+    },
+    {
+      "name": "upload",
+      "t": 33.917
+    },
+    {
+      "name": "csv",
+      "t": 36.909
+    },
+    {
+      "name": "send",
+      "t": 42.008
+    },
+    {
+      "name": "result",
+      "t": 49.045
+    },
+    {
+      "name": "rows",
+      "t": 60.606
+    },
+    {
+      "name": "closed",
+      "t": 65.931
+    },
+    {
+      "name": "journey",
+      "t": 70.186
+    },
+    {
+      "name": "map",
+      "t": 77.297
+    },
+    {
+      "name": "end",
+      "t": 80.297
+    }
+  ],
+  "txs": [
+    {
+      "at": "2026-10-03T16:29:01.091Z",
+      "shot": "D5-transit-releases",
+      "role": "exporter",
+      "to": "0x06daf9462ecf2434ed0314a005bf762ccded7fe1",
+      "selector": "0xc1ac453d",
+      "hash": "0xd592d1c7cf36e855ec77b480ea29a685cdd6585d27d51cea1f7632476fae9d87"
+    }
+  ],
+  "notes": [
+    "leg 1 32 readings 2026-10-03T16:27:54.000Z..2026-10-03T16:29:09.000Z",
+    "Result 32 readings accepted. Epoch Score Outcome Transaction #1 (milestone 1) 100 Passed: milestone released 0x5a9c…ea94 #1 (milestone 2) 100 Passed: milestone released 0xe6ba…dcdc"
+  ]
+}

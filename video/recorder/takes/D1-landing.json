@@ -1,0 +1,34 @@
+{
+  "id": "D1-landing",
+  "take": "D1-landing.take.mp4",
+  "recordedAt": "2026-10-03T15:33:10.949Z",
+  "durationSec": 10.63,
+  "marks": [
+    {
+      "name": "start",
+      "t": 0
+    },
+    {
+      "name": "hero",
+      "t": 1.033
+    },
+    {
+      "name": "pill",
+      "t": 3.928
+    },
+    {
+      "name": "scroll",
+      "t": 4.675
+    },
+    {
+      "name": "trackbar",
+      "t": 9.825
+    },
+    {
+      "name": "end",
+      "t": 10.624
+    }
+  ],
+  "txs": [],
+  "notes": []
+}

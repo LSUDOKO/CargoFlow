@@ -1,0 +1,30 @@
+{
+  "id": "R4a-track-settled",
+  "take": "R4a-track-settled.take.mp4",
+  "recordedAt": "2026-10-03T15:35:03.575Z",
+  "durationSec": 10.85,
+  "marks": [
+    {
+      "name": "start",
+      "t": 0
+    },
+    {
+      "name": "header",
+      "t": 1.221
+    },
+    {
+      "name": "pill",
+      "t": 3.385
+    },
+    {
+      "name": "journey",
+      "t": 8.352
+    },
+    {
+      "name": "end",
+      "t": 10.853
+    }
+  ],
+  "txs": [],
+  "notes": []
+}

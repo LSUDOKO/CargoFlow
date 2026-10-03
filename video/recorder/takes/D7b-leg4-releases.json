@@ -1,0 +1,29 @@
+{
+  "id": "D7b-leg4-releases",
+  "take": "D7b-leg4-releases.take.mp4",
+  "recordedAt": "2026-10-03T16:33:40.781Z",
+  "durationSec": 37.44,
+  "marks": [
+    {
+      "name": "start",
+      "t": 0
+    },
+    {
+      "name": "result",
+      "t": 15.045
+    },
+    {
+      "name": "journey",
+      "t": 34.3
+    },
+    {
+      "name": "end",
+      "t": 37.434
+    }
+  ],
+  "txs": [],
+  "notes": [
+    "leg 4 32 readings",
+    "Result 32 readings accepted. Epoch Score Outcome Transaction #1 (milestone 4) 100 Passed: milestone released 0x1e89…4cb6 #1 (milestone 5) 100 Passed: milestone released 0x1404…dd91"
+  ]
+}

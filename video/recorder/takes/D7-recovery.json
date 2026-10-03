@@ -1,0 +1,82 @@
+{
+  "id": "D7-recovery",
+  "take": "D7-recovery.take.mp4",
+  "recordedAt": "2026-10-03T16:33:01.219Z",
+  "durationSec": 103.35,
+  "marks": [
+    {
+      "name": "start",
+      "t": 0
+    },
+    {
+      "name": "upload",
+      "t": 2.26
+    },
+    {
+      "name": "sent",
+      "t": 13.015
+    },
+    {
+      "name": "waiting",
+      "t": 21.03
+    },
+    {
+      "name": "ready",
+      "t": 68.878
+    },
+    {
+      "name": "bell",
+      "t": 70.675
+    },
+    {
+      "name": "review",
+      "t": 73.444
+    },
+    {
+      "name": "panel",
+      "t": 75.263
+    },
+    {
+      "name": "signed",
+      "t": 77.135
+    },
+    {
+      "name": "resumed",
+      "t": 84.111
+    },
+    {
+      "name": "release3",
+      "t": 90.761
+    },
+    {
+      "name": "released3",
+      "t": 90.773
+    },
+    {
+      "name": "active",
+      "t": 95.334
+    },
+    {
+      "name": "proofcard",
+      "t": 102.553
+    },
+    {
+      "name": "end",
+      "t": 103.352
+    }
+  ],
+  "txs": [
+    {
+      "at": "2026-10-03T16:32:40.845Z",
+      "shot": "D7-recovery",
+      "role": "exporter",
+      "to": "0x06daf9462ecf2434ed0314a005bf762ccded7fe1",
+      "selector": "0x2b5e02b0",
+      "hash": "0x79c68fc0a35fc23f08678215e858a1d16af38ce61b13307524e67802af8a232f"
+    }
+  ],
+  "notes": [
+    "leg 3 16 readings 2026-10-03T16:30:29.000Z..2026-10-03T16:31:04.000Z",
+    "RECOVERY_READY after 45 s"
+  ]
+}

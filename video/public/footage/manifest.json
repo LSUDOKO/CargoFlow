@@ -1,4 +1,95 @@
 {
-  "generatedAt": "2026-10-03T14:40:36.601Z",
-  "files": {}
+  "generatedAt": "2026-10-03T16:46:58.095Z",
+  "files": {
+    "D1-landing.mp4": {
+      "bytes": 791236,
+      "durationSec": 6,
+      "width": 1920,
+      "height": 1080
+    },
+    "D10-market.mp4": {
+      "bytes": 315440,
+      "durationSec": 7.167,
+      "width": 1920,
+      "height": 1080
+    },
+    "D2-exporter-wizard.mp4": {
+      "bytes": 808614,
+      "durationSec": 11,
+      "width": 1920,
+      "height": 1080
+    },
+    "D3-financier-funds.mp4": {
+      "bytes": 302948,
+      "durationSec": 7,
+      "width": 1920,
+      "height": 1080
+    },
+    "D4-carrier-ebl.mp4": {
+      "bytes": 623827,
+      "durationSec": 8.967,
+      "width": 1920,
+      "height": 1080
+    },
+    "D5-transit-releases.mp4": {
+      "bytes": 1996054,
+      "durationSec": 9,
+      "width": 1920,
+      "height": 1080
+    },
+    "D6-excursion-pause.mp4": {
+      "bytes": 1491419,
+      "durationSec": 9.033,
+      "width": 1920,
+      "height": 1080
+    },
+    "D7-recovery.mp4": {
+      "bytes": 1248376,
+      "durationSec": 9,
+      "width": 1920,
+      "height": 1080
+    },
+    "D8-buyer-passkey-settled.mp4": {
+      "bytes": 2308268,
+      "durationSec": 9.267,
+      "width": 1920,
+      "height": 1080
+    },
+    "D9-certificate.mp4": {
+      "bytes": 2162970,
+      "durationSec": 5.5,
+      "width": 1920,
+      "height": 1080
+    },
+    "M1-developers-copy-url.mp4": {
+      "bytes": 174048,
+      "durationSec": 4.833,
+      "width": 1920,
+      "height": 1080
+    },
+    "R3-docs-reference.mp4": {
+      "bytes": 482902,
+      "durationSec": 5.4,
+      "width": 1920,
+      "height": 1080
+    },
+    "R4a-explorer-tx.mp4": {
+      "bytes": 126064,
+      "durationSec": 3,
+      "width": 1920,
+      "height": 1080
+    },
+    "R4a-track-settled.mp4": {
+      "bytes": 920148,
+      "durationSec": 6.333,
+      "width": 1920,
+      "height": 1080
+    },
+    "R4b-deployments.mp4": {
+      "bytes": 839970,
+      "durationSec": 3.5,
+      "width": 1920,
+      "height": 1080
+    }
+  }
 }

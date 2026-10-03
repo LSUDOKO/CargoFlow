@@ -1,0 +1,36 @@
+{
+  "id": "D9-certificate",
+  "take": "D9-certificate.take.mp4",
+  "recordedAt": "2026-10-03T16:35:03.181Z",
+  "durationSec": 14.64,
+  "marks": [
+    {
+      "name": "start",
+      "t": 0
+    },
+    {
+      "name": "download",
+      "t": 2.058
+    },
+    {
+      "name": "downloaded",
+      "t": 3.259
+    },
+    {
+      "name": "pdf",
+      "t": 6.483
+    },
+    {
+      "name": "scrolled",
+      "t": 14.644
+    },
+    {
+      "name": "end",
+      "t": 14.645
+    }
+  ],
+  "txs": [],
+  "notes": [
+    "certificate dl-buyer-cargoflow-settlement-certificate-CF-SG-VAX-0202.pdf"
+  ]
+}

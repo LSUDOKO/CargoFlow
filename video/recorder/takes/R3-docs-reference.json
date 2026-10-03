@@ -1,0 +1,34 @@
+{
+  "id": "R3-docs-reference",
+  "take": "R3-docs-reference.take.mp4",
+  "recordedAt": "2026-10-03T16:00:11.433Z",
+  "durationSec": 9.67,
+  "marks": [
+    {
+      "name": "start",
+      "t": 0
+    },
+    {
+      "name": "reference",
+      "t": 0.833
+    },
+    {
+      "name": "group",
+      "t": 3.001
+    },
+    {
+      "name": "operation",
+      "t": 5.613
+    },
+    {
+      "name": "signed",
+      "t": 8.165
+    },
+    {
+      "name": "end",
+      "t": 9.666
+    }
+  ],
+  "txs": [],
+  "notes": []
+}

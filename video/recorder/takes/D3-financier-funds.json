@@ -1,0 +1,59 @@
+{
+  "id": "D3-financier-funds",
+  "take": "D3-financier-funds.take.mp4",
+  "recordedAt": "2026-10-03T16:27:36.249Z",
+  "durationSec": 24.81,
+  "marks": [
+    {
+      "name": "start",
+      "t": 0
+    },
+    {
+      "name": "card",
+      "t": 0.92
+    },
+    {
+      "name": "preview",
+      "t": 2.694
+    },
+    {
+      "name": "approve",
+      "t": 3.769
+    },
+    {
+      "name": "approved",
+      "t": 13.187
+    },
+    {
+      "name": "deposit",
+      "t": 15.909
+    },
+    {
+      "name": "funded",
+      "t": 22.311
+    },
+    {
+      "name": "end",
+      "t": 24.811
+    }
+  ],
+  "txs": [
+    {
+      "at": "2026-10-03T16:27:21.777Z",
+      "shot": "D3-financier-funds",
+      "role": "financier",
+      "to": "0x7e955252e15c84f5768b83c41a71f9eba181802f",
+      "selector": "0x095ea7b3",
+      "hash": "0xf77e1c21a999a3d3641b3e26e9f1b6736e1d7323a2d54d6d481acf825123ba7d"
+    },
+    {
+      "at": "2026-10-03T16:27:30.979Z",
+      "shot": "D3-financier-funds",
+      "role": "financier",
+      "to": "0x06daf9462ecf2434ed0314a005bf762ccded7fe1",
+      "selector": "0x4c0bd4c7",
+      "hash": "0xdb32bb6a22a7aa52265b03df3d46e1d78e27948e5bcdb933e1e8944691ce360b"
+    }
+  ],
+  "notes": []
+}

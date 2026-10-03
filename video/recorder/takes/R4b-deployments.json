@@ -1,0 +1,26 @@
+{
+  "id": "R4b-deployments",
+  "take": "R4b-deployments.take.mp4",
+  "recordedAt": "2026-10-03T15:35:53.209Z",
+  "durationSec": 8.5,
+  "marks": [
+    {
+      "name": "start",
+      "t": 0
+    },
+    {
+      "name": "top",
+      "t": 0.727
+    },
+    {
+      "name": "scrolled",
+      "t": 7.302
+    },
+    {
+      "name": "end",
+      "t": 8.502
+    }
+  ],
+  "txs": [],
+  "notes": []
+}
