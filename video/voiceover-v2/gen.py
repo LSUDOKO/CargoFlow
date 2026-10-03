@@ -24,6 +24,7 @@ import soundfile as sf
 from vo_common import (HERE, MODELS, align_words, expand_text, find_cues_file, load_config, load_cues, load_json,
                        refine_words, spoken_string)
 
+os.environ.setdefault("HF_HUB_OFFLINE", "1")  # whisper weights are cached after the first run; avoid network checks
 _state = {}
 
 

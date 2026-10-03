@@ -5,8 +5,8 @@
   .venv/bin/python mix.py --duck-db 6 --bed-lufs -20 --voice X.wav --music Y.mp3
 
 Pipeline
-  1. bed:   extend the music to the voice length (loop with an equal-power crossfade), fade in/out, two-pass loudnorm to
-            --bed-lufs (default -20 LUFS integrated, -1.5 dBTP)            -> ../public/audio/music-v2.wav
+  1. bed:   (kept in memory; written only with --write-bed) extend the music to the voice length (loop with an equal-power crossfade), fade in/out, two-pass loudnorm to
+            --bed-lufs (default -20 LUFS integrated, -1.5 dBTP)            -> ../public/audio/music-v2.wav (--write-bed)
   2. duck:  sidechain from the voice: 20 ms RMS envelope, speech = above -45 dB, gaps shorter than --hold ms bridged,
             gain smoothed with --attack / --release; speech => bed - --duck-db (default 6 dB more)
             -> ../public/audio/music-v2-ducked.wav (the stem to use in Remotion if you mix there)
@@ -98,7 +98,7 @@ def duck_gain(voice, duck_db, hold_ms, attack_ms, release_ms, sil_db=-45.0):
         cur = k * cur + (1 - k) * t
         g[i] = cur
     env = np.interp(np.arange(len(voice)), np.arange(n) * hop + hop / 2, g)
-    return env.astype(np.float32), float(bridged.mean())
+    return env.astype(np.float32), float(bridged.mean()), bridged
 
 
 def main():
@@ -111,6 +111,7 @@ def main():
     ap.add_argument("--hold", type=float, default=450.0, help="ms: bridge speech gaps shorter than this")
     ap.add_argument("--attack", type=float, default=120.0, help="ms")
     ap.add_argument("--release", type=float, default=600.0, help="ms")
+    ap.add_argument("--write-bed", action="store_true", help="also write the un-ducked bed music-v2.wav (60 MB)")
     ap.add_argument("--fade-in", type=float, default=2.0)
     ap.add_argument("--fade-out", type=float, default=4.0)
     a = ap.parse_args()
@@ -124,9 +125,10 @@ def main():
     bed[-fo:] *= np.linspace(1, 0, fo)[:, None] ** 2
     bed = loudnorm_to(bed, a.bed_lufs)
     os.makedirs(a.out_dir, exist_ok=True)
-    write_wav(bed, os.path.join(a.out_dir, "music-v2.wav"))
+    if a.write_bed:
+        write_wav(bed, os.path.join(a.out_dir, "music-v2.wav"))
 
-    env, frac = duck_gain(voice, a.duck_db, a.hold, a.attack, a.release)
+    env, frac, bridged = duck_gain(voice, a.duck_db, a.hold, a.attack, a.release)
     ducked = bed * env[:, None]
     write_wav(ducked, os.path.join(a.out_dir, "music-v2-ducked.wav"))
 
@@ -140,19 +142,16 @@ def main():
     # report
     act = env < 0.99
     print(f"voice {n / SR:.1f}s  speech-active {frac:.0%} of frames  duck {a.duck_db} dB (attack {a.attack:.0f} ms, release {a.release:.0f} ms, hold {a.hold:.0f} ms)")
-    for name in ("music-v2.wav", "music-v2-ducked.wav", "mix-v2.wav"):
+    for name in (("music-v2.wav",) if a.write_bed else ()) + ("music-v2-ducked.wav", "mix-v2.wav"):
         m = loudness(os.path.join(a.out_dir, name))
         print(f"  {name:22s} {m['input_i']:>7} LUFS  TP {m['input_tp']:>6} dBTP  LRA {m['input_lra']}")
-    # measured duck depth: bed level in speech-free stretches minus level under speech
-    hop = int(SR * 0.05)
-    nf = n // hop
-    a50 = np.array([np.mean(act[i * hop:(i + 1) * hop]) for i in range(nf)])
-    sp, gp = a50 > 0.95, a50 < 0.05
-    if sp.any() and gp.any():
-        fr = np.sqrt((bed[:nf * hop, 0].reshape(nf, hop) ** 2).mean(1))
-        fd = np.sqrt((ducked[:nf * hop, 0].reshape(nf, hop) ** 2).mean(1))
-        db = lambda v: 20 * np.log10(np.sqrt(np.mean(v ** 2)) + 1e-9)
-        print(f"  measured: bed in gaps {db(fd[gp]):.1f} dBFS-rms, under speech {db(fd[sp]):.1f}; duck depth on same material {db(fr[sp]) - db(fd[sp]):.1f} dB")
+    # measured duck depth: applied gain on frames where the voice is active (20 ms frames)
+    h = int(SR * 0.02)
+    nfr = len(env) // h
+    g = 20 * np.log10(env[: nfr * h].reshape(nfr, h).mean(1) + 1e-9)
+    b = bridged[:nfr]
+    print(f"  applied duck on speech frames: median {np.median(g[b]):.1f} dB, 10th pct {np.percentile(g[b], 10):.1f} dB; "
+          f"in gaps: median {np.median(g[~b]):.1f} dB")
 
 if __name__ == "__main__":
     main()

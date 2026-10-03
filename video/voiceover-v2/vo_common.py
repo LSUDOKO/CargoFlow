@@ -163,7 +163,17 @@ def align_words(asr_words, groups, duration):
     out = []
     for gi, g in enumerate(groups):
         idx = [k for k, (g2, _) in enumerate(sp_tokens) if g2 == gi]
-        out.append({"text": g["display"], "start": round(times[idx[0]][0], 3), "end": round(times[idx[-1]][1], 3)})
+        st, en = times[idx[0]][0], times[idx[-1]][1]
+        parts = g["display"].split()
+        if len(parts) > 1 and g["display"] != g["spoken"]:  # multi-word key: split the span by character count
+            tot = sum(len(q) for q in parts)
+            t = st
+            for q in parts:
+                d = (en - st) * len(q) / tot
+                out.append({"text": q, "start": round(t, 3), "end": round(t + d, 3)})
+                t += d
+        else:
+            out.append({"text": g["display"], "start": round(st, 3), "end": round(en, 3)})
     return out
 
 

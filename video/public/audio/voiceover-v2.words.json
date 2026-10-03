@@ -254,25 +254,25 @@
  {
   "word": "Wei",
   "startMs": 20148,
-  "endMs": 20308,
+  "endMs": 20268,
   "cue": "c007"
  },
  {
   "word": "Lin,",
-  "startMs": 20308,
-  "endMs": 20568,
+  "startMs": 20268,
+  "endMs": 20528,
   "cue": "c007"
  },
  {
   "word": "pays",
-  "startMs": 20748,
-  "endMs": 20868,
+  "startMs": 20528,
+  "endMs": 20788,
   "cue": "c007"
  },
  {
   "word": "later.",
-  "startMs": 20868,
-  "endMs": 21448,
+  "startMs": 20788,
+  "endMs": 21378,
   "cue": "c007"
  },
  {
@@ -841,32 +841,32 @@
  },
  {
   "word": "to",
-  "startMs": 66689,
-  "endMs": 66779,
+  "startMs": 66759,
+  "endMs": 66749,
   "cue": "c021"
  },
  {
   "word": "failures",
-  "startMs": 66779,
-  "endMs": 67119,
+  "startMs": 66749,
+  "endMs": 67149,
   "cue": "c021"
  },
  {
   "word": "in",
-  "startMs": 67119,
-  "endMs": 67479,
+  "startMs": 67149,
+  "endMs": 67349,
   "cue": "c021"
  },
  {
   "word": "temperature-controlled",
-  "startMs": 67479,
-  "endMs": 68459,
+  "startMs": 67349,
+  "endMs": 68229,
   "cue": "c021"
  },
  {
   "word": "logistics.",
-  "startMs": 68459,
-  "endMs": 69269,
+  "startMs": 68229,
+  "endMs": 68909,
   "cue": "c021"
  },
  {
@@ -1051,32 +1051,32 @@
  },
  {
   "word": "On",
-  "startMs": 83386,
-  "endMs": 83476,
+  "startMs": 83396,
+  "endMs": 83471,
   "cue": "c027"
  },
  {
   "word": "chain,",
-  "startMs": 83476,
-  "endMs": 83676,
+  "startMs": 83471,
+  "endMs": 83786,
   "cue": "c027"
  },
  {
   "word": "milestone",
-  "startMs": 83676,
-  "endMs": 84036,
+  "startMs": 83926,
+  "endMs": 84106,
   "cue": "c027"
  },
  {
   "word": "by",
-  "startMs": 84036,
-  "endMs": 84456,
+  "startMs": 84106,
+  "endMs": 84486,
   "cue": "c027"
  },
  {
   "word": "milestone.",
-  "startMs": 84456,
-  "endMs": 85156,
+  "startMs": 84486,
+  "endMs": 85196,
   "cue": "c027"
  },
  {
@@ -1160,25 +1160,25 @@
  {
   "word": "the",
   "startMs": 92092,
-  "endMs": 92272,
+  "endMs": 92252,
   "cue": "c030"
  },
  {
   "word": "facility",
-  "startMs": 92272,
-  "endMs": 92572,
+  "startMs": 92252,
+  "endMs": 92552,
   "cue": "c030"
  },
  {
   "word": "in",
-  "startMs": 92572,
-  "endMs": 92992,
+  "startMs": 92552,
+  "endMs": 92912,
   "cue": "c030"
  },
  {
   "word": "USDG.",
-  "startMs": 92992,
-  "endMs": 93982,
+  "startMs": 92912,
+  "endMs": 93812,
   "cue": "c030"
  },
  {
@@ -1370,97 +1370,97 @@
  {
   "word": "CargoFlow",
   "startMs": 108631,
-  "endMs": 109151,
+  "endMs": 109121,
   "cue": "c035"
  },
  {
   "word": "fuses",
-  "startMs": 109151,
-  "endMs": 109671,
+  "startMs": 109121,
+  "endMs": 109601,
   "cue": "c035"
  },
  {
   "word": "the",
-  "startMs": 109671,
-  "endMs": 109911,
+  "startMs": 109601,
+  "endMs": 109821,
   "cue": "c035"
  },
  {
   "word": "two",
-  "startMs": 109911,
-  "endMs": 110071,
+  "startMs": 109821,
+  "endMs": 109961,
   "cue": "c035"
  },
  {
   "word": "probes,",
-  "startMs": 110071,
-  "endMs": 110751,
+  "startMs": 109961,
+  "endMs": 110561,
   "cue": "c035"
  },
  {
   "word": "measures",
-  "startMs": 110881,
-  "endMs": 111171,
+  "startMs": 110681,
+  "endMs": 110921,
   "cue": "c035"
  },
  {
   "word": "their",
-  "startMs": 111171,
-  "endMs": 111471,
+  "startMs": 110921,
+  "endMs": 111201,
   "cue": "c035"
  },
  {
   "word": "disagreement,",
-  "startMs": 111471,
-  "endMs": 112301,
+  "startMs": 111201,
+  "endMs": 111931,
   "cue": "c035"
  },
  {
   "word": "and",
-  "startMs": 112041,
-  "endMs": 112101,
+  "startMs": 112061,
+  "endMs": 112121,
   "cue": "c036"
  },
  {
   "word": "scores",
-  "startMs": 112101,
-  "endMs": 112281,
+  "startMs": 112121,
+  "endMs": 112301,
   "cue": "c036"
  },
  {
   "word": "the",
-  "startMs": 112281,
-  "endMs": 112561,
+  "startMs": 112301,
+  "endMs": 112581,
   "cue": "c036"
  },
  {
   "word": "epoch",
-  "startMs": 112561,
-  "endMs": 112781,
+  "startMs": 112581,
+  "endMs": 112801,
   "cue": "c036"
  },
  {
   "word": "out",
-  "startMs": 112781,
-  "endMs": 113101,
+  "startMs": 112801,
+  "endMs": 113121,
   "cue": "c036"
  },
  {
   "word": "of",
-  "startMs": 113101,
-  "endMs": 113201,
+  "startMs": 113121,
+  "endMs": 113221,
   "cue": "c036"
  },
  {
   "word": "a",
-  "startMs": 113201,
-  "endMs": 113241,
+  "startMs": 113221,
+  "endMs": 113261,
   "cue": "c036"
  },
  {
   "word": "hundred.",
-  "startMs": 113241,
-  "endMs": 113721,
+  "startMs": 113261,
+  "endMs": 113741,
   "cue": "c036"
  },
  {
@@ -1574,25 +1574,25 @@
  {
   "word": "tranche",
   "startMs": 123507,
-  "endMs": 123847,
+  "endMs": 123907,
   "cue": "c039"
  },
  {
   "word": "goes",
-  "startMs": 123847,
-  "endMs": 124067,
+  "startMs": 123907,
+  "endMs": 124047,
   "cue": "c039"
  },
  {
   "word": "to",
-  "startMs": 124067,
+  "startMs": 124047,
   "endMs": 124267,
   "cue": "c039"
  },
  {
   "word": "Meera.",
   "startMs": 124267,
-  "endMs": 124707,
+  "endMs": 124717,
   "cue": "c039"
  },
  {
@@ -1658,67 +1658,67 @@
  {
   "word": "Off",
   "startMs": 132410,
-  "endMs": 132510,
+  "endMs": 132520,
   "cue": "c042"
  },
  {
   "word": "Sri",
-  "startMs": 132510,
-  "endMs": 132690,
+  "startMs": 132520,
+  "endMs": 132780,
   "cue": "c042"
  },
  {
   "word": "Lanka,",
-  "startMs": 132690,
-  "endMs": 133240,
+  "startMs": 132780,
+  "endMs": 133330,
   "cue": "c042"
  },
  {
   "word": "probe",
-  "startMs": 133370,
-  "endMs": 133510,
+  "startMs": 133460,
+  "endMs": 133600,
   "cue": "c042"
  },
  {
   "word": "one",
-  "startMs": 133510,
-  "endMs": 133810,
+  "startMs": 133600,
+  "endMs": 133900,
   "cue": "c042"
  },
  {
   "word": "climbs",
-  "startMs": 133810,
-  "endMs": 134090,
+  "startMs": 133900,
+  "endMs": 134160,
   "cue": "c042"
  },
  {
   "word": "to",
-  "startMs": 134090,
-  "endMs": 134450,
+  "startMs": 134160,
+  "endMs": 134500,
   "cue": "c042"
  },
  {
   "word": "eleven",
-  "startMs": 134450,
-  "endMs": 134690,
+  "startMs": 134500,
+  "endMs": 134760,
   "cue": "c042"
  },
  {
   "word": "point",
-  "startMs": 134690,
-  "endMs": 135070,
+  "startMs": 134760,
+  "endMs": 135140,
   "cue": "c042"
  },
  {
   "word": "seven",
-  "startMs": 135070,
-  "endMs": 135510,
+  "startMs": 135140,
+  "endMs": 135560,
   "cue": "c042"
  },
  {
   "word": "degrees.",
-  "startMs": 135510,
-  "endMs": 136160,
+  "startMs": 135560,
+  "endMs": 136200,
   "cue": "c042"
  },
  {
@@ -1838,43 +1838,43 @@
  {
   "word": "An",
   "startMs": 145824,
-  "endMs": 145884,
+  "endMs": 145904,
   "cue": "c046"
  },
  {
   "word": "AI",
-  "startMs": 145884,
-  "endMs": 146064,
+  "startMs": 145904,
+  "endMs": 146264,
   "cue": "c046"
  },
  {
   "word": "monitor",
-  "startMs": 146064,
-  "endMs": 146344,
+  "startMs": 146384,
+  "endMs": 146644,
   "cue": "c046"
  },
  {
   "word": "can",
-  "startMs": 146344,
-  "endMs": 146624,
+  "startMs": 146644,
+  "endMs": 146884,
   "cue": "c046"
  },
  {
   "word": "make",
-  "startMs": 146624,
-  "endMs": 146864,
+  "startMs": 146884,
+  "endMs": 147024,
   "cue": "c046"
  },
  {
   "word": "things",
-  "startMs": 146924,
-  "endMs": 146984,
+  "startMs": 147024,
+  "endMs": 147224,
   "cue": "c046"
  },
  {
   "word": "stricter.",
-  "startMs": 146984,
-  "endMs": 147704,
+  "startMs": 147224,
+  "endMs": 147894,
   "cue": "c046"
  },
  {
@@ -2114,43 +2114,43 @@
  {
   "word": "Singapore,",
   "startMs": 168480,
-  "endMs": 169140,
+  "endMs": 168860,
   "cue": "c054"
  },
  {
   "word": "Wei",
   "startMs": 169200,
-  "endMs": 169320,
+  "endMs": 169280,
   "cue": "c054"
  },
  {
   "word": "Lin",
-  "startMs": 169320,
-  "endMs": 169600,
+  "startMs": 169280,
+  "endMs": 169520,
   "cue": "c054"
  },
  {
   "word": "confirms",
-  "startMs": 169600,
-  "endMs": 169980,
+  "startMs": 169520,
+  "endMs": 169920,
   "cue": "c054"
  },
  {
   "word": "delivery",
-  "startMs": 169980,
-  "endMs": 170500,
+  "startMs": 169920,
+  "endMs": 170460,
   "cue": "c054"
  },
  {
   "word": "and",
-  "startMs": 170500,
-  "endMs": 170860,
+  "startMs": 170460,
+  "endMs": 170800,
   "cue": "c054"
  },
  {
   "word": "pays.",
-  "startMs": 170860,
-  "endMs": 171470,
+  "startMs": 170800,
+  "endMs": 171410,
   "cue": "c054"
  },
  {
@@ -2228,55 +2228,55 @@
  {
   "word": "and",
   "startMs": 177186,
-  "endMs": 177249,
+  "endMs": 177241,
   "cue": "c057"
  },
  {
   "word": "hands",
-  "startMs": 177249,
-  "endMs": 177386,
+  "startMs": 177241,
+  "endMs": 177366,
   "cue": "c057"
  },
  {
   "word": "Wei",
-  "startMs": 177386,
-  "endMs": 177766,
+  "startMs": 177366,
+  "endMs": 177706,
   "cue": "c057"
  },
  {
   "word": "Lin",
-  "startMs": 177766,
-  "endMs": 178086,
+  "startMs": 177706,
+  "endMs": 178026,
   "cue": "c057"
  },
  {
   "word": "the",
-  "startMs": 178086,
-  "endMs": 178266,
+  "startMs": 178026,
+  "endMs": 178226,
   "cue": "c057"
  },
  {
   "word": "electronic",
-  "startMs": 178266,
+  "startMs": 178226,
   "endMs": 178506,
   "cue": "c057"
  },
  {
   "word": "bill",
   "startMs": 178506,
-  "endMs": 178836,
+  "endMs": 178806,
   "cue": "c057"
  },
  {
   "word": "of",
-  "startMs": 178946,
-  "endMs": 179186,
+  "startMs": 178916,
+  "endMs": 179166,
   "cue": "c057"
  },
  {
   "word": "lading:",
-  "startMs": 179186,
-  "endMs": 179616,
+  "startMs": 179166,
+  "endMs": 179596,
   "cue": "c057"
  },
  {
@@ -2533,38 +2533,38 @@
  },
  {
   "word": "but",
-  "startMs": 201038,
-  "endMs": 201098,
+  "startMs": 201042,
+  "endMs": 201102,
   "cue": "c064"
  },
  {
   "word": "can",
-  "startMs": 201098,
-  "endMs": 201218,
+  "startMs": 201102,
+  "endMs": 201222,
   "cue": "c064"
  },
  {
   "word": "never",
-  "startMs": 201218,
-  "endMs": 201438,
+  "startMs": 201222,
+  "endMs": 201442,
   "cue": "c064"
  },
  {
   "word": "release",
-  "startMs": 201438,
-  "endMs": 201758,
+  "startMs": 201442,
+  "endMs": 201742,
   "cue": "c064"
  },
  {
   "word": "a",
-  "startMs": 201758,
-  "endMs": 201958,
+  "startMs": 201742,
+  "endMs": 201962,
   "cue": "c064"
  },
  {
   "word": "tranche.",
-  "startMs": 201958,
-  "endMs": 202468,
+  "startMs": 201962,
+  "endMs": 202512,
   "cue": "c064"
  },
  {
@@ -2725,50 +2725,50 @@
  },
  {
   "word": "Daniel",
-  "startMs": 217310,
-  "endMs": 217560,
+  "startMs": 217280,
+  "endMs": 217500,
   "cue": "c068"
  },
  {
   "word": "approves",
-  "startMs": 217560,
-  "endMs": 217940,
+  "startMs": 217500,
+  "endMs": 217800,
   "cue": "c068"
  },
  {
   "word": "and",
-  "startMs": 217940,
-  "endMs": 218280,
+  "startMs": 217800,
+  "endMs": 218140,
   "cue": "c068"
  },
  {
   "word": "deposits",
-  "startMs": 218280,
-  "endMs": 218680,
+  "startMs": 218140,
+  "endMs": 218420,
   "cue": "c068"
  },
  {
   "word": "twenty",
-  "startMs": 218680,
-  "endMs": 219140,
+  "startMs": 218420,
+  "endMs": 218880,
   "cue": "c068"
  },
  {
   "word": "USDG",
-  "startMs": 219140,
-  "endMs": 220300,
+  "startMs": 218880,
+  "endMs": 219880,
   "cue": "c068"
  },
  {
   "word": "into",
-  "startMs": 220300,
-  "endMs": 220600,
+  "startMs": 219880,
+  "endMs": 220140,
   "cue": "c068"
  },
  {
   "word": "escrow.",
-  "startMs": 220600,
-  "endMs": 221240,
+  "startMs": 220140,
+  "endMs": 220720,
   "cue": "c068"
  },
  {
@@ -3110,67 +3110,67 @@
  {
   "word": "Wei",
   "startMs": 250310,
-  "endMs": 250460,
+  "endMs": 250390,
   "cue": "c077"
  },
  {
   "word": "Lin",
-  "startMs": 250460,
-  "endMs": 250700,
+  "startMs": 250390,
+  "endMs": 250570,
   "cue": "c077"
  },
  {
   "word": "signs",
-  "startMs": 250700,
-  "endMs": 250900,
+  "startMs": 250570,
+  "endMs": 250830,
   "cue": "c077"
  },
  {
   "word": "in",
-  "startMs": 250900,
-  "endMs": 251240,
+  "startMs": 250830,
+  "endMs": 251170,
   "cue": "c077"
  },
  {
   "word": "with",
-  "startMs": 251240,
-  "endMs": 251360,
+  "startMs": 251170,
+  "endMs": 251310,
   "cue": "c077"
  },
  {
   "word": "a",
-  "startMs": 251360,
-  "endMs": 251420,
+  "startMs": 251310,
+  "endMs": 251370,
   "cue": "c077"
  },
  {
   "word": "passkey,",
-  "startMs": 251420,
-  "endMs": 252040,
+  "startMs": 251370,
+  "endMs": 252120,
   "cue": "c077"
  },
  {
   "word": "no",
-  "startMs": 252180,
-  "endMs": 252300,
+  "startMs": 252260,
+  "endMs": 252390,
   "cue": "c077"
  },
  {
   "word": "extension,",
-  "startMs": 252300,
-  "endMs": 252720,
+  "startMs": 252390,
+  "endMs": 252810,
   "cue": "c077"
  },
  {
   "word": "gas",
-  "startMs": 253080,
-  "endMs": 253200,
+  "startMs": 253190,
+  "endMs": 253310,
   "cue": "c077"
  },
  {
   "word": "sponsored.",
-  "startMs": 253200,
-  "endMs": 253900,
+  "startMs": 253310,
+  "endMs": 254010,
   "cue": "c077"
  },
  {
@@ -3314,31 +3314,31 @@
  {
   "word": "CargoFlow",
   "startMs": 266420,
-  "endMs": 266890,
+  "endMs": 266850,
   "cue": "c082"
  },
  {
   "word": "also",
-  "startMs": 266890,
-  "endMs": 267250,
+  "startMs": 266850,
+  "endMs": 267230,
   "cue": "c082"
  },
  {
   "word": "works",
-  "startMs": 267250,
-  "endMs": 267610,
+  "startMs": 267230,
+  "endMs": 267510,
   "cue": "c082"
  },
  {
   "word": "inside",
-  "startMs": 267610,
-  "endMs": 267990,
+  "startMs": 267510,
+  "endMs": 267870,
   "cue": "c082"
  },
  {
   "word": "Claude.",
-  "startMs": 267990,
-  "endMs": 268650,
+  "startMs": 267870,
+  "endMs": 268530,
   "cue": "c082"
  },
  {
@@ -3553,146 +3553,146 @@
  },
  {
   "word": "For",
-  "startMs": 286430,
-  "endMs": 286480,
+  "startMs": 286410,
+  "endMs": 286460,
   "cue": "c087"
  },
  {
   "word": "developers:",
-  "startMs": 286480,
-  "endMs": 286900,
+  "startMs": 286460,
+  "endMs": 286800,
   "cue": "c087"
  },
  {
   "word": "an",
-  "startMs": 286900,
-  "endMs": 287300,
+  "startMs": 286800,
+  "endMs": 287120,
   "cue": "c087"
  },
  {
   "word": "OpenAPI",
-  "startMs": 287300,
-  "endMs": 288180,
+  "startMs": 287120,
+  "endMs": 287800,
   "cue": "c087"
  },
  {
   "word": "reference,",
-  "startMs": 288180,
-  "endMs": 288850,
+  "startMs": 287800,
+  "endMs": 288080,
   "cue": "c087"
  },
  {
   "word": "a",
-  "startMs": 288910,
-  "endMs": 288960,
+  "startMs": 288400,
+  "endMs": 288420,
   "cue": "c087"
  },
  {
   "word": "TypeScript",
-  "startMs": 288960,
-  "endMs": 289620,
+  "startMs": 288420,
+  "endMs": 288920,
   "cue": "c087"
  },
  {
   "word": "SDK,",
-  "startMs": 289680,
-  "endMs": 290510,
+  "startMs": 288920,
+  "endMs": 289750,
   "cue": "c087"
  },
  {
   "word": "a",
-  "startMs": 289820,
-  "endMs": 289880,
+  "startMs": 289890,
+  "endMs": 289950,
   "cue": "c088"
  },
  {
   "word": "gateway",
-  "startMs": 289880,
-  "endMs": 290040,
+  "startMs": 289950,
+  "endMs": 290110,
   "cue": "c088"
  },
  {
   "word": "agent",
-  "startMs": 290040,
-  "endMs": 290520,
+  "startMs": 290110,
+  "endMs": 290590,
   "cue": "c088"
  },
  {
   "word": "for",
-  "startMs": 290520,
-  "endMs": 290740,
+  "startMs": 290590,
+  "endMs": 290810,
   "cue": "c088"
  },
  {
   "word": "data",
-  "startMs": 290740,
-  "endMs": 290960,
+  "startMs": 290810,
+  "endMs": 291030,
   "cue": "c088"
  },
  {
   "word": "loggers,",
-  "startMs": 290960,
-  "endMs": 291710,
+  "startMs": 291030,
+  "endMs": 291780,
   "cue": "c088"
  },
  {
   "word": "a",
-  "startMs": 292403,
-  "endMs": 292443,
+  "startMs": 292301,
+  "endMs": 292341,
   "cue": "c089"
  },
  {
   "word": "Python",
-  "startMs": 292443,
-  "endMs": 292703,
+  "startMs": 292341,
+  "endMs": 292561,
   "cue": "c089"
  },
  {
   "word": "SDK",
-  "startMs": 292703,
-  "endMs": 293543,
+  "startMs": 292561,
+  "endMs": 293301,
   "cue": "c089"
  },
  {
   "word": "for",
-  "startMs": 293543,
-  "endMs": 293823,
+  "startMs": 293301,
+  "endMs": 293601,
   "cue": "c089"
  },
  {
   "word": "portfolio",
-  "startMs": 293823,
-  "endMs": 294223,
+  "startMs": 293601,
+  "endMs": 293921,
   "cue": "c089"
  },
  {
   "word": "risk,",
-  "startMs": 294223,
-  "endMs": 294983,
+  "startMs": 293921,
+  "endMs": 294601,
   "cue": "c089"
  },
  {
   "word": "and",
-  "startMs": 295163,
-  "endMs": 295243,
+  "startMs": 294741,
+  "endMs": 294821,
   "cue": "c089"
  },
  {
   "word": "GS1",
-  "startMs": 295243,
-  "endMs": 296143,
+  "startMs": 294821,
+  "endMs": 295561,
   "cue": "c089"
  },
  {
   "word": "EPCIS",
-  "startMs": 296143,
-  "endMs": 296663,
+  "startMs": 295561,
+  "endMs": 296021,
   "cue": "c089"
  },
  {
   "word": "export.",
-  "startMs": 296663,
-  "endMs": 297343,
+  "startMs": 296021,
+  "endMs": 296631,
   "cue": "c089"
  },
  {
@@ -3757,110 +3757,92 @@
  },
  {
   "word": "ZeroDev",
-  "startMs": 301858,
-  "endMs": 302498,
+  "startMs": 301848,
+  "endMs": 302198,
   "cue": "c091"
  },
  {
   "word": "passkeys,",
-  "startMs": 302558,
-  "endMs": 303218,
+  "startMs": 302198,
+  "endMs": 302678,
   "cue": "c091"
  },
  {
-  "word": "Alchemy",
-  "startMs": 303278,
-  "endMs": 303458,
+  "word": "Alchemy,",
+  "startMs": 302958,
+  "endMs": 303568,
   "cue": "c091"
  },
  {
-  "word": "and",
-  "startMs": 303458,
-  "endMs": 303818,
+  "word": "QuickNode,",
+  "startMs": 303638,
+  "endMs": 303758,
   "cue": "c091"
  },
  {
-  "word": "QuickNode",
+  "word": "OpenZeppelin.",
   "startMs": 303818,
-  "endMs": 304078,
-  "cue": "c091"
- },
- {
-  "word": "RPC,",
-  "startMs": 304138,
-  "endMs": 305368,
-  "cue": "c091"
- },
- {
-  "word": "OpenZeppelin",
-  "startMs": 305448,
-  "endMs": 306098,
-  "cue": "c091"
- },
- {
-  "word": "contracts.",
-  "startMs": 306098,
-  "endMs": 306998,
+  "endMs": 304668,
   "cue": "c091"
  },
  {
   "word": "Dune",
   "startMs": 305458,
-  "endMs": 305608,
+  "endMs": 305578,
   "cue": "c092"
  },
  {
   "word": "analytics,",
-  "startMs": 305608,
-  "endMs": 306008,
+  "startMs": 305578,
+  "endMs": 305878,
   "cue": "c092"
  },
  {
   "word": "and",
-  "startMs": 306428,
-  "endMs": 306468,
+  "startMs": 306218,
+  "endMs": 306258,
   "cue": "c092"
  },
  {
   "word": "Fhenix",
-  "startMs": 306468,
-  "endMs": 307048,
+  "startMs": 306258,
+  "endMs": 306618,
   "cue": "c092"
  },
  {
   "word": "and",
-  "startMs": 307048,
-  "endMs": 307308,
+  "startMs": 306618,
+  "endMs": 306778,
   "cue": "c092"
  },
  {
   "word": "GMX",
-  "startMs": 307308,
-  "endMs": 308228,
+  "startMs": 306778,
+  "endMs": 307518,
   "cue": "c092"
  },
  {
   "word": "extensions",
-  "startMs": 308228,
-  "endMs": 308828,
+  "startMs": 307518,
+  "endMs": 308018,
   "cue": "c092"
  },
  {
   "word": "on",
-  "startMs": 308828,
-  "endMs": 309288,
+  "startMs": 308018,
+  "endMs": 308418,
   "cue": "c092"
  },
  {
   "word": "Arbitrum",
-  "startMs": 309288,
-  "endMs": 309808,
+  "startMs": 308418,
+  "endMs": 308878,
   "cue": "c092"
  },
  {
   "word": "Sepolia.",
-  "startMs": 309808,
-  "endMs": 310578,
+  "startMs": 308878,
+  "endMs": 309518,
   "cue": "c092"
  },
  {
@@ -3937,20 +3919,20 @@
  },
  {
   "word": "Ten",
-  "startMs": 316058,
-  "endMs": 316168,
+  "startMs": 315949,
+  "endMs": 316029,
   "cue": "c095"
  },
  {
   "word": "contracts,",
-  "startMs": 316168,
-  "endMs": 316548,
+  "startMs": 316029,
+  "endMs": 316369,
   "cue": "c095"
  },
  {
   "word": "source-verified.",
-  "startMs": 316868,
-  "endMs": 317698,
+  "startMs": 316609,
+  "endMs": 317369,
   "cue": "c095"
  },
  {

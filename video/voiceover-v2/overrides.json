@@ -31,7 +31,7 @@
     "FX": "F X",
     "Chainlink": "Chain link",
     "CargoFlow": "Cargo Flow",
-    "AI": "A I",
+    "AI": "A. I.",
     "B2B": "B to B",
     "GMX": "G M X",
     "GS1": "G S one",
@@ -42,7 +42,14 @@
     "ZeroDev": "Zero Dev",
     "TypeScript": "Type Script",
     "v3": "version three",
-    "Fhenix": "Fenix"
+    "Fhenix": "Fenix",
+    "source-verified": "source verified",
+    "Wei": "Way",
+    "Sri": "Shree",
+    "tranche": "tronsh",
+    "passkey": "pass key",
+    "passkeys": "pass keys",
+    "On chain": "Onn chain"
   },
   "patterns": [
     {
@@ -50,7 +57,5 @@
       "spoken": "the contract"
     }
   ],
-  "cues": {
-    "c095": "Ten contracts source verified."
-  }
+  "cues": {}
 }

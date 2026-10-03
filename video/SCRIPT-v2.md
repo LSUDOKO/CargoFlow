@@ -699,7 +699,7 @@ Small footer tag for the whole scene: `Packages build and pass their tests in th
 **Voice-over** (28 words)
 
 > Built on Robinhood Chain, with Paxos USDG as the money.
-> ZeroDev passkeys, Alchemy and QuickNode RPC, OpenZeppelin contracts.
+> ZeroDev passkeys, Alchemy, QuickNode, OpenZeppelin.
 > Dune analytics, and Fhenix and GMX extensions on Arbitrum Sepolia.
 
 **Composition.** A designed board, not a logo wall: one row per partner, each row = name (Space Grotesk), what

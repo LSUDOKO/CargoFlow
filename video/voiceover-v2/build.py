@@ -20,6 +20,7 @@ from vo_common import HERE, VIDEO, find_cues_file, load_cues, load_json
 
 SR = 48000
 TARGET_I, TARGET_TP, TARGET_LRA = -16.0, -1.5, 11.0
+PUSH_MS = 800               # a cue that would start on top of an overrunning predecessor is delayed up to this much if it still ends before the next cue
 BORROW_MS = 400             # an overrunning cue may start up to this much early if the gap before it is free
 TOLERANCE_MS = 150          # a cue may run this far past its caption endMs before it is flagged
 LEAD_KEEP, TAIL_KEEP = 0.02, 0.06
@@ -128,12 +129,19 @@ def main():
         if need > 0:
             borrow = int(max(0, min(BORROW_MS, need, c["startMs"] - prev_end - 100)))
         place_ms = c["startMs"] - borrow
+        push = 0
+        nxt_start = cues[i + 1]["startMs"] if i + 1 < len(cues) else 10 ** 9
+        if prev_end + 80 > place_ms:
+            d = min(prev_end + 80 - place_ms, PUSH_MS, nxt_start - 50 - dur_ms - place_ms)  # as much as fits before the next cue
+            if d > 0:
+                push = int(d)
+                place_ms += push
         start = int(place_ms / 1000 * SR)
         track[start: start + len(y)] += y[: len(track) - start]
         clip_end = place_ms + dur_ms
         prev_end = clip_end
         nxt = cues[i + 1]["startMs"] if i + 1 < len(cues) else None
-        over = clip_end - c["endMs"]
+        over = clip_end - c["endMs"] - push  # lateness from a push is reported separately
         status = "ok"
         if over > TOLERANCE_MS:
             status = "overrun"
@@ -141,7 +149,7 @@ def main():
             status = "collision"
         cur = float(meta.get("speed", speeds.get(c["id"], 1.0)))
         rec = {"id": c["id"], "scene": c.get("scene"), "startMs": c["startMs"], "endMs": c["endMs"], "windowMs": window,
-               "durationMs": dur_ms, "placedStartMs": place_ms, "borrowedMs": borrow, "clipEndMs": clip_end, "overMs": over, "status": status, "speed": cur,
+               "durationMs": dur_ms, "placedStartMs": place_ms, "borrowedMs": borrow, "pushedMs": push, "clipEndMs": clip_end, "overMs": over, "status": status, "speed": cur,
                "inputLUFS": round(meas, 1), "text": c["text"], "spokenText": meta["spokenText"]}
         if status != "ok":
             want = cur * dur_ms / max(1, window + TOLERANCE_MS * 0.5)
@@ -178,7 +186,7 @@ def main():
         print(f"\n{len(overruns)} cue(s) overrun (> {TOLERANCE_MS} ms past endMs, or into the next cue):")
         for m in overruns:
             sug = f"suggest speed {m['suggestedSpeed']}" if m["suggestedSpeed"] else f"needs text edit (speed would be > {MAX_SPEED})"
-            print(f"  {m['id']} [{m['status']}] borrowed {m['borrowedMs']} ms early, window {m['windowMs']} ms, clip {m['durationMs']} ms (+{m['overMs']} ms), speed {m['speed']} -> {sug}")
+            print(f"  {m['id']} [{m['status']}] borrowed {m['borrowedMs']} ms early, pushed {m['pushedMs']} ms late, window {m['windowMs']} ms, clip {m['durationMs']} ms (+{m['overMs']} ms), speed {m['speed']} -> {sug}")
         if a.apply_suggestions:
             for m in overruns:
                 if m["suggestedSpeed"]:
