@@ -99,6 +99,8 @@ export function AuditTable({ entries, chainId }: { entries: AuditEntry[]; chainI
   const counts = Object.fromEntries(filters.map((x) => [x.id, x.id === "all" ? entries.length : entries.filter((e) => e.kind === x.id).length]));
   const all = [...entries].filter((e) => f === "all" || e.kind === f).sort((a, b) => b.time.localeCompare(a.time));
   const rows = all.slice(0, limit);
+  const perDay = new Map<string, number>();
+  for (const e of all) perDay.set(dayKey(e.time), (perDay.get(dayKey(e.time)) ?? 0) + 1);
   const groups: { key: string; label: string; items: AuditEntry[] }[] = [];
   for (const e of rows) {
     const k = dayKey(e.time);
@@ -118,7 +120,7 @@ export function AuditTable({ entries, chainId }: { entries: AuditEntry[]; chainI
               <section key={g.key} aria-label={g.label}>
                 <h3 className="flex items-baseline justify-between gap-3 border-b border-border px-2 pb-2 text-small font-semibold text-ink">
                   {g.label}
-                  <span className="num font-normal text-text-muted">{g.items.length} {g.items.length === 1 ? "event" : "events"}</span>
+                  <span className="num font-normal text-text-muted">{perDay.get(g.key)} {perDay.get(g.key) === 1 ? "event" : "events"}</span>
                 </h3>
                 <ul className="mt-1 flex flex-col">
                   {g.items.map((e, i) => <Row key={`${e.time}-${e.title}-${i}`} e={e} chainId={chainId} />)}

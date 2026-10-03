@@ -61,6 +61,7 @@ export function ExplainPanel({ view, fallback, roles, position, vesselName, chil
   const e = q.data ?? fallback;
   const tone = statusTone(e.status);
   const mine = (r: string) => roles.includes(r.toLowerCase() as PartyRole);
+  const side = (!loading && e.nextSteps.length > 0) || !!children;
 
   return (
     <div className="flex flex-col gap-6">
@@ -83,7 +84,7 @@ export function ExplainPanel({ view, fallback, roles, position, vesselName, chil
 
       <Facts view={view} position={position} vesselName={vesselName} next={loading ? undefined : e.nextSteps[0]} mine={mine} />
 
-      <div className="grid gap-x-8 gap-y-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+      <div className={cx("grid gap-x-8 gap-y-6", side && "lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]")}>
         <section aria-labelledby="brief-why" className="min-w-0">
           <h3 id="brief-why" className="eyebrow">Why</h3>
           {loading ? (
@@ -110,7 +111,8 @@ export function ExplainPanel({ view, fallback, roles, position, vesselName, chil
           )}
         </section>
 
-        <div className="flex min-w-0 flex-col gap-4 lg:border-l lg:border-line lg:pl-8">
+        {side && (
+        <div className="flex min-w-0 flex-col gap-4 lg:border-l lg:border-border lg:pl-8">
           {!loading && e.nextSteps.length > 0 && (
             <section aria-labelledby="brief-next">
               <h3 id="brief-next" className="eyebrow">What each party does now</h3>
@@ -129,6 +131,7 @@ export function ExplainPanel({ view, fallback, roles, position, vesselName, chil
           )}
           {children && <div className={!loading && e.nextSteps.length > 0 ? "border-t border-line pt-4" : ""}>{children}</div>}
         </div>
+        )}
       </div>
     </div>
   );

@@ -53,9 +53,8 @@ import { VesselPanel } from "./VesselPanel";
 
 type Section = "overview" | "evidence" | "money" | "records" | "audit";
 
-// long references (CF-LIVE-1791029236301) in Inter with tabular figures, a slashed zero and the serifed one (cv01),
-// so 1 and 7 never read alike
-const idType = "font-sans font-semibold tracking-tight [font-feature-settings:'tnum','zero','cv01'] [overflow-wrap:anywhere]";
+// long references (CF-LIVE-1791029236301) in Inter, not Space Grotesk: its flagged 1 reads as a 7 at display sizes
+const idType = "font-sans font-semibold tracking-tight [overflow-wrap:anywhere]";
 const linkCls = "font-semibold text-ink underline decoration-ink/30 underline-offset-2 transition-colors duration-(--duration-fast) hover:decoration-ink";
 
 /**
@@ -262,21 +261,23 @@ export function ShipmentDashboard({ id }: { id: string }) {
               <CardHeader title="Latest evidence" description={latest ? `Milestone ${latest.milestoneIndex === 255 ? "–" : latest.milestoneIndex + 1} · batch #${latest.sequence}` : undefined} />
               {v ? <EvidenceGauges view={v} latest={latest} /> : <Skeleton className="h-32" />}
             </Card>
-            <Card className="lg:col-span-5">
-              <CardHeader title="Monitor decision" />
-              {audit.data ? <AiPanel assessment={latestAssessment(au)} /> : <Skeleton className="h-32" />}
-            </Card>
+            <div className="flex min-w-0 flex-col gap-4 lg:col-span-5 lg:gap-6">
+              <Card>
+                <CardHeader title="Monitor decision" />
+                {audit.data ? <AiPanel assessment={latestAssessment(au)} /> : <Skeleton className="h-32" />}
+              </Card>
+              <Card>
+                <CardHeader title="Zero-knowledge recovery" />
+                <ProofCard epochs={ev} audit={au} chainId={chainId} paused={paused} />
+              </Card>
+            </div>
             <Card className="lg:col-span-12">
               <CardHeader title="Temperature per batch" description="Each batch is eight readings per probe; the green band is what all parties agreed." />
               {telemetry.data && v ? <TelemetryChart epochs={telemetry.data.epochs} policy={v.shipment.policy} /> : <Skeleton className="h-64" />}
             </Card>
-            <Card className="lg:col-span-8">
+            <Card className="lg:col-span-12">
               <CardHeader title="Committed evidence" description="Only each batch's fingerprint (Merkle root) is on chain." />
               {epochs.data ? <EpochList epochs={ev} chainId={chainId} /> : <Skeleton className="h-40" />}
-            </Card>
-            <Card className="lg:col-span-4">
-              <CardHeader title="Zero-knowledge recovery" />
-              <ProofCard epochs={ev} audit={au} chainId={chainId} paused={paused} />
             </Card>
           </div>
         )}

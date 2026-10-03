@@ -35,11 +35,11 @@ export function Gauge({ value, max, threshold, label, display, good = "high", hi
         {frac > 0 && <path d={`M${cx0 - r},${cy} A${r},${r} 0 0 1 ${ex},${ey}`} fill="none" className={cx("transition-[stroke] duration-(--duration-slow)", ok ? "stroke-success" : "stroke-warning")} strokeWidth="14" strokeLinecap="round" />}
         <line x1={tx} y1={ty} x2={cx0 + (tx - cx0) * 0.72} y2={cy + (ty - cy) * 0.72} className="stroke-ink" strokeWidth="3" strokeLinecap="round" />
       </svg>
-      <p className="-mt-12 mb-3 font-display text-h2 leading-none font-semibold num">
+      <p className="-mt-8 mb-2 font-display text-h4 leading-none font-semibold num sm:-mt-12 sm:mb-3 sm:text-h2">
         <span className={cx("-mx-1 rounded-md px-1", changed > 0 && "animate-update")}>{display}</span>
       </p>
       <figcaption className="flex flex-col items-center text-center">
-        <span className="inline-flex items-center gap-1.5 text-sm font-semibold">
+        <span className="inline-flex flex-wrap items-center justify-center gap-1 text-small font-semibold sm:gap-1.5 sm:text-sm">
           {label}
           {hint && <InfoTip term={label} align={hintAlign}>{hint}</InfoTip>}
         </span>

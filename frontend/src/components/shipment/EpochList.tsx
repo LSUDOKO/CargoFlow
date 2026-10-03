@@ -28,7 +28,7 @@ export function EpochList({ epochs, chainId }: { epochs: EpochSummary[]; chainId
       header: "Batch",
       primary: true,
       cell: (e) => (
-        <span className="inline-flex flex-wrap items-center gap-1.5">
+        <span className="inline-flex flex-wrap items-center gap-1.5 whitespace-nowrap">
           {e.milestoneIndex === 255 ? <span className="text-text-muted">Observation</span> : <span className="font-semibold">Milestone {e.milestoneIndex + 1}</span>}
           <span className="num text-text-muted">#{e.sequence}</span>
           {e.proofVerified && <Badge variant="success" size="sm" shape="square">ZK proven</Badge>}
@@ -63,7 +63,7 @@ export function EpochList({ epochs, chainId }: { epochs: EpochSummary[]; chainId
               e.sources.length === 0 ? (
                 <span className="text-text-muted">–</span>
               ) : (
-                <span className="inline-flex flex-col items-end gap-1 sm:items-start">
+                <span className="inline-flex flex-wrap items-center justify-end gap-1 sm:justify-start">
                   {e.sources.map((s) => {
                     const rec = onChain.devices.get(s.keyHash.toLowerCase());
                     return (
