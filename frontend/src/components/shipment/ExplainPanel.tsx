@@ -163,7 +163,7 @@ function Facts({ view, position, vesselName, next, mine }: { view: ShipmentView;
         foot={position ? <>Logger fix {ageText(Math.max(0, now - position.timestamp))} ago · {coordText(position)}{vesselName ? ` · aboard ${vesselName}` : ""}</> : "The data logger has not reported a position yet."}
       >
         {arrived ? (
-          "At destination"
+          "Delivered to the buyer"
         ) : progress ? (
           <>
             {kmText(progress.doneM)} <span className="font-sans text-sm font-normal text-slate">of a {kmText(progress.totalM)} voyage</span>

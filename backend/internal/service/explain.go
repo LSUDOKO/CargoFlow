@@ -61,7 +61,10 @@ func (s *Service) Explain(ctx context.Context, shipmentID string) (Explanation, 
 	if err != nil {
 		return Explanation{}, err
 	}
-	x.Forecast = forecast(readings, v.Shipment.Policy)
+	// A trend only means something while the cargo is still travelling and still reporting.
+	if forecastApplies(x.Status, readings, time.Now()) {
+		x.Forecast = forecast(readings, v.Shipment.Policy)
+	}
 	if s.o.Wording != nil && (x.Headline != "" || len(x.Causes) > 0) {
 		if w, ok := s.reword(ctx, x.Status, ai.Wording{Headline: x.Headline, Causes: x.Causes}); ok {
 			x.Headline, x.Causes, x.Source = w.Headline, w.Causes, "ai"
@@ -297,4 +300,20 @@ func minutesTo(gap, rate float64) *int {
 	}
 	out := int(math.Floor(m))
 	return &out
+}
+
+// forecastApplies reports whether a temperature trend is worth showing: the facility is active or paused and at
+// least one sensor reported within the last hour.
+func forecastApplies(status string, readings map[string][]telemetry.Point, now time.Time) bool {
+	if status != "ACTIVE" && status != "PAUSED" {
+		return false
+	}
+	for _, pts := range readings {
+		for _, p := range pts {
+			if now.Unix()-p.Timestamp <= 3600 {
+				return true
+			}
+		}
+	}
+	return false
 }

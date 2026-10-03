@@ -3,6 +3,7 @@ package service
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/LSUDOKO/CargoFlow/backend/internal/store"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/telemetry"
@@ -73,5 +74,23 @@ func TestRulesExplainAPauseFromTheFailingEvidence(t *testing.T) {
 	}
 	if x := explainRules(sh, &FacilityView{Status: "ACTIVE", MilestoneCount: 3, NextMilestone: 3}, nil); x.NextSteps[0].Role != "buyer" {
 		t.Fatalf("all milestones released = %+v", x)
+	}
+}
+
+func TestAForecastIsOnlyShownWhileTheCargoIsTravellingAndReporting(t *testing.T) {
+	now := time.Unix(10_000, 0)
+	fresh := map[string][]telemetry.Point{"probe": {{SensorID: "probe", Timestamp: 9_900}}}
+	stale := map[string][]telemetry.Point{"probe": {{SensorID: "probe", Timestamp: 1_000}}}
+	for _, tc := range []struct {
+		status   string
+		readings map[string][]telemetry.Point
+		want     bool
+	}{
+		{"ACTIVE", fresh, true}, {"PAUSED", fresh, true}, {"ACTIVE", stale, false},
+		{"SETTLED", fresh, false}, {"DELIVERED", fresh, false}, {"DEFAULTED", fresh, false}, {"ACTIVE", nil, false},
+	} {
+		if got := forecastApplies(tc.status, tc.readings, now); got != tc.want {
+			t.Errorf("%s: %v, want %v", tc.status, got, tc.want)
+		}
 	}
 }
