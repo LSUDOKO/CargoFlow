@@ -7,7 +7,7 @@ import { distanceToRouteM, lengthKm, nearLon, toLonLat, unwrap, type LonLat, typ
 
 export type ScenePort = { lon: number; lat: number; name: string; role: "origin" | "destination" | "stop"; code?: string };
 export type SceneTrackPoint = TrackPoint & { lon: number; lat: number };
-export type SceneVessel = { lon: number; lat: number; name: string; mmsi: string; live: boolean; cogDeg: number | null; timestamp: number; track: LonLat[]; gapKm: number | null; agrees: boolean | null };
+export type SceneVessel = { lon: number; lat: number; name: string; mmsi: string; live: boolean; cogDeg: number | null; sogKn: number | null; timestamp: number; track: LonLat[]; gapKm: number | null; agrees: boolean | null; comparable: boolean };
 
 export type Scene = {
   route: LonLat[];
@@ -65,9 +65,11 @@ export function buildScene(input: {
     vessel = {
       lon, lat, name: v.name || `MMSI ${v.mmsi}`, mmsi: v.mmsi, live: v.live, timestamp: v.last.timestamp,
       cogDeg: typeof v.last.cogDegX10 === "number" && v.last.cogDegX10 < 3600 ? v.last.cogDegX10 / 10 : null,
+      sogKn: typeof v.last.sogKnotsX10 === "number" && v.last.sogKnotsX10 < 1023 ? v.last.sogKnotsX10 / 10 : null,
       track: unwrap(v.track.map((t) => place(t.latE6, t.lonE6))).map(([lo, la]) => [nearLon(lo, lon), la] as LonLat),
       gapKm,
       agrees: v.crossCheck && v.crossCheck.comparable ? v.crossCheck.agrees : null,
+      comparable: !!v.crossCheck?.comparable,
     };
   }
 

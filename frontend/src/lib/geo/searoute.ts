@@ -189,3 +189,16 @@ export function routeOnGraph(g: Graph, ports: Port[]): SeaRoute {
 export async function planSeaRoute(ports: Port[]): Promise<SeaRoute> {
   return routeOnGraph(await load(), ports);
 }
+
+let laneLines: Promise<LonLat[][]> | null = null;
+
+/**
+ * The shipping-lane network itself, as lines, for drawing faintly under a route. It shares the dynamic import with
+ * the router, so the 600 kB file downloads at most once, and only in the browser.
+ */
+export function loadLaneLines(): Promise<LonLat[][]> {
+  laneLines ??= import("searoute-js/data/marnet_densified.json").then((m) =>
+    (((m as { default?: unknown }).default ?? m) as Network).features.map((f) => f.geometry.coordinates.map((c) => [c[0]!, c[1]!] as LonLat)),
+  );
+  return laneLines;
+}

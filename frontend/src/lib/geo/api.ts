@@ -21,6 +21,9 @@ export const TrackPoint = z.object({
   maxTempX100: z.number(),
   pass: z.boolean(),
   committed: z.boolean().optional().default(false),
+  // not sent by every backend: shown in the map's tooltip when present
+  maxHumidityX100: z.number().optional(),
+  maxShockX100: z.number().optional(),
 });
 export type TrackPoint = z.infer<typeof TrackPoint>;
 export const Track = z.object({ points: list(TrackPoint) });
