@@ -40,7 +40,7 @@ export function SourcesPanel({ shipment, chainId, closed }: { shipment: Shipment
       {gateways.isPending ? (
         <Skeleton className="h-16" />
       ) : list.length === 0 ? (
-        <p className="text-sm text-slate">
+        <p className="text-sm text-text-muted">
           {isExporter
             ? "No gateways yet. Add the data logger travelling with the goods, then submit its readings as evidence."
             : "No evidence gateways yet. The exporter adds the data logger travelling with the goods."}
@@ -53,11 +53,11 @@ export function SourcesPanel({ shipment, chainId, closed }: { shipment: Shipment
               <li key={g.id} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 py-2.5 text-sm">
                 <span className="font-semibold">{g.label || "Gateway"}</span>
                 <HashBadge value={g.id} compact />
-                <span className="font-mono text-slate">{g.sensorIds.join(", ")}</span>
-                <span className="ml-auto text-xs text-slate">added {new Date(g.createdAt).toLocaleDateString("en-GB", { dateStyle: "medium" })}</span>
+                <span className="font-mono text-text-muted">{g.sensorIds.join(", ")}</span>
+                <span className="ml-auto text-xs text-text-muted">added {new Date(g.createdAt).toLocaleDateString("en-GB", { dateStyle: "medium" })}</span>
                 <span className="basis-full">
                   <DeviceBadge deviceClass={g.deviceClass} onChain={rec?.registered} revoked={rec?.revoked} />
-                  {g.attested && g.deviceClass !== "software" && <span className="ml-2 text-xs text-slate">attestation verified</span>}
+                  {g.attested && g.deviceClass !== "software" && <span className="ml-2 text-xs text-text-muted">attestation verified</span>}
                 </span>
               </li>
             );
@@ -76,11 +76,11 @@ export function SourcesPanel({ shipment, chainId, closed }: { shipment: Shipment
             <Button size="sm" onClick={() => setUploading(true)} disabled={list.length === 0}>Submit readings</Button>
             <Button size="sm" variant="secondary" onClick={() => setAdding(true)}>Add sensor gateway</Button>
           </div>
-          <button type="button" onClick={() => setPhone(true)} className="mt-3 flex w-full items-center gap-3 rounded-2xl border border-dashed border-line bg-white/60 px-3.5 py-3 text-left text-sm transition-colors hover:border-ink/40">
+          <button type="button" onClick={() => setPhone(true)} className="mt-3 flex w-full items-center gap-3 rounded-tile border border-dashed border-line bg-white/60 px-3.5 py-3 text-left text-sm transition-colors hover:border-ink/40">
             <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5" /><path d="M10.5 18.5h3" /></svg>
             <span className="min-w-0 flex-1">
               <span className="block font-semibold">Use a phone as a signed inspection device</span>
-              <span className="block text-slate">Its passkey signs each manual reading. No app or key file needed.</span>
+              <span className="block text-text-muted">Its passkey signs each manual reading. No app or key file needed.</span>
             </span>
           </button>
           <ApiInstructions shipmentId={shipment.id} />

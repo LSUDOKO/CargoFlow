@@ -6,10 +6,10 @@ import { useParty, type Grade } from "@/lib/api/market";
 import { shortHash } from "@/lib/format";
 
 const gradeTone: Record<Grade, string> = {
-  A: "bg-verified text-white",
+  A: "bg-success-solid text-white",
   B: "bg-signal text-ink",
   C: "bg-alert text-ink",
-  new: "bg-ink/8 text-slate",
+  new: "bg-ink/8 text-text-muted",
 };
 
 const gradeWords: Record<Grade, string> = {
@@ -29,9 +29,9 @@ export function GradeBadge({ grade, size = "sm", className }: { grade: Grade | u
       aria-label={gradeWords[g]}
       className={cx(
         "inline-grid shrink-0 place-items-center font-display font-bold",
-        size === "lg" ? "h-16 min-w-16 rounded-2xl px-3 text-3xl" : "h-6 min-w-6 rounded-md px-1.5 text-xs",
-        g === "new" && size === "sm" && "text-[0.65rem] tracking-wide uppercase",
-        g === "new" && size === "lg" && "text-lg tracking-wide uppercase",
+        size === "lg" ? "h-14 min-w-14 rounded-tile px-3 text-metric" : "h-6 min-w-6 rounded-md px-1.5 text-xs",
+        g === "new" && size === "sm" && "text-caption",
+        g === "new" && size === "lg" && "text-base",
         gradeTone[g],
         className,
       )}

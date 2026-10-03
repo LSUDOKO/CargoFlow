@@ -1,34 +1,38 @@
 "use client";
 
 import { useHealth } from "@/lib/api/hooks";
-import { chainName } from "@/lib/explorer";
+import { chainName, ROBINHOOD_TESTNET_ID } from "@/lib/explorer";
 import { cx } from "@/components/ui/cx";
 
 /**
  * Live backend and chain status: green when both answer, amber when degraded, red when unreachable.
  * While the first check is in flight it shows only a quiet dot, so the header does not flash a "Connecting" label.
+ * `onDark` (the header) uses paper text at 80% on a paper/8 wash (≈ 10:1 on ink); the default is for light surfaces.
+ * `short` shows "Testnet" instead of the chain's full name; the full name stays available to screen readers and on hover.
  */
-export function HealthPill() {
+export function HealthPill({ onDark, short }: { onDark?: boolean; short?: boolean }) {
   const { data, isError, isPending } = useHealth();
   const ok = data?.status === "ok";
+  const shell = cx(
+    "inline-flex h-8 items-center gap-2 rounded-full px-3 text-caption font-semibold whitespace-nowrap ring-1 ring-inset",
+    onDark ? "bg-paper/8 text-paper/85 ring-paper/15" : "bg-surface text-ink ring-border",
+  );
   if (isPending) {
     return (
-      <span role="status" className="inline-flex h-8 items-center px-2" title="Checking the network">
-        <span className="h-2 w-2 animate-pulse rounded-full bg-current/30" aria-hidden="true" />
+      <span role="status" className={shell} title="Checking the network">
+        <span className={cx("h-2 w-2 animate-pulse rounded-full", onDark ? "bg-paper/40" : "bg-ink/30")} aria-hidden="true" />
         <span className="sr-only">Checking the network</span>
       </span>
     );
   }
-  const tone = isError ? "bg-danger" : ok ? "bg-verified" : "bg-alert";
-  const text = isError ? "Offline" : ok ? chainName(data?.chainId) : "Degraded";
+  const tone = isError ? "bg-danger" : ok ? "bg-success" : "bg-warning";
+  const full = isError ? "Offline" : ok ? chainName(data?.chainId) : "Degraded";
+  const label = short && ok && data?.chainId === ROBINHOOD_TESTNET_ID ? "Testnet" : full;
+  const block = data?.headBlock !== undefined ? `Block ${data.headBlock.toLocaleString()}` : undefined;
   return (
-    <span
-      className="inline-flex h-8 animate-fade items-center gap-2 rounded-full bg-current/10 px-3 text-xs font-semibold whitespace-nowrap"
-      title={data?.headBlock ? `Block ${data.headBlock.toLocaleString()}` : undefined}
-    >
+    <span className={cx(shell, "animate-fade")} title={block ? `${full} · ${block}` : full}>
       <span className={cx("h-2 w-2 shrink-0 rounded-full", tone, ok && "animate-pulse-dot")} aria-hidden="true" />
-      <span>{text}</span>
-      {ok && data?.headBlock !== undefined && <span className="hidden font-mono opacity-60 2xl:inline">#{data.headBlock.toLocaleString()}</span>}
+      {label === full ? <span>{label}</span> : <><span aria-hidden="true">{label}</span><span className="sr-only">{full}</span></>}
     </span>
   );
 }

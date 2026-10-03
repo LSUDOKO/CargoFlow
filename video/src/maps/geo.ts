@@ -1,11 +1,12 @@
-import { geoBounds, geoCircle, geoGraticule, geoMercator, geoPath } from "d3-geo";
+import { geoBounds, geoCircle, geoEquirectangular, geoGraticule, geoPath } from "d3-geo";
 import type { Feature, FeatureCollection, Geometry, MultiLineString, Polygon } from "geojson";
 import { feature } from "topojson-client";
 import type { GeometryCollection, Topology } from "topojson-specification";
 import countries50 from "world-atlas/countries-50m.json";
 
 /**
- * Real geography (Natural Earth 1:50m via world-atlas), projected once with Mercator onto a
+ * Real geography (Natural Earth 1:50m via world-atlas), projected once (equirectangular, as the
+ * script's map kit specifies: 60°E–110°E, 8°S–26°N) onto a
  * fixed 1920×1080 "map space" framing the Arabian Sea → Singapore corridor. Everything else
  * (camera, markers, route) works in this map space.
  */
@@ -16,7 +17,7 @@ export const MAP_H = 1080;
 export type LonLat = [number, number];
 
 /** Region framed at zoom 1 (lon/lat bounds). */
-export const REGION = { lon: [62, 112] as [number, number], lat: [-7, 27] as [number, number] };
+export const REGION = { lon: [60, 110] as [number, number], lat: [-8, 26] as [number, number] };
 
 const regionPoly: Feature<Polygon> = {
   type: "Feature",
@@ -36,7 +37,7 @@ const regionPoly: Feature<Polygon> = {
   },
 };
 
-export const projection = geoMercator().fitExtent(
+export const projection = geoEquirectangular().fitExtent(
   [
     [0, 0],
     [MAP_W, MAP_H],
@@ -84,7 +85,8 @@ export const circlePath = (center: LonLat, km: number) => path(geoCircle().cente
 
 export const PORTS = {
   nhavaSheva: { name: "Nhava Sheva", code: "INNSA", ll: [72.95, 18.95] as LonLat },
-  singapore: { name: "Singapore", code: "SGSIN", ll: [103.84, 1.26] as LonLat },
+  colombo: { name: "Colombo", code: "LKCMB", ll: [79.85, 6.95] as LonLat },
+  singapore: { name: "Singapore", code: "SGSIN", ll: [103.82, 1.264] as LonLat },
 };
 
 export const ROUTE_WAYPOINTS: LonLat[] = [
@@ -94,7 +96,9 @@ export const ROUTE_WAYPOINTS: LonLat[] = [
   [73.8, 12.2], // off Mangalore
   [75.4, 9.2], // off Kochi
   [77.2, 7.0], // off Kanyakumari
-  [80.0, 5.55], // south of Dondra Head, Sri Lanka
+  [79.6, 6.9], // off Colombo (28 km: inside the illustrative 50 km M3 place)
+  [79.85, 6.0], // off Galle
+  [80.4, 5.6], // south of Dondra Head, Sri Lanka
   [82.6, 5.7],
   [88.0, 5.9],
   [94.6, 6.35], // north of Pulau Weh / Aceh

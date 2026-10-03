@@ -57,14 +57,14 @@ export function NotificationBell() {
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={unread ? `Notifications, ${unread} unread` : "Notifications"}
-        className="relative grid h-11 w-11 shrink-0 place-items-center rounded-full border-2 border-paper/35 text-paper transition-colors hover:border-paper/70 hover:bg-paper/8"
+        className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full text-paper/80 ring-1 ring-paper/15 ring-inset transition-colors duration-(--duration-fast) ease-standard hover:bg-paper/8 hover:text-paper hover:ring-paper/30"
       >
-        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <svg viewBox="0 0 24 24" className="h-[1.125rem] w-[1.125rem]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M6 9a6 6 0 1 1 12 0c0 4.5 1.5 6.5 2 7H4c.5-.5 2-2.5 2-7Z" />
           <path d="M10 19.5a2.2 2.2 0 0 0 4 0" />
         </svg>
         {unread > 0 && (
-          <span className="absolute -top-1 -right-1 grid h-5 min-w-5 place-items-center rounded-full bg-signal px-1 font-mono text-[0.6875rem] font-bold text-ink ring-2 ring-ink" aria-hidden="true">
+          <span className="num absolute -top-1 -right-1 grid h-5 min-w-5 place-items-center rounded-full bg-signal px-1 text-overline font-bold text-ink ring-2 ring-ink" aria-hidden="true">
             {unread > 99 ? "99+" : unread}
           </span>
         )}

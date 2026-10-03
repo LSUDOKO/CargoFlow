@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ApiReference } from "@/components/developers/ApiReference";
+import { LinkButton } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { CodeBlock } from "@/components/ui/CodeBlock";
+import { CopyField } from "@/components/ui/CopyField";
+import { PageHeader, SectionHeader } from "@/components/ui/Section";
 import { DOCS_API_URL } from "@/lib/developer";
 
 export const metadata: Metadata = {
@@ -54,60 +58,72 @@ const PACKAGES = [
 
 export default function DocsPage() {
   return (
-    <div className="container-page py-10 md:py-14">
-      <header className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-end">
-        <div>
-          <p className="text-sm font-semibold tracking-[0.12em] text-slate uppercase">Developers</p>
-          <h1 className="mt-2 font-display text-[clamp(2rem,4.5vw,3.25rem)] leading-[1.05] font-bold tracking-tight">CargoFlow API reference</h1>
-          <p className="mt-4 max-w-xl text-lg text-ink/75">
-            Public reads need no credentials. Parties write by signing a fixed message with their own wallet; evidence gateways sign every request with their device key. The backend never holds a party key.
-          </p>
+    <div className="container-page py-(--space-page-y)">
+      <PageHeader
+        eyebrow="Developers"
+        title="CargoFlow API reference"
+        description="Public reads need no credentials. Parties write by signing a fixed message with their own wallet; evidence gateways sign every request with their device key. The backend never holds a party key."
+        actions={
+          <>
+            <LinkButton href={`${DOCS_API_URL}/v1/openapi.json`} external variant="secondary">
+              OpenAPI 3.1 JSON<span className="sr-only"> (opens in a new tab)</span>
+            </LinkButton>
+            <LinkButton href="/developers" variant="ghost">SDKs and tools</LinkButton>
+          </>
+        }
+      />
+
+      <Card padded="sm" className="grid gap-4 md:grid-cols-12 md:items-center md:gap-6">
+        <div className="min-w-0 md:col-span-7">
+          <p className="eyebrow mb-1.5">Base URL</p>
+          <CopyField value={DOCS_API_URL} kind="text" display="full" className="w-full" />
         </div>
-        <dl className="grid gap-3 rounded-[var(--radius-card)] border border-line bg-white p-5 text-sm sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <dt className="text-xs font-semibold tracking-wide text-slate uppercase">Base URL</dt>
-            <dd className="mt-1 font-mono text-[0.9375rem] font-semibold break-all">{DOCS_API_URL}</dd>
+        <dl className="grid grid-cols-2 gap-4 md:col-span-5">
+          <div>
+            <dt className="eyebrow">Auth</dt>
+            <dd className="mt-1.5 text-small">None for reads · EIP-191 or device signature for writes</dd>
           </div>
           <div>
-            <dt className="text-xs font-semibold tracking-wide text-slate uppercase">Specification</dt>
-            <dd className="mt-1"><a className="font-semibold underline decoration-ink/30 underline-offset-2 hover:decoration-ink" href={`${DOCS_API_URL}/v1/openapi.json`}>OpenAPI 3.1 JSON</a></dd>
-          </div>
-          <div>
-            <dt className="text-xs font-semibold tracking-wide text-slate uppercase">Errors</dt>
-            <dd className="mt-1 font-mono text-xs">{`{"error":{"code","message"}}`}</dd>
+            <dt className="eyebrow">Errors</dt>
+            <dd className="mt-1.5"><code className="font-mono text-caption">{`{"error":{"code","message"}}`}</code></dd>
           </div>
         </dl>
-      </header>
+      </Card>
 
-      <section className="mt-10 grid gap-5 lg:grid-cols-2" aria-labelledby="recipes">
-        <h2 id="recipes" className="sr-only">Authentication recipes</h2>
-        <div className="flex flex-col gap-3">
-          <h3 className="font-display text-xl font-semibold">Wallet-signed requests</h3>
-          <p className="text-sm text-slate">
-            EIP-191 <code className="font-mono">personal_sign</code> over the exact text in each operation&apos;s <code className="font-mono">x-cargoflow-signed-message</code>. Contract wallets (passkey smart accounts) are checked through EIP-1271.
-          </p>
-          <CodeBlock label="TypeScript (viem)" code={WALLET_RECIPE} />
-        </div>
-        <div className="flex flex-col gap-3">
-          <h3 className="font-display text-xl font-semibold">Gateway-signed telemetry</h3>
-          <p className="text-sm text-slate">
-            A gateway registered by the exporter (Ed25519, P-256 secure element or a WebAuthn passkey) signs each request. <Link href="/developers#gateway" className="font-semibold underline">@cargoflow/gateway</Link> does this for you.
-          </p>
-          <CodeBlock label="Signing string and headers" code={GATEWAY_RECIPE} />
+      <section className="mt-12" aria-labelledby="recipes">
+        <SectionHeader id="recipes" title="Signing recipes" description="The two ways to write. Reads need neither." className="mb-6" />
+        <div className="grid items-start gap-6 lg:grid-cols-2">
+          <div className="flex min-w-0 flex-col gap-3">
+            <h3 className="font-display text-h3">Wallet-signed requests</h3>
+            <p className="text-small text-text-muted">
+              EIP-191 <code className="font-mono">personal_sign</code> over the exact text in each operation&apos;s <code className="font-mono">x-cargoflow-signed-message</code>. Contract wallets (passkey smart accounts) are checked through EIP-1271.
+            </p>
+            <CodeBlock label="TypeScript (viem)" code={WALLET_RECIPE} />
+          </div>
+          <div className="flex min-w-0 flex-col gap-3">
+            <h3 className="font-display text-h3">Gateway-signed telemetry</h3>
+            <p className="text-small text-text-muted">
+              A gateway registered by the exporter (Ed25519, P-256 secure element or a WebAuthn passkey) signs each request. <Link href="/developers#gateway" className="font-semibold text-ink underline decoration-ink/30 underline-offset-4 hover:decoration-ink">@cargoflow/gateway</Link> does this for you.
+            </p>
+            <CodeBlock label="Signing string and headers" code={GATEWAY_RECIPE} />
+          </div>
         </div>
       </section>
 
-      <nav aria-label="Client libraries" className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <nav aria-label="Client libraries" className="mt-8 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         {PACKAGES.map((p) => (
-          <Link key={p.name} href={p.href} className="group rounded-2xl border border-line bg-white px-4 py-3 transition-colors hover:border-ink/40">
-            <span className="block font-mono text-sm font-semibold">{p.name}</span>
-            <span className="mt-0.5 block text-sm text-slate">{p.what}</span>
+          <Link key={p.name} href={p.href} className="group flex items-start justify-between gap-3 rounded-tile border border-border bg-surface px-4 py-3 transition-[border-color,box-shadow] duration-(--duration-fast) hover:border-border-strong hover:shadow-1">
+            <span className="min-w-0">
+              <span className="block font-mono text-small font-semibold">{p.name}</span>
+              <span className="mt-0.5 block text-small text-text-muted">{p.what}</span>
+            </span>
+            <span aria-hidden="true" className="mt-0.5 text-text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-ink">→</span>
           </Link>
         ))}
       </nav>
 
-      <section className="mt-10" aria-labelledby="reference">
-        <h2 id="reference" className="mb-4 font-display text-2xl font-semibold">Endpoints</h2>
+      <section className="mt-12" aria-labelledby="reference">
+        <SectionHeader id="reference" title="Endpoints" description="Every operation has a Test Request button that calls the live API." className="mb-4" />
         <ApiReference serverUrl={DOCS_API_URL} />
       </section>
     </div>

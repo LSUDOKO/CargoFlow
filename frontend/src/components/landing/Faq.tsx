@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { Accordion } from "@/components/ui/Accordion";
+import { GITHUB_URL } from "@/lib/developer";
 
 const items = [
   { id: "what", title: "What does CargoFlow actually do?", body: "It lets a financier advance working capital against a specific shipment and releases that money in milestones, each one gated by sensor evidence committed on-chain. If the evidence fails, the money stops; if it recovers with proof, the money moves again." },
@@ -12,9 +14,25 @@ const items = [
 
 export function Faq() {
   return (
-    <section id="faq" aria-labelledby="faq-title" className="container-page mt-24 grid gap-10 md:mt-32 lg:grid-cols-[0.8fr_1.2fr]">
-      <h2 id="faq-title" className="h-section max-w-md">Questions people ask first</h2>
-      <Accordion items={items} />
+    <section id="faq" aria-labelledby="faq-title" className="container-page mt-24 scroll-mt-24 md:mt-32">
+      <div className="grid gap-8 lg:grid-cols-12 lg:gap-12">
+        <div className="lg:col-span-4">
+          <div className="lg:sticky lg:top-28">
+            <p className="eyebrow">FAQ</p>
+            <h2 id="faq-title" className="h-section mt-3 max-w-md">Questions people ask first</h2>
+            <p className="mt-5 max-w-sm text-text-muted">
+              Anything else is in the{" "}
+              <Link href="/docs" className="font-semibold text-ink underline decoration-ink/30 underline-offset-4 hover:decoration-ink">API reference</Link> or the{" "}
+              <a href={`${GITHUB_URL}#readme`} target="_blank" rel="noreferrer" className="font-semibold text-ink underline decoration-ink/30 underline-offset-4 hover:decoration-ink">
+                README<span className="sr-only"> (opens in a new tab)</span>
+              </a>.
+            </p>
+          </div>
+        </div>
+        <div className="lg:col-span-8">
+          <Accordion items={items} />
+        </div>
+      </div>
     </section>
   );
 }

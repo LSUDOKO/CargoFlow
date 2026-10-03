@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button, LinkButton } from "@/components/ui/Button";
-import { HashBadge } from "@/components/ui/HashBadge";
+import { CopyField } from "@/components/ui/CopyField";
+import { Badge } from "@/components/ui/Pill";
 import { Spinner } from "@/components/ui/Spinner";
 import { apiGet, lookupReference } from "@/lib/api/client";
 import { useConfig, useShipments } from "@/lib/api/hooks";
@@ -22,9 +23,9 @@ type TabId = (typeof tabs)[number]["id"];
 export function TrackBar() {
   const [tab, setTab] = useState<TabId>("track");
   return (
-    <div className="rounded-[var(--radius-card)] border border-line bg-white p-3 shadow-[var(--shadow-lift)] md:p-4">
+    <div className="surface-light rounded-card border border-border bg-surface p-2.5 text-ink shadow-3 md:p-3">
       {/* the tab strip, the search field and its button share one geometry: a 2px-bordered pill, 6px inset, 44px controls */}
-      <div role="tablist" aria-label="What would you like to do?" className="grid grid-cols-3 gap-1 rounded-full border-2 border-mist bg-mist p-1 sm:inline-flex">
+      <div role="tablist" aria-label="What would you like to do?" className="grid grid-cols-3 gap-1 rounded-full bg-surface-sunken p-1 sm:inline-flex">
         {tabs.map((t, i) => {
           const selected = t.id === tab;
           return (
@@ -44,10 +45,10 @@ export function TrackBar() {
                 setTab(next.id);
                 document.getElementById(`hero-tab-${next.id}`)?.focus();
               }}
-              className={`inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full px-3 text-[0.9375rem] font-semibold whitespace-nowrap transition-colors sm:px-5 ${selected ? "bg-ink text-paper" : "text-ink/70 hover:bg-ink/6 hover:text-ink"}`}
+              className={`inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-full px-3 text-small font-semibold whitespace-nowrap transition-colors duration-(--duration-fast) ease-standard sm:px-4 ${selected ? "bg-surface text-ink shadow-1 ring-1 ring-border" : "text-text-muted hover:text-ink"}`}
             >
               <svg viewBox="0 0 24 24" className="hidden h-4 w-4 shrink-0 sm:block" aria-hidden="true">
-                <path d={t.icon} fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinejoin="round" strokeLinecap="round" />
+                <path d={t.icon} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" strokeLinecap="round" />
               </svg>
               <span className="sm:hidden">{t.short}</span>
               <span className="hidden sm:inline">{t.label}</span>
@@ -55,7 +56,7 @@ export function TrackBar() {
           );
         })}
       </div>
-      <div className="pt-3">
+      <div className="px-1 pt-2.5 pb-1 md:px-1.5">
         {tab === "track" && <TrackPanel />}
         {tab === "finance" && <FinancePanel />}
         {tab === "verify" && <VerifyPanel />}
@@ -70,7 +71,7 @@ function SearchRow({ id, label, placeholder, value, onChange, busy, cta, onSubmi
   return (
     <form
       onSubmit={(e) => { e.preventDefault(); onSubmit(); }}
-      className="flex flex-col gap-2 sm:flex-row sm:items-center sm:rounded-full sm:border-2 sm:border-line sm:bg-paper sm:p-1 sm:transition-colors sm:focus-within:border-ink"
+      className="flex flex-col gap-2 sm:flex-row sm:items-center sm:rounded-full sm:bg-paper sm:p-1 sm:ring-1 sm:ring-border-strong sm:transition-shadow sm:ring-inset sm:focus-within:ring-2 sm:focus-within:ring-ink"
     >
       <label htmlFor={id} className="sr-only">{label}</label>
       <input
@@ -80,9 +81,9 @@ function SearchRow({ id, label, placeholder, value, onChange, busy, cta, onSubmi
         placeholder={placeholder}
         autoComplete="off"
         spellCheck={false}
-        className="h-12 min-w-0 rounded-full border-2 border-line bg-paper px-5 text-base outline-none placeholder:text-slate/80 focus:border-ink sm:h-11 sm:flex-1 sm:border-0 sm:bg-transparent sm:px-4"
+        className="h-12 min-w-0 rounded-full border border-border-strong bg-paper px-5 text-base outline-none placeholder:text-text-muted focus:border-ink focus-visible:outline-none sm:h-11 sm:flex-1 sm:border-0 sm:bg-transparent sm:px-4"
       />
-      <Button type="submit" loading={busy} className="h-12 sm:h-11 sm:min-w-[7.5rem]">{cta}</Button>
+      <Button type="submit" variant="ink" loading={busy} className="h-12 sm:h-11 sm:min-w-28">{cta}</Button>
     </form>
   );
 }
@@ -118,9 +119,9 @@ function TrackPanel() {
         onSubmit={submit}
       />
       {error ? (
-        <p className="mt-2.5 px-4 text-sm font-medium text-danger" role="alert">{error}</p>
+        <p className="mt-2.5 px-4 text-small font-medium text-danger-fg" role="alert">{error}</p>
       ) : (
-        <p className="mt-2.5 px-4 text-sm text-slate">
+        <p className="mt-2.5 px-4 text-small text-text-muted">
           See the route, the evidence behind every release and the money in escrow, live. No wallet needed.
         </p>
       )}
@@ -131,11 +132,11 @@ function TrackPanel() {
 function FinancePanel() {
   return (
     <div id="hero-panel-finance" role="tabpanel" aria-labelledby="hero-tab-finance" className="flex flex-col gap-4 px-1 sm:flex-row sm:items-center sm:justify-between sm:pl-4">
-      <p className="max-w-xl text-[0.9375rem] leading-relaxed text-ink/80">
+      <p className="max-w-xl text-body text-ink/80">
         Register a shipment and its cold-chain policy, then name a financier. Each tranche reaches you the moment its evidence is committed.
       </p>
       <div className="flex shrink-0 flex-wrap gap-2">
-        <LinkButton href="/exporter">Start as an exporter</LinkButton>
+        <LinkButton href="/exporter" variant="ink">Start as an exporter</LinkButton>
         <LinkButton href="/financier" variant="secondary">Fund a facility</LinkButton>
       </div>
     </div>
@@ -177,19 +178,19 @@ function VerifyPanel() {
   return (
     <div id="hero-panel-verify" role="tabpanel" aria-labelledby="hero-tab-verify">
       <SearchRow id="verify-q" label="Evidence epoch id" placeholder="Evidence epoch id (0x…)" value={q} onChange={(v) => { setQ(v); setError(null); }} busy={busy} cta="Verify" onSubmit={search} />
-      {error && <p className="mt-2.5 px-4 text-sm font-medium text-danger" role="alert">{error}</p>}
+      {error && <p className="mt-2.5 px-4 text-small font-medium text-danger-fg" role="alert">{error}</p>}
       {found && (
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl bg-verified/10 px-4 py-3 text-sm">
-          <span className="font-semibold text-[#00733e]">Committed on-chain</span>
-          <span>Score <b className="tabular">{found.epoch.score}</b></span>
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-tile bg-success-bg px-4 py-3 text-small">
+          <Badge variant="success" dot>Committed on-chain</Badge>
+          <span>Score <b className="num">{found.epoch.score}</b></span>
           <span>{found.epoch.readingCount} readings</span>
-          <HashBadge value={found.epoch.root} label="root" />
-          {found.epoch.commitTx && <HashBadge value={found.epoch.commitTx} kind="tx" chainId={cfg?.chainId} label="tx" />}
+          <CopyField value={found.epoch.root} label="Root" kind="hash" size="sm" />
+          {found.epoch.commitTx && <CopyField value={found.epoch.commitTx} kind="tx" chainId={cfg?.chainId} label="Tx" size="sm" />}
           <LinkButton href={`/track/${found.shipment}`} variant="ghost" size="sm" className="-my-1">Open shipment</LinkButton>
         </div>
       )}
-      {!error && !found && !busy && <p className="mt-2.5 px-4 text-sm text-slate">Every evidence epoch is a Poseidon Merkle root on-chain. The readings themselves stay private.</p>}
-      {busy && <p className="mt-2.5 flex items-center gap-2 px-4 text-sm text-slate"><Spinner /> Searching committed epochs…</p>}
+      {!error && !found && !busy && <p className="mt-2.5 px-4 text-small text-text-muted">Every evidence epoch is a Poseidon Merkle root on-chain. The readings themselves stay private.</p>}
+      {busy && <p className="mt-2.5 flex items-center gap-2 px-4 text-small text-text-muted"><Spinner /> Searching committed epochs…</p>}
     </div>
   );
 }

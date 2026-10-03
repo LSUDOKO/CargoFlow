@@ -11,7 +11,7 @@ import { PortCombobox } from "./PortCombobox";
 
 const MapView = dynamic(() => import("./MapView"), {
   ssr: false,
-  loading: () => <div className="grid h-full place-items-center bg-[#D5E3EC] text-xs text-slate">Loading map…</div>,
+  loading: () => <div className="grid h-full place-items-center bg-[#D5E3EC] text-xs text-text-muted">Loading map…</div>,
 });
 
 const MAX_STOPS = 3;
@@ -84,7 +84,7 @@ export function RoutePlanner({ value, onChange, deviationKm, error }: Props) {
             value={s || null}
             onChange={(c) => ends(origin, dest, stops.map((x, j) => (j === i ? (c ?? "") : x)))}
             action={
-              <button type="button" className="text-sm font-semibold text-slate underline hover:text-ink" onClick={() => ends(origin, dest, stops.filter((_, j) => j !== i))}>
+              <button type="button" className="text-sm font-semibold text-text-muted underline hover:text-ink" onClick={() => ends(origin, dest, stops.filter((_, j) => j !== i))}>
                 Remove stop {i + 1}
               </button>
             }
@@ -97,18 +97,18 @@ export function RoutePlanner({ value, onChange, deviationKm, error }: Props) {
         </button>
       )}
 
-      <div className="overflow-hidden rounded-2xl border border-line bg-white">
+      <div className="overflow-hidden rounded-tile border border-line bg-white">
         <div className="relative h-[220px] bg-[#D5E3EC] sm:h-[260px]">
           {value.points.length > 1 ? (
             <MapView scene={scene} corridorM={deviationKm * 1000} label="Preview of the planned sea route" variant="preview" fitKey={value.points.map((p) => `${p.latE6},${p.lonE6}`).join(";")} />
           ) : (
-            <p className="grid h-full place-items-center px-6 text-center text-sm text-slate">Choose an origin and a destination to generate the sea route.</p>
+            <p className="grid h-full place-items-center px-6 text-center text-sm text-text-muted">Choose an origin and a destination to generate the sea route.</p>
           )}
           {value.status === "planning" && (
             <p role="status" className="absolute top-3 left-3 rounded-full bg-ink/90 px-3 py-1 text-xs font-semibold text-paper">Generating the sea route…</p>
           )}
         </div>
-        <p className="border-t border-line px-4 py-2.5 text-xs font-medium text-slate" aria-live="polite">
+        <p className="border-t border-line px-4 py-2.5 text-xs font-medium text-text-muted" aria-live="polite">
           {value.status === "ready"
             ? `Sea route about ${formatKm(value.distanceKm)} (${Math.round(value.distanceKm / 1.852).toLocaleString("en-US")} nmi) · ${value.points.length} waypoints committed on chain (at most ${MAX_WAYPOINTS})${deviationKm > 0 ? ` · corridor ±${deviationKm} km` : ""}`
             : value.status === "error"
@@ -118,7 +118,7 @@ export function RoutePlanner({ value, onChange, deviationKm, error }: Props) {
                 : "Pick both ends of the route."}
         </p>
       </div>
-      {error && <p className="-mt-2 text-sm font-medium text-danger">{error}</p>}
+      {error && <p className="-mt-2 text-sm font-medium text-danger-fg">{error}</p>}
     </div>
   );
 }

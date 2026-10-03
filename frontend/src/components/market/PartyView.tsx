@@ -1,15 +1,20 @@
 "use client";
 
-import Link from "next/link";
+import { Callout } from "@/components/ui/Banner";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { Card, CardHeader } from "@/components/ui/Card";
-import { StatusPill } from "@/components/ui/Pill";
+import { CopyField } from "@/components/ui/CopyField";
+import { DataTable, type Column } from "@/components/ui/DataTable";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { KeyValue } from "@/components/ui/KeyValue";
+import { Badge, StatusPill } from "@/components/ui/Pill";
+import { PageHeader, Section } from "@/components/ui/Section";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useShipmentsFor, useShipmentViews } from "@/lib/api/hooks";
+import type { Shipment } from "@/lib/api/schemas";
 import { isUnavailable, useParty, type Party } from "@/lib/api/market";
 import { useContracts } from "@/lib/chain/contracts";
-import { explorerAddress } from "@/lib/explorer";
-import { formatUSDG, shortHash } from "@/lib/format";
+import { formatUSDG } from "@/lib/format";
 import { GradeBadge, gradeDescription } from "./PartyLink";
 
 function sinceLabel(since: Party["since"]): string | null {
@@ -18,174 +23,179 @@ function sinceLabel(since: Party["since"]): string | null {
   return Number.isNaN(d.getTime()) ? null : d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
 }
 
+type Role = { id: string; title: string; active: boolean; headline: string; headlineUnit: string; rows: [string, string | number][] };
+const usdg = (v: string) => `${formatUSDG(v, { compact: true })} USDG`;
+
+function roles(party: Party, insurer: boolean): Role[] {
+  const out: Role[] = [
+    {
+      id: "exporter",
+      title: "As exporter",
+      active: party.exporter.shipments > 0,
+      headline: formatUSDG(party.exporter.volume, { compact: true }),
+      headlineUnit: "USDG invoiced",
+      rows: [
+        ["Shipments", party.exporter.shipments],
+        ["Settled", party.exporter.settled],
+        ["Active", party.exporter.active],
+        ["Paused", party.exporter.paused],
+        ["Disputed", party.exporter.disputed],
+        ["Defaulted", party.exporter.defaulted],
+        ...(party.exporter.cancelled ? ([["Cancelled before transit", party.exporter.cancelled]] as [string, number][]) : []),
+        ["ZK recoveries", party.exporter.recoveries],
+        ["Average evidence score", party.exporter.avgEvidenceScore === null ? "–" : `${party.exporter.avgEvidenceScore.toFixed(1)} / 100`],
+      ],
+    },
+    {
+      id: "financier",
+      title: "As financier",
+      active: party.financier.facilities > 0,
+      headline: formatUSDG(party.financier.committed, { compact: true }),
+      headlineUnit: "USDG committed",
+      rows: [
+        ["Facilities", party.financier.facilities],
+        ["Drawn by exporters", usdg(party.financier.drawn)],
+        ["In escrow", usdg(party.financier.inEscrow)],
+        ["Fees earned", usdg(party.financier.feesEarned)],
+        ["Settled", party.financier.settled],
+        ["Defaulted", party.financier.defaulted],
+        ...(party.financier.cancelled ? ([["Cancelled before transit", party.financier.cancelled]] as [string, number][]) : []),
+      ],
+    },
+    {
+      id: "buyer",
+      title: "As buyer",
+      active: party.buyer.shipments > 0,
+      headline: formatUSDG(party.buyer.paidVolume, { compact: true }),
+      headlineUnit: "USDG paid",
+      rows: [
+        ["Shipments", party.buyer.shipments],
+        ["Settled", party.buyer.settled],
+      ],
+    },
+  ];
+  if (insurer) {
+    out.push({
+      id: "insurer",
+      title: "As insurer",
+      active: party.insurer.offered > 0,
+      headline: formatUSDG(party.insurer.coverWritten, { compact: true }),
+      headlineUnit: "USDG of default cover written",
+      rows: [
+        ["Facilities offered cover", party.insurer.offered],
+        ["Active covers", party.insurer.active],
+        ["Returned after settlement", party.insurer.released],
+        ["Paid out after default", party.insurer.claimed],
+        ...(party.insurer.triggered ? ([["Parametric payouts", party.insurer.triggered]] as [string, number][]) : []),
+        ["Premiums earned", usdg(party.insurer.premiumsEarned)],
+        ["Paid to financiers", usdg(party.insurer.paidOut)],
+      ],
+    });
+  }
+  return out;
+}
+
+const listWords = (xs: string[]) => (xs.length <= 1 ? xs.join("") : `${xs.slice(0, -1).join(", ")} or ${xs.at(-1)}`);
+
 export function PartyView({ address }: { address: string }) {
   const { data: party, isPending, error, refetch, isFetching } = useParty(address);
   const { chainId, contracts } = useContracts();
-  // the insurer column appears on a deployment with default cover, or for anyone who has written cover
+  // the insurer role appears on a deployment with default cover, or for anyone who has written cover
   const insurer = !!party && (!!contracts?.coverPool || party.insurer.offered > 0);
-  const explorer = explorerAddress(chainId, address);
   const since = party ? sinceLabel(party.since) : null;
+  const all = party ? roles(party, insurer) : [];
+  const active = all.filter((r) => r.active);
+  const idle = all.filter((r) => !r.active).map((r) => r.id);
 
   return (
-    <div className="container-page flex flex-col gap-6 py-10">
-      <header className="surface-ink relative overflow-hidden rounded-[var(--radius-card)] bg-ink p-6 text-paper shadow-[var(--shadow-card)] md:p-10">
-        <div className="pointer-events-none absolute inset-0 opacity-[0.07] [background-image:linear-gradient(to_right,#f7f9f4_1px,transparent_1px),linear-gradient(to_bottom,#f7f9f4_1px,transparent_1px)] [background-size:40px_40px]" aria-hidden="true" />
-        <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold tracking-wide text-signal uppercase">Track record</p>
-            <h1 className="mt-2 font-mono text-[clamp(1.6rem,4vw,2.8rem)] leading-none font-semibold tracking-tight">{shortHash(address, 6, 6)}</h1>
-            <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
-              <span className="font-mono text-xs break-all text-paper/70">{address}</span>
-              {since && <span className="text-paper/70">On CargoFlow since {since}</span>}
-              {explorer && (
-                <a href={explorer} target="_blank" rel="noreferrer" className="font-semibold text-signal underline-offset-2 hover:underline">
-                  View on the explorer
-                </a>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-4 rounded-2xl bg-paper/8 p-4 ring-1 ring-paper/12">
-            {isPending ? <Skeleton className="h-16 w-16 rounded-2xl bg-paper/15" /> : <GradeBadge grade={party?.grade} size="lg" />}
+    <div className="container-page py-(--space-page-y)">
+      <PageHeader
+        eyebrow="Track record"
+        title="Party record"
+        description="Every shipment and facility this wallet is part of on CargoFlow, read from the chain."
+        meta={
+          <>
+            <CopyField value={address} label="Address" kind="address" chainId={chainId} display="full" className="max-w-full" />
+            {since && <Badge variant="neutral" shape="square">On CargoFlow since {since}</Badge>}
+          </>
+        }
+        actions={
+          <div className="flex items-center gap-4 rounded-tile border border-border bg-surface p-4 shadow-1">
+            {isPending ? <Skeleton className="h-14 w-14 rounded-tile" /> : <GradeBadge grade={party?.grade} size="lg" />}
             <div className="max-w-56">
-              <p className="font-display text-lg font-semibold">{party ? (party.grade === "new" ? "New party" : `Grade ${party.grade}`) : "Grade"}</p>
-              <p className="text-sm text-paper/70">{party ? gradeDescription(party.grade) : isPending ? "Reading the record…" : "No grade available"}</p>
+              <p className="font-display text-h4">{party ? (party.grade === "new" ? "New party" : `Grade ${party.grade}`) : "Grade"}</p>
+              <p className="text-small text-text-muted">{party ? gradeDescription(party.grade) : isPending ? "Reading the record…" : "No grade available"}</p>
             </div>
           </div>
-        </div>
-      </header>
+        }
+      />
 
-      {isPending ? (
-        <div className="grid gap-4 md:grid-cols-3">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-64 rounded-[var(--radius-card)]" />)}</div>
-      ) : error ? (
-        <Card className="text-center">
-          <p className="font-display text-xl font-semibold">{isUnavailable(error) ? "Track records are not live on this backend yet" : "The track record could not be loaded"}</p>
-          <p className="mx-auto mt-2 max-w-md text-slate">{isUnavailable(error) ? "The shipments this wallet is part of are still listed below." : error.message}</p>
-          {!isUnavailable(error) && <Button className="mt-5" variant="secondary" onClick={() => refetch()} loading={isFetching}>Try again</Button>}
-        </Card>
-      ) : party ? (
-        <div className={`grid gap-4 ${insurer ? "md:grid-cols-2 xl:grid-cols-4" : "md:grid-cols-3"}`}>
-          <StatBlock
-            title="As exporter"
-            empty={party.exporter.shipments === 0}
-            headline={[formatUSDG(party.exporter.volume, { compact: true }), "USDG invoiced"]}
-            rows={[
-              ["Shipments", party.exporter.shipments],
-              ["Settled", party.exporter.settled],
-              ["Active", party.exporter.active],
-              ["Paused", party.exporter.paused],
-              ["Disputed", party.exporter.disputed],
-              ["Defaulted", party.exporter.defaulted],
-              ...(party.exporter.cancelled ? ([["Cancelled before transit", party.exporter.cancelled]] as [string, number][]) : []),
-              ["ZK recoveries", party.exporter.recoveries],
-              ["Average evidence score", party.exporter.avgEvidenceScore === null ? "–" : party.exporter.avgEvidenceScore.toFixed(1)],
-            ]}
-          />
-          <StatBlock
-            title="As financier"
-            empty={party.financier.facilities === 0}
-            headline={[formatUSDG(party.financier.committed, { compact: true }), "USDG committed"]}
-            rows={[
-              ["Facilities", party.financier.facilities],
-              ["Drawn by exporters", `${formatUSDG(party.financier.drawn, { compact: true })} USDG`],
-              ["In escrow", `${formatUSDG(party.financier.inEscrow, { compact: true })} USDG`],
-              ["Fees earned", `${formatUSDG(party.financier.feesEarned, { compact: true })} USDG`],
-              ["Settled", party.financier.settled],
-              ["Defaulted", party.financier.defaulted],
-              ...(party.financier.cancelled ? ([["Cancelled before transit", party.financier.cancelled]] as [string, number][]) : []),
-            ]}
-          />
-          <StatBlock
-            title="As buyer"
-            empty={party.buyer.shipments === 0}
-            headline={[formatUSDG(party.buyer.paidVolume, { compact: true }), "USDG paid"]}
-            rows={[
-              ["Shipments", party.buyer.shipments],
-              ["Settled", party.buyer.settled],
-            ]}
-          />
-          {insurer && (
-            <StatBlock
-              title="As insurer"
-              empty={party.insurer.offered === 0}
-              headline={[formatUSDG(party.insurer.coverWritten, { compact: true }), "USDG of default cover written"]}
-              rows={[
-                ["Facilities offered cover", party.insurer.offered],
-                ["Active covers", party.insurer.active],
-                ["Returned after settlement", party.insurer.released],
-                ["Paid out after default", party.insurer.claimed],
-                ...(party.insurer.triggered ? ([["Parametric payouts", party.insurer.triggered]] as [string, number][]) : []),
-                ["Premiums earned", `${formatUSDG(party.insurer.premiumsEarned, { compact: true })} USDG`],
-                ["Paid to financiers", `${formatUSDG(party.insurer.paidOut, { compact: true })} USDG`],
-              ]}
-            />
-          )}
-        </div>
-      ) : null}
+      <div className="flex flex-col gap-10">
+        {isPending ? (
+          <div aria-busy="true" className="grid items-start gap-4 md:grid-cols-2">{[0, 1].map((i) => <Skeleton key={i} className="h-56 rounded-card" />)}</div>
+        ) : error ? (
+          <Callout
+            variant={isUnavailable(error) ? "info" : "danger"}
+            title={isUnavailable(error) ? "Track records are not live on this backend yet" : "The track record could not be loaded"}
+            action={!isUnavailable(error) && <Button variant="secondary" size="sm" onClick={() => refetch()} loading={isFetching}>Try again</Button>}
+          >
+            {isUnavailable(error) ? "The shipments this wallet is part of are still listed below." : error.message}
+          </Callout>
+        ) : party ? (
+          <Section title="Roles" description={active.length === 0 ? undefined : idle.length ? `No activity as ${listWords(idle)} yet.` : undefined}>
+            {active.length === 0 ? (
+              <EmptyState size="sm" title="No activity yet" description="This wallet has not exported, financed, bought or insured a shipment on CargoFlow." />
+            ) : (
+              <div className={active.length === 1 ? "" : "grid items-start gap-4 md:grid-cols-2"}>
+                {active.map((r) => (
+                  <Card key={r.id} as="section" aria-label={r.title}>
+                    <CardHeader title={r.title} as="h3" />
+                    <p className="num font-display text-metric text-ink">
+                      {r.headline}
+                      <span className="ml-1.5 font-sans text-sm font-semibold tracking-normal text-text-muted">{r.headlineUnit}</span>
+                    </p>
+                    <KeyValue className="mt-4" dense layout={active.length === 1 ? "grid" : "inline"} columns={4} items={r.rows.map(([label, value]) => ({ label, value, numeric: true }))} />
+                  </Card>
+                ))}
+              </div>
+            )}
+          </Section>
+        ) : null}
 
-      <RecentShipments address={address} />
+        <RecentShipments address={address} />
+      </div>
     </div>
   );
 }
 
-function StatBlock({ title, headline, rows, empty }: { title: string; headline: [string, string]; rows: [string, string | number][]; empty: boolean }) {
-  return (
-    <Card className="flex flex-col">
-      <h2 className="text-sm font-semibold tracking-wide text-slate uppercase">{title}</h2>
-      {empty ? (
-        <p className="mt-3 flex-1 text-slate">No activity in this role yet.</p>
-      ) : (
-        <>
-          <p className="mt-2 font-display text-4xl font-bold tabular">{headline[0]}</p>
-          <p className="text-sm text-slate">{headline[1]}</p>
-          <dl className="mt-5 flex flex-col divide-y divide-line text-sm">
-            {rows.map(([k, v]) => (
-              <div key={k} className="flex items-baseline justify-between gap-3 py-2">
-                <dt className="text-slate">{k}</dt>
-                <dd className="font-mono font-semibold tabular">{v}</dd>
-              </div>
-            ))}
-          </dl>
-        </>
-      )}
-    </Card>
-  );
-}
+type Row = Shipment & { role: string; status: string };
 
 function RecentShipments({ address }: { address: string }) {
   const { data, isPending } = useShipmentsFor(address);
   const list = (data?.shipments ?? []).slice().sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)).slice(0, 12);
   const views = useShipmentViews(list.map((s) => s.id));
   const a = address.toLowerCase();
+  const rows: Row[] = list.map((s, i) => ({
+    ...s,
+    role: s.exporter.toLowerCase() === a ? "Exporter" : s.buyer.toLowerCase() === a ? "Buyer" : "Financier",
+    status: views[i]?.data?.facility?.status ?? s.status,
+  }));
+  const columns: Column<Row>[] = [
+    { key: "ref", header: "Shipment", primary: true, cell: (s) => s.externalRef },
+    { key: "role", header: "Role" },
+    { key: "status", header: "Status", cell: (s) => <StatusPill status={s.status} /> },
+    { key: "invoice", header: "Invoice", numeric: true, cell: (s) => <>{formatUSDG(s.invoiceValue)} <span className="text-text-muted">USDG</span></> },
+    { key: "created", header: "Registered", hideOnCard: true, cell: (s) => <span className="num text-text-muted">{new Date(s.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span> },
+  ];
   return (
-    <Card>
-      <CardHeader title="Recent shipments">
-        <span className="text-sm text-slate">{data ? `${data.shipments.length} in total` : ""}</span>
-      </CardHeader>
-      {isPending ? (
-        <div className="flex flex-col gap-2">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-14 rounded-2xl" />)}</div>
-      ) : list.length === 0 ? (
-        <div className="rounded-2xl bg-mist px-5 py-8 text-center">
-          <p className="text-slate">This wallet is not a party to any shipment yet.</p>
-          <div className="mt-4 flex justify-center"><LinkButton href="/market" variant="secondary" size="sm">Browse the market</LinkButton></div>
-        </div>
+    <Section title="Recent shipments" description={data ? `${data.shipments.length} in total; the 12 newest are listed.` : undefined}>
+      {!isPending && rows.length === 0 ? (
+        <EmptyState size="sm" title="Not a party to any shipment yet" description="Shipments this wallet exports, finances or buys appear here." action={<LinkButton href="/market" variant="secondary" size="sm">Browse the market</LinkButton>} />
       ) : (
-        <ul className="flex flex-col divide-y divide-line">
-          {list.map((s, i) => {
-            const v = views[i]?.data;
-            const role = s.exporter.toLowerCase() === a ? "Exporter" : s.buyer.toLowerCase() === a ? "Buyer" : "Financier";
-            return (
-              <li key={s.id}>
-                <Link href={`/track/${s.id}`} className="group grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 py-3 sm:grid-cols-[minmax(0,1.5fr)_7rem_minmax(0,1fr)_7rem]">
-                  <span className="truncate font-semibold group-hover:underline">{s.externalRef}</span>
-                  <span className="justify-self-end sm:justify-self-start"><StatusPill status={v?.facility?.status ?? s.status} /></span>
-                  <span className="text-sm text-slate">{role}</span>
-                  <span className="justify-self-end font-mono text-sm font-semibold sm:col-auto">{formatUSDG(s.invoiceValue, { compact: true })} USDG</span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        <Card padded={false} className="overflow-hidden max-sm:border-0 max-sm:bg-transparent max-sm:shadow-none">
+          <DataTable caption="Recent shipments of this party" columns={columns} rows={rows} rowKey={(s) => s.id} rowHref={(s) => `/track/${s.id}`} loading={isPending} loadingRows={3} />
+        </Card>
       )}
-    </Card>
+    </Section>
   );
 }

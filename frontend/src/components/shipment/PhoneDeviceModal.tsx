@@ -110,15 +110,15 @@ function RegisterForm({ shipment, isExporter, onRegistered }: { shipment: Shipme
         void register();
       }}
     >
-      <ol className="list-decimal space-y-1 pl-5 text-sm text-slate">
+      <ol className="list-decimal space-y-1 pl-5 text-sm text-text-muted">
         <li>This phone creates a passkey for this shipment only.</li>
         <li>The exporter&apos;s wallet signs that the passkey may report the sensor below.</li>
         <li>Readings you take are then signed with the passkey and count as evidence (device class: passkey).</li>
       </ol>
       <Field label="Device name" value={label} onChange={(e) => setLabel(e.target.value.slice(0, 80))} maxLength={80} data-autofocus />
       <Field label="Sensor id" value={sensorId} onChange={(e) => setSensorId(e.target.value.trim())} error={sensorError} hint="How readings from this phone are labelled in the evidence." />
-      {!isExporter && <p className="text-sm font-medium text-danger">Connect the exporter&apos;s wallet ({shipment.exporter.slice(0, 8)}…) to authorize a device.</p>}
-      {error && <p role="alert" className="text-sm font-medium text-danger">{error}</p>}
+      {!isExporter && <p className="text-sm font-medium text-danger-fg">Connect the exporter&apos;s wallet ({shipment.exporter.slice(0, 8)}…) to authorize a device.</p>}
+      {error && <p role="alert" className="text-sm font-medium text-danger-fg">{error}</p>}
       <Button type="submit" loading={busy !== null} disabled={!isExporter || !!sensorError}>
         {busy === "passkey" ? "Follow the passkey prompt…" : busy === "sign" ? "Waiting for the wallet signature…" : busy === "register" ? "Registering…" : "Create passkey and register device"}
       </Button>
@@ -197,13 +197,13 @@ function ReadingForm({ shipment, device, onForget }: { shipment: Shipment; devic
         <Field label="Longitude" inputMode="decimal" value={lon} onChange={(e) => setLon(e.target.value)} placeholder="103.84000" />
       </div>
       <Button variant="secondary" size="sm" className="self-start" loading={busy === "locate"} onClick={locate}>Use this phone&apos;s location</Button>
-      {error && <p role="alert" className="text-sm font-medium text-danger">{error}</p>}
-      {done && <p role="status" className="rounded-xl bg-verified/10 px-3 py-2 text-sm font-medium text-[#00733e]">{done}</p>}
-      <p className="text-sm text-slate">The passkey signs this exact reading (time, position and values); the backend checks the signature against the registered device before it counts.</p>
+      {error && <p role="alert" className="text-sm font-medium text-danger-fg">{error}</p>}
+      {done && <p role="status" className="rounded-xl bg-verified/10 px-3 py-2 text-sm font-medium text-success-fg">{done}</p>}
+      <p className="text-sm text-text-muted">The passkey signs this exact reading (time, position and values); the backend checks the signature against the registered device before it counts.</p>
       <Button type="submit" loading={busy === "sign"} disabled={!valid || busy !== null}>
         {busy === "sign" ? "Confirm with your passkey…" : "Sign reading with passkey"}
       </Button>
-      <button type="button" onClick={onForget} className="self-start text-sm font-semibold text-slate underline-offset-4 hover:text-ink hover:underline">
+      <button type="button" onClick={onForget} className="self-start text-sm font-semibold text-text-muted underline-offset-4 hover:text-ink hover:underline">
         Register a different device
       </button>
     </form>

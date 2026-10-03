@@ -40,7 +40,7 @@ export function ParametricTrigger({ view, cover }: { view: ShipmentView; cover: 
   const pct = Math.min(100, Math.round((Math.min(check.streak, n) / n) * 100));
 
   return (
-    <div className={`flex flex-col gap-3 rounded-2xl px-4 py-4 ${check.met ? "bg-danger/8 ring-2 ring-danger/40" : "bg-mist"}`}>
+    <div className={`flex flex-col gap-3 rounded-tile px-4 py-4 ${check.met ? "bg-danger/8 ring-2 ring-danger/40" : "bg-mist"}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-semibold">Parametric trigger</h3>
         {check.met ? <Pill tone="danger" dot>Trigger met</Pill> : <Pill tone="slate">Not met</Pill>}
@@ -50,7 +50,7 @@ export function ParametricTrigger({ view, cover }: { view: ShipmentView; cover: 
         {p.epochFloor > 0 ? ` (after batch ${p.epochFloor})` : ""}, while the facility is in transit, paused or disputed.
       </p>
       <div>
-        <div className="flex justify-between text-xs text-slate">
+        <div className="flex justify-between text-xs text-text-muted">
           <span>Failed in a row</span>
           <span className="font-mono font-semibold text-ink tabular">{Math.min(check.streak, n)} of {n}</span>
         </div>
@@ -68,7 +68,7 @@ export function ParametricTrigger({ view, cover }: { view: ShipmentView; cover: 
           >
             Trigger the payout
           </Button>
-          <p className="text-xs text-slate">Anyone can press this: the contract checks the {n} batches itself. Each party then collects its share.</p>
+          <p className="text-xs text-text-muted">Anyone can press this: the contract checks the {n} batches itself. Each party then collects its share.</p>
         </div>
       )}
     </div>
@@ -84,11 +84,11 @@ export function SplitTable({ financier, exporter, insurer, caption }: { financie
   ];
   return (
     <div>
-      <p className="text-xs font-semibold tracking-wide text-slate uppercase">{caption}</p>
+      <p className="eyebrow">{caption}</p>
       <dl className="mt-1.5 divide-y divide-line text-sm">
         {rows.map(([k, v, why]) => (
           <div key={k} className="flex items-baseline justify-between gap-3 py-1.5">
-            <dt>{k} <span className="text-xs text-slate">· {why}</span></dt>
+            <dt>{k} <span className="text-xs text-text-muted">· {why}</span></dt>
             <dd className="font-mono font-semibold whitespace-nowrap tabular">{formatUSDG(v)} USDG</dd>
           </div>
         ))}

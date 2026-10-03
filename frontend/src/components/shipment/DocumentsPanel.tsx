@@ -76,7 +76,7 @@ export function DocumentsPanel({ view }: { view: ShipmentView }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="flex items-start gap-2 text-sm text-slate">
+      <p className="flex items-start gap-2 text-sm text-text-muted">
         <svg viewBox="0 0 16 16" className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><path d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2M3.5 7h9v6.5h-9z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" /></svg>
         <span>Files stay on your device. Only their fingerprints (hashes) are signed or compared.</span>
       </p>
@@ -84,11 +84,11 @@ export function DocumentsPanel({ view }: { view: ShipmentView }) {
       {docs.isPending ? (
         <div className="flex flex-col gap-2"><Skeleton className="h-14" /><Skeleton className="h-14" /></div>
       ) : unavailable ? (
-        <p className="rounded-2xl bg-mist px-4 py-3 text-sm text-slate">Document attestation is not available on this deployment yet. You can still check a file against the invoice hash registered on chain.</p>
+        <p className="rounded-tile bg-mist px-4 py-3 text-sm text-text-muted">Document attestation is not available on this deployment yet. You can still check a file against the invoice hash registered on chain.</p>
       ) : docs.isError ? (
-        <p className="text-sm text-slate">The attested documents could not be loaded. They will retry shortly.</p>
+        <p className="text-sm text-text-muted">The attested documents could not be loaded. They will retry shortly.</p>
       ) : list.length === 0 ? (
-        <p className="rounded-2xl bg-mist px-4 py-3 text-sm text-slate">No documents attested yet.{isParty ? " Attest the invoice, bill of lading or certificates so every party can check their copies." : ""}</p>
+        <p className="rounded-tile bg-mist px-4 py-3 text-sm text-text-muted">No documents attested yet.{isParty ? " Attest the invoice, bill of lading or certificates so every party can check their copies." : ""}</p>
       ) : (
         <ul className="-my-1 divide-y divide-line">
           {list.map((d) => (
@@ -114,13 +114,13 @@ export function DocumentsPanel({ view }: { view: ShipmentView }) {
 
 function DocumentRow({ d, highlighted }: { d: AttestedDocument; highlighted: boolean }) {
   return (
-    <li className={cx("py-3", highlighted && "-mx-3 rounded-2xl bg-verified/10 px-3")}>
-      <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.6875rem] font-semibold tracking-wide text-slate uppercase">
+    <li className={cx("py-3", highlighted && "-mx-3 rounded-tile bg-verified/10 px-3")}>
+      <p className="flex flex-wrap items-center gap-x-2 gap-y-1 eyebrow">
         {kindLabel[d.kind] ?? d.kind}
         {d.matchesInvoiceHash && <Pill tone="verified" className="normal-case tracking-normal">Matches on-chain invoice</Pill>}
       </p>
       <p className="mt-0.5 truncate font-semibold" title={d.name}>{d.name}</p>
-      <p className="text-xs text-slate">{formatBytes(d.sizeBytes)} · signed by the {d.role} · {date(d.createdAt)}</p>
+      <p className="text-xs text-text-muted">{formatBytes(d.sizeBytes)} · signed by the {d.role} · {date(d.createdAt)}</p>
       <div className="mt-2 flex flex-wrap gap-1.5">
         <HashBadge value={d.sha256} label="sha256" />
         <HashBadge value={d.keccak256} label="keccak" />
@@ -132,8 +132,8 @@ function DocumentRow({ d, highlighted }: { d: AttestedDocument; highlighted: boo
 function VerifyResult({ check, onClear }: { check: { file: FileHashes; result: Verification } | { error: string }; onClear: () => void }) {
   if ("error" in check) {
     return (
-      <div role="alert" className="flex items-start justify-between gap-3 rounded-2xl bg-danger/8 px-4 py-3 text-sm">
-        <p className="font-medium text-[#a1191e]">{check.error}</p>
+      <div role="alert" className="flex items-start justify-between gap-3 rounded-tile bg-danger/8 px-4 py-3 text-sm">
+        <p className="font-medium text-danger-fg">{check.error}</p>
         <Button size="sm" variant="ghost" className="-my-1 -mr-2" onClick={onClear}>Clear</Button>
       </div>
     );
@@ -141,14 +141,14 @@ function VerifyResult({ check, onClear }: { check: { file: FileHashes; result: V
   const { file, result } = check;
   const ok = result.matches.length > 0 || result.invoice;
   return (
-    <div role="status" className={cx("rounded-2xl px-4 py-3 text-sm", ok ? "bg-verified/10 ring-1 ring-verified/30 ring-inset" : "bg-danger/8 ring-1 ring-danger/25 ring-inset")}>
+    <div role="status" className={cx("rounded-tile px-4 py-3 text-sm", ok ? "bg-verified/10 ring-1 ring-verified/30 ring-inset" : "bg-danger/8 ring-1 ring-danger/25 ring-inset")}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className={cx("flex items-center gap-2 font-display text-base font-semibold", ok ? "text-[#00733e]" : "text-[#a1191e]")}>
+          <p className={cx("flex items-center gap-2 font-display text-base font-semibold", ok ? "text-success-fg" : "text-danger-fg")}>
             <span aria-hidden="true" className={cx("grid h-5 w-5 place-items-center rounded-full text-xs text-white", ok ? "bg-verified" : "bg-danger")}>{ok ? "✓" : "×"}</span>
             {ok ? "This file matches" : "No match"}
           </p>
-          <p className="mt-0.5 truncate text-slate" title={file.name}>{file.name} · {formatBytes(file.sizeBytes)}</p>
+          <p className="mt-0.5 truncate text-text-muted" title={file.name}>{file.name} · {formatBytes(file.sizeBytes)}</p>
         </div>
         <Button size="sm" variant="ghost" className="-my-1 -mr-2" onClick={onClear}>Clear</Button>
       </div>
@@ -224,11 +224,11 @@ function AttestModal({ view, existing, onClose }: { view: ShipmentView; existing
     <Modal open onClose={onClose} title="Attest a document" description="Sign a file's fingerprint so every party can check their copy. The file stays on this device.">
       <div className="flex flex-col gap-4">
         {file ? (
-          <div className="rounded-2xl border border-line bg-white p-4">
+          <div className="rounded-tile border border-line bg-white p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="truncate font-semibold" title={file.name}>{file.name}</p>
-                <p className="text-sm text-slate">{formatBytes(file.sizeBytes)}</p>
+                <p className="text-sm text-text-muted">{formatBytes(file.sizeBytes)}</p>
               </div>
               <PickFile label="Another file to attest" onPick={(f) => void pick(f)} disabled={hashing || busy !== null}>Change</PickFile>
             </div>
@@ -239,8 +239,8 @@ function AttestModal({ view, existing, onClose }: { view: ShipmentView; existing
             {isInvoice && <Pill tone="verified" dot className="mt-3">Matches the on-chain invoice hash</Pill>}
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-line bg-white px-4 py-8 text-center">
-            <p className="text-sm text-slate">Invoice, bill of lading, packing list or certificate: any file type.</p>
+          <div className="flex flex-col items-center gap-3 rounded-tile border-2 border-dashed border-line bg-white px-4 py-8 text-center">
+            <p className="text-sm text-text-muted">Invoice, bill of lading, packing list or certificate: any file type.</p>
             <PickFile label="File to attest" variant="primary" onPick={(f) => void pick(f)} disabled={hashing}>
               {hashing ? <><Spinner /> Hashing…</> : "Choose a file"}
             </PickFile>
@@ -250,16 +250,16 @@ function AttestModal({ view, existing, onClose }: { view: ShipmentView; existing
         {file && (
           <div>
             <label htmlFor="doc-kind" className="mb-1.5 block text-sm font-semibold">Document type</label>
-            <select id="doc-kind" value={kind} onChange={(e) => setKind(e.target.value as DocumentKind)} className="h-12 w-full rounded-2xl border-2 border-line bg-white px-3 outline-none focus:border-ink">
+            <select id="doc-kind" value={kind} onChange={(e) => setKind(e.target.value as DocumentKind)} className="h-12 w-full rounded-tile border-2 border-line bg-white px-3 outline-none focus:border-ink">
               {DOCUMENT_KINDS.map((k) => (
                 <option key={k} value={k}>{kindLabel[k]}</option>
               ))}
             </select>
           </div>
         )}
-        {duplicate && <p className="text-sm font-medium text-[#8a5300]">This exact file is already attested by the {duplicate.role} ({kindLabel[duplicate.kind] ?? duplicate.kind}).</p>}
-        {error && <p role="alert" className="text-sm font-medium text-danger">{error}</p>}
-        <p className="text-sm text-slate">Your wallet signs a message naming this shipment, the document type and the SHA-256. Signing costs no gas.</p>
+        {duplicate && <p className="text-sm font-medium text-warning-fg">This exact file is already attested by the {duplicate.role} ({kindLabel[duplicate.kind] ?? duplicate.kind}).</p>}
+        {error && <p role="alert" className="text-sm font-medium text-danger-fg">{error}</p>}
+        <p className="text-sm text-text-muted">Your wallet signs a message naming this shipment, the document type and the SHA-256. Signing costs no gas.</p>
         <Button loading={busy !== null} disabled={!file || hashing || !!duplicate} onClick={() => void attest()}>
           {busy === "sign" ? "Waiting for your signature…" : busy === "save" ? "Attesting…" : "Sign and attest"}
         </Button>

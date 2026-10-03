@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CopyButton } from "@/components/ui/CodeBlock";
+import { ContractTable } from "@/components/developers/ContractTable";
+import { LinkButton } from "@/components/ui/Button";
+import { CopyField } from "@/components/ui/CopyField";
+import { Badge } from "@/components/ui/Pill";
+import { PageHeader, Section } from "@/components/ui/Section";
 import arbitrum from "@/data/deployments/arbitrum-sepolia.json";
 import v3 from "@/data/deployments/robinhood-testnet.json";
 import v1 from "@/data/deployments/robinhood-testnet-v1.json";
@@ -37,52 +41,11 @@ const PASSKEY_INFRA = [
 
 type Manifest = { chainId?: number; contracts?: Record<string, string>; deployer?: string; usdg?: string; explorer?: string; verification?: string; roles?: Record<string, string> };
 
-const addressUrl = (a: string, base = ROBINHOOD_EXPLORER) => `${base.replace(/\/+$/, "")}/address/${a}`;
-
-function Address({ value, explorer = ROBINHOOD_EXPLORER, verified = true }: { value: string; explorer?: string; verified?: boolean }) {
-  return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-      <a href={addressUrl(value, explorer)} target="_blank" rel="noreferrer" className="font-mono text-[0.8125rem] font-semibold break-all underline decoration-ink/25 underline-offset-2 hover:decoration-ink">
-        {value}<span className="sr-only"> (opens the explorer in a new tab)</span>
-      </a>
-      <CopyButton text={value} />
-      {verified && (
-        <a href={`${addressUrl(value, explorer)}?tab=contract`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-full bg-verified/12 px-2.5 py-0.5 text-xs font-semibold text-[#00733e] hover:bg-verified/20">
-          ✓ Verified source<span className="sr-only"> (opens in a new tab)</span>
-        </a>
-      )}
-    </div>
-  );
-}
-
-function Table({ rows, caption, explorer }: { rows: { key: string; name: string; role: string; address: string; verified?: boolean }[]; caption: string; explorer?: string }) {
-  return (
-    <div className="overflow-hidden rounded-[var(--radius-card)] border border-line bg-white">
-      <table className="w-full text-left text-sm">
-        <caption className="sr-only">{caption}</caption>
-        <thead className="hidden bg-mist text-xs tracking-wide text-slate uppercase md:table-header-group">
-          <tr>
-            <th scope="col" className="px-5 py-3 font-semibold">Contract</th>
-            <th scope="col" className="px-5 py-3 font-semibold">Address</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-line">
-          {rows.map((r) => (
-            <tr key={r.key} className="flex flex-col gap-2 px-5 py-4 md:table-row md:p-0">
-              <th scope="row" className="font-normal md:w-[45%] md:px-5 md:py-4 md:align-top">
-                <span className="block font-semibold">{r.name}</span>
-                <span className="mt-0.5 block text-slate">{r.role}</span>
-              </th>
-              <td className="md:px-5 md:py-4 md:align-top">
-                <Address value={r.address} explorer={explorer} verified={r.verified !== false} />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
+const ExternalIcon = () => (
+  <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M9.5 2.5h4v4M13.5 2.5 7.5 8.5M12 9.5v3a1 1 0 0 1-1 1H3.5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3" />
+  </svg>
+);
 
 export default function DeploymentsPage() {
   const cur = v3 as Manifest;
@@ -105,83 +68,71 @@ export default function DeploymentsPage() {
   ];
 
   return (
-    <div className="container-page py-10 md:py-14">
-      <header className="max-w-3xl">
-        <p className="text-sm font-semibold tracking-[0.12em] text-slate uppercase">Verify</p>
-        <h1 className="mt-2 font-display text-[clamp(2rem,4.5vw,3.25rem)] leading-[1.05] font-bold tracking-tight">Deployments</h1>
-        <p className="mt-4 text-lg text-ink/75">
-          Contracts v3 on Robinhood Chain Testnet (chain {cur.chainId ?? 46630}), deployed in blocks 128,127,715 – 128,127,723. Every address links to the explorer, where the verified source can be read.
-        </p>
-      </header>
+    <div className="container-page py-(--space-page-y)">
+      <PageHeader
+        eyebrow="Verify"
+        title="Deployments"
+        description={<>Contracts v3 on Robinhood Chain Testnet (chain {cur.chainId ?? 46630}), deployed in blocks <span className="num">128,127,715 – 128,127,723</span>. Every address links to the explorer, where the verified source can be read.</>}
+        actions={<LinkButton href={ROBINHOOD_EXPLORER} external variant="secondary" iconEnd={<ExternalIcon />}>Open the explorer<span className="sr-only"> (opens in a new tab)</span></LinkButton>}
+      />
 
-      <section className="mt-10" aria-labelledby="v3">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 id="v3" className="font-display text-2xl font-semibold">Contracts v3 · live</h2>
-          {cur.deployer && <p className="text-sm text-slate">Deployer <span className="font-mono">{cur.deployer}</span></p>}
-        </div>
-        <div className="mt-4"><Table rows={current} caption="CargoFlow contracts v3 on Robinhood Chain Testnet" /></div>
-      </section>
+      <div className="flex flex-col gap-12 md:gap-16">
+        <Section
+          title={<span className="inline-flex flex-wrap items-center gap-3">Contracts v3 <Badge variant="success" dot pulse>Live</Badge></span>}
+          description={`${current.length - (cur.usdg ? 1 : 0)} contracts and the settlement token, all source-verified on the Robinhood explorer.`}
+          actions={cur.deployer ? <CopyField value={cur.deployer} label="Deployer" kind="address" chainId={cur.chainId ?? 46630} size="sm" /> : undefined}
+        >
+          <ContractTable rows={current} caption="CargoFlow contracts v3 on Robinhood Chain Testnet" />
+        </Section>
 
-      <section className="mt-12" aria-labelledby="services">
-        <h2 id="services" className="font-display text-2xl font-semibold">Live services</h2>
-        <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {services.map((s) => (
-            <li key={s.name} className="rounded-2xl border border-line bg-white px-4 py-3.5">
-              <p className="font-semibold">{s.name}</p>
-              <p className="text-sm text-slate">{s.note}</p>
-              {s.href.startsWith("/") ? (
-                <Link href={s.href} className="mt-1 block font-mono text-[0.8125rem] font-semibold break-all underline decoration-ink/25 underline-offset-2">{s.href}</Link>
-              ) : (
-                <a href={s.href} target="_blank" rel="noreferrer" className="mt-1 block font-mono text-[0.8125rem] font-semibold break-all underline decoration-ink/25 underline-offset-2">{s.href}<span className="sr-only"> (opens in a new tab)</span></a>
-              )}
-              {s.extra && (
-                <p className="mt-1 flex flex-wrap gap-3 text-xs">
-                  {s.extra.map((x) => <a key={x.href} href={x.href} target="_blank" rel="noreferrer" className="font-mono font-semibold text-slate underline underline-offset-2 hover:text-ink">{x.label}</a>)}
-                </p>
-              )}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="mt-12" aria-labelledby="aa">
-        <h2 id="aa" className="font-display text-2xl font-semibold">Passkey accounts (ERC-4337)</h2>
-        <p className="mt-1 max-w-2xl text-sm text-slate">Shared infrastructure on Robinhood Chain Testnet used by &quot;Continue with passkey&quot;: ZeroDev Kernel smart accounts with a WebAuthn validator.</p>
-        <div className="mt-4"><Table rows={PASSKEY_INFRA.map((r) => ({ key: r.address, ...r, verified: false }))} caption="Account abstraction contracts used for passkey accounts" /></div>
-      </section>
-
-      <section className="mt-12" aria-labelledby="sponsors">
-        <h2 id="sponsors" className="font-display text-2xl font-semibold">Arbitrum Sepolia · sponsor integrations</h2>
-        <p className="mt-1 max-w-2xl text-sm text-slate">Fhenix and GMX do not run on Robinhood Chain, so these contracts live on Arbitrum Sepolia (chain 421614) and are linked to a shipment by its id.</p>
-        <ul className="mt-4 divide-y divide-line overflow-hidden rounded-[var(--radius-card)] border border-line bg-white">
-          {sponsor.map((c) => {
-            const address = arb.contracts?.[c.key];
-            return (
-              <li key={c.key} className="flex flex-col gap-2 px-5 py-4 md:flex-row md:items-start md:gap-6">
-                <div className="md:w-[45%]">
-                  <p className="font-semibold">{c.name}</p>
-                  <p className="text-sm text-slate">{c.role}</p>
+        <Section title="Live services" description="Everything the contracts are read and written through.">
+          <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface shadow-1">
+            {services.map((s) => (
+              <li key={s.name} className="flex flex-col gap-1.5 px-5 py-4 md:flex-row md:items-center md:justify-between md:gap-6">
+                <div className="min-w-0">
+                  <p className="font-semibold">{s.name}</p>
+                  <p className="text-small text-text-muted">{s.note}</p>
                 </div>
-                {address ? (
-                  <Address value={address} explorer={arbExplorer} verified={false} />
-                ) : (
-                  <span className="self-start rounded-full bg-alert/15 px-3 py-1 text-xs font-semibold">Pending deployment</span>
-                )}
+                <div className="flex min-w-0 flex-col gap-1 md:items-end">
+                  {s.href.startsWith("/") ? (
+                    <Link href={s.href} className="truncate font-mono text-small font-semibold underline decoration-ink/25 underline-offset-4 hover:decoration-ink">{s.href}</Link>
+                  ) : (
+                    <a href={s.href} target="_blank" rel="noreferrer" title={s.href} className="max-w-full truncate font-mono text-small font-semibold underline decoration-ink/25 underline-offset-4 hover:decoration-ink">
+                      {s.href.replace(/^https:\/\//, "")}<span className="sr-only"> (opens in a new tab)</span>
+                    </a>
+                  )}
+                  {s.extra && (
+                    <p className="flex flex-wrap gap-3">
+                      {s.extra.map((x) => <a key={x.href} href={x.href} target="_blank" rel="noreferrer" className="font-mono text-caption text-text-muted underline underline-offset-4 hover:text-ink">{x.label}<span className="sr-only"> (opens in a new tab)</span></a>)}
+                    </p>
+                  )}
+                </div>
               </li>
-            );
-          })}
-        </ul>
-        {arb.verification && <p className="mt-2 text-xs text-slate">Source verification: {arb.verification}.</p>}
-      </section>
+            ))}
+          </ul>
+        </Section>
 
-      <section className="mt-12" aria-labelledby="history">
-        <h2 id="history" className="font-display text-2xl font-semibold">History · contracts v1</h2>
-        <p className="mt-1 max-w-2xl text-sm text-slate">The first deployment, superseded by v3. Kept for its transaction record; new shipments use v3.</p>
-        <details className="mt-4 group">
-          <summary className="cursor-pointer text-sm font-semibold underline-offset-4 hover:underline">Show {history.length} v1 contracts</summary>
-          <div className="mt-3"><Table rows={history} caption="CargoFlow contracts v1 (history)" /></div>
-        </details>
-      </section>
+        <Section title="Passkey accounts (ERC-4337)" description={<>Shared infrastructure on Robinhood Chain Testnet used by &quot;Continue with passkey&quot;: ZeroDev Kernel smart accounts with a WebAuthn validator.</>}>
+          <ContractTable rows={PASSKEY_INFRA.map((r) => ({ key: r.address, ...r, verified: false }))} caption="Account abstraction contracts used for passkey accounts" showVerified={false} />
+        </Section>
+
+        <Section title="Arbitrum Sepolia · sponsor integrations" description="Fhenix and GMX do not run on Robinhood Chain, so these contracts live on Arbitrum Sepolia (chain 421614) and are linked to a shipment by its id.">
+          <ContractTable rows={sponsor.map((c) => ({ ...c, address: arb.contracts?.[c.key], verified: false }))} caption="Sponsor integration contracts on Arbitrum Sepolia" explorer={arbExplorer} showVerified={false} />
+          {arb.verification && <p className="mt-2 text-caption text-text-muted">Source verification: {arb.verification}.</p>}
+        </Section>
+
+        <Section title="History · contracts v1" description="The first deployment, superseded by v3. Kept for its transaction record; new shipments use v3.">
+          <details className="group rounded-card border border-border bg-surface shadow-1">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-card px-5 py-4 text-small font-semibold [&::-webkit-details-marker]:hidden">
+              Show {history.length} v1 contracts
+              <svg viewBox="0 0 12 12" className="h-3 w-3 transition-transform duration-(--duration-fast) group-open:rotate-180" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </summary>
+            <div className="border-t border-border">
+              <ContractTable rows={history} caption="CargoFlow contracts v1 (history)" />
+            </div>
+          </details>
+        </Section>
+      </div>
     </div>
   );
 }

@@ -5,11 +5,15 @@ import { useState } from "react";
 import type { Address, Hex } from "viem";
 import { useAccount } from "wagmi";
 import { Button, LinkButton } from "@/components/ui/Button";
+import { Callout } from "@/components/ui/Banner";
 import { Card, CardHeader } from "@/components/ui/Card";
-import { cx } from "@/components/ui/cx";
-import { HashBadge } from "@/components/ui/HashBadge";
+import { CopyField } from "@/components/ui/CopyField";
+import { DataTable, type Column } from "@/components/ui/DataTable";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { KeyValue } from "@/components/ui/KeyValue";
 import { Modal } from "@/components/ui/Modal";
-import { Pill, StatusPill } from "@/components/ui/Pill";
+import { Badge, StatusPill } from "@/components/ui/Pill";
+import { PageHeader } from "@/components/ui/Section";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { NetworkGuard } from "@/components/wallet/NetworkGuard";
 import { WalletButton } from "@/components/wallet/WalletButton";
@@ -28,7 +32,7 @@ import { formatTempX100, formatUSDG } from "@/lib/format";
 import { useHydrated } from "@/lib/useHydrated";
 import { OfferModal } from "./OfferModal";
 import { PartyLink } from "./PartyLink";
-import { BandChip, RequestStatusPill, RouteLabel, Term } from "./RequestBits";
+import { BandChip, RequestStatusPill, RouteLabel } from "./RequestBits";
 import { useSigned } from "./useSigned";
 
 export function RequestDetail({ id }: { id: string }) {
@@ -42,56 +46,61 @@ export function RequestDetail({ id }: { id: string }) {
   if (m.isPending && !r) return <DetailSkeleton />;
   if (!r) {
     return (
-      <div className="container-page py-16">
-        <BackLink />
-        <Card className="mt-6 text-center">
-          <h1 className="font-display text-2xl font-semibold">{m.unavailable ? "The market is not live on this backend yet" : "We couldn't find that request"}</h1>
-          <p className="mx-auto mt-2 max-w-md text-slate">
-            {m.unavailable ? "This deployment's API does not serve financing requests yet." : "It may have been closed and removed, or the link is incomplete."}
-          </p>
-          <div className="mt-6 flex justify-center"><LinkButton href="/market" variant="secondary">Back to the market</LinkButton></div>
-        </Card>
+      <div className="container-page py-(--space-page-y)">
+        <PageHeader back={<BackLink />} title={m.unavailable ? "The market is not live on this backend yet" : "We couldn't find that request"} />
+        <EmptyState
+          title={m.unavailable ? "No financing requests here" : "This request is not on the market"}
+          description={m.unavailable ? "This deployment's API does not serve financing requests yet." : "It may have been closed and removed, or the link is incomplete."}
+          action={<LinkButton href="/market" variant="secondary">Back to the market</LinkButton>}
+        />
       </div>
     );
   }
 
   const rate = advanceRate(r.amount, r.invoiceValue);
+  const threshold = r.policy.minEvidenceScore ?? view?.shipment.policy.minEvidenceScore;
   return (
-    <div className="container-page flex flex-col gap-6 py-10">
-      <BackLink />
-      <header className="rounded-[var(--radius-card)] bg-white p-6 shadow-[var(--shadow-card)] md:p-8">
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="font-display text-[clamp(2rem,4.5vw,3.2rem)] leading-none font-bold tracking-[-0.04em] break-all">{r.externalRef}</h1>
-              <RequestStatusPill status={r.status} />
-            </div>
-            <RouteLabel route={r.route} className="mt-3 text-lg font-medium text-ink/80" />
-            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate">
-              <BandChip policy={r.policy} />
-              <span className="inline-flex items-center gap-2">Exporter <PartyLink address={r.exporter} /></span>
-              <span>Posted <time dateTime={r.createdAt}>{age(r.createdAt)}</time></span>
-            </div>
-          </div>
-        </div>
-        <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-5 border-t border-line pt-6 sm:grid-cols-3 lg:grid-cols-5">
-          <Term label="Seeking" sub="USDG">{formatUSDG(r.amount)}</Term>
-          <Term label="Invoice" sub="USDG, paid by the buyer">{formatUSDG(r.invoiceValue)}</Term>
-          <Term label="Advance" sub="of the invoice">{rate}%</Term>
-          <Term label="Max fee" sub={`${formatUSDG((BigInt(r.amount) * BigInt(r.maxFeeBps)) / 10_000n)} USDG at full draw`}>{pct(r.maxFeeBps)}</Term>
-          <Term label="Tranches" sub={`released at score ${r.policy.minEvidenceScore ?? view?.shipment.policy.minEvidenceScore ?? "–"}+`}>{r.milestoneCount}</Term>
-        </dl>
-        {r.note && <p className="mt-6 rounded-2xl bg-mist px-4 py-3 text-ink/80">“{r.note}”</p>}
-      </header>
+    <div className="container-page py-(--space-page-y)">
+      <PageHeader
+        back={<BackLink />}
+        title={<span className="font-sans font-semibold tracking-tight break-all">{r.externalRef}</span>}
+        description={<RouteLabel route={r.route} className="font-medium text-ink/80" />}
+        meta={
+          <>
+            <RequestStatusPill status={r.status} />
+            <BandChip policy={r.policy} />
+            <span className="inline-flex items-center gap-2 text-small text-text-muted">Exporter <PartyLink address={r.exporter} /></span>
+            <span className="text-small text-text-muted">Posted <time dateTime={r.createdAt}>{age(r.createdAt)}</time></span>
+          </>
+        }
+      />
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="flex min-w-0 flex-col gap-6">
-          <NextStep request={r} role={role} view={view} />
-          <Offers request={r} role={role} />
+      <div className="flex flex-col gap-6">
+        <Card>
+          <KeyValue
+            layout="grid"
+            columns={4}
+            className="lg:grid-cols-5"
+            items={[
+              { label: "Seeking", value: <span className="num text-lg font-semibold">{formatUSDG(r.amount)} <span className="text-sm text-text-muted">USDG</span></span> },
+              { label: "Invoice", value: <span className="num text-lg font-semibold">{formatUSDG(r.invoiceValue)} <span className="text-sm text-text-muted">USDG</span></span>, hint: "Paid by the buyer" },
+              { label: "Advance", value: <span className="num text-lg font-semibold">{rate}%</span>, hint: "of the invoice" },
+              { label: "Max fee", value: <span className="num text-lg font-semibold">{pct(r.maxFeeBps)}</span>, hint: `${formatUSDG((BigInt(r.amount) * BigInt(r.maxFeeBps)) / 10_000n)} USDG at full draw` },
+              { label: "Tranches", value: <span className="num text-lg font-semibold">{r.milestoneCount}</span>, hint: `Released at score ${threshold ?? "–"}+` },
+            ]}
+          />
+          {r.note && <p className="mt-5 rounded-tile bg-surface-sunken px-4 py-3 text-sm text-ink/80">“{r.note}”</p>}
+        </Card>
+
+        <div className="grid items-start gap-6 lg:grid-cols-12">
+          <div className="flex min-w-0 flex-col gap-6 lg:col-span-8">
+            <NextStep request={r} role={role} view={view} />
+            <Offers request={r} role={role} />
+          </div>
+          <aside className="flex min-w-0 flex-col gap-6 lg:col-span-4">
+            <ShipmentSummary request={r} view={view} />
+          </aside>
         </div>
-        <aside className="flex flex-col gap-6">
-          <ShipmentSummary request={r} view={view} />
-        </aside>
       </div>
     </div>
   );
@@ -99,7 +108,7 @@ export function RequestDetail({ id }: { id: string }) {
 
 function BackLink() {
   return (
-    <Link href="/market" className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-slate hover:text-ink">
+    <Link href="/market" className="inline-flex w-fit items-center gap-1.5 font-semibold text-text-muted hover:text-ink">
       <svg viewBox="0 0 16 16" className="h-4 w-4" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
       Market
     </Link>
@@ -108,14 +117,11 @@ function BackLink() {
 
 function DetailSkeleton() {
   return (
-    <div className="container-page flex flex-col gap-6 py-10" role="status" aria-label="Loading the request">
+    <div className="container-page flex flex-col gap-6 py-(--space-page-y)" role="status" aria-label="Loading the request">
       <Skeleton className="h-5 w-20" />
-      <div className="rounded-[var(--radius-card)] bg-white p-8 shadow-[var(--shadow-card)]">
-        <Skeleton className="h-12 w-72" />
-        <Skeleton className="mt-4 h-5 w-64" />
-        <div className="mt-8 grid grid-cols-2 gap-6 lg:grid-cols-5">{[0, 1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-12" />)}</div>
-      </div>
-      <div className="grid gap-6 lg:grid-cols-[1fr_340px]"><Skeleton className="h-64 rounded-[var(--radius-card)]" /><Skeleton className="h-64 rounded-[var(--radius-card)]" /></div>
+      <Skeleton className="h-10 w-72" />
+      <Skeleton className="h-28 rounded-card" />
+      <div className="grid gap-6 lg:grid-cols-12"><Skeleton className="h-64 rounded-card lg:col-span-8" /><Skeleton className="h-64 rounded-card lg:col-span-4" /></div>
     </div>
   );
 }
@@ -123,12 +129,13 @@ function DetailSkeleton() {
 // ------------------------------------------------------------------------------------------------ next step
 
 function StepCard({ eyebrow, title, children, tone = "white" }: { eyebrow: string; title: string; children: React.ReactNode; tone?: "white" | "ink" }) {
+  // "ink" marks the step that waits on this wallet: a lime rule on the card's edge, not a navy panel
   return (
-    <section aria-labelledby="next-step" className={cx("rounded-[var(--radius-card)] p-6 shadow-[var(--shadow-card)] md:p-7", tone === "ink" ? "surface-ink bg-ink text-paper" : "border border-line bg-white")}>
-      <p className={cx("text-xs font-semibold tracking-wide uppercase", tone === "ink" ? "text-signal" : "text-slate")}>{eyebrow}</p>
-      <h2 id="next-step" className="mt-1 font-display text-2xl font-semibold">{title}</h2>
-      <div className={cx("mt-3", tone === "ink" ? "text-paper/80" : "text-ink/80")}>{children}</div>
-    </section>
+    <Card as="section" aria-labelledby="next-step" className={tone === "ink" ? "border-l-4 border-l-signal-fg" : undefined}>
+      <p className="eyebrow">{eyebrow}</p>
+      <h2 id="next-step" className="mt-1 font-display text-h2">{title}</h2>
+      <div className="mt-2 max-w-reading text-body text-ink/80">{children}</div>
+    </Card>
   );
 }
 
@@ -146,7 +153,7 @@ function NextStep({ request: r, role, view }: { request: MarketRequest; role: Ro
     return (
       <StepCard eyebrow="Next step" title={r.status === "open" ? "Connect a wallet to make an offer" : "Connect a wallet to see your part"} tone="ink">
         <p>Financiers offer a fee with a signed message; nothing moves until the exporter accepts and opens the facility on chain.</p>
-        <div className="mt-5 text-ink"><WalletButton /></div>
+        <div className="mt-5"><WalletButton /></div>
       </StepCard>
     );
   }
@@ -225,11 +232,12 @@ function CloseRequest({ request: r }: { request: MarketRequest }) {
   const { run, busy, error } = useSigned();
   return (
     <>
-      <Button variant="inverse" size="sm" onClick={() => setConfirm(true)}>Close this request</Button>
-      <div className="surface-light text-ink">
+      <Button variant="secondary" size="sm" onClick={() => setConfirm(true)}>Close this request</Button>
+      <div>
         <Modal open={confirm} onClose={() => setConfirm(false)} title="Close this request?" description="Financiers will no longer see it or be able to offer. The shipment itself is unaffected.">
-          {error && <p role="alert" className="mb-3 text-sm font-medium text-danger">{error}</p>}
-          <div className="flex flex-wrap gap-2">
+          {error && <Callout variant="danger" live="assertive" className="mb-3">{error}</Callout>}
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button variant="ghost" onClick={() => setConfirm(false)}>Keep it open</Button>
             <Button
               variant="danger"
               loading={busy !== null}
@@ -240,7 +248,6 @@ function CloseRequest({ request: r }: { request: MarketRequest }) {
             >
               {busy === "sign" ? "Waiting for your signature…" : "Sign and close"}
             </Button>
-            <Button variant="ghost" onClick={() => setConfirm(false)}>Keep it open</Button>
           </div>
         </Modal>
       </div>
@@ -264,14 +271,19 @@ function CreateFacility({ request: r, offer, view }: { request: MarketRequest; o
   return (
     <StepCard eyebrow={`Accepted ${pct(offer.feeBps)}`} title="Open the facility on chain" tone="ink">
       <p>One transaction creates the escrowed facility naming this financier. They then deposit the capital, and you start transit from the dashboard.</p>
-      <dl className="mt-5 grid grid-cols-2 gap-4 rounded-2xl bg-paper/8 p-4 text-sm sm:grid-cols-4">
-        <div><dt className="text-paper/65">Financier</dt><dd className="mt-1"><PartyLink address={offer.financier} onDark /></dd></div>
-        <div><dt className="text-paper/65">Facility</dt><dd className="mt-1 font-mono font-semibold text-paper">{formatUSDG(r.amount)} USDG</dd></div>
-        <div><dt className="text-paper/65">Fee</dt><dd className="mt-1 font-mono font-semibold text-paper">{pct(offer.feeBps)} · {formatUSDG(fee)} USDG</dd></div>
-        <div><dt className="text-paper/65">Tranches</dt><dd className="mt-1 font-mono font-semibold text-paper">{r.milestoneCount} × ~{formatUSDG(BigInt(r.amount) / BigInt(Math.max(1, r.milestoneCount)), { compact: true })}</dd></div>
-      </dl>
-      <div className="mt-5 text-ink">
-        <NetworkGuard purpose="Opening the facility is a transaction from your exporter wallet.">
+      <KeyValue
+        layout="grid"
+        columns={4}
+        className="mt-5 rounded-tile bg-surface-sunken p-4"
+        items={[
+          { label: "Financier", value: <PartyLink address={offer.financier} /> },
+          { label: "Facility", value: `${formatUSDG(r.amount)} USDG`, numeric: true },
+          { label: "Fee", value: `${pct(offer.feeBps)}, ${formatUSDG(fee)} USDG`, numeric: true },
+          { label: "Tranches", value: `${r.milestoneCount} of about ${formatUSDG(BigInt(r.amount) / BigInt(Math.max(1, r.milestoneCount)), { compact: true })} USDG`, numeric: true },
+        ]}
+      />
+      <div className="mt-5">
+        <NetworkGuard compact purpose="Opening the facility is a transaction from your exporter wallet.">
           {paused.controller && <PausedBanner className="mb-3" />}
           <div className="flex flex-wrap items-center gap-3">
             <Button
@@ -288,58 +300,47 @@ function CreateFacility({ request: r, offer, view }: { request: MarketRequest; o
             >
               Create facility
             </Button>
-            {hash && <HashBadge value={hash} kind="tx" onDark />}
+            {hash && <CopyField value={hash} kind="tx" size="sm" label="Transaction" />}
           </div>
         </NetworkGuard>
       </div>
-      {planError && <p role="alert" className="mt-3 text-sm font-medium text-[#FFB4B6]">{planError}</p>}
+      {planError && <Callout variant="danger" live="assertive" className="mt-3">{planError}</Callout>}
     </StepCard>
   );
 }
 
 // ------------------------------------------------------------------------------------------------ offers
 
+type RankedOffer = Offer & { rank: number };
+
 function Offers({ request: r, role }: { request: MarketRequest; role: Role }) {
-  const ranked = rankOffers(r.offers);
+  const ranked: RankedOffer[] = rankOffers(r.offers).map((o, i) => ({ ...o, rank: i + 1 }));
   const [accepting, setAccepting] = useState<Offer | null>(null);
   const canAccept = role === "exporter" && r.status === "open";
+  const fee = (o: Offer) => (BigInt(r.amount) * BigInt(o.feeBps)) / 10_000n;
+  const columns: Column<RankedOffer>[] = [
+    { key: "rank", header: "Rank", width: "4rem", cell: (o) => <span className={o.rank === 1 ? "num grid h-7 w-7 place-items-center rounded-full bg-signal text-sm font-semibold text-ink" : "num grid h-7 w-7 place-items-center rounded-full bg-ink/6 text-sm font-semibold text-text-muted"}>{o.rank}</span> },
+    { key: "financier", header: "Financier", primary: true, cell: (o) => <PartyLink address={o.financier} /> },
+    { key: "fee", header: "Fee", numeric: true, cell: (o) => <span className="font-semibold text-ink">{pct(o.feeBps)}</span> },
+    { key: "full", header: "At full draw", numeric: true, cell: (o) => <>{formatUSDG(fee(o))} <span className="text-text-muted">USDG</span></> },
+    { key: "age", header: "Offered", cell: (o) => <time dateTime={o.createdAt} className="text-text-muted">{age(o.createdAt)}</time> },
+    {
+      key: "act",
+      header: <span className="sr-only">Action</span>,
+      align: "right",
+      cardLabel: "Action",
+      cell: (o) => (o.accepted ? <Badge variant="success" dot>Accepted</Badge> : canAccept ? <Button size="xs" variant={o.rank === 1 ? "primary" : "secondary"} onClick={() => setAccepting(o)}>Accept</Button> : null),
+    },
+  ];
   return (
-    <Card>
-      <CardHeader title={`Offers (${ranked.length})`}>
-        <span className="text-sm text-slate">Ranked by fee, cheapest first</span>
-      </CardHeader>
+    <Card padded={false} className="overflow-hidden">
+      <div className="px-4 pt-4 md:px-6 md:pt-6">
+        <CardHeader title={`Offers (${ranked.length})`} description="Ranked by fee, cheapest first." />
+      </div>
       {ranked.length === 0 ? (
-        <p className="rounded-2xl bg-mist px-4 py-6 text-center text-slate">No offers yet. Financiers see this request in the market.</p>
+        <EmptyState frame="plain" size="sm" title="No offers yet" description="Financiers see this request in the market and offer a fee with a signed message." className="pt-2" />
       ) : (
-        <ol className="flex flex-col gap-2">
-          {ranked.map((o, i) => {
-            const fee = (BigInt(r.amount) * BigInt(o.feeBps)) / 10_000n;
-            return (
-              <li
-                key={o.id}
-                className={cx(
-                  "grid grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 rounded-2xl border px-4 py-3 sm:grid-cols-[2rem_minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,0.8fr)_7rem]",
-                  o.accepted ? "border-verified/50 bg-verified/8" : i === 0 ? "border-ink/25 bg-white" : "border-line bg-white",
-                )}
-              >
-                <span className={cx("grid h-8 w-8 place-items-center rounded-full font-display text-sm font-bold", i === 0 ? "bg-signal text-ink" : "bg-ink/6 text-slate")}>{i + 1}</span>
-                <PartyLink address={o.financier} />
-                <div className="col-start-2 text-sm sm:col-start-auto">
-                  <span className="font-display text-lg font-bold tabular">{pct(o.feeBps)}</span>
-                  <span className="ml-2 text-slate">{formatUSDG(fee)} USDG</span>
-                </div>
-                <time dateTime={o.createdAt} className="col-start-2 text-sm text-slate sm:col-start-auto">{age(o.createdAt)}</time>
-                <div className="col-start-3 row-span-2 row-start-1 justify-self-end sm:col-start-auto sm:row-span-1 sm:row-start-auto">
-                  {o.accepted ? (
-                    <Pill tone="verified" dot>Accepted</Pill>
-                  ) : canAccept ? (
-                    <Button size="sm" variant={i === 0 ? "primary" : "secondary"} onClick={() => setAccepting(o)}>Accept</Button>
-                  ) : null}
-                </div>
-              </li>
-            );
-          })}
-        </ol>
+        <DataTable caption="Offers on this request" columns={columns} rows={ranked} rowKey={(o) => o.id} className="max-sm:px-4 max-sm:pb-4" />
       )}
       {accepting && <AcceptModal request={r} offer={accepting} onClose={() => setAccepting(null)} />}
     </Card>
@@ -350,26 +351,36 @@ function AcceptModal({ request: r, offer, onClose }: { request: MarketRequest; o
   const { run, busy, error } = useSigned();
   const fee = (BigInt(r.amount) * BigInt(offer.feeBps)) / 10_000n;
   return (
-    <Modal open onClose={onClose} title={`Accept ${pct(offer.feeBps)}?`} description="Accepting closes the request to other offers. You then open the facility on chain naming this financier.">
-      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 rounded-2xl bg-ink/4 p-4 text-sm">
-        <dt className="text-slate">Financier</dt><dd><PartyLink address={offer.financier} /></dd>
-        <dt className="text-slate">Facility</dt><dd className="font-mono font-semibold">{formatUSDG(r.amount)} USDG in {r.milestoneCount}</dd>
-        <dt className="text-slate">Fee at full draw</dt><dd className="font-mono font-semibold">{formatUSDG(fee)} USDG</dd>
-      </dl>
-      {error && <p role="alert" className="mt-3 text-sm font-medium text-danger">{error}</p>}
-      <p className="mt-4 text-sm text-slate">Your wallet signs a message naming this request and offer. Signing costs no gas.</p>
-      <div className="mt-4 flex flex-wrap gap-2">
-        <Button
-          loading={busy !== null}
-          onClick={async () => {
-            const ok = await run((t) => acceptMessage(r.id, offer.id, t), (t, signature) => postAccept(r.id, { offerId: offer.id, issuedAt: t, signature }), "The offer could not be accepted.");
-            if (ok !== undefined) onClose();
-          }}
-        >
-          {busy === "sign" ? "Waiting for your signature…" : busy === "send" ? "Accepting…" : "Sign and accept"}
-        </Button>
-        <Button variant="ghost" onClick={onClose}>Cancel</Button>
-      </div>
+    <Modal
+      open
+      onClose={onClose}
+      title={`Accept ${pct(offer.feeBps)}?`}
+      description="Accepting closes the request to other offers. You then open the facility on chain naming this financier."
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button
+            loading={busy !== null}
+            onClick={async () => {
+              const ok = await run((t) => acceptMessage(r.id, offer.id, t), (t, signature) => postAccept(r.id, { offerId: offer.id, issuedAt: t, signature }), "The offer could not be accepted.");
+              if (ok !== undefined) onClose();
+            }}
+          >
+            {busy === "sign" ? "Waiting for your signature…" : busy === "send" ? "Accepting…" : "Sign and accept"}
+          </Button>
+        </>
+      }
+    >
+      <KeyValue
+        className="rounded-tile bg-surface-sunken px-4 py-1"
+        items={[
+          { label: "Financier", value: <PartyLink address={offer.financier} /> },
+          { label: "Facility", value: `${formatUSDG(r.amount)} USDG in ${r.milestoneCount} tranches`, numeric: true },
+          { label: "Fee at full draw", value: `${formatUSDG(fee)} USDG`, numeric: true },
+        ]}
+      />
+      {error && <Callout variant="danger" live="assertive" className="mt-3">{error}</Callout>}
+      <p className="mt-4 text-small text-text-muted">Your wallet signs a message naming this request and offer. Signing costs no gas.</p>
     </Modal>
   );
 }
@@ -378,28 +389,25 @@ function AcceptModal({ request: r, offer, onClose }: { request: MarketRequest; o
 
 function ShipmentSummary({ request: r, view }: { request: MarketRequest; view: ShipmentView | undefined }) {
   const p = view?.shipment.policy ?? r.policy;
-  const rows: [string, React.ReactNode][] = [
-    ["Buyer", <PartyLink key="b" address={r.buyer} />],
-    ["Shipment id", <HashBadge key="id" value={r.shipmentId} compact />],
-    ["Temperature", p.minTempX100 !== undefined && p.maxTempX100 !== undefined ? `${formatTempX100(p.minTempX100)} to ${formatTempX100(p.maxTempX100)}` : "–"],
-    ["Evidence score", p.minEvidenceScore !== undefined ? `${p.minEvidenceScore} / 100 to release` : "–"],
-    ["Route deviation", p.maxRouteDeviationM !== undefined ? `${(p.maxRouteDeviationM / 1000).toLocaleString("en-US")} km allowed` : "–"],
-    ["Probes", p.minSensors !== undefined ? `at least ${p.minSensors}` : "–"],
-  ];
   return (
     <Card>
       <CardHeader title="The shipment">
-        {view?.facility ? <StatusPill status={view.facility.status} /> : <Pill tone="slate">No facility yet</Pill>}
+        {view?.facility ? <StatusPill status={view.facility.status} /> : <Badge variant="neutral">No facility yet</Badge>}
       </CardHeader>
-      <dl className="flex flex-col divide-y divide-line text-sm">
-        {rows.map(([k, v]) => (
-          <div key={k} className="flex items-center justify-between gap-4 py-2.5">
-            <dt className="text-slate">{k}</dt>
-            <dd className="text-right font-medium">{v}</dd>
-          </div>
-        ))}
-      </dl>
-      <p className="mt-4 text-sm text-slate">The policy is hashed on chain and frozen. Every tranche is released by the contract only on evidence that meets it.</p>
+      <div className="flex flex-col gap-2">
+        <CopyField value={r.shipmentId} label="Shipment" kind="hash" className="w-full" />
+        <span className="inline-flex items-center gap-2 text-small text-text-muted">Buyer <PartyLink address={r.buyer} /></span>
+      </div>
+      <KeyValue
+        className="mt-3"
+        items={[
+          { label: "Temperature", value: p.minTempX100 !== undefined && p.maxTempX100 !== undefined ? `${formatTempX100(p.minTempX100)} to ${formatTempX100(p.maxTempX100)}` : "–", numeric: true },
+          { label: "Evidence score", value: p.minEvidenceScore !== undefined ? `${p.minEvidenceScore} / 100` : "–", hint: "to release a tranche", numeric: true },
+          { label: "Route deviation", value: p.maxRouteDeviationM !== undefined ? `${(p.maxRouteDeviationM / 1000).toLocaleString("en-US")} km` : "–", numeric: true },
+          { label: "Sensors", value: p.minSensors !== undefined ? `at least ${p.minSensors}` : "–" },
+        ]}
+      />
+      <p className="mt-4 text-small text-text-muted">The policy is hashed on chain and frozen. Every tranche is released by the contract only on evidence that meets it.</p>
       <LinkButton href={`/track/${r.shipmentId}`} variant="secondary" size="sm" className="mt-4 w-full">Open the shipment dashboard</LinkButton>
     </Card>
   );

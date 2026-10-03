@@ -89,13 +89,13 @@ export function AddGatewayModal({ open, onClose, shipment, onCreated }: Props) {
           <p className="text-sm">
             <strong>{created.source.label || "The gateway"}</strong> can now report for {shipment.externalRef}. Its key file was saved to your downloads.
           </p>
-          <div className="rounded-2xl border-2 border-alert/60 bg-alert/10 p-4 text-sm">
+          <div className="rounded-tile border-2 border-alert/60 bg-alert/10 p-4 text-sm">
             Keep the key file private. Anyone holding it can submit readings for this shipment, and CargoFlow cannot show it again. If it is lost, add a new gateway.
           </div>
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-            <dt className="text-slate">Gateway id</dt>
+            <dt className="text-text-muted">Gateway id</dt>
             <dd><HashBadge value={created.source.id} /></dd>
-            <dt className="text-slate">Sensors</dt>
+            <dt className="text-text-muted">Sensors</dt>
             <dd className="font-mono">{created.source.sensorIds.join(", ")}</dd>
           </dl>
           <div className="flex flex-wrap gap-2">
@@ -128,9 +128,9 @@ export function AddGatewayModal({ open, onClose, shipment, onCreated }: Props) {
             error={sensorText.trim() === "" ? null : sensorError}
             hint={`Exactly as they appear in your logger's export, separated by commas. Each evidence epoch needs readings from at least ${minSensors} sensor${minSensors > 1 ? "s" : ""}.`}
           />
-          {!isExporter && <p className="text-sm font-medium text-danger">Connect the exporter&apos;s wallet ({shipment.exporter.slice(0, 8)}…) to add a gateway.</p>}
-          {error && <p role="alert" className="text-sm font-medium text-danger">{error}</p>}
-          <p className="text-sm text-slate">Your wallet will ask you to sign a message naming this shipment, the gateway&apos;s public key and its sensors. Signing costs no gas.</p>
+          {!isExporter && <p className="text-sm font-medium text-danger-fg">Connect the exporter&apos;s wallet ({shipment.exporter.slice(0, 8)}…) to add a gateway.</p>}
+          {error && <p role="alert" className="text-sm font-medium text-danger-fg">{error}</p>}
+          <p className="text-sm text-text-muted">Your wallet will ask you to sign a message naming this shipment, the gateway&apos;s public key and its sensors. Signing costs no gas.</p>
           <Button type="submit" loading={busy !== null} disabled={!isExporter || !!sensorError}>
             {busy === "sign" ? "Waiting for your signature…" : busy === "register" ? "Registering…" : "Sign and add gateway"}
           </Button>

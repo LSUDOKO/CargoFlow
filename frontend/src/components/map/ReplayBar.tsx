@@ -12,9 +12,9 @@ const temp = (x100: number) => `${(x100 / 100).toFixed(1)}°`;
 
 const COLOR: Record<TempClass, string> = { in: MAP_COLORS.tempIn, near: MAP_COLORS.tempNear, out: MAP_COLORS.tempOut };
 const CHIP: Record<TempClass, string> = {
-  in: "bg-[#2563EB]/10 text-[#1D4ED8]",
-  near: "bg-[#E08A00]/15 text-[#8A5300]",
-  out: "bg-[#D92D20]/10 text-[#B42318]",
+  in: "bg-info-bg text-info-fg",
+  near: "bg-warning-bg text-warning-fg",
+  out: "bg-danger-bg text-danger-fg",
 };
 const CLASS_TEXT: Record<TempClass, string> = { in: "In band", near: "Near limit", out: "Out of band" };
 
@@ -136,12 +136,12 @@ export function ReplayBar({ points, index, onChange, band = null }: { points: Sc
           <div className="px-2">
             <Sparkline points={points} band={band} index={index} onPick={(i) => { setPlaying(false); onChange(i); }} />
           </div>
-          <div className="mt-0.5 flex justify-between px-2 font-mono text-[10px] text-slate" aria-hidden="true">
+          <div className="mt-0.5 flex justify-between px-2 font-mono text-overline text-text-muted" aria-hidden="true">
             <span>{day(points[0]!.startTime)}</span>
             {band && (
-              <span className={excursions ? "font-semibold text-[#B42318]" : ""}>
+              <span className={excursions ? "font-semibold text-danger-fg" : ""}>
                 {excursions ? `${excursions} out of band` : "all in band"}
-                <span className="hidden font-normal text-slate sm:inline"> · band {temp(band.minX100)} to {temp(band.maxX100)}C</span>
+                <span className="hidden font-normal text-text-muted sm:inline"> · band {temp(band.minX100)} to {temp(band.maxX100)}C</span>
               </span>
             )}
             <span>{day(points[last]!.endTime)}</span>
@@ -159,28 +159,28 @@ export function ReplayBar({ points, index, onChange, band = null }: { points: Sc
       </div>
       <dl className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs sm:grid-cols-4" aria-live="polite">
         <div className="min-w-0">
-          <dt className="truncate text-slate">Batch {p.sequence}{p.milestoneIndex !== 255 ? ` · milestone ${p.milestoneIndex + 1}` : ""}</dt>
+          <dt className="truncate text-text-muted">Batch {p.sequence}{p.milestoneIndex !== 255 ? ` · milestone ${p.milestoneIndex + 1}` : ""}</dt>
           <dd className="truncate font-mono">{when(p.endTime)}</dd>
         </div>
         <div className="min-w-0 sm:order-3">
-          <dt className="text-slate">Position</dt>
+          <dt className="text-text-muted">Position</dt>
           <dd className="truncate font-mono">{formatLatLon([p.lon, p.lat], 1)}</dd>
         </div>
         <div className="min-w-0 sm:order-2">
-          <dt className="text-slate">Temperature</dt>
+          <dt className="text-text-muted">Temperature</dt>
           <dd className="flex flex-wrap items-center gap-1.5 font-mono whitespace-nowrap">
             {temp(p.minTempX100)} to {temp(p.maxTempX100)}C
-            {band && <span className={`rounded-full px-1.5 font-sans text-[10.5px] font-semibold ${CHIP[cls]}`}>{CLASS_TEXT[cls]}</span>}
+            {band && <span className={`rounded-full px-1.5 font-sans text-overline font-semibold ${CHIP[cls]}`}>{CLASS_TEXT[cls]}</span>}
           </dd>
         </div>
         <div className="min-w-0 sm:order-4 sm:text-right">
-          <dt className="text-slate">Policy check</dt>
+          <dt className="text-text-muted">Policy check</dt>
           <dd>
-            <span className={`inline-flex items-center gap-1.5 font-semibold ${p.pass ? "text-[#00733E]" : "text-[#B42318]"}`}>
+            <span className={`inline-flex items-center gap-1.5 font-semibold ${p.pass ? "text-success-fg" : "text-danger-fg"}`}>
               <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${p.pass ? "bg-verified" : "bg-danger"}`} />
               {p.pass ? "Passed" : "Failed"}
             </span>
-            <span className="ml-1.5 text-[11px] text-slate">{p.committed ? "on chain" : "not yet on chain"}</span>
+            <span className="ml-1.5 text-overline text-text-muted">{p.committed ? "on chain" : "not yet on chain"}</span>
           </dd>
         </div>
       </dl>

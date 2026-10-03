@@ -4,51 +4,43 @@ import { useQueries } from "@tanstack/react-query";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useAccount } from "wagmi";
+import { Callout } from "@/components/ui/Banner";
 import { Button, LinkButton, buttonClass } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { cx } from "@/components/ui/cx";
-import { HashBadge } from "@/components/ui/HashBadge";
+import { DataTable, type Column } from "@/components/ui/DataTable";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Field, Select } from "@/components/ui/Field";
 import { StatusPill } from "@/components/ui/Pill";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { PageHeader } from "@/components/ui/Section";
+import { Stat } from "@/components/ui/Stat";
 import { Tabs } from "@/components/ui/Tabs";
 import { apiGet } from "@/lib/api/client";
 import { useFleetPages } from "@/lib/api/hooks";
 import { EpochList, ShipmentView } from "@/lib/api/schemas";
 import { filterFleet, tabCounts, type FleetRow, type FleetSort, type FleetTab } from "@/lib/fleet";
-import { formatUSDG } from "@/lib/format";
+import { formatUSDG, shortHash } from "@/lib/format";
 import { useHydrated } from "@/lib/useHydrated";
 import { ContainerDrawer } from "./ContainerDrawer";
 import { Sparkline } from "./Sparkline";
 
-// rows are separated tables cells, so the border lives on the cells and the row hover darkens all of them at once
-const rowClass = "group cursor-pointer";
-const cell = "border-y border-line bg-white transition-colors group-hover:border-ink";
+const searchIcon = (
+  <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
+    <circle cx="7" cy="7" r="4.5" />
+    <path d="m10.5 10.5 3 3" />
+  </svg>
+);
+const boxIcon = (
+  <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true">
+    <path d="M3.5 8 12 3.5 20.5 8v8L12 20.5 3.5 16z" />
+    <path d="M3.5 8 12 12.5 20.5 8M12 12.5v8" />
+  </svg>
+);
 
-/** Placeholder rows shaped like the real ones: reference and id, status, capital, evidence sparkline, link. */
-function FleetSkeleton() {
-  return (
-    <div role="status" aria-label="Loading the fleet">
-      <div className="hidden flex-col gap-2 pt-9 md:flex">
-        {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="grid h-[4.75rem] grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,1.6fr)_auto] items-center gap-4 rounded-[var(--radius-tile)] border border-line bg-white px-5">
-            <div className="flex flex-col gap-2"><Skeleton className="h-4 w-48" /><Skeleton className="h-5 w-24 rounded-md" /></div>
-            <Skeleton className="h-6 w-20 rounded-full" />
-            <Skeleton className="h-4 w-20" />
-            <div className="flex items-center gap-3"><Skeleton className="h-5 w-24" /><Skeleton className="h-4 w-8" /></div>
-            <Skeleton className="h-4 w-20" />
-          </div>
-        ))}
-      </div>
-      <div className="flex flex-col gap-3 md:hidden">
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="rounded-[var(--radius-tile)] border border-line bg-white p-4">
-            <div className="flex items-center justify-between gap-3"><Skeleton className="h-4 w-40" /><Skeleton className="h-6 w-20 rounded-full" /></div>
-            <div className="mt-4 flex items-center justify-between"><Skeleton className="h-4 w-24" /><Skeleton className="h-5 w-24" /></div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+const created = (iso: string) => {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? "–" : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+};
 
 export function FleetView() {
   const { data, isPending, isError, error, refetch, isFetching, fetchNextPage, hasNextPage, isFetchingNextPage } = useFleetPages();
@@ -72,6 +64,7 @@ export function FleetView() {
     };
   });
   const scoreSeries = new Map(shipments.map((s, i) => [s.id, (epochs[i]?.data?.epochs ?? []).filter((e) => e.milestoneIndex !== 255).map((e) => e.score)]));
+  const threshold = new Map(shipments.map((s) => [s.id, s.policy?.minEvidenceScore ?? 75]));
   const shown = filterFleet(rows, { tab, q, sort, dir, mine: mineOnly && address ? address : undefined });
   const counts = tabCounts(rows);
   const tabs = [
@@ -81,128 +74,164 @@ export function FleetView() {
     { id: "all", label: "All", count: counts.all },
   ];
 
+  // fleet-wide figures for the stat row
+  const totals = rows.reduce((t, r) => ({ drawn: t.drawn + BigInt(r.drawn || "0"), committed: t.committed + BigInt(r.committed || "0") }), { drawn: 0n, committed: 0n });
+  const scores = rows.map((r) => r.score).filter((s): s is number => s !== undefined);
+  const avg = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : null;
+  const viewsLoading = views.some((v) => v.isPending);
+  const clear = () => { setQ(""); setTab("all"); setMineOnly(false); };
+
+  const columns: Column<FleetRow>[] = [
+    {
+      key: "ref",
+      header: "Shipment",
+      primary: true,
+      cell: (r) => (
+        <span className="flex min-w-0 flex-col">
+          <button type="button" data-open-row onClick={() => setOpen(r.id)} className="w-fit max-w-full truncate text-left font-semibold text-ink underline-offset-2 hover:underline">
+            {r.ref}
+          </button>
+          <span className="font-mono text-caption text-text-muted">{shortHash(r.id)}</span>
+        </span>
+      ),
+    },
+    { key: "status", header: "Status", cell: (r) => <StatusPill status={r.status} /> },
+    {
+      key: "drawn",
+      header: "Capital drawn",
+      numeric: true,
+      cell: (r) =>
+        r.committed !== "0" ? (
+          <span>
+            <span className="font-semibold text-ink">{formatUSDG(r.drawn)}</span>
+            <span className="text-text-muted"> / {formatUSDG(r.committed)} USDG</span>
+          </span>
+        ) : (
+          <span className="text-text-muted">No facility</span>
+        ),
+    },
+    {
+      key: "score",
+      header: "Evidence score",
+      cardLabel: "Evidence",
+      cell: (r) => (
+        <span className="inline-flex items-center gap-3">
+          <Sparkline values={scoreSeries.get(r.id) ?? []} threshold={threshold.get(r.id)} />
+          {r.score !== undefined && <span className="num w-7 text-right font-semibold">{r.score}</span>}
+        </span>
+      ),
+    },
+    { key: "created", header: "Registered", hideOnCard: true, cell: (r) => <span className="num whitespace-nowrap text-text-muted">{created(r.created)}</span> },
+    {
+      key: "go",
+      header: <span className="sr-only">Dashboard</span>,
+      align: "right",
+      hideOnCard: true,
+      width: "7.5rem",
+      cell: (r) => (
+        <Link href={`/track/${r.id}`} className={buttonClass("ghost", "xs")} aria-label={`Open the dashboard of ${r.ref}`}>
+          Dashboard
+        </Link>
+      ),
+    },
+  ];
+
   return (
-    <div className="container-page py-10">
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="font-display text-[clamp(2.2rem,5vw,3.6rem)] leading-none font-bold tracking-[-0.04em]">Fleet</h1>
-          <p className="lede mt-3 text-slate">Every financed shipment, its evidence and the capital it has unlocked.</p>
-        </div>
-        <LinkButton href="/exporter">Finance a new shipment</LinkButton>
-      </div>
+    <div className="container-page py-(--space-page-y)">
+      <PageHeader
+        title="Fleet"
+        description="Every financed shipment, its evidence and the capital it has unlocked."
+        actions={<LinkButton href="/exporter">Finance a new shipment</LinkButton>}
+      />
 
-      <div className="sticky top-[4.5rem] z-30 -mx-4 mt-8 flex flex-col gap-3 bg-paper/90 px-4 py-3 backdrop-blur-md md:mx-0 md:flex-row md:items-center md:justify-between md:rounded-2xl md:px-0">
-        <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden">
-          <Tabs label="Filter by status" tabs={tabs} value={tab} onChange={(t) => setTab(t as FleetTab)} />
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <label htmlFor="fleet-q" className="sr-only">Search shipments</label>
-          <input
-            id="fleet-q"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search reference or id"
-            className="h-11 w-full rounded-full border-2 border-line bg-white px-4 text-sm transition-colors outline-none focus:border-ink sm:w-60"
-          />
-          <label htmlFor="fleet-sort" className="sr-only">Sort by</label>
-          <select
-            id="fleet-sort"
-            value={`${sort}:${dir}`}
-            onChange={(e) => { const [s, d] = e.target.value.split(":"); setSort(s as FleetSort); setDir(d as "asc" | "desc"); }}
-            className="h-11 rounded-full border-2 border-line bg-white px-4 text-sm font-semibold transition-colors outline-none focus:border-ink"
-          >
-            <option value="created:desc">Newest first</option>
-            <option value="created:asc">Oldest first</option>
-            <option value="drawn:desc">Most capital drawn</option>
-            <option value="score:asc">Weakest evidence</option>
-            <option value="score:desc">Strongest evidence</option>
-            <option value="status:asc">Status</option>
-          </select>
-          {hydrated && address && (
-            <button
-              type="button"
-              aria-pressed={mineOnly}
-              onClick={() => setMineOnly((m) => !m)}
-              className={cx("h-11 rounded-full border-2 px-4 text-sm font-semibold whitespace-nowrap transition-colors", mineOnly ? "border-ink bg-ink text-paper" : "border-line bg-white hover:border-ink")}
+      <div className="flex flex-col gap-6">
+        {!isError && (isPending || rows.length > 0) && (
+          <section aria-label="Fleet summary" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <Stat label="In transit" value={counts.active} loading={isPending} hint="Facilities releasing on evidence" />
+            <Stat label="Paused or disputed" value={counts.paused} loading={isPending} hint={counts.paused ? "Waiting on proof or the arbiter" : "Nothing held right now"} />
+            <Stat label="Capital drawn" value={formatUSDG(totals.drawn, { compact: true })} unit="USDG" loading={isPending || viewsLoading} hint={`of ${formatUSDG(totals.committed, { compact: true })} USDG committed`} />
+            <Stat label="Average evidence" value={avg === null ? "–" : avg.toFixed(0)} unit={avg === null ? undefined : "/ 100"} loading={isPending || viewsLoading} hint={scores.length ? `Latest batch, ${scores.length} shipment${scores.length === 1 ? "" : "s"}` : "No batches scored yet"} />
+          </section>
+        )}
+
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <Tabs label="Filter by status" tabs={tabs} value={tab} onChange={(t) => setTab(t as FleetTab)} controls={false} className="lg:w-auto" />
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:flex sm:flex-wrap sm:items-center">
+            <Field label="Search shipments" hideLabel value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search reference or id" prefix={searchIcon} type="search" className="col-span-2 sm:w-64" />
+            <Select
+              label="Sort by"
+              hideLabel
+              value={`${sort}:${dir}`}
+              onChange={(e) => { const [s, d] = e.target.value.split(":"); setSort(s as FleetSort); setDir(d as "asc" | "desc"); }}
+              className="min-w-0 sm:w-52"
             >
-              My shipments
-            </button>
-          )}
+              <option value="created:desc">Newest first</option>
+              <option value="created:asc">Oldest first</option>
+              <option value="drawn:desc">Most capital drawn</option>
+              <option value="score:asc">Weakest evidence</option>
+              <option value="score:desc">Strongest evidence</option>
+              <option value="status:asc">Status</option>
+            </Select>
+            {hydrated && address && (
+              <button
+                type="button"
+                aria-pressed={mineOnly}
+                onClick={() => setMineOnly((m) => !m)}
+                className={cx(
+                  "h-11 rounded-control border px-4 text-sm font-semibold whitespace-nowrap shadow-1 transition-colors duration-(--duration-fast)",
+                  mineOnly ? "border-ink bg-ink text-paper" : "border-border-strong bg-surface hover:border-neutral-400",
+                )}
+              >
+                My shipments
+              </button>
+            )}
+          </div>
         </div>
-      </div>
 
-      <div id={`panel-${tab}`} role="tabpanel" aria-labelledby={`tab-${tab}`} className="mt-4">
         {isError ? (
-          <div className="rounded-[var(--radius-card)] border border-line bg-white p-10 text-center">
-            <p className="font-display text-xl font-semibold">The fleet could not be loaded</p>
-            <p className="mt-2 text-slate">{error.message}</p>
-            <Button className="mt-5" variant="secondary" onClick={() => refetch()} loading={isFetching}>Try again</Button>
-          </div>
-        ) : isPending ? (
-          <FleetSkeleton />
-        ) : shown.length === 0 ? (
-          <div className="rounded-[var(--radius-card)] border border-dashed border-ink/25 p-12 text-center">
-            <p className="font-display text-2xl font-semibold">{rows.length === 0 ? "No shipments yet" : "Nothing matches these filters"}</p>
-            <p className="mx-auto mt-2 max-w-md text-slate">
-              {rows.length === 0 ? "Exporters register shipments and open facilities in the exporter portal; they appear here as soon as they are on chain." : "Try another tab or clear the search."}
-            </p>
-            <div className="mt-6 flex justify-center gap-2">
-              {rows.length === 0 ? (
-                <LinkButton href="/exporter" variant="secondary">Open the exporter portal</LinkButton>
-              ) : (
-                <Button variant="secondary" onClick={() => { setQ(""); setTab("all"); setMineOnly(false); }}>Clear filters</Button>
-              )}
-            </div>
-          </div>
+          <Callout variant="danger" title="The fleet could not be loaded" action={<Button variant="secondary" size="sm" onClick={() => refetch()} loading={isFetching}>Try again</Button>}>
+            {error.message}
+          </Callout>
+        ) : !isPending && shown.length === 0 ? (
+          rows.length === 0 ? (
+            <EmptyState
+              icon={boxIcon}
+              title="No shipments yet"
+              description="Exporters register shipments and open facilities in the exporter portal; they appear here as soon as they are on chain."
+              action={<LinkButton href="/exporter" variant="secondary">Open the exporter portal</LinkButton>}
+            />
+          ) : (
+            <EmptyState
+              icon={searchIcon}
+              title="Nothing matches these filters"
+              description="Try another tab, or clear the search to see the whole fleet."
+              action={<Button variant="secondary" onClick={clear}>Clear filters</Button>}
+            />
+          )
         ) : (
           <>
-            <table className="hidden w-full border-separate border-spacing-y-2 text-left md:table">
-              <thead>
-                <tr className="text-sm text-slate">
-                  <th className="px-5 font-semibold">Shipment</th>
-                  <th className="font-semibold">Status</th>
-                  <th className="font-semibold">Capital drawn</th>
-                  <th className="font-semibold">Evidence</th>
-                  <th className="pr-5 text-right font-semibold"><span className="sr-only">Actions</span></th>
-                </tr>
-              </thead>
-              <tbody>
-                {shown.map((r) => (
-                  <tr key={r.id} className={rowClass} onClick={() => setOpen(r.id)}>
-                    <td className={cx(cell, "rounded-l-[var(--radius-tile)] border-l px-5 py-4")}>
-                      <button type="button" onClick={(e) => { e.stopPropagation(); setOpen(r.id); }} className="text-left font-semibold hover:underline">{r.ref}</button>
-                      <div className="mt-1"><HashBadge value={r.id} compact /></div>
-                    </td>
-                    <td className={cell}><StatusPill status={r.status} /></td>
-                    <td className={cx(cell, "font-mono text-sm")}>
-                      {r.committed !== "0" ? <>{formatUSDG(r.drawn)} <span className="text-slate">/ {formatUSDG(r.committed)}</span></> : <span className="font-sans text-slate">No facility</span>}
-                    </td>
-                    <td className={cell}><div className="flex items-center gap-3"><Sparkline values={scoreSeries.get(r.id) ?? []} /><span className="font-mono text-sm font-semibold">{r.score ?? "–"}</span></div></td>
-                    <td className={cx(cell, "rounded-r-[var(--radius-tile)] border-r pr-4 text-right")}>
-                      <Link href={`/track/${r.id}`} onClick={(e) => e.stopPropagation()} className={buttonClass("ghost", "sm")}>Dashboard</Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <ul className="flex flex-col gap-3 md:hidden">
-              {shown.map((r) => (
-                <li key={r.id}>
-                  <button type="button" onClick={() => setOpen(r.id)} className="w-full rounded-[var(--radius-tile)] border border-line bg-white p-4 text-left transition-colors hover:border-ink">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="truncate font-semibold">{r.ref}</span>
-                      <StatusPill status={r.status} />
-                    </div>
-                    <div className="mt-3 flex items-center justify-between">
-                      <span className="font-mono text-sm">{formatUSDG(r.drawn)} / {formatUSDG(r.committed)}</span>
-                      <Sparkline values={scoreSeries.get(r.id) ?? []} />
-                    </div>
-                  </button>
-                </li>
-              ))}
-            </ul>
+            {/* a row opens the container drawer; the reference button inside it is the keyboard target */}
+            <div
+              className="[&_tbody_tr]:cursor-pointer"
+              onClick={(e) => {
+                const t = e.target as HTMLElement;
+                if (t.closest("a, button, input, select")) return;
+                t.closest("tr, li")?.querySelector<HTMLButtonElement>("[data-open-row]")?.click();
+              }}
+            >
+              <Card padded={false} className="overflow-hidden max-sm:border-0 max-sm:bg-transparent max-sm:shadow-none">
+                <DataTable
+                  caption="Shipments in the fleet"
+                  columns={columns}
+                  rows={shown}
+                  rowKey={(r) => r.id}
+                  loading={isPending}
+                  loadingRows={4}
+                />
+              </Card>
+            </div>
             {hasNextPage && (
-              <div className="mt-6 text-center">
+              <div className="text-center">
                 <Button variant="secondary" loading={isFetchingNextPage} onClick={() => fetchNextPage()}>Load more</Button>
               </div>
             )}

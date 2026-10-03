@@ -28,7 +28,7 @@ export function RoleActions({ view, epochs }: { view: ShipmentView; epochs: Epoc
   if (!isConnected) {
     return (
       <div className="flex flex-wrap items-center gap-3">
-        <p className="text-sm text-slate">Connect as the exporter, financier or buyer to act on this shipment.</p>
+        <p className="text-sm text-text-muted">Connect as the exporter, financier or buyer to act on this shipment.</p>
         <WalletButton compact />
       </div>
     );
@@ -38,8 +38,8 @@ export function RoleActions({ view, epochs }: { view: ShipmentView; epochs: Epoc
     same(address, f?.financier) && "financier",
     same(address, f?.buyer ?? view.shipment.buyer) && "buyer",
   ].filter(Boolean) as string[];
-  if (!f || !contracts) return <p className="text-sm text-slate">No facility yet. The exporter opens one from the exporter portal.</p>;
-  if (roles.length === 0) return <p className="text-sm text-slate">This wallet is not a party to the shipment; you can follow it read-only.</p>;
+  if (!f || !contracts) return <p className="text-sm text-text-muted">No facility yet. The exporter opens one from the exporter portal.</p>;
+  if (roles.length === 0) return <p className="text-sm text-text-muted">This wallet is not a party to the shipment; you can follow it read-only.</p>;
 
   const actions: React.ReactNode[] = [];
   const next = f.nextMilestone;
@@ -88,8 +88,8 @@ export function RoleActions({ view, epochs }: { view: ShipmentView; epochs: Epoc
   }
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-sm text-slate">You are the {roles.join(" and ")} on this shipment.</p>
-      {actions.length ? <div className="flex flex-wrap items-start gap-2">{actions}</div> : <p className="text-sm text-slate">Nothing for you to do right now. This page updates as the shipment moves.</p>}
+      <p className="text-sm text-text-muted">You are the {roles.join(" and ")} on this shipment.</p>
+      {actions.length ? <div className="flex flex-wrap items-start gap-2">{actions}</div> : <p className="text-sm text-text-muted">Nothing for you to do right now. This page updates as the shipment moves.</p>}
     </div>
   );
 }

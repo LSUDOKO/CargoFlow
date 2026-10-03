@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { UseWithClaude } from "@/components/developers/UseWithClaude";
+import { LinkButton } from "@/components/ui/Button";
 import { CodeBlock } from "@/components/ui/CodeBlock";
+import { PageHeader, SectionHeader } from "@/components/ui/Section";
 import { GITHUB_URL } from "@/lib/developer";
 
 export const metadata: Metadata = {
@@ -52,55 +54,81 @@ cfa.simulate_default_recovery(pf, n_sims=20_000, seed=2026).summary()`,
   },
 ];
 
+const SURFACES = [
+  { name: "REST API", what: "OpenAPI 3.1, public reads, signed writes", href: "/docs" },
+  { name: "@cargoflow/mcp", what: "Claude, Cursor and other assistants", href: "#claude" },
+  { name: "@cargoflow/sdk", what: "Typed TypeScript client", href: "#sdk" },
+  { name: "@cargoflow/gateway", what: "Edge agent for data loggers", href: "#gateway" },
+  { name: "cargoflow (Python)", what: "Analytics and Monte Carlo", href: "#python" },
+];
+
 export default function DevelopersPage() {
   return (
-    <div className="container-page py-10 md:py-14">
-      <header className="max-w-3xl">
-        <p className="text-sm font-semibold tracking-[0.12em] text-slate uppercase">Developers</p>
-        <h1 className="mt-2 font-display text-[clamp(2rem,4.5vw,3.25rem)] leading-[1.05] font-bold tracking-tight">Build on CargoFlow</h1>
-        <p className="mt-4 text-lg text-ink/75">
-          Everything the website does is open: a REST API with an OpenAPI spec, SDKs in TypeScript and Python, an edge agent for data loggers and an MCP server so assistants can read shipments and prepare transactions for your wallet.
-        </p>
-        <div className="mt-6 flex flex-wrap gap-2">
-          <Link href="/docs" className="inline-flex h-11 items-center rounded-full bg-ink px-5 font-semibold text-paper hover:bg-ink-2">API reference</Link>
-          <Link href="/deployments" className="inline-flex h-11 items-center rounded-full border-2 border-ink/80 px-5 font-semibold hover:bg-ink hover:text-paper">Contracts and services</Link>
-          <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="inline-flex h-11 items-center rounded-full border-2 border-ink/80 px-5 font-semibold hover:bg-ink hover:text-paper">
-            Source on GitHub<span className="sr-only"> (opens in a new tab)</span>
-          </a>
-        </div>
-      </header>
+    <div className="container-page py-(--space-page-y)">
+      <PageHeader
+        eyebrow="Developers"
+        title="Build on CargoFlow"
+        description="Everything the website does is open: a REST API with an OpenAPI spec, TypeScript and Python SDKs, an edge agent for data loggers and an MCP server so assistants can read shipments and prepare transactions for your wallet."
+        actions={
+          <>
+            <LinkButton href="/docs" variant="ink">API reference</LinkButton>
+            <LinkButton href="/deployments" variant="secondary">Contracts and services</LinkButton>
+            <LinkButton href={GITHUB_URL} external variant="ghost">
+              Source on GitHub<span className="sr-only"> (opens in a new tab)</span>
+            </LinkButton>
+          </>
+        }
+      />
 
-      <section id="claude" className="mt-14 scroll-mt-24" aria-labelledby="claude-title">
-        <h2 id="claude-title" className="font-display text-2xl font-semibold md:text-3xl">Use CargoFlow in Claude</h2>
-        <p className="mt-2 max-w-2xl text-slate">
-          The <span className="font-mono text-ink">@cargoflow/mcp</span> server gives assistants read tools (shipments, evidence, explanations, cover, the market) and prepare tools that return unsigned transactions with a link to sign them here. No private keys, ever.
-        </p>
-        <div id="mcp" className="mt-6 scroll-mt-24">
-          <UseWithClaude />
-        </div>
-      </section>
-
-      <section className="mt-16" aria-labelledby="libs">
-        <h2 id="libs" className="font-display text-2xl font-semibold md:text-3xl">Libraries and tools</h2>
-        <div className="mt-6 flex flex-col gap-5">
-          {TOOLS.map((t) => (
-            <article key={t.id} id={t.id} className="grid scroll-mt-24 grid-cols-1 gap-5 rounded-[var(--radius-card)] border border-line bg-white p-5 md:p-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-              <div>
-                <p className="text-xs font-semibold tracking-wide text-slate uppercase">{t.kind}</p>
-                <h3 className="mt-1 font-mono text-xl font-semibold">{t.name}</h3>
-                <p className="mt-2 text-ink/80">{t.blurb}</p>
-                <a href={t.readme} target="_blank" rel="noreferrer" className="mt-3 inline-block text-sm font-semibold underline decoration-ink/30 underline-offset-2 hover:decoration-ink">
-                  README and full reference<span className="sr-only"> (opens in a new tab)</span>
-                </a>
-              </div>
-              <div className="flex min-w-0 flex-col gap-3">
-                <CodeBlock label="Install" code={t.install} />
-                <CodeBlock label="Example" code={t.example} />
-              </div>
-            </article>
+      <nav aria-label="Developer surfaces" className="scroll-x -mx-(--gutter) px-(--gutter)">
+        <ul className="flex min-w-max gap-2 md:grid md:min-w-0 md:grid-cols-5">
+          {SURFACES.map((s) => (
+            <li key={s.name} className="min-w-0">
+              <Link href={s.href} className="flex h-full w-56 flex-col rounded-tile border border-border bg-surface px-4 py-3 transition-[border-color,box-shadow] duration-(--duration-fast) hover:border-border-strong hover:shadow-1 md:w-auto">
+                <span className="font-mono text-small font-semibold">{s.name}</span>
+                <span className="mt-0.5 text-small text-text-muted">{s.what}</span>
+              </Link>
+            </li>
           ))}
-        </div>
-      </section>
+        </ul>
+      </nav>
+
+      <div className="mt-12 flex flex-col gap-16 md:mt-16">
+        <section id="claude" className="scroll-mt-24" aria-labelledby="claude-title">
+          <SectionHeader
+            id="claude-title"
+            title="Use CargoFlow in Claude"
+            description={<>The <span className="font-mono text-ink">@cargoflow/mcp</span> server gives assistants read tools (shipments, evidence, explanations, cover, the market) and prepare tools that return unsigned transactions with a link to sign them here. No private keys, ever.</>}
+            className="mb-6"
+          />
+          <div id="mcp" className="scroll-mt-24">
+            <UseWithClaude />
+          </div>
+        </section>
+
+        <section aria-labelledby="libs">
+          <SectionHeader id="libs" title="Libraries and tools" description="Install, then copy the example. Each README has the full reference." className="mb-6" />
+          <div className="flex flex-col gap-4">
+            {TOOLS.map((t) => (
+              <article key={t.id} id={t.id} className="grid scroll-mt-24 grid-cols-1 items-start gap-6 rounded-card border border-border bg-surface p-5 shadow-1 md:p-6 lg:grid-cols-12">
+                <div className="min-w-0 lg:col-span-5">
+                  <p className="eyebrow">{t.kind}</p>
+                  <h3 className="mt-1.5 font-mono text-h3 font-semibold">{t.name}</h3>
+                  <p className="mt-2 text-text-muted">{t.blurb}</p>
+                  <a href={t.readme} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1 text-small font-semibold underline decoration-ink/30 underline-offset-4 hover:decoration-ink">
+                    README and full reference<span className="sr-only"> (opens in a new tab)</span>
+                    <span aria-hidden="true">↗</span>
+                  </a>
+                </div>
+                <div className="flex min-w-0 flex-col gap-3 lg:col-span-7">
+                  <CodeBlock label="Install" code={t.install} />
+                  <CodeBlock label="Example" code={t.example} />
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

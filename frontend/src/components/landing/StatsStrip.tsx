@@ -1,39 +1,46 @@
 "use client";
 
-import { Skeleton } from "@/components/ui/Skeleton";
+import Link from "next/link";
+import { Badge } from "@/components/ui/Pill";
+import { Stat } from "@/components/ui/Stat";
 import { useStats } from "@/lib/api/hooks";
 
-/** Live platform counts, each drawn as a shipping container: the brand's container-rib motif. */
+/**
+ * Live testnet numbers, straight from the CargoFlow API (GET /v1/stats, refreshed every 20 s). Each figure says what
+ * it counts and where it can be checked, so a small testnet number reads as a fact rather than a weak boast.
+ */
 export function StatsStrip() {
   const { data, isPending, isError } = useStats();
   const s = data?.shipments ?? {};
   const active = (s.ACTIVE ?? 0) + (s.FINANCED ?? 0) + (s.PAUSED ?? 0);
+  const settled = s.SETTLED ?? 0;
+  const show = (v: number | undefined) => (isError || v === undefined ? "–" : v.toLocaleString());
   const items = [
-    { value: data?.total, label: "shipments under watch" },
-    { value: data ? active : undefined, label: "facilities in transit" },
-    { value: data?.epochsCommitted, label: "evidence epochs committed on-chain" },
-    { value: data?.proofsVerified, label: "recoveries proven with zero knowledge" },
+    { label: "Shipments under watch", value: show(data?.total), unit: data?.total === 1 ? "shipment" : "shipments", hint: data ? `${settled.toLocaleString()} settled end to end` : "Registered in ShipmentRegistry" },
+    { label: "Facilities in transit", value: show(data ? active : undefined), unit: "open", hint: "Financed, active or paused right now" },
+    { label: "Evidence epochs committed", value: show(data?.epochsCommitted), unit: data?.epochsCommitted === 1 ? "root" : "roots", hint: "Poseidon Merkle roots in EvidenceRegistry" },
+    { label: "Recoveries proven", value: show(data?.proofsVerified), unit: data?.proofsVerified === 1 ? "proof" : "proofs", hint: "Groth16, verified by the contract" },
   ];
   return (
-    <section aria-label="Live platform numbers" className="container-page mt-12 md:mt-16">
-      <ul className="grid grid-cols-2 gap-px overflow-hidden rounded-[var(--radius-tile)] border border-line bg-line md:grid-cols-4">
+    <section aria-labelledby="proof-title" className="container-page mt-16 md:mt-20">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex flex-wrap items-center gap-3">
+          <h2 id="proof-title" className="font-display text-h3">Live on testnet</h2>
+          {isError ? <Badge variant="warning" dot>Backend offline</Badge> : <Badge variant="success" dot pulse={!isPending}>Live</Badge>}
+        </div>
+        <p className="text-small text-text-muted">
+          Source: the CargoFlow API, indexed from Robinhood Chain Testnet.{" "}
+          <Link href="/deployments" className="font-semibold text-ink underline decoration-ink/30 underline-offset-4 hover:decoration-ink">Check the contracts</Link>
+        </p>
+      </div>
+      <ul aria-busy={isPending || undefined} className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-card border border-border bg-border shadow-1 lg:grid-cols-4">
         {items.map((it) => (
-          <li key={it.label} className="relative overflow-hidden bg-white px-5 py-5 md:px-6 md:py-6">
-            <span aria-hidden="true" className="absolute inset-y-0 right-0 flex gap-2 pr-4">
-              {[0, 1, 2, 3].map((i) => <span key={i} className="my-4 w-1 rounded-full bg-ink/5" />)}
-            </span>
-            {isPending ? (
-              <Skeleton className="h-10 w-16 md:h-12" />
-            ) : (
-              <p className="relative font-display text-[2.5rem] leading-none font-bold tracking-tight tabular md:text-5xl">
-                {isError || it.value === undefined ? "–" : it.value.toLocaleString()}
-              </p>
-            )}
-            <p className="relative mt-2 max-w-[12rem] text-sm leading-snug text-slate">{it.label}</p>
+          <li key={it.label} className="min-w-0 bg-surface p-4 md:p-6">
+            <Stat tile={false} size="lg" label={it.label} value={it.value} unit={isError ? undefined : it.unit} hint={it.hint} loading={isPending} />
           </li>
         ))}
       </ul>
-      {isError && <p className="mt-3 text-sm text-slate">Live numbers are unavailable while the backend is offline.</p>}
+      {isError && <p className="mt-3 text-small text-text-muted">Live numbers are unavailable while the backend is offline.</p>}
     </section>
   );
 }

@@ -106,13 +106,13 @@ export function CoverPanel({ view }: { view: ShipmentView }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <p className="text-sm text-slate">
+      <p className="text-sm text-text-muted">
         Default cover protects the financier. An insurer escrows USDG in the cover pool; the financier buys the cover by paying the premium straight to the insurer.
         If the buyer pays, the cover goes back to the insurer. If the facility defaults, the financier is paid up to the principal already advanced to the exporter, and the rest goes back to the insurer.
       </p>
 
       {!f ? (
-        <p className="rounded-2xl bg-mist px-4 py-3 text-sm text-slate">Cover can be offered once a financing facility exists.</p>
+        <p className="rounded-tile bg-mist px-4 py-3 text-sm text-text-muted">Cover can be offered once a financing facility exists.</p>
       ) : q.isPending && !view.cover ? (
         <Skeleton className="h-24" />
       ) : cover ? (
@@ -130,10 +130,10 @@ export function CoverPanel({ view }: { view: ShipmentView }) {
                 </Button>
               );
             if (!acts.accept) return null;
-            if (paused.coverPool) return <span className="text-xs font-medium text-[#8a5300]">Acceptance is paused by the guardian</span>;
+            if (paused.coverPool) return <span className="text-xs font-medium text-warning-fg">Acceptance is paused by the guardian</span>;
             const premium = premiumOf(o.amount, o.premiumBps);
             const needs = fundingNeeds(wallet.balance, wallet.allowance, premium);
-            if (wallet.balance !== undefined && needs.shortfall > 0n) return <span className="text-xs font-medium text-[#8a5300]">You need {formatUSDG(needs.shortfall)} more USDG for the premium</span>;
+            if (wallet.balance !== undefined && needs.shortfall > 0n) return <span className="text-xs font-medium text-warning-fg">You need {formatUSDG(needs.shortfall)} more USDG for the premium</span>;
             return (
               <div className="flex flex-wrap justify-end gap-2">
                 {premium > 0n && needs.needsApproval && (
@@ -160,7 +160,7 @@ export function CoverPanel({ view }: { view: ShipmentView }) {
       {f && cover?.status === "ACTIVE" && cover.parametric && (TRIGGER_STATES as readonly string[]).includes(status ?? "") && <ParametricTrigger view={view} cover={cover} />}
 
       {f && cover?.status === "ACTIVE" && (acts.release || acts.claim) && (
-        <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-mist px-4 py-3">
+        <div className="flex flex-wrap items-center gap-3 rounded-tile bg-mist px-4 py-3">
           <p className="min-w-0 flex-1 text-sm">
             {acts.release
               ? status === "CANCELLED"
@@ -181,7 +181,7 @@ export function CoverPanel({ view }: { view: ShipmentView }) {
       )}
 
       {hydrated && wallet.claimable !== undefined && wallet.claimable > 0n && (
-        <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-verified/12 px-4 py-3">
+        <div className="flex flex-wrap items-center gap-3 rounded-tile bg-verified/12 px-4 py-3">
           <p className="min-w-0 flex-1 text-sm">
             <span className="font-semibold">The cover pool holds {formatUSDG(wallet.claimable)} USDG for this wallet.</span> Payouts are collected rather than pushed, so nobody can block another party&apos;s payment.
           </p>
@@ -195,7 +195,7 @@ export function CoverPanel({ view }: { view: ShipmentView }) {
         <div className="border-t border-line pt-5">
           {!hydrated ? null : !isConnected ? (
             <div className="flex flex-wrap items-center gap-3">
-              <p className="text-sm text-slate">Connect a wallet to offer cover on this shipment.</p>
+              <p className="text-sm text-text-muted">Connect a wallet to offer cover on this shipment.</p>
               <WalletButton compact />
             </div>
           ) : acts.offer && paused.coverPool ? (
@@ -213,26 +213,26 @@ export function CoverPanel({ view }: { view: ShipmentView }) {
               }
             />
           ) : acts.offerBlocked && !acts.myOffer ? (
-            <p className="text-sm text-slate">{acts.offerBlocked}</p>
+            <p className="text-sm text-text-muted">{acts.offerBlocked}</p>
           ) : null}
         </div>
       )}
-      {f && !coverOpen(status) && !cover && <p className="text-sm text-slate">Cover could only be offered and accepted before transit started; none was taken out.</p>}
+      {f && !coverOpen(status) && !cover && <p className="text-sm text-text-muted">Cover could only be offered and accepted before transit started; none was taken out.</p>}
     </div>
   );
 }
 
 function Offers({ offers, premiumFor, action }: { offers: CoverOffer[]; premiumFor: (o: CoverOffer) => bigint; action: (o: CoverOffer) => React.ReactNode }) {
-  if (offers.length === 0) return <p className="rounded-2xl bg-mist px-4 py-3 text-sm text-slate">No cover offers yet.</p>;
+  if (offers.length === 0) return <p className="rounded-tile bg-mist px-4 py-3 text-sm text-text-muted">No cover offers yet.</p>;
   return (
     <div>
-      <h3 className="mb-2 text-xs font-semibold tracking-wide text-slate uppercase">Open offers</h3>
-      <ul className="flex flex-col divide-y divide-line rounded-2xl border border-line">
+      <h3 className="mb-2 eyebrow">Open offers</h3>
+      <ul className="flex flex-col divide-y divide-line rounded-tile border border-line">
         {offers.map((o) => (
           <li key={o.insurer} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
             <div className="min-w-0 flex-1">
-              <p className="font-mono text-lg font-semibold">{formatUSDG(o.amount)} <span className="font-sans text-sm font-normal text-slate">USDG of cover</span></p>
-              <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-slate">
+              <p className="font-mono text-lg font-semibold">{formatUSDG(o.amount)} <span className="font-sans text-sm font-normal text-text-muted">USDG of cover</span></p>
+              <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-text-muted">
                 <span>Premium {formatBps(o.premiumBps)} ({formatUSDG(premiumFor(o))} USDG)</span>
                 <span aria-hidden="true">·</span>
                 <HashBadge value={o.insurer} kind="address" label="insurer" compact />
@@ -263,28 +263,28 @@ function AcceptedCover({ view, cover }: { view: ShipmentView; cover: NonNullable
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <p className="font-display text-4xl font-bold tabular">{formatUSDG(cover.amount)} <span className="font-sans text-base font-normal text-slate">USDG of cover</span></p>
+        <p className="font-display text-4xl font-bold tabular">{formatUSDG(cover.amount)} <span className="font-sans text-base font-normal text-text-muted">USDG of cover</span></p>
         <Pill tone={cover.status === "ACTIVE" ? "verified" : cover.status === "CLAIMED" || cover.status === "TRIGGERED" ? "alert" : "slate"} dot>{word}</Pill>
       </div>
       <dl className="grid grid-cols-2 gap-3 text-sm">
-        <div><dt className="text-slate">Insurer</dt><dd><HashBadge value={cover.insurer} kind="address" compact /></dd></div>
-        <div><dt className="text-slate">Premium paid</dt><dd className="font-mono font-semibold">{formatUSDG(cover.premium)} USDG</dd></div>
+        <div><dt className="text-text-muted">Insurer</dt><dd><HashBadge value={cover.insurer} kind="address" compact /></dd></div>
+        <div><dt className="text-text-muted">Premium paid</dt><dd className="font-mono font-semibold">{formatUSDG(cover.premium)} USDG</dd></div>
         {p && (
-          <div className="col-span-2"><dt className="text-slate">Parametric trigger</dt><dd>{p.consecutiveFailedEpochs} failed evidence {p.consecutiveFailedEpochs === 1 ? "batch" : "batches"} in a row; salvage to the exporter up to <span className="font-mono font-semibold">{formatUSDG(p.salvageToExporter)} USDG</span>.</dd></div>
+          <div className="col-span-2"><dt className="text-text-muted">Parametric trigger</dt><dd>{p.consecutiveFailedEpochs} failed evidence {p.consecutiveFailedEpochs === 1 ? "batch" : "batches"} in a row; salvage to the exporter up to <span className="font-mono font-semibold">{formatUSDG(p.salvageToExporter)} USDG</span>.</dd></div>
         )}
         {cover.status === "ACTIVE" && (
-          <div className="col-span-2"><dt className="text-slate">If the facility defaulted now</dt><dd>The financier would receive <span className="font-mono font-semibold">{formatUSDG(split.payout)} USDG</span> (the principal drawn so far, up to the cover); <span className="font-mono">{formatUSDG(split.remainder)} USDG</span> would return to the insurer.</dd></div>
+          <div className="col-span-2"><dt className="text-text-muted">If the facility defaulted now</dt><dd>The financier would receive <span className="font-mono font-semibold">{formatUSDG(split.payout)} USDG</span> (the principal drawn so far, up to the cover); <span className="font-mono">{formatUSDG(split.remainder)} USDG</span> would return to the insurer.</dd></div>
         )}
-        {cover.status === "RELEASED" && <div className="col-span-2"><dt className="text-slate">Outcome</dt><dd>The invoice was paid, so the whole <span className="font-mono font-semibold">{formatUSDG(cover.insurerReturn)} USDG</span> went back to the insurer.</dd></div>}
+        {cover.status === "RELEASED" && <div className="col-span-2"><dt className="text-text-muted">Outcome</dt><dd>The invoice was paid, so the whole <span className="font-mono font-semibold">{formatUSDG(cover.insurerReturn)} USDG</span> went back to the insurer.</dd></div>}
         {cover.status === "TRIGGERED" && (
           <div className="col-span-2">
-            <dt className="text-slate">Outcome</dt>
+            <dt className="text-text-muted">Outcome</dt>
             <dd className="mb-2">The parametric trigger was proved on chain. The cover is final: a later settlement or default does not reopen it. Each party collects its share below.</dd>
             <SplitTable financier={cover.financierPayout} exporter={p?.exporterSalvage ?? "0"} insurer={cover.insurerReturn} caption="Credited by the trigger" />
           </div>
         )}
         {cover.status === "CLAIMED" && (
-          <div className="col-span-2"><dt className="text-slate">Outcome</dt><dd>The facility defaulted: the financier received <span className="font-mono font-semibold">{formatUSDG(cover.financierPayout)} USDG</span> and <span className="font-mono">{formatUSDG(cover.insurerReturn)} USDG</span> went back to the insurer.</dd></div>
+          <div className="col-span-2"><dt className="text-text-muted">Outcome</dt><dd>The facility defaulted: the financier received <span className="font-mono font-semibold">{formatUSDG(cover.financierPayout)} USDG</span> and <span className="font-mono">{formatUSDG(cover.insurerReturn)} USDG</span> went back to the insurer.</dd></div>
         )}
       </dl>
     </div>
@@ -316,18 +316,18 @@ function OfferFormView({ committed, wallet, pending, approve, offer }: { committ
     >
       <div>
         <h3 className="font-semibold">Offer cover as an insurer</h3>
-        <p className="text-sm text-slate">You escrow the cover now and can withdraw it until the financier accepts. Offers close when transit starts.</p>
+        <p className="text-sm text-text-muted">You escrow the cover now and can withdraw it until the financier accepts. Offers close when transit starts.</p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Cover amount (USDG)" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} inputMode="decimal" placeholder={formatUSDG(committed).replace(/,/g, "")} suffix="USDG" hint={`Up to the facility's ${formatUSDG(committed)} USDG.`} error={err("amount")} />
         <Field label="Premium" value={form.premiumPct} onChange={(e) => setForm({ ...form, premiumPct: e.target.value })} inputMode="decimal" suffix="%" hint={valid ? `The financier pays you ${formatUSDG(premiumOf(amount, v.premiumBps!))} USDG on accepting.` : "Up to 20% of the cover."} error={err("premiumPct")} />
       </div>
-      <div className="rounded-2xl border border-line p-4">
+      <div className="rounded-tile border border-line p-4">
         <label className="flex cursor-pointer items-start gap-3">
           <input type="checkbox" checked={parametric} onChange={(e) => setParametric(e.target.checked)} className="mt-1 h-4 w-4 accent-[var(--color-ink)]" />
           <span>
             <span className="block font-semibold">Add a parametric trigger</span>
-            <span className="block text-sm text-slate">The cover also pays out, before any default, when enough committed evidence batches fail in a row. Anyone can prove it on chain.</span>
+            <span className="block text-sm text-text-muted">The cover also pays out, before any default, when enough committed evidence batches fail in a row. Anyone can prove it on chain.</span>
           </span>
         </label>
         {parametric && (
@@ -338,7 +338,7 @@ function OfferFormView({ committed, wallet, pending, approve, offer }: { committ
         )}
       </div>
       {valid && wallet.balance !== undefined && needs.shortfall > 0n ? (
-        <p className="rounded-2xl bg-alert/12 px-4 py-3 text-sm">This wallet holds {formatUSDG(wallet.balance)} USDG; the offer escrows {formatUSDG(amount)}.</p>
+        <p className="rounded-tile bg-alert/12 px-4 py-3 text-sm">This wallet holds {formatUSDG(wallet.balance)} USDG; the offer escrows {formatUSDG(amount)}.</p>
       ) : (
         <div className="flex flex-wrap gap-2">
           {valid && needs.needsApproval && (

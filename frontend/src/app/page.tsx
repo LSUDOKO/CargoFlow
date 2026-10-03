@@ -4,6 +4,7 @@ import { Faq } from "@/components/landing/Faq";
 import { UseWithClaudeCard } from "@/components/developers/UseWithClaude";
 import { Hero } from "@/components/landing/Hero";
 import { HowItWorks } from "@/components/landing/HowItWorks";
+import { Roles } from "@/components/landing/Roles";
 import { StatsStrip } from "@/components/landing/StatsStrip";
 import { Verified } from "@/components/landing/Verified";
 import { Waterfall } from "@/components/landing/Waterfall";
@@ -13,11 +14,12 @@ export default function Home() {
     <>
       <Hero />
       <StatsStrip />
+      <BuiltOn />
       <HowItWorks />
       <Waterfall />
+      <Roles />
       <Verified />
-      <BuiltOn />
-      <section className="container-page py-12 md:py-16" aria-label="Use CargoFlow in Claude">
+      <section className="container-page mt-24 md:mt-32" aria-label="Use CargoFlow in Claude">
         <UseWithClaudeCard />
       </section>
       <Faq />

@@ -67,7 +67,7 @@ export function RecoveryPanel({ view, focus }: { view: ShipmentView; focus?: boo
     return (
       <div className="mt-4 border-t border-line pt-4">
         <h3 ref={headingRef} tabIndex={-1} className="font-semibold outline-none">Resume with a proof</h3>
-        <p className="mt-1 text-sm text-slate">Connect the exporter&apos;s wallet ({view.shipment.exporter.slice(0, 8)}…) to review the recovery proof and sign.</p>
+        <p className="mt-1 text-sm text-text-muted">Connect the exporter&apos;s wallet ({view.shipment.exporter.slice(0, 8)}…) to review the recovery proof and sign.</p>
         <div className="mt-3"><WalletButton compact /></div>
       </div>
     );
@@ -127,13 +127,13 @@ export function RecoveryPanel({ view, focus }: { view: ShipmentView; focus?: boo
     <div className="mt-4 border-t border-line pt-4">
       <h3 ref={headingRef} tabIndex={-1} className="font-semibold outline-none">Resume with a proof</h3>
       {/HUMIDITY_LIMIT|SHOCK_LIMIT/.test(f.pauseReason ?? "") && (
-        <p className="mt-1 rounded-2xl bg-alert/12 px-3 py-2 text-sm">
+        <p className="mt-1 rounded-tile bg-alert/12 px-3 py-2 text-sm">
           This pause is for a humidity or shock breach. The proof covers only the temperature band, so it cannot lift this pause on its own: ask the arbiter to review it.
         </p>
       )}
       {ready && !proof && (
-        <div className="mt-2 rounded-2xl bg-verified/10 p-4 ring-1 ring-verified/30 ring-inset" role="status">
-          <p className="flex items-center gap-2 font-display text-base font-semibold text-[#00733e]">
+        <div className="mt-2 rounded-tile bg-verified/10 p-4 ring-1 ring-verified/30 ring-inset" role="status">
+          <p className="flex items-center gap-2 font-display text-base font-semibold text-success-fg">
             <span aria-hidden="true" className="grid h-5 w-5 place-items-center rounded-full bg-verified text-xs text-white">✓</span>
             Proof ready — sign to resume
           </p>
@@ -147,7 +147,7 @@ export function RecoveryPanel({ view, focus }: { view: ShipmentView; focus?: boo
       )}
       {proof ? (
         <>
-          <p className="mt-1 text-sm text-slate">
+          <p className="mt-1 text-sm text-text-muted">
             The proof is ready: eight readings from {held?.sensor ?? chosen}, committed on chain and proven inside the band. Submit it from your wallet to resume the facility; then release milestone {proof.milestoneIndex + 1} above.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -157,7 +157,7 @@ export function RecoveryPanel({ view, focus }: { view: ShipmentView; focus?: boo
         </>
       ) : (
         <>
-          <p className="mt-1 text-sm text-slate">
+          <p className="mt-1 text-sm text-text-muted">
             Choose a probe that kept the goods in range. Its 8 most recent readings since the pause are proven inside the band without revealing them.
           </p>
           {sensors.length === 0 ? (
@@ -166,7 +166,7 @@ export function RecoveryPanel({ view, focus }: { view: ShipmentView; focus?: boo
             <div className="mt-3 flex flex-wrap items-end gap-3">
               <div>
                 <label htmlFor="recovery-probe" className="text-sm font-semibold">Probe</label>
-                <select id="recovery-probe" className="mt-1 block h-11 rounded-2xl border-2 border-line bg-white px-3 font-mono" value={chosen} onChange={(e) => setSensor(e.target.value)}>
+                <select id="recovery-probe" className="mt-1 block h-11 rounded-tile border-2 border-line bg-white px-3 font-mono" value={chosen} onChange={(e) => setSensor(e.target.value)}>
                   {sensors.map((s) => (
                     <option key={s} value={s}>{s}</option>
                   ))}
@@ -179,7 +179,7 @@ export function RecoveryPanel({ view, focus }: { view: ShipmentView; focus?: boo
           )}
         </>
       )}
-      {error && <p role="alert" className="mt-2 text-sm font-medium text-danger">{error}</p>}
+      {error && <p role="alert" className="mt-2 text-sm font-medium text-danger-fg">{error}</p>}
     </div>
   );
 }

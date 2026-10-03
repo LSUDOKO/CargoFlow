@@ -9,24 +9,24 @@ const reasonWords: Record<string, string> = {
 };
 
 export function AiPanel({ assessment }: { assessment: Assessment | null }) {
-  if (!assessment) return <p className="text-slate">The monitor reports here once the first epoch is evaluated.</p>;
+  if (!assessment) return <p className="text-sm text-text-muted">The monitor reports here once the first epoch is evaluated.</p>;
   const severe = assessment.action === "PAUSE_FACILITY";
   return (
     <div>
       <div className="flex flex-wrap items-center gap-2">
         <Pill tone={severe ? "alert" : assessment.action === "APPROVE_ADVANCE" ? "verified" : assessment.action === "HELD_NOT_AT_PLACE" ? "ink" : "slate"} dot>{actionWords[assessment.action] ?? assessment.action}</Pill>
-        {assessment.confidence !== undefined && <Pill tone="ink">{Math.round(assessment.confidence * 100)}% confident</Pill>}
+        {assessment.confidence !== undefined && <Pill tone="slate"><span className="num">{Math.round(assessment.confidence * 100)}%</span> confident</Pill>}
       </div>
-      <p className="mt-3 font-display text-xl font-semibold">{reasonWords[assessment.reason] ?? assessment.reason}</p>
-      {assessment.explanation && <blockquote className="mt-3 border-l-4 border-signal pl-3 text-[0.95rem] text-ink/80">{assessment.explanation}</blockquote>}
-      <p className="mt-3 text-sm text-slate">
+      <p className="mt-3 font-display text-h3">{reasonWords[assessment.reason] ?? assessment.reason}</p>
+      {assessment.explanation && <blockquote className="mt-3 border-l-2 border-signal-2 pl-3 text-sm text-ink/80">{assessment.explanation}</blockquote>}
+      <p className="mt-3 text-sm text-text-muted">
         {assessment.decider === "ai-escalation"
           ? "The AI monitor made this stricter than the policy required."
           : assessment.provider
             ? `Decided by the policy gate; ${assessment.provider.replace("groq:", "")} reviewed it.`
             : "Decided by the deterministic policy gate (no AI model configured)."}
       </p>
-      <p className="mt-2 text-xs text-slate">The AI can only tighten a decision. It cannot release money or override the contract.</p>
+      <p className="mt-2 text-caption text-text-muted">The AI can only tighten a decision. It cannot release money or override the contract.</p>
     </div>
   );
 }

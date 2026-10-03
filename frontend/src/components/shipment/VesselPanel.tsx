@@ -35,7 +35,7 @@ export function VesselPanel({ shipment, closed }: { shipment: Shipment; closed?:
 
   if (vessel.isPending) return <Skeleton className="h-20" />;
   if (vessel.isError) {
-    return <p className="text-sm text-slate">{isUnavailable(vessel.error) ? "Vessel tracking is not available on this deployment yet." : "The vessel could not be loaded. It will retry shortly."}</p>;
+    return <p className="text-sm text-text-muted">{isUnavailable(vessel.error) ? "Vessel tracking is not available on this deployment yet." : "The vessel could not be loaded. It will retry shortly."}</p>;
   }
   const v = vessel.data;
   const canEdit = isExporter && !closed;
@@ -47,7 +47,7 @@ export function VesselPanel({ shipment, closed }: { shipment: Shipment; closed?:
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="font-display text-lg leading-tight font-semibold [overflow-wrap:anywhere]">{v.name}</p>
-              <p className="mt-0.5 text-sm text-slate">
+              <p className="mt-0.5 text-sm text-text-muted">
                 MMSI <span className="font-mono text-ink">{v.mmsi}</span>
               </p>
             </div>
@@ -59,7 +59,7 @@ export function VesselPanel({ shipment, closed }: { shipment: Shipment; closed?:
           )}
         </>
       ) : (
-        <p className="text-sm text-slate">
+        <p className="text-sm text-text-muted">
           {canEdit ? "Register the ship carrying this container so its AIS position can be checked against the data logger." : "No vessel registered yet. The exporter can add the ship carrying the container."}
         </p>
       )}
@@ -71,9 +71,9 @@ export function VesselPanel({ shipment, closed }: { shipment: Shipment; closed?:
 function CrossCheck({ v, aisFeed }: { v: Vessel; aisFeed: boolean }) {
   if (!aisFeed && !v.live) {
     return (
-      <div className="rounded-2xl bg-mist px-4 py-3 text-sm">
+      <div className="rounded-tile bg-mist px-4 py-3 text-sm">
         <p className="font-semibold">No live AIS feed configured</p>
-        <p className="mt-0.5 text-slate">Positions come from the data logger alone on this deployment.</p>
+        <p className="mt-0.5 text-text-muted">Positions come from the data logger alone on this deployment.</p>
       </div>
     );
   }
@@ -81,7 +81,7 @@ function CrossCheck({ v, aisFeed }: { v: Vessel; aisFeed: boolean }) {
   return (
     <div className="flex flex-col gap-3">
       {c ? (
-        <div className={`rounded-2xl px-4 py-3 text-sm ${!c.comparable ? "bg-mist" : c.agrees ? "bg-verified/10" : "bg-alert/15"}`}>
+        <div className={`rounded-tile px-4 py-3 text-sm ${!c.comparable ? "bg-mist" : c.agrees ? "bg-verified/10" : "bg-alert/15"}`}>
           <p className="font-semibold">{!c.comparable ? "Not compared yet" : c.agrees ? "Logger and ship agree" : "Logger and ship disagree"}</p>
           <p className="mt-0.5 text-ink/75">
             {!c.comparable
@@ -90,12 +90,12 @@ function CrossCheck({ v, aisFeed }: { v: Vessel; aisFeed: boolean }) {
           </p>
         </div>
       ) : (
-        <p className="rounded-2xl bg-mist px-4 py-3 text-sm text-slate">{v.last ? "Waiting for a logger position to compare with." : "Waiting for the ship's first AIS position."}</p>
+        <p className="rounded-tile bg-mist px-4 py-3 text-sm text-text-muted">{v.last ? "Waiting for a logger position to compare with." : "Waiting for the ship's first AIS position."}</p>
       )}
       {v.last && (
         <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-          <div><dt className="text-slate">Position</dt><dd className="font-mono text-[0.8125rem]">{deg(v.last.latE6, "N", "S")}<br />{deg(v.last.lonE6, "E", "W")}</dd></div>
-          <div><dt className="text-slate">Speed, course</dt><dd className="font-mono text-[0.8125rem]">{(v.last.sogKnotsX10 / 10).toFixed(1)} kn<br />{Math.round(v.last.cogDegX10 / 10)}°</dd></div>
+          <div><dt className="text-text-muted">Position</dt><dd className="font-mono text-small">{deg(v.last.latE6, "N", "S")}<br />{deg(v.last.lonE6, "E", "W")}</dd></div>
+          <div><dt className="text-text-muted">Speed, course</dt><dd className="font-mono text-small">{(v.last.sogKnotsX10 / 10).toFixed(1)} kn<br />{Math.round(v.last.cogDegX10 / 10)}°</dd></div>
         </dl>
       )}
     </div>
@@ -146,7 +146,7 @@ function RegisterVessel({ shipment, initial, onDone, onCancel }: { shipment: Shi
     >
       <Field label="MMSI" inputMode="numeric" autoComplete="off" placeholder="636092123" maxLength={9} value={mmsi} onChange={(e) => setMmsi(e.target.value.replace(/\D/g, ""))} error={mmsiError} />
       <Field label="Vessel" placeholder="MSC Aurora" maxLength={80} value={ship} onChange={(e) => setShip(e.target.value)} hint="As it appears on the bill of lading." />
-      {error && <p role="alert" className="text-sm font-medium text-danger">{error}</p>}
+      {error && <p role="alert" className="text-sm font-medium text-danger-fg">{error}</p>}
       <div className="flex flex-wrap gap-2">
         <Button type="submit" size="sm" loading={busy !== null} disabled={!MMSI.test(mmsi) || !ship.trim()}>
           {busy === "sign" ? "Waiting for your signature…" : busy === "save" ? "Saving…" : "Sign and save vessel"}

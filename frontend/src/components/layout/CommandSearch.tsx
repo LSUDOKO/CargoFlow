@@ -3,11 +3,17 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { Kbd } from "@/components/ui/Kbd";
 import { Modal } from "@/components/ui/Modal";
+import { controlClass } from "@/components/ui/Field";
+import { cx } from "@/components/ui/cx";
 import { lookupReference } from "@/lib/api/client";
 import { resolveShipment } from "@/lib/resolve";
 
-/** Global "find a shipment" dialog, opened with Ctrl/⌘ K or the header button. */
+/**
+ * Global "find a shipment" dialog, opened with Ctrl/⌘ K or the header button.
+ * The trigger is a 40px search icon below xl and a labelled field-like button from xl, so the header fits at 768.
+ */
 export function CommandSearch() {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
@@ -26,6 +32,10 @@ export function CommandSearch() {
   }, []);
   const go = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!q.trim()) {
+      setError("Enter a shipment id or reference.");
+      return;
+    }
     setBusy(true);
     const r = await resolveShipment(q, lookupReference).catch(() => null);
     setBusy(false);
@@ -47,13 +57,26 @@ export function CommandSearch() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="hidden h-11 shrink-0 items-center gap-3 rounded-full border-2 border-paper/20 bg-paper/5 pr-2 pl-4 text-sm whitespace-nowrap text-paper/75 transition-colors hover:border-paper/50 hover:text-paper md:inline-flex"
+        aria-label="Find a shipment"
+        aria-keyshortcuts="Control+K Meta+K"
+        title="Find a shipment (Ctrl K)"
+        className={cx(
+          "inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-full text-paper/80 ring-1 ring-paper/15 ring-inset",
+          "transition-colors duration-(--duration-fast) ease-standard hover:bg-paper/8 hover:text-paper hover:ring-paper/30",
+          "w-10 xl:w-auto xl:justify-start xl:pr-1.5 xl:pl-3.5",
+        )}
       >
-        Find a shipment
-        <kbd className="rounded-full bg-paper/10 px-2 py-1 font-sans text-xs font-semibold whitespace-nowrap text-paper/80">Ctrl K</kbd>
+        <svg viewBox="0 0 20 20" className="h-[1.125rem] w-[1.125rem] shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+          <circle cx="9" cy="9" r="5.5" />
+          <path d="m13.2 13.2 3.3 3.3" />
+        </svg>
+        <span className="hidden text-small font-medium whitespace-nowrap xl:inline">Find a shipment</span>
+        <span className="ml-3 hidden xl:inline-flex" aria-hidden="true">
+          <Kbd keys={["Ctrl", "K"]} onDark />
+        </span>
       </button>
       <Modal open={open} onClose={() => setOpen(false)} title="Find a shipment" description="Search by shipment id or by your reference, for example CF-2026-SG01-….">
-        <form onSubmit={go} className="flex flex-col gap-3">
+        <form onSubmit={go} className="flex flex-col gap-3" noValidate>
           <label htmlFor="cmd-q" className="sr-only">Shipment id or reference</label>
           <input
             id="cmd-q"
@@ -61,10 +84,13 @@ export function CommandSearch() {
             value={q}
             onChange={(e) => { setQ(e.target.value); setError(null); }}
             placeholder="0x… or CF-2026-SG01-…"
-            className="h-13 rounded-2xl border-2 border-line bg-white px-4 font-mono text-sm outline-none focus:border-ink"
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? "cmd-q-error" : undefined}
+            className={controlClass({ error: !!error, className: "h-12 font-mono text-sm" })}
             autoComplete="off"
+            spellCheck={false}
           />
-          {error && <p className="text-sm font-medium text-danger">{error}</p>}
+          {error && <p id="cmd-q-error" className="text-small font-medium text-danger-fg" role="alert">{error}</p>}
           <Button type="submit" size="lg" loading={busy}>Track shipment</Button>
         </form>
       </Modal>

@@ -1,70 +1,49 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { cx } from "@/components/ui/cx";
+import { Tooltip } from "@/components/ui/Tooltip";
+import { useValueChange } from "@/components/ui/useValueChange";
 
-/** A small "?" that explains a term in plain words: click or Enter toggles it, Escape or a click elsewhere closes it. */
+/** A small "?" that explains a term in plain words, on hover and keyboard focus. */
 export function InfoTip({ term, children, align = "center" }: { term: string; children: React.ReactNode; align?: "left" | "center" | "right" }) {
-  const [open, setOpen] = useState(false);
-  const id = useId();
-  const ref = useRef<HTMLSpanElement>(null);
-  useEffect(() => {
-    if (!open) return;
-    const close = (e: MouseEvent | KeyboardEvent) => {
-      if (e instanceof KeyboardEvent ? e.key === "Escape" : !ref.current?.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", close);
-    document.addEventListener("keydown", close);
-    return () => {
-      document.removeEventListener("mousedown", close);
-      document.removeEventListener("keydown", close);
-    };
-  }, [open]);
   return (
-    <span ref={ref} className="relative inline-flex align-middle">
+    <Tooltip content={children} side="bottom" align={align === "left" ? "start" : align === "right" ? "end" : "center"} className="w-64 text-small font-normal">
       <button
         type="button"
-        aria-expanded={open}
-        aria-controls={id}
         aria-label={`What is ${term.toLowerCase()}?`}
-        onClick={() => setOpen((o) => !o)}
-        className="grid h-5 w-5 place-items-center rounded-full border border-ink/25 text-[0.6875rem] font-bold text-slate hover:border-ink hover:text-ink"
+        className="grid h-5 w-5 place-items-center rounded-full border border-border-strong text-overline font-bold text-text-muted transition-colors duration-(--duration-fast) hover:border-ink hover:text-ink"
       >
         ?
       </button>
-      <span
-        id={id}
-        role="note"
-        hidden={!open}
-        className={`absolute top-7 z-30 w-64 rounded-2xl bg-ink p-3 text-left text-[0.8125rem] leading-relaxed font-normal text-paper shadow-[var(--shadow-lift)] ${align === "right" ? "right-0" : align === "left" ? "left-0" : "left-1/2 -translate-x-1/2"}`}
-      >
-        {children}
-      </span>
-    </span>
+    </Tooltip>
   );
 }
 
 /** A semicircular gauge. `good` says whether high values are good (score) or bad (conflict). */
 export function Gauge({ value, max, threshold, label, display, good = "high", hint, limit, hintAlign }: { value: number; max: number; threshold: number; label: string; display: string; good?: "high" | "low"; hint?: React.ReactNode; limit?: string; hintAlign?: "left" | "center" | "right" }) {
-  const r = 70, cx = 90, cy = 86;
+  const r = 70, cx0 = 90, cy = 86;
   const frac = Math.max(0, Math.min(1, value / max));
-  const pt = (f: number) => [cx - r * Math.cos(Math.PI * f), cy - r * Math.sin(Math.PI * f)] as const;
+  const pt = (f: number) => [cx0 - r * Math.cos(Math.PI * f), cy - r * Math.sin(Math.PI * f)] as const;
   const [ex, ey] = pt(frac);
   const [tx, ty] = pt(Math.min(1, threshold / max));
   const ok = good === "high" ? value >= threshold : value <= threshold;
+  const changed = useValueChange(display);
   return (
-    <figure className="flex flex-col items-center">
-      <svg viewBox="0 0 180 100" className="h-auto w-full max-w-[200px]" role="img" aria-label={`${label}: ${display}, ${ok ? "within" : "outside"} the policy limit`}>
-        <path d={`M${cx - r},${cy} A${r},${r} 0 0 1 ${cx + r},${cy}`} fill="none" stroke="#DCE3DA" strokeWidth="14" strokeLinecap="round" />
-        {frac > 0 && <path d={`M${cx - r},${cy} A${r},${r} 0 0 1 ${ex},${ey}`} fill="none" stroke={ok ? "#00C46A" : "#FFB020"} strokeWidth="14" strokeLinecap="round" />}
-        <line x1={tx} y1={ty} x2={cx + (tx - cx) * 0.72} y2={cy + (ty - cy) * 0.72} stroke="#0B1B2B" strokeWidth="3" strokeLinecap="round" />
-        <text x={cx} y={cy - 8} textAnchor="middle" fontSize="28" fontWeight="700" fill="#0B1B2B" fontFamily="var(--font-display)">{display}</text>
+    <figure className="flex min-w-0 flex-col items-center">
+      <svg viewBox="0 0 180 100" className="h-auto w-full max-w-[180px]" role="img" aria-label={`${label}: ${display}, ${ok ? "within" : "outside"} the policy limit`}>
+        <path d={`M${cx0 - r},${cy} A${r},${r} 0 0 1 ${cx0 + r},${cy}`} fill="none" className="stroke-neutral-150" strokeWidth="14" strokeLinecap="round" />
+        {frac > 0 && <path d={`M${cx0 - r},${cy} A${r},${r} 0 0 1 ${ex},${ey}`} fill="none" className={cx("transition-[stroke] duration-(--duration-slow)", ok ? "stroke-success" : "stroke-warning")} strokeWidth="14" strokeLinecap="round" />}
+        <line x1={tx} y1={ty} x2={cx0 + (tx - cx0) * 0.72} y2={cy + (ty - cy) * 0.72} className="stroke-ink" strokeWidth="3" strokeLinecap="round" />
       </svg>
-      <figcaption className="-mt-1 flex flex-col items-center text-center">
+      <p className="-mt-12 mb-3 font-display text-h2 leading-none font-semibold num">
+        <span className={cx("-mx-1 rounded-md px-1", changed > 0 && "animate-update")}>{display}</span>
+      </p>
+      <figcaption className="flex flex-col items-center text-center">
         <span className="inline-flex items-center gap-1.5 text-sm font-semibold">
           {label}
           {hint && <InfoTip term={label} align={hintAlign}>{hint}</InfoTip>}
         </span>
-        {limit && <span className={`text-xs ${ok ? "text-slate" : "font-semibold text-[#8a5300]"}`}>{limit}</span>}
+        {limit && <span className={cx("text-caption", ok ? "text-text-muted" : "font-semibold text-warning-fg")}>{limit}</span>}
       </figcaption>
     </figure>
   );

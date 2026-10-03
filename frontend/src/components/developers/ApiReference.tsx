@@ -8,35 +8,56 @@ const SCALAR_SRC = "https://cdn.jsdelivr.net/npm/@scalar/api-reference@1.72.4/di
 
 type ScalarGlobal = { createApiReference: (el: Element | string, config: Record<string, unknown>) => { destroy?: () => void } };
 
-/** Brand theme for Scalar: light only, navy text and accents, lime highlights. */
+/**
+ * Brand theme for Scalar, written against the design-system tokens (globals.css) so the reference shares the site's
+ * fonts, radii, greys and focus colour instead of bringing its own. Scalar renders into this document, so the CSS
+ * variables resolve. HTTP method colours use the darker "-fg" tones so they pass 4.5:1 on paper.
+ */
 const BRAND_CSS = `
 .light-mode, .scalar-app, :root {
-  --scalar-color-1: #0b1b2b;
-  --scalar-color-2: #3e4f60;
-  --scalar-color-3: #5b6b7b;
-  --scalar-color-accent: #0b1b2b;
-  --scalar-background-1: #f7f9f4;
-  --scalar-background-2: #eef2ea;
-  --scalar-background-3: #e4eadf;
-  --scalar-background-accent: #c6f43233;
-  --scalar-border-color: #dce3da;
-  --scalar-button-1: #0b1b2b;
-  --scalar-button-1-color: #f7f9f4;
-  --scalar-button-1-hover: #13293d;
-  --scalar-color-green: #00a35a;
-  --scalar-color-red: #c8323a;
-  --scalar-color-yellow: #b37400;
-  --scalar-color-blue: #1d5fa8;
-  --scalar-color-orange: #c26a00;
-  --scalar-color-purple: #6941c6;
-  --scalar-font: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --scalar-font-code: var(--font-jetbrains), ui-monospace, monospace;
-  --scalar-radius: 10px;
-  --scalar-radius-lg: 16px;
-  --scalar-custom-header-height: 72px;
+  --scalar-color-1: var(--color-text);
+  --scalar-color-2: var(--color-neutral-600);
+  --scalar-color-3: var(--color-text-muted);
+  --scalar-color-accent: var(--color-ink);
+  --scalar-color-ghost: var(--color-neutral-400);
+  --scalar-background-1: var(--color-surface);
+  --scalar-background-2: var(--color-paper);
+  --scalar-background-3: var(--color-neutral-100);
+  --scalar-background-4: var(--color-neutral-150);
+  --scalar-background-accent: var(--color-signal-soft);
+  --scalar-border-color: var(--color-border);
+  --scalar-button-1: var(--color-ink);
+  --scalar-button-1-color: var(--color-paper);
+  --scalar-button-1-hover: var(--color-ink-800);
+  --scalar-color-green: var(--color-success-fg);
+  --scalar-color-red: var(--color-danger-fg);
+  --scalar-color-yellow: var(--color-warning-fg);
+  --scalar-color-blue: var(--color-info-fg);
+  --scalar-color-orange: var(--color-warning-fg);
+  --scalar-color-purple: #5b3aa8;
+  --scalar-link-color: var(--color-ink);
+  --scalar-font: var(--font-sans);
+  --scalar-font-code: var(--font-mono);
+  --scalar-radius: var(--radius-chip);
+  --scalar-radius-lg: var(--radius-control);
+  --scalar-radius-xl: var(--radius-card);
+  --scalar-shadow-1: var(--shadow-1);
+  --scalar-shadow-2: var(--shadow-2);
+  --scalar-custom-header-height: 64px;
+  --scalar-sidebar-background-1: var(--color-paper);
+  --scalar-sidebar-color-1: var(--color-text);
+  --scalar-sidebar-color-2: var(--color-text-muted);
+  --scalar-sidebar-border-color: var(--color-border);
+  --scalar-sidebar-item-hover-background: var(--color-neutral-100);
+  --scalar-sidebar-item-active-background: var(--color-signal-soft);
+  --scalar-sidebar-color-active: var(--color-ink);
+  --scalar-sidebar-search-background: var(--color-surface);
+  --scalar-sidebar-search-border-color: var(--color-border-strong);
 }
-.scalar-app .sidebar { --scalar-sidebar-background-1: #f7f9f4; --scalar-sidebar-item-active-background: #c6f43255; --scalar-sidebar-color-active: #0b1b2b; }
-.scalar-app h1, .scalar-app h2, .scalar-app h3 { font-family: var(--font-space-grotesk), var(--scalar-font); }
+.scalar-app h1, .scalar-app h2, .scalar-app h3 { font-family: var(--font-display); letter-spacing: -0.02em; }
+.scalar-app :focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.scalar-app .sidebar { top: 0; }
+.scalar-app .references-layout { min-height: 0; }
 `;
 
 let loading: Promise<ScalarGlobal> | null = null;
@@ -115,20 +136,20 @@ export function ApiReference({ serverUrl }: { serverUrl: string }) {
   return (
     <div>
       {state.status === "loading" && (
-        <div className="flex items-center gap-3 rounded-2xl border border-line bg-white px-5 py-6 text-sm text-slate" role="status">
+        <div className="flex items-center gap-3 rounded-card border border-border bg-surface px-5 py-6 text-small text-text-muted" role="status">
           <span className="h-2.5 w-2.5 animate-pulse-dot rounded-full bg-ink" aria-hidden="true" />
           Loading the API reference…
         </div>
       )}
       {state.status === "error" && (
-        <p role="alert" className="rounded-2xl bg-danger/8 px-5 py-4 text-sm font-medium text-[#a1191e]">
+        <p role="alert" className="rounded-tile border border-danger-border bg-danger-bg px-5 py-4 text-small font-medium text-danger-fg">
           {state.message} The raw specification is at <a className="underline" href="/openapi.json">/openapi.json</a>.
         </p>
       )}
       {state.status === "ready" && state.source === "bundled" && (
-        <p className="mb-3 rounded-xl bg-alert/12 px-4 py-2 text-sm">The live API did not answer, so this shows the specification bundled with the site. It may trail the live API slightly.</p>
+        <p className="mb-3 rounded-tile border border-warning-border bg-warning-bg px-4 py-2 text-small text-warning-fg">The live API did not answer, so this shows the specification bundled with the site. It may trail the live API slightly.</p>
       )}
-      <div ref={ref} className="scalar-host min-h-[60vh] overflow-hidden rounded-[var(--radius-card)] border border-line bg-paper" />
+      <div ref={ref} className="scalar-host min-h-[60vh] overflow-hidden rounded-card border border-border bg-surface shadow-1" />
     </div>
   );
 }

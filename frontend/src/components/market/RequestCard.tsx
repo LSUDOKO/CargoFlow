@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Button, LinkButton } from "@/components/ui/Button";
+import { cardClass } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { advanceRate, age, pct, rankOffers, roleOn, type MarketRequest } from "@/lib/api/market";
 import { formatUSDG } from "@/lib/format";
@@ -24,50 +25,46 @@ export function RequestCard({ request: r }: { request: MarketRequest }) {
   const mineOffer = address && r.offers.some((o) => o.financier.toLowerCase() === address.toLowerCase());
 
   return (
-    <article className="group relative flex h-full flex-col rounded-[var(--radius-card)] border border-line bg-white shadow-[var(--shadow-card)] transition-[border-color,box-shadow] duration-200 hover:border-ink/35 hover:shadow-[var(--shadow-lift)]">
-      <div className="flex flex-col gap-3 p-5 pb-4">
+    <article className={cardClass({ padded: false, interactive: true, className: "group relative flex h-full flex-col" })}>
+      <div className="flex flex-col gap-2.5 p-5 pb-4">
         <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h3 className="truncate font-display text-xl font-semibold">
-              <Link href={`/market/${r.id}`} className="outline-none after:absolute after:inset-0 after:rounded-[var(--radius-card)] focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-ink">
-                {r.externalRef}
-              </Link>
-            </h3>
-            <RouteLabel route={r.route} className="mt-1 text-sm font-medium text-ink/80" />
-          </div>
+          <h3 className="min-w-0 truncate font-display text-h3">
+            <Link href={`/market/${r.id}`} className="outline-none after:absolute after:inset-0 after:rounded-card after:content-[''] focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-ink">
+              {r.externalRef}
+            </Link>
+          </h3>
           <RequestStatusPill status={r.status} className="shrink-0" />
         </div>
+        <RouteLabel route={r.route} className="text-sm font-medium text-ink/80" />
         <div><BandChip policy={r.policy} /></div>
       </div>
 
-      <dl className="grid grid-cols-3 gap-3 border-y border-line px-5 py-4">
+      <dl className="grid grid-cols-3 gap-3 border-y border-border px-5 py-4">
         <Term label="Seeking" sub="USDG">{formatUSDG(r.amount, { compact: true })}</Term>
-        <Term label="Max fee" sub={best ? `best ${pct(best.feeBps)}` : "no offers yet"}>{pct(r.maxFeeBps)}</Term>
-        <Term label="Tranches" sub="evidence-gated">{r.milestoneCount}</Term>
+        <Term label="Advance" sub={`of ${formatUSDG(r.invoiceValue, { compact: true })} invoice`}>{rate}%</Term>
+        <Term label="Max fee" sub={`${r.milestoneCount} tranches`}>{pct(r.maxFeeBps)}</Term>
       </dl>
 
       <div className="flex flex-col gap-3 px-5 py-4">
-        <div>
-          <div className="flex items-baseline justify-between gap-2 text-xs">
-            <span className="font-semibold text-slate">Advance on a {formatUSDG(r.invoiceValue)} USDG invoice</span>
-            <span className="font-mono font-semibold tabular">{rate}%</span>
-          </div>
-          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-mist" aria-hidden="true">
-            <div className="h-full rounded-full bg-ink" style={{ width: `${Math.min(rate, 100)}%` }} />
-          </div>
-        </div>
-        {r.pricing && r.status === "open" && <FeeBand pricing={r.pricing} maxFeeBps={r.maxFeeBps} compact />}
-        {r.note && <p className="line-clamp-2 text-sm text-ink/75">“{r.note}”</p>}
+        {r.pricing && r.status === "open" ? (
+          <FeeBand pricing={r.pricing} maxFeeBps={r.maxFeeBps} compact />
+        ) : (
+          <p className="text-small text-text-muted">{best ? <>Best offer <span className="num font-semibold text-ink">{pct(best.feeBps)}</span></> : "No fee guidance for this request."}</p>
+        )}
+        {r.note && <p className="line-clamp-2 text-small text-ink/80">“{r.note}”</p>}
       </div>
 
-      <div className="mt-auto flex items-center justify-between gap-3 rounded-b-[var(--radius-card)] border-t border-line bg-paper/60 px-5 py-3">
-        <div className="relative z-10 flex min-w-0 flex-col gap-1">
+      <div className="mt-auto flex items-center justify-between gap-3 rounded-b-card border-t border-border bg-neutral-25 px-5 py-3">
+        <div className="relative z-[1] flex min-w-0 flex-col gap-1">
           <PartyLink address={r.exporter} />
-          <p className="text-xs text-slate">
-            {r.offers.length} offer{r.offers.length === 1 ? "" : "s"} <span aria-hidden="true">·</span> <time dateTime={r.createdAt}>{age(r.createdAt)}</time>
+          <p className="text-caption text-text-muted">
+            <span className="num">{r.offers.length}</span> offer{r.offers.length === 1 ? "" : "s"}
+            {best && <>, best <span className="num font-semibold text-ink">{pct(best.feeBps)}</span></>}
+            {" · "}
+            <time dateTime={r.createdAt}>{age(r.createdAt)}</time>
           </p>
         </div>
-        <div className="relative z-10 shrink-0">
+        <div className="relative z-[1] shrink-0">
           {r.status === "open" && role !== "exporter" && role !== "buyer" ? (
             <Button size="sm" variant="secondary" onClick={() => setOffering(true)}>{mineOffer ? "Change offer" : "Make an offer"}</Button>
           ) : role === "exporter" && r.status !== "closed" ? (
@@ -82,17 +79,17 @@ export function RequestCard({ request: r }: { request: MarketRequest }) {
 
 export function RequestCardSkeleton() {
   return (
-    <div className="flex flex-col rounded-[var(--radius-card)] border border-line bg-white">
+    <div className={cardClass({ padded: false, className: "flex flex-col" })}>
       <div className="flex flex-col gap-3 p-5">
-        <div className="flex justify-between"><Skeleton className="h-6 w-40 rounded-lg" /><Skeleton className="h-6 w-16 rounded-full" /></div>
-        <Skeleton className="h-4 w-52 rounded-lg" />
-        <Skeleton className="h-6 w-36 rounded-full" />
+        <div className="flex justify-between"><Skeleton className="h-6 w-40" /><Skeleton className="h-6 w-16 rounded-full" /></div>
+        <Skeleton className="h-4 w-52" />
+        <Skeleton className="h-6 w-36" />
       </div>
-      <div className="grid grid-cols-3 gap-3 border-y border-line px-5 py-4">
-        {[0, 1, 2].map((i) => <Skeleton key={i} className="h-10 rounded-lg" />)}
+      <div className="grid grid-cols-3 gap-3 border-y border-border px-5 py-4">
+        {[0, 1, 2].map((i) => <Skeleton key={i} className="h-10" />)}
       </div>
       <div className="px-5 py-4"><Skeleton className="h-3 w-full rounded-full" /></div>
-      <div className="border-t border-line px-5 py-3"><Skeleton className="h-6 w-44 rounded-lg" /></div>
+      <div className="border-t border-border px-5 py-3"><Skeleton className="h-6 w-44" /></div>
     </div>
   );
 }

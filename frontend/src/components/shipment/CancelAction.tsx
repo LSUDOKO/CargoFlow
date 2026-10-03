@@ -43,7 +43,7 @@ export function CancelAction({ view }: { view: ShipmentView }) {
     return (
       <div className="flex flex-col gap-1">
         <Button variant="danger-outline" disabled aria-describedby="cancel-wait">Cancel facility</Button>
-        <p id="cancel-wait" className="text-xs text-slate">
+        <p id="cancel-wait" className="text-xs text-text-muted">
           Cancellable in <span className="font-mono font-semibold text-ink tabular">{countdownText(state.remainingSec)}</span> (14 days after the deposit), if transit has not started.
         </p>
       </div>
@@ -60,7 +60,7 @@ export function CancelAction({ view }: { view: ShipmentView }) {
       <Button variant="danger-outline" onClick={() => setOpen(true)}>Cancel facility</Button>
       <Modal open={open} onClose={() => setOpen(false)} title="Cancel this facility?" description="The facility closes for good before transit. This cannot be undone.">
         <ul className="flex flex-col gap-3 text-sm">
-          <li className="flex gap-3 rounded-2xl bg-mist px-4 py-3">
+          <li className="flex gap-3 rounded-tile bg-mist px-4 py-3">
             <span aria-hidden="true" className="mt-0.5 font-display font-bold">1</span>
             <span>
               {state.refundsDeposit ? (
@@ -70,12 +70,12 @@ export function CancelAction({ view }: { view: ShipmentView }) {
               )}
             </span>
           </li>
-          <li className="flex gap-3 rounded-2xl bg-mist px-4 py-3">
+          <li className="flex gap-3 rounded-tile bg-mist px-4 py-3">
             <span aria-hidden="true" className="mt-0.5 font-display font-bold">2</span>
             <span>A bill of lading bound to the facility returns to the exporter.</span>
           </li>
           {view.cover && (
-            <li className="flex gap-3 rounded-2xl bg-mist px-4 py-3">
+            <li className="flex gap-3 rounded-tile bg-mist px-4 py-3">
               <span aria-hidden="true" className="mt-0.5 font-display font-bold">3</span>
               <span>The default cover can then be returned to the insurer from the Money tab.</span>
             </li>

@@ -35,7 +35,7 @@ type Props = {
 
 function MapLoading() {
   return (
-    <div className="grid h-full w-full animate-pulse place-items-center bg-[#D5E3EC] text-xs font-medium text-slate" role="status">
+    <div className="grid h-full w-full animate-pulse place-items-center bg-[#D5E3EC] text-xs font-medium text-text-muted" role="status">
       Loading map…
     </div>
   );
@@ -280,7 +280,7 @@ export function RouteMap({ route, position, status, shipmentId, maxRouteDeviatio
       if (scene.track.some((p) => !p.committed)) legend.push({ key: "unc", swatch: dot(MAP_COLORS.tempIn, true), text: "Not yet on chain" });
     }
     const ms = new Set(voyage.milestones.map((m) => m.state));
-    const badge = (bg: string, fg: string, g: string, border = "#fff") => <span className="grid h-4 w-4 place-items-center rounded-full text-[9px] font-extrabold" style={{ background: bg, color: fg, border: `1.5px solid ${border}` }}>{g}</span>;
+    const badge = (bg: string, fg: string, g: string, border = "#fff") => <span className="grid h-4 w-4 place-items-center rounded-full text-overline font-extrabold" style={{ background: bg, color: fg, border: `1.5px solid ${border}` }}>{g}</span>;
     if (ms.has("released")) legend.push({ key: "msr", swatch: badge(MAP_COLORS.released, "#fff", "✓"), text: "Milestone released" });
     if (ms.has("paused")) legend.push({ key: "msp", swatch: badge(MAP_COLORS.paused, "#0B1B2B", "!"), text: "Milestone blocked" });
     if (ms.has("next") || ms.has("pending")) legend.push({ key: "msn", swatch: badge("#fff", "#5B6B7B", "#", "#94A3B8"), text: "Milestone pending" });
@@ -298,12 +298,12 @@ export function RouteMap({ route, position, status, shipmentId, maxRouteDeviatio
 
   const p = facts.progress;
   return (
-    <figure ref={figure} className="cf-figure overflow-hidden rounded-2xl border border-line bg-white">
+    <figure ref={figure} className="cf-figure overflow-hidden rounded-tile border border-line bg-white">
       <div className="cf-figure__map relative h-[340px] sm:h-[440px]" style={{ background: pal.water }}>
         {failed ? (
           <div className="flex h-full flex-col">
             <RouteSketch route={route} position={position} paused={paused} className="min-h-0 w-full flex-1" />
-            <p className="border-t border-line bg-white px-3 py-1.5 text-[11px] text-slate">Map tiles are unavailable, so this is a sketch of the route.</p>
+            <p className="border-t border-line bg-white px-3 py-1.5 text-overline text-text-muted">Map tiles are unavailable, so this is a sketch of the route.</p>
           </div>
         ) : (
           <MapView scene={scene} corridorM={corridorM} replayIndex={replayIdx} paused={paused} label={label} describedBy={summaryId} onFail={setFailed} fullscreenTarget={fullscreenTarget} theme={theme} voyage={voyage} places={places} showLanes />
@@ -312,11 +312,11 @@ export function RouteMap({ route, position, status, shipmentId, maxRouteDeviatio
         {/* voyage card: where the cargo is along the route */}
         {scene.route.length > 1 && (
           <div className="pointer-events-none absolute top-2.5 left-2.5 z-10 w-[min(250px,calc(100%-62px))] rounded-xl border border-ink/10 bg-white/95 px-2.5 py-2 text-ink shadow-[0_4px_14px_-6px_rgb(11_27_43/0.3)] backdrop-blur-sm" aria-hidden="true">
-            <div className="flex items-center justify-between gap-2 text-[11px] font-semibold">
+            <div className="flex items-center justify-between gap-2 text-overline font-semibold">
               <span className="truncate">
-                {origin?.code ?? origin?.name ?? "Origin"} <span className="font-normal text-slate">→</span> {dest?.code ?? dest?.name ?? "Destination"}
+                {origin?.code ?? origin?.name ?? "Origin"} <span className="font-normal text-text-muted">→</span> {dest?.code ?? dest?.name ?? "Destination"}
               </span>
-              <span className={delivered ? "text-[#00733E]" : ""}>{delivered ? "Delivered" : p ? `${Math.round(p.pct)}%` : "Not started"}</span>
+              <span className={delivered ? "text-success-fg" : ""}>{delivered ? "Delivered" : p ? `${Math.round(p.pct)}%` : "Not started"}</span>
             </div>
             <div className="relative mt-1.5 h-1 overflow-hidden rounded-full bg-mist">
               <div className="absolute inset-y-0 left-0 rounded-full bg-ink" style={{ width: `${delivered ? 100 : (p?.pct ?? 0)}%` }} />
@@ -324,11 +324,11 @@ export function RouteMap({ route, position, status, shipmentId, maxRouteDeviatio
                 <span key={m.index} className="absolute top-0 h-full w-[2px] bg-white" style={{ left: `${Math.min(99.5, (100 * m.alongKm) / (scene.routeKm || 1))}%` }} />
               ))}
             </div>
-            <p className="mt-1.5 truncate font-mono text-[10px] text-slate">
+            <p className="mt-1.5 truncate font-mono text-overline text-text-muted">
               {delivered ? formatKm(scene.routeKm) : p ? <><b className="font-semibold text-ink">{formatKm(p.remainingKm)}</b> to go of {formatKm(p.totalKm)}</> : `${formatKm(scene.routeKm)} · awaiting first fix`}
             </p>
             {!delivered && (facts.etaTs || facts.speedKn !== null) && (
-              <p className="truncate font-mono text-[10px] text-slate">
+              <p className="truncate font-mono text-overline text-text-muted">
                 {[facts.speedKn !== null ? `${facts.speedKn.toFixed(1)} kn${facts.heading !== null ? ` ${compass(facts.heading)}` : ""}` : null, facts.etaTs ? `ETA ≈ ${day(facts.etaTs)}` : null].filter(Boolean).join(" · ")}
               </p>
             )}
@@ -340,14 +340,14 @@ export function RouteMap({ route, position, status, shipmentId, maxRouteDeviatio
       <figcaption className="border-t border-line px-3 py-2.5 text-ink">
         <p id={summaryId} className="sr-only">{summary}</p>
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 text-xs font-medium">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-slate">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-text-muted">
             <span>
               {scene.route.length > 1 ? formatKm(scene.routeKm) : "Planned route"}
               {scene.route.length > 1 && ` (${Math.round(scene.routeKm / 1.852).toLocaleString("en-US")} nmi)`}
             </span>
             <span>{scene.position ? `Last fix ${when(scene.position.timestamp)}` : "Awaiting first reading"}</span>
             {off !== null && corridorM > 0 && (
-              <span className={`rounded-full px-2 py-0.5 font-semibold ${off <= corridorM ? "bg-verified/12 text-[#00733E]" : "bg-alert/20 text-[#8A5300]"}`}>
+              <span className={`rounded-full px-2 py-0.5 font-semibold ${off <= corridorM ? "bg-verified/12 text-success-fg" : "bg-alert/20 text-warning-fg"}`}>
                 {off <= corridorM ? "Inside corridor" : `Off route by ${formatKm((off - corridorM) / 1000)}`}
               </span>
             )}
@@ -356,13 +356,13 @@ export function RouteMap({ route, position, status, shipmentId, maxRouteDeviatio
             {trackState === "ready" && scene.track.length === 0 && <span>No logger fixes yet</span>}
           </div>
           {!failed && legend.length > 0 && (
-            <button type="button" onClick={toggleLegend} aria-expanded={legendOpen} aria-controls={legendId} className="inline-flex items-center gap-1 rounded-full border border-line px-2.5 py-0.5 text-[11px] font-semibold sm:hidden">
+            <button type="button" onClick={toggleLegend} aria-expanded={legendOpen} aria-controls={legendId} className="inline-flex items-center gap-1 rounded-full border border-line px-2.5 py-0.5 text-overline font-semibold sm:hidden">
               Legend
               <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true" className={legendOpen ? "" : "rotate-180"}><path d="M2 6.5 5 3.5l3 3" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
             </button>
           )}
           {!failed && (
-            <div role="group" aria-label="Map style" className="inline-flex rounded-full bg-mist p-0.5 text-[11px] font-semibold">
+            <div role="group" aria-label="Map style" className="inline-flex rounded-full bg-mist p-0.5 text-overline font-semibold">
               {(["light", "dark"] as const).map((t) => (
                 <button key={t} type="button" aria-pressed={theme === t} onClick={() => setTheme(t)} className={`rounded-full px-2.5 py-0.5 capitalize transition-colors ${theme === t ? "bg-ink text-paper" : "text-ink/70 hover:text-ink"}`}>
                   {t}
@@ -372,7 +372,7 @@ export function RouteMap({ route, position, status, shipmentId, maxRouteDeviatio
           )}
         </div>
         {legend.length > 0 && (
-          <ul id={legendId} aria-label="Map legend" className={`${legendVisible} mt-2.5 flex-wrap gap-x-3.5 gap-y-1.5 border-t border-line pt-2.5 text-[11px] text-ink/75 sm:flex`}>
+          <ul id={legendId} aria-label="Map legend" className={`${legendVisible} mt-2.5 flex-wrap gap-x-3.5 gap-y-1.5 border-t border-line pt-2.5 text-overline text-ink/75 sm:flex`}>
             {legend.map((l) => (
               <li key={l.key} className="flex items-center gap-1.5">
                 <span className="grid w-5 shrink-0 place-items-center" aria-hidden="true">{l.swatch}</span>

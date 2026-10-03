@@ -42,7 +42,7 @@ export function TitleCard({ view }: { view: ShipmentView }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="rounded-2xl bg-mist px-4 py-3 text-sm">
+      <p className="rounded-tile bg-mist px-4 py-3 text-sm">
         <span className="font-semibold">{DAP_RULE.split(":")[0]}:</span>
         {DAP_RULE.slice(DAP_RULE.indexOf(":") + 1)}
       </p>
@@ -58,17 +58,17 @@ export function TitleCard({ view }: { view: ShipmentView }) {
             </div>
           </div>
           <dl className="grid grid-cols-2 gap-3 text-sm">
-            <div><dt className="text-slate">Held by</dt><dd>{where?.escrow ? <span className="font-medium">The financing contract (escrow)</span> : <HashBadge value={bill.holder} kind="address" chainId={chainId} compact />}</dd></div>
-            <div><dt className="text-slate">Consignee</dt><dd>{isToOrder(bill.consignee) ? <span className="font-medium">To order</span> : <HashBadge value={bill.consignee} kind="address" chainId={chainId} compact />}</dd></div>
-            <div className="col-span-2"><dt className="text-slate">Document fingerprint</dt><dd><HashBadge value={bill.documentHash} compact /></dd></div>
+            <div><dt className="text-text-muted">Held by</dt><dd>{where?.escrow ? <span className="font-medium">The financing contract (escrow)</span> : <HashBadge value={bill.holder} kind="address" chainId={chainId} compact />}</dd></div>
+            <div><dt className="text-text-muted">Consignee</dt><dd>{isToOrder(bill.consignee) ? <span className="font-medium">To order</span> : <HashBadge value={bill.consignee} kind="address" chainId={chainId} compact />}</dd></div>
+            <div className="col-span-2"><dt className="text-text-muted">Document fingerprint</dt><dd><HashBadge value={bill.documentHash} compact /></dd></div>
           </dl>
-          {where?.escrow && <p className="text-sm text-slate">While bound nobody can move it: not the exporter, the carrier or the admin. It leaves escrow only by the rule above.</p>}
+          {where?.escrow && <p className="text-sm text-text-muted">While bound nobody can move it: not the exporter, the carrier or the admin. It leaves escrow only by the rule above.</p>}
         </div>
       ) : (
-        <p className="text-sm text-slate">{open ? "No bill of lading is bound yet. The exporter can bind one before transit starts." : "No bill of lading was bound to this facility."}</p>
+        <p className="text-sm text-text-muted">{open ? "No bill of lading is bound yet. The exporter can bind one before transit starts." : "No bill of lading was bound to this facility."}</p>
       )}
       {!bill && open && isExporter && <BindTitle view={view} />}
-      <p className="text-xs text-slate">{MLETR_NOTE}</p>
+      <p className="text-xs text-text-muted">{MLETR_NOTE}</p>
     </div>
   );
 }
@@ -106,13 +106,13 @@ function BindTitle({ view }: { view: ShipmentView }) {
         <Skeleton className="h-12" />
       ) : candidates.length > 0 ? (
         <fieldset className="flex flex-col gap-2">
-          <legend className="mb-1 text-sm text-slate">Bills you hold that can be bound (live, consigned to the buyer or to order)</legend>
+          <legend className="mb-1 text-sm text-text-muted">Bills you hold that can be bound (live, consigned to the buyer or to order)</legend>
           {candidates.map((b) => (
             <BillChoice key={String(b.tokenId)} bill={b} checked={picked === String(b.tokenId)} onChange={() => { setPicked(String(b.tokenId)); setManual(""); }} />
           ))}
         </fieldset>
       ) : (
-        <p className="text-sm text-slate">
+        <p className="text-sm text-text-muted">
           {others.length > 0 ? `You hold ${others.length} ${others.length === 1 ? "bill" : "bills"}, but none can be bound here: ${bindableReason(others[0]!, f.exporter, f.buyer)}` : "This wallet holds no live bill of lading. The carrier issues one to the shipper from the carrier portal."}
         </p>
       )}
@@ -144,10 +144,10 @@ function BindTitle({ view }: { view: ShipmentView }) {
 
 function BillChoice({ bill, checked, onChange }: { bill: Bill; checked: boolean; onChange: () => void }) {
   return (
-    <label className={`flex cursor-pointer items-center gap-3 rounded-2xl border-2 px-4 py-2.5 text-sm ${checked ? "border-ink bg-ink/4" : "border-line hover:border-ink/40"}`}>
+    <label className={`flex cursor-pointer items-center gap-3 rounded-tile border-2 px-4 py-2.5 text-sm ${checked ? "border-ink bg-ink/4" : "border-line hover:border-ink/40"}`}>
       <input type="radio" name="bind-bill" checked={checked} onChange={onChange} className="accent-[var(--color-ink)]" />
       <span className="font-semibold">Bill #{String(bill.tokenId)}</span>
-      <span className="text-slate">{isToOrder(bill.consignee) ? "To order" : "Named consignee"}</span>
+      <span className="text-text-muted">{isToOrder(bill.consignee) ? "To order" : "Named consignee"}</span>
       <span className="ml-auto"><HashBadge value={bill.documentHash} compact /></span>
     </label>
   );

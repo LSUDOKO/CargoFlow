@@ -1,20 +1,20 @@
 "use client";
 
-import { useState } from "react";
 import { Drawer } from "@/components/ui/Drawer";
-import { Button, LinkButton } from "@/components/ui/Button";
-import { StatusPill } from "@/components/ui/Pill";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { LinkButton } from "@/components/ui/Button";
+import { CopyField } from "@/components/ui/CopyField";
+import { KeyValue } from "@/components/ui/KeyValue";
+import { Badge, StatusPill } from "@/components/ui/Pill";
+import { Skeleton, SkeletonText } from "@/components/ui/Skeleton";
 import { useShipment, useTelemetry } from "@/lib/api/hooks";
 import { formatTempX100, formatUSDG } from "@/lib/format";
 
-const probe: Record<string, string> = { "sensor-1": "Container air probe", "sensor-2": "Core probe" };
+const probe: Record<string, string> = { "sensor-1": "Container air sensor", "sensor-2": "Core sensor" };
 
-/** The container behind a fleet row: its probes, their latest readings range and the facility at a glance. */
+/** The container behind a fleet row: its sensors, their reading range and the facility at a glance. */
 export function ContainerDrawer({ id, onClose }: { id: string | null; onClose: () => void }) {
   const { data: v } = useShipment(id ?? undefined);
   const { data: t } = useTelemetry(id ?? undefined);
-  const [copied, setCopied] = useState(false);
   const sensors = new Map<string, { readings: number; min: number; max: number }>();
   for (const e of t?.epochs ?? []) {
     for (const s of e.sensors) {
@@ -24,49 +24,65 @@ export function ContainerDrawer({ id, onClose }: { id: string | null; onClose: (
   }
   const band = v?.shipment.policy;
   return (
-    <Drawer open={!!id} onClose={onClose} title={v?.shipment.externalRef ?? "Container"}>
+    <Drawer
+      open={!!id}
+      onClose={onClose}
+      title={v?.shipment.externalRef ?? "Container"}
+      description="Sensor readings and the facility behind this shipment."
+      footer={v && <LinkButton href={`/track/${v.shipment.id}`}>Open dashboard</LinkButton>}
+    >
       {!v ? (
-        <Skeleton className="h-64" />
+        <div aria-busy="true" className="flex flex-col gap-4">
+          <Skeleton className="h-6 w-40" />
+          <SkeletonText lines={4} />
+        </div>
       ) : (
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-wrap items-center gap-3">
-            <StatusPill status={v.facility?.status ?? v.shipment.status} />
-            {v.facility && <span className="text-sm text-slate">{formatUSDG(v.facility.drawn)} of {formatUSDG(v.facility.committed)} USDG drawn</span>}
+        <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <StatusPill status={v.facility?.status ?? v.shipment.status} />
+              {v.facility && (
+                <span className="num text-sm text-text-muted">
+                  <span className="font-semibold text-ink">{formatUSDG(v.facility.drawn)}</span> of {formatUSDG(v.facility.committed)} USDG drawn
+                </span>
+              )}
+            </div>
+            <CopyField value={v.shipment.id} label="Shipment id" kind="hash" className="w-full" />
           </div>
-          <section>
-            <h3 className="font-display text-lg font-semibold">Probes</h3>
+
+          <section aria-labelledby="drawer-probes">
+            <h3 id="drawer-probes" className="font-display text-h4">Probes</h3>
             {sensors.size === 0 ? (
-              <p className="mt-2 text-slate">No readings yet.</p>
+              <p className="mt-2 text-sm text-text-muted">No readings yet.</p>
             ) : (
-              <ul className="mt-3 flex flex-col gap-3">
+              <ul className="mt-3 flex flex-col gap-2">
                 {[...sensors.entries()].sort().map(([sid, s]) => {
                   const outside = band ? s.max > band.maxTempX100 || s.min < band.minTempX100 : false;
                   return (
-                    <li key={sid} className={`rounded-2xl border p-4 ${outside ? "border-alert bg-alert/10" : "border-line bg-white"}`}>
-                      <p className="font-semibold">{probe[sid] ?? sid}</p>
-                      <p className="mt-1 text-sm text-slate">{s.readings} readings accepted</p>
-                      <p className="mt-2 font-mono text-sm">
-                        {formatTempX100(s.min)} to {formatTempX100(s.max)}
-                        {outside && <span className="ml-2 font-sans font-semibold text-[#8a5300]">left the agreed band</span>}
-                      </p>
+                    <li key={sid} className="flex items-start justify-between gap-3 rounded-tile border border-border bg-surface p-4">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold">{probe[sid] ?? sid}</p>
+                        <p className="num mt-0.5 text-small text-text-muted">{s.readings.toLocaleString("en-US")} readings accepted</p>
+                      </div>
+                      <div className="flex shrink-0 flex-col items-end gap-1">
+                        <span className="num text-sm font-semibold">{formatTempX100(s.min)} to {formatTempX100(s.max)}</span>
+                        {outside ? <Badge variant="warning" size="sm">Left the band</Badge> : <Badge variant="success" size="sm">In band</Badge>}
+                      </div>
                     </li>
                   );
                 })}
               </ul>
             )}
           </section>
-          <section className="grid grid-cols-2 gap-4 text-sm">
-            <div><p className="text-slate">Evidence epochs</p><p className="font-display text-2xl font-bold">{t?.epochs.length ?? 0}</p></div>
-            <div><p className="text-slate">Latest score</p><p className="font-display text-2xl font-bold">{v.latestEvidence?.score ?? "–"}</p></div>
-            <div><p className="text-slate">Quarantined readings</p><p className="font-display text-2xl font-bold">{v.quarantinedReadings}</p></div>
-            <div><p className="text-slate">Agreed band</p><p className="font-display text-xl font-bold">{band ? `${formatTempX100(band.minTempX100)} – ${formatTempX100(band.maxTempX100)}` : "–"}</p></div>
-          </section>
-          <div className="flex flex-wrap gap-2">
-            <LinkButton href={`/track/${v.shipment.id}`}>Open dashboard</LinkButton>
-            <Button variant="secondary" onClick={async () => { await navigator.clipboard?.writeText(v.shipment.id); setCopied(true); }}>
-              {copied ? "Copied" : "Copy id"}
-            </Button>
-          </div>
+
+          <KeyValue
+            items={[
+              { label: "Agreed band", value: band ? `${formatTempX100(band.minTempX100)} to ${formatTempX100(band.maxTempX100)}` : "–", numeric: true },
+              { label: "Evidence batches", value: t?.epochs.length ?? 0, numeric: true },
+              { label: "Latest evidence score", value: v.latestEvidence ? `${v.latestEvidence.score} / 100` : "–", numeric: true },
+              { label: "Quarantined readings", value: v.quarantinedReadings, numeric: true },
+            ]}
+          />
         </div>
       )}
     </Drawer>

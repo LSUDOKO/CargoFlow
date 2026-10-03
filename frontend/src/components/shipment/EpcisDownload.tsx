@@ -29,7 +29,7 @@ export function EpcisDownload({ shipmentId, reference }: { shipmentId: string; r
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-slate">
+      <p className="text-sm text-text-muted">
         Every event of this shipment in the GS1 EPCIS 2.0 standard: commissioning, shipping, one sensor report per evidence batch (temperature, humidity and shock aggregates with the Merkle root and commit transaction), financing events and receiving. Raw readings are not included.
       </p>
       <div className="flex flex-wrap items-center gap-3">
@@ -40,7 +40,7 @@ export function EpcisDownload({ shipmentId, reference }: { shipmentId: string; r
           Open the API endpoint<span className="sr-only"> (opens in a new tab)</span>
         </a>
       </div>
-      {error && <p role="alert" className="text-sm font-medium text-danger">{error}</p>}
+      {error && <p role="alert" className="text-sm font-medium text-danger-fg">{error}</p>}
     </div>
   );
 }

@@ -7,7 +7,7 @@ function Code({ children }: { children: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <div className="relative">
-      <pre className="overflow-x-auto rounded-2xl bg-ink p-4 pr-20 font-mono text-xs leading-relaxed text-paper">{children}</pre>
+      <pre className="overflow-x-auto rounded-tile bg-ink p-4 pr-20 font-mono text-xs leading-relaxed text-paper">{children}</pre>
       <button
         type="button"
         className="absolute top-2 right-2 rounded-full bg-paper/10 px-3 py-1 text-xs font-semibold text-paper hover:bg-paper/20"
@@ -54,7 +54,7 @@ const res = await fetch("${API_URL}" + path, {
 console.log(res.status, await res.text());`;
 
   return (
-    <details className="group mt-4 rounded-2xl border-2 border-line">
+    <details className="group mt-4 rounded-tile border-2 border-line">
       <summary className="cursor-pointer list-none px-4 py-3 font-semibold marker:hidden">
         <span className="mr-2 inline-block transition-transform group-open:rotate-90" aria-hidden="true">›</span>
         Send readings from a device instead

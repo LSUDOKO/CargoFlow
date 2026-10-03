@@ -158,7 +158,7 @@ export function ShareCard({ id, reference, chainId }: { id: string; reference: s
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-4">
-        <div className="shrink-0 rounded-2xl border border-line bg-white p-2.5">
+        <div className="shrink-0 rounded-tile border border-line bg-white p-2.5">
           {path ? (
             <svg viewBox={`-1 -1 ${size + 2} ${size + 2}`} className="h-28 w-28" role="img" aria-label={`QR code for ${url}`} shapeRendering="crispEdges">
               <path d={path} fill={INK} />
@@ -167,7 +167,7 @@ export function ShareCard({ id, reference, chainId }: { id: string; reference: s
             <Skeleton className="h-28 w-28" />
           )}
         </div>
-        <p className="text-sm text-slate">Anyone with the link sees the live evidence, escrow and audit trail. Nothing private is exposed.</p>
+        <p className="text-sm text-text-muted">Anyone with the link sees the live evidence, escrow and audit trail. Nothing private is exposed.</p>
       </div>
       <div>
         <label htmlFor="share-link" className="mb-1.5 block text-sm font-semibold">Public tracking link</label>
@@ -176,14 +176,14 @@ export function ShareCard({ id, reference, chainId }: { id: string; reference: s
           readOnly
           value={url}
           onFocus={(e) => e.currentTarget.select()}
-          className="h-11 w-full rounded-2xl border-2 border-line bg-white px-3 font-mono text-[0.8125rem] text-ink outline-none focus:border-ink"
+          className="h-11 w-full rounded-tile border-2 border-line bg-white px-3 font-mono text-small text-ink outline-none focus:border-ink"
         />
       </div>
       <div className="flex flex-wrap gap-2">
         <Button size="sm" variant="secondary" onClick={() => void copy()} disabled={!url}>{copied ? "Link copied" : "Copy link"}</Button>
         <Button size="sm" variant="secondary" loading={busy} onClick={() => void download()} disabled={!url}>Download label</Button>
       </div>
-      <p className="text-xs text-slate">The label is a 4 × 6 in PNG for the container door or the pallet: print it at 100%.</p>
+      <p className="text-xs text-text-muted">The label is a 4 × 6 in PNG for the container door or the pallet: print it at 100%.</p>
     </div>
   );
 }

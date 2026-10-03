@@ -47,10 +47,10 @@ export function DisputeAction({ shipmentId, controller }: { shipmentId: `0x${str
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder="Container MSKU 482113-0 arrived with a broken seal at Singapore; survey report 2026-118 attached to our email."
-            className="-mt-2 rounded-2xl border-2 border-line bg-white p-3 text-[0.98rem] outline-none focus:border-ink"
+            className="-mt-2 rounded-tile border-2 border-line bg-white p-3 text-body outline-none focus:border-ink"
           />
           {hash && (
-            <p className="text-sm text-slate">
+            <p className="text-sm text-text-muted">
               On chain this is recorded as <code className="font-mono text-xs break-all text-ink">{hash}</code>. Keep the text: the arbiter can check it against this hash.
             </p>
           )}

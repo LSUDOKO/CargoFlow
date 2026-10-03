@@ -9,8 +9,8 @@ const TEXTS = {
 
 export function PausedBanner({ scope = "controller", className = "" }: { scope?: keyof typeof TEXTS; className?: string }) {
   return (
-    <div role="status" className={`flex items-start gap-3 rounded-2xl border border-alert/50 bg-alert/12 px-4 py-3 text-sm ${className}`}>
-      <svg viewBox="0 0 20 20" className="mt-0.5 h-4 w-4 shrink-0 text-[#8a5300]" aria-hidden="true">
+    <div role="status" className={`flex items-start gap-3 rounded-tile border border-alert/50 bg-alert/12 px-4 py-3 text-sm ${className}`}>
+      <svg viewBox="0 0 20 20" className="mt-0.5 h-4 w-4 shrink-0 text-warning-fg" aria-hidden="true">
         <rect x="5" y="4" width="3.2" height="12" rx="1" fill="currentColor" />
         <rect x="11.8" y="4" width="3.2" height="12" rx="1" fill="currentColor" />
       </svg>

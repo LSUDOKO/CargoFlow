@@ -58,16 +58,16 @@ export function AlertsPanel({ view }: { view: ShipmentView }) {
 
   if (extras.isPending) return <Skeleton className="h-32" />;
   if (!alerts) {
-    return <p className="rounded-2xl bg-mist px-4 py-3 text-sm text-slate">Alerts are not available on this deployment yet.</p>;
+    return <p className="rounded-tile bg-mist px-4 py-3 text-sm text-text-muted">Alerts are not available on this deployment yet.</p>;
   }
   const available: Record<AlertChannel, boolean> = { webhook: alerts.webhook, telegram: alerts.telegram, email: alerts.email, slack: alerts.slack };
 
   if (!hydrated || !isConnected || roles.length === 0) {
     return (
       <div className="flex flex-col gap-3 text-sm">
-        <p className="text-slate">The exporter, financier and buyer can be alerted the moment this shipment pauses, releases, settles or is disputed.</p>
+        <p className="text-text-muted">The exporter, financier and buyer can be alerted the moment this shipment pauses, releases, settles or is disputed.</p>
         <ChannelList available={available} />
-        {hydrated && isConnected ? <p className="text-slate">This wallet is not a party to the shipment.</p> : <div><WalletButton compact /></div>}
+        {hydrated && isConnected ? <p className="text-text-muted">This wallet is not a party to the shipment.</p> : <div><WalletButton compact /></div>}
       </div>
     );
   }
@@ -80,13 +80,13 @@ export function AlertsPanel({ view }: { view: ShipmentView }) {
         <SubscribeForm view={view} available={available} telegramBot={alerts.telegramBot} onCreated={setCreated} />
       )}
       <section aria-labelledby="my-alerts">
-        <h3 id="my-alerts" className="text-xs font-semibold tracking-wide text-slate uppercase">Your alerts</h3>
+        <h3 id="my-alerts" className="eyebrow">Your alerts</h3>
         {subs.isPending ? (
           <Skeleton className="mt-2 h-12" />
         ) : subs.isError ? (
-          <p className="mt-2 text-sm text-slate">{isUnavailable(subs.error) ? "Your alerts can't be listed on this deployment yet." : "Your alerts could not be loaded."}</p>
+          <p className="mt-2 text-sm text-text-muted">{isUnavailable(subs.error) ? "Your alerts can't be listed on this deployment yet." : "Your alerts could not be loaded."}</p>
         ) : subs.data.subscriptions.length === 0 ? (
-          <p className="mt-2 text-sm text-slate">None yet.</p>
+          <p className="mt-2 text-sm text-text-muted">None yet.</p>
         ) : (
           <ul className="mt-1 divide-y divide-line">
             {subs.data.subscriptions.map((s) => (
@@ -174,7 +174,7 @@ function SubscribeForm({ view, available, telegramBot, onCreated }: { view: Ship
     >
       <fieldset>
         <legend className="mb-1.5 text-sm font-semibold">Channel</legend>
-        <div className="grid grid-cols-2 gap-1 rounded-2xl bg-mist p-1 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-1 rounded-tile bg-mist p-1 sm:grid-cols-4">
           {CHANNELS.map((c) => {
             const on = channel === c.id;
             const off = !available[c.id];
@@ -194,7 +194,7 @@ function SubscribeForm({ view, available, telegramBot, onCreated }: { view: Ship
             );
           })}
         </div>
-        <p className="mt-1.5 text-sm text-slate">
+        <p className="mt-1.5 text-sm text-text-muted">
           {CHANNELS.find((c) => c.id === channel)!.hint}.
           {CHANNELS.some((c) => !available[c.id]) && ` ${CHANNELS.filter((c) => !available[c.id]).map((c) => c.label).join(" and ")} ${CHANNELS.filter((c) => !available[c.id]).length > 1 ? "are" : "is"} not configured on this deployment.`}
         </p>
@@ -221,7 +221,7 @@ function SubscribeForm({ view, available, telegramBot, onCreated }: { view: Ship
         <Field label="Email address" type="email" autoComplete="email" placeholder="ops@exporter.example" value={target} onChange={(e) => setTarget(e.target.value)} onBlur={() => setTouched(true)} error={touched ? tErr : null} />
       )}
       {channel === "telegram" && (
-        <p className="rounded-2xl bg-mist px-4 py-3 text-sm text-slate">
+        <p className="rounded-tile bg-mist px-4 py-3 text-sm text-text-muted">
           After you sign, open {telegramBot ? <span className="font-semibold text-ink">@{telegramBot.replace(/^@/, "")}</span> : "the CargoFlow bot"} and press Start to finish.
         </p>
       )}
@@ -236,7 +236,7 @@ function SubscribeForm({ view, available, telegramBot, onCreated }: { view: Ship
                 key={ev}
                 className={cx(
                   "inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink",
-                  on ? "border-ink/60 bg-signal/30 text-ink" : "border-line bg-white text-slate hover:border-ink/40",
+                  on ? "border-ink/60 bg-signal/30 text-ink" : "border-line bg-white text-text-muted hover:border-ink/40",
                 )}
               >
                 <input type="checkbox" className="sr-only" checked={on} onChange={() => setEvents((xs) => (on ? xs.filter((x) => x !== ev) : [...xs, ev]))} />
@@ -246,10 +246,10 @@ function SubscribeForm({ view, available, telegramBot, onCreated }: { view: Ship
             );
           })}
         </div>
-        {events.length === 0 && <p className="mt-1.5 text-sm font-medium text-danger">Pick at least one event.</p>}
+        {events.length === 0 && <p className="mt-1.5 text-sm font-medium text-danger-fg">Pick at least one event.</p>}
       </fieldset>
 
-      {error && <p role="alert" className="text-sm font-medium text-danger">{error}</p>}
+      {error && <p role="alert" className="text-sm font-medium text-danger-fg">{error}</p>}
       <Button type="submit" size="sm" className="self-start" loading={busy !== null} disabled={!available[channel] || events.length === 0}>
         {busy === "sign" ? "Waiting for your signature…" : busy === "save" ? "Subscribing…" : "Sign and subscribe"}
       </Button>
@@ -269,7 +269,7 @@ function Created({ created, onDone }: { created: SubscriptionCreated; onDone: ()
     }
   };
   return (
-    <div className="flex flex-col gap-3 rounded-2xl bg-ink p-4 text-paper surface-ink" role="status">
+    <div className="flex flex-col gap-3 rounded-tile bg-ink p-4 text-paper surface-ink" role="status">
       <p className="font-display text-base font-semibold text-signal">{channelLabel(created.channel)} alert created</p>
       {created.channel === "telegram" && created.linkUrl ? (
         <>
@@ -279,10 +279,10 @@ function Created({ created, onDone }: { created: SubscriptionCreated; onDone: ()
       ) : created.secret ? (
         <>
           <p className="text-sm text-paper/80">
-            Every delivery carries <code className="font-mono text-[0.8125rem] text-paper">X-CargoFlow-Signature</code>, the hex HMAC-SHA256 of the body with this secret. It is shown only once.
+            Every delivery carries <code className="font-mono text-small text-paper">X-CargoFlow-Signature</code>, the hex HMAC-SHA256 of the body with this secret. It is shown only once.
           </p>
           <div className="flex items-center gap-2 rounded-xl bg-paper/10 py-1.5 pr-1.5 pl-3">
-            <code className="min-w-0 flex-1 font-mono text-[0.8125rem] break-all select-all">{created.secret}</code>
+            <code className="min-w-0 flex-1 font-mono text-small break-all select-all">{created.secret}</code>
             <Button size="sm" variant="primary" onClick={() => void copy(created.secret!)}>{copied ? "Copied" : "Copy"}</Button>
           </div>
         </>
@@ -333,11 +333,11 @@ function SubscriptionRow({ s, shipmentId }: { s: Subscription; shipmentId: strin
             {!s.active && <Pill tone="alert">{s.channel === "telegram" ? "Waiting for Start" : "Inactive"}</Pill>}
           </p>
           {s.targetMasked && <p className={`truncate text-xs text-ink/80 ${s.channel === "telegram" ? "" : "font-mono"}`} title={s.targetMasked}>{s.targetMasked}</p>}
-          <p className="text-xs text-slate">{ALERT_EVENTS.filter((e) => !COVER_ALERT_EVENTS.includes(e) && !V3_ALERT_EVENTS.includes(e)).every((e) => s.events.includes(e)) ? "Every event" : s.events.map((e) => ALERT_EVENT_LABEL[e as AlertEvent] ?? e).join(", ")}</p>
+          <p className="text-xs text-text-muted">{ALERT_EVENTS.filter((e) => !COVER_ALERT_EVENTS.includes(e) && !V3_ALERT_EVENTS.includes(e)).every((e) => s.events.includes(e)) ? "Every event" : s.events.map((e) => ALERT_EVENT_LABEL[e as AlertEvent] ?? e).join(", ")}</p>
         </div>
         <Button size="sm" variant="ghost" loading={busy} onClick={() => void remove()} aria-label={`Remove ${channelLabel(s.channel)} alert`}>Remove</Button>
       </div>
-      {error && <p role="alert" className="mt-1 text-sm font-medium text-danger">{error}</p>}
+      {error && <p role="alert" className="mt-1 text-sm font-medium text-danger-fg">{error}</p>}
     </li>
   );
 }
