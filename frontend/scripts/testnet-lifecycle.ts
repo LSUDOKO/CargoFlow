@@ -5,11 +5,15 @@
 //   node --experimental-strip-types scripts/testnet-lifecycle.ts https://cargoflow-api-….onrender.com
 //
 // It spends testnet gas from each party and a small amount of testnet USDG (facility 20, invoice 30).
+//
+// Partial runs for demo data: STOP=paused ends after the excursion (a live paused facility for the automatic
+// recovery worker), MODE=request registers a shipment with its policy and opens a market financing request.
 import { readFileSync } from "node:fs";
 import { createPublicClient, createWalletClient, defineChain, http, keccak256, toBytes, type Address, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { controllerAbi, policiesAbi, registryAbi, usdgAbi } from "../src/lib/chain/abis.ts";
 import { buildMilestones, buildPolicy, defaultPolicyForm, routeCommitment, ROUTES } from "../src/lib/exporter.ts";
+import { requestMessage } from "../src/lib/api/market.ts";
 import { newGatewayKey, recoveryAuthorizationMessage, signRequest, sourceAuthorizationMessage, sourceIdFor } from "../src/lib/gateway.ts";
 
 const API = (process.argv[2] ?? "").replace(/\/+$/, "");
@@ -60,7 +64,15 @@ async function main() {
   const commitment = (await pub.readContract({ address: c.policyEngine!, abi: policiesAbi, functionName: "hashPolicy", args: [policy] })) as Hex;
   await tx("register shipment", exporter, c.shipmentRegistry!, registryAbi, "registerShipment", [refHash, buyer.account!.address, keccak256(toBytes(`invoice:${ref}:${invoice}`)), routeCommitment(route), commitment, invoice]);
   await tx("set policy", exporter, c.policyEngine!, policiesAbi, "setPolicy", [id, policy]);
-  await tx("create facility", exporter, c.financingController!, controllerAbi, "createFacility", [id, financier.account!.address, 300, buildMilestones(total, 5, Number(defaultPolicyForm.minScore), ref)]);
+  if (process.env.MODE !== "request") await tx("create facility", exporter, c.financingController!, controllerAbi, "createFacility", [id, financier.account!.address, 300, buildMilestones(total, 5, Number(defaultPolicyForm.minScore), ref)]);
+  if (process.env.MODE === "request") {
+    await api("POST", "/v1/shipments/mirror", { shipmentId: id, externalRef: ref, route, maxGapSec: 1800, minSensors: 2 });
+    const at = Math.floor(Date.now() / 1000);
+    const msig = await exporter.account!.signMessage!({ message: requestMessage(id, total, 400, 5, at) });
+    const r = await api<{ id: string }>("POST", "/v1/requests", { shipmentId: id, amount: total.toString(), maxFeeBps: 400, milestoneCount: 5, note: "Vaccines, 2-8 °C, Nhava Sheva to Singapore", issuedAt: at, signature: msig });
+    console.log(`  market request ${r.id} for ${id}`);
+    return;
+  }
   await api("POST", "/v1/shipments/mirror", { shipmentId: id, externalRef: ref, route, maxGapSec: 1800, minSensors: 2 });
   console.log(`  dashboard id ${id}`);
 
@@ -111,6 +123,10 @@ async function main() {
   await send("leg 1, healthy", leg(16));
   await send("leg 2, reefer fails", leg(8, [5.2, 6.8, 8.9, 10.4, 11.7]));
   await send("leg 3, probe-2 still in range", leg(8));
+  if (process.env.STOP === "paused") {
+    console.log(`  stopped while paused: ${id}`);
+    return;
+  }
 
   // 5. recovery: the exporter signs, the backend proves bound to the exporter, the exporter submits the proof
   const ri = Math.floor(Date.now() / 1000);
