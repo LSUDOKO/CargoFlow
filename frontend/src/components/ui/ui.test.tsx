@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { explorerAddress, explorerTx } from "@/lib/explorer";
 import { statusTone } from "@/lib/status";
@@ -121,5 +121,194 @@ describe("dialog focus", () => {
     fireEvent.change(input, { target: { value: "C" } });
     fireEvent.change(input, { target: { value: "CF" } });
     expect(document.activeElement).toBe(input);
+  });
+});
+
+/* ── design system v2 ───────────────────────────────────────────────────── */
+
+describe("Button v2", () => {
+  it("swaps the label for loadingText and keeps the busy state", async () => {
+    const { Button } = await import("./Button");
+    render(<Button loading loadingText="Signing…">Sign</Button>);
+    const b = screen.getByRole("button", { name: /Signing/ });
+    expect(b.getAttribute("aria-busy")).toBe("true");
+  });
+  it("names an icon-only button from its label", async () => {
+    const { IconButton } = await import("./Button");
+    render(<IconButton label="Open menu"><svg /></IconButton>);
+    expect(screen.getByRole("button", { name: "Open menu" })).toBeTruthy();
+  });
+});
+
+describe("Badge and StatusPill", () => {
+  it("keeps the status test id and maps tones to semantic variants", async () => {
+    const { StatusPill, Badge } = await import("./Pill");
+    render(<><StatusPill status="PAUSED" /><Badge variant="info">Info</Badge></>);
+    const pill = screen.getByTestId("status-pill");
+    expect(pill.textContent).toBe("Paused");
+    expect(pill.closest("span.ring-1")?.className).toContain("bg-warning-bg");
+    expect(screen.getByText("Info").closest("span.ring-1")?.className).toContain("text-info-fg");
+  });
+});
+
+describe("Tabs v2", () => {
+  it("prefixes ids and skips disabled tabs with the arrow keys", async () => {
+    const { Tabs } = await import("./Tabs");
+    const onChange = vi.fn();
+    render(<Tabs idBase="audit-" label="Filter" value="a" onChange={onChange} tabs={[{ id: "a", label: "A" }, { id: "b", label: "B", disabled: true }, { id: "c", label: "C" }]} />);
+    const a = screen.getByRole("tab", { name: "A" });
+    expect(a.id).toBe("audit-tab-a");
+    expect(a.getAttribute("aria-controls")).toBe("audit-panel-a");
+    fireEvent.keyDown(a, { key: "ArrowRight" });
+    expect(onChange).toHaveBeenCalledWith("c");
+  });
+});
+
+describe("Modal v2 and Sheet", () => {
+  it("describes the dialog and renders a footer", async () => {
+    const { Modal } = await import("./Modal");
+    render(<Modal open title="Close request?" description="Financiers will no longer see it." onClose={() => {}} footer={<button>Confirm</button>}>body</Modal>);
+    const d = screen.getByRole("dialog", { name: "Close request?" });
+    expect(document.getElementById(d.getAttribute("aria-describedby")!)?.textContent).toContain("Financiers");
+    expect(screen.getByRole("button", { name: "Confirm" })).toBeTruthy();
+  });
+  it("opens a bottom sheet as a labelled dialog", async () => {
+    const { Sheet } = await import("./Drawer");
+    render(<Sheet open title="Choose a wallet" onClose={() => {}}>x</Sheet>);
+    expect(screen.getByRole("dialog", { name: "Choose a wallet" })).toBeTruthy();
+  });
+});
+
+describe("Field, Select and Textarea", () => {
+  it("wires help and error to the control", async () => {
+    const { Field, Select, Textarea } = await import("./Field");
+    const { rerender } = render(<Field label="Invoice value (USDG)" help="Whole USDG" suffix="USDG" />);
+    const input = screen.getByLabelText("Invoice value (USDG)");
+    expect(document.getElementById(input.getAttribute("aria-describedby")!)?.textContent).toBe("Whole USDG");
+    rerender(<Field label="Invoice value (USDG)" help="Whole USDG" error="Enter an amount" />);
+    expect(input.getAttribute("aria-invalid")).toBe("true");
+    expect(document.getElementById(input.getAttribute("aria-describedby")!)?.textContent).toContain("Enter an amount");
+    render(<><Select label="Sort"><option>Newest first</option></Select><Textarea label="What went wrong" optional /></>);
+    expect(screen.getByRole("combobox", { name: "Sort" })).toBeTruthy();
+    expect(screen.getByRole("textbox", { name: /What went wrong/ })).toBeTruthy();
+  });
+});
+
+describe("DataTable", () => {
+  type Row = { id: string; ref: string; amount: number };
+  const rows: Row[] = [{ id: "1", ref: "CF-A", amount: 30 }, { id: "2", ref: "CF-B", amount: 120 }];
+  it("renders a captioned table with right-aligned numbers and sorts by a column", async () => {
+    const { DataTable } = await import("./DataTable");
+    render(
+      <DataTable<Row>
+        caption="Shipments"
+        rows={rows}
+        rowKey={(r) => r.id}
+        rowHref={(r) => `/track/${r.id}`}
+        columns={[{ key: "ref", header: "Shipment", primary: true }, { key: "amount", header: "Amount", numeric: true, sortable: true }]}
+      />,
+    );
+    const table = screen.getByRole("table", { name: "Shipments" });
+    const amountHeader = within(table).getByRole("columnheader", { name: /Amount/ });
+    expect(amountHeader.className).toContain("text-right");
+    expect(amountHeader.getAttribute("aria-sort")).toBe("none");
+    fireEvent.click(within(amountHeader).getByRole("button"));
+    expect(amountHeader.getAttribute("aria-sort")).toBe("descending");
+    const firstRowCells = within(table).getAllByRole("row")[1]!;
+    expect(firstRowCells.textContent).toContain("CF-B");
+    expect(within(table).getByRole("link", { name: "CF-A" }).getAttribute("href")).toBe("/track/1");
+  });
+  it("shows the empty state and the loading state", async () => {
+    const { DataTable } = await import("./DataTable");
+    const cols = [{ key: "ref", header: "Shipment" }];
+    const { rerender } = render(<DataTable<Row> caption="Shipments" rows={[]} rowKey={(r) => r.id} columns={cols} empty={<p>No shipments yet</p>} cards={false} />);
+    expect(screen.getByText("No shipments yet")).toBeTruthy();
+    rerender(<DataTable<Row> caption="Shipments" rows={[]} rowKey={(r) => r.id} columns={cols} loading cards={false} />);
+    expect(screen.getByRole("table").getAttribute("aria-busy")).toBe("true");
+  });
+});
+
+describe("Stat, Sparkline and KeyValue", () => {
+  it("gives the delta direction to screen readers", async () => {
+    const { Stat } = await import("./Stat");
+    const { Sparkline } = await import("./Sparkline");
+    render(<Stat label="Capital drawn" value="40,000" unit="USDG" delta={{ value: "+4.2%", direction: "up", context: "since last week" }} chart={<Sparkline values={[1, 3, 2]} label="Drawn over 3 days" />} />);
+    expect(screen.getByText("Capital drawn")).toBeTruthy();
+    expect(screen.getByText(/up since last week/)).toBeTruthy();
+    expect(screen.getByRole("img", { name: "Drawn over 3 days" })).toBeTruthy();
+  });
+  it("renders a description list", async () => {
+    const { KeyValue } = await import("./KeyValue");
+    render(<KeyValue items={[{ label: "Temperature", value: "2.0 °C to 8.0 °C" }, { label: "Fee", value: "3%", numeric: true }]} />);
+    expect(screen.getByText("Temperature").tagName).toBe("DT");
+    expect(screen.getByText("3%").tagName).toBe("DD");
+  });
+});
+
+describe("Timeline", () => {
+  it("marks the active step and tells screen readers each state", async () => {
+    const { Timeline } = await import("./Timeline");
+    render(<Timeline label="Journey" items={[{ id: "1", title: "Checkpoint 1", state: "done" }, { id: "2", title: "Checkpoint 2", state: "held" }, { id: "3", title: "Checkpoint 3", state: "pending" }]} />);
+    const list = screen.getByRole("list", { name: "Journey" });
+    const items = within(list).getAllByRole("listitem");
+    expect(items[0]!.textContent).toContain("Done");
+    expect(items[1]!.textContent).toContain("On hold");
+    expect(items.filter((li) => li.getAttribute("aria-current") === "step")).toHaveLength(0);
+  });
+});
+
+describe("Section, EmptyState, Kbd and Banner", () => {
+  it("labels a section by its heading", async () => {
+    const { Section } = await import("./Section");
+    render(<Section title="Endpoints">x</Section>);
+    expect(screen.getByRole("region", { name: "Endpoints" })).toBeTruthy();
+  });
+  it("renders an empty state with its action", async () => {
+    const { EmptyState } = await import("./EmptyState");
+    render(<EmptyState title="Nothing matches these filters" action={<button>Clear filters</button>} />);
+    expect(screen.getByRole("heading", { name: "Nothing matches these filters" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Clear filters" })).toBeTruthy();
+  });
+  it("renders a key chord", async () => {
+    const { Kbd } = await import("./Kbd");
+    const { container } = render(<Kbd keys={["Ctrl", "K"]} />);
+    expect(container.querySelectorAll("kbd")).toHaveLength(2);
+  });
+  it("announces assertive banners as alerts and can be dismissed", async () => {
+    const { Banner, Callout } = await import("./Banner");
+    const onDismiss = vi.fn();
+    render(<><Banner variant="danger" live="assertive" title="The backend is not reachable" onDismiss={onDismiss} /><Callout variant="info">Static guidance</Callout></>);
+    expect(screen.getByRole("alert").textContent).toContain("backend is not reachable");
+    fireEvent.click(screen.getByRole("button", { name: "Dismiss" }));
+    expect(onDismiss).toHaveBeenCalled();
+    expect(screen.getByText("Static guidance").closest("[role]")).toBeNull();
+  });
+});
+
+describe("CopyField", () => {
+  it("copies the full value and links to the explorer", async () => {
+    const { CopyField } = await import("./CopyField");
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText } });
+    const a = "0x8e6877a28d51a6c2b1699154cc17f3ebf682102f";
+    render(<CopyField label="Exporter" value={a} chainId={46630} />);
+    expect(screen.getByRole("link", { name: /explorer/ }).getAttribute("href")).toContain(a);
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: /Copy Exporter/ })));
+    expect(writeText).toHaveBeenCalledWith(a);
+    expect(screen.getByRole("button", { name: "Copied" })).toBeTruthy();
+  });
+});
+
+describe("Tooltip", () => {
+  it("opens on focus, describes the trigger and closes on Escape", async () => {
+    const { Tooltip } = await import("./Tooltip");
+    render(<Tooltip content="Needs 75 or more"><button>Evidence score</button></Tooltip>);
+    const btn = screen.getByRole("button", { name: "Evidence score" });
+    act(() => btn.focus());
+    const tip = screen.getByRole("tooltip");
+    expect(tip.textContent).toBe("Needs 75 or more");
+    expect(btn.getAttribute("aria-describedby")).toBe(tip.id);
+    act(() => { fireEvent.keyDown(document, { key: "Escape" }); });
+    expect(screen.queryByRole("tooltip")).toBeNull();
   });
 });

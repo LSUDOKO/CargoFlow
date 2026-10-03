@@ -1,34 +1,253 @@
 @import "tailwindcss";
 
-/* CargoFlow design tokens. Tailwind exposes each colour as bg-*, text-*, border-* … */
+/*
+ * CargoFlow design system v2.
+ * Every token below becomes a CSS variable and, where Tailwind has a namespace for it, a utility
+ * (--color-x -> bg-x / text-x / border-x, --text-x -> text-x, --radius-x -> rounded-x, --shadow-x -> shadow-x,
+ * --ease-x -> ease-x, --container-x -> max-w-x). docs/design/system.md explains when to use which.
+ * The v1 names (ink-2, ink-3, verified, alert, slate, line, mist, radius-card, radius-tile, shadow-card,
+ * shadow-lift, animate-rise/fade/pulse-dot) are kept as aliases so nothing that uses them breaks.
+ */
 @theme {
+  /* ── Brand ─────────────────────────────────────────────────────────────── */
   --color-ink: #0b1b2b;
-  --color-ink-2: #13293d;
-  --color-ink-3: #1d3a55;
   --color-paper: #f7f9f4;
   --color-signal: #c6f432;
-  --color-signal-2: #b2e01c;
+  --color-signal-2: #b2e01c; /* hover / pressed lime */
+  --color-signal-soft: #eefbc8; /* lime wash behind lime-meaning text on light surfaces */
+  --color-signal-fg: #3d5a00; /* lime meaning as text on light surfaces (7.2:1 on signal-soft) */
+
+  /* ── Ink scale (navy). 900 is the brand ink; text on light uses 900/700/500 ───────── */
+  --color-ink-950: #07131f;
+  --color-ink-900: #0b1b2b;
+  --color-ink-800: #13293d;
+  --color-ink-700: #1d3a55;
+  --color-ink-600: #2d4d6b;
+  --color-ink-500: #4a6680; /* 6.0:1 on white */
+  --color-ink-400: #7d93a8; /* decorative only on light, text-safe on ink */
+  --color-ink-300: #b3c2cf;
+  --color-ink-200: #d5e3ec;
+  --color-ink-100: #e8eff4;
+
+  /* ── Neutrals (paper-tinted). Surfaces 0–200, borders 200–300, text 500+ ─────────── */
+  --color-neutral-0: #ffffff;
+  --color-neutral-25: #fbfcf9;
+  --color-neutral-50: #f7f9f4; /* = paper, the page canvas */
+  --color-neutral-100: #eef2ea; /* = mist, sunken wells, tab tracks */
+  --color-neutral-150: #e4eadf; /* hover on sunken */
+  --color-neutral-200: #dce3da; /* = line, default border */
+  --color-neutral-300: #c3ccc4; /* strong border, control border on hover */
+  --color-neutral-400: #8d9a97; /* icons, disabled text (not for body copy: 2.9:1) */
+  --color-neutral-500: #5b6b7b; /* = slate, muted text, 5.2:1 on paper */
+  --color-neutral-600: #45556a;
+  --color-neutral-700: #2a3b4f;
+  --color-neutral-900: #0b1b2b;
+
+  /* ── Semantic: light surfaces (fg ≥ 5:1 on its bg) ───────────────────────────── */
+  --color-success: #00c46a; /* solid mark: dots, bars, rings */
+  --color-success-solid: #00804a; /* filled with white text, 5.0:1 */
+  --color-success-bg: #e3f6ea;
+  --color-success-fg: #00733e;
+  --color-success-border: #9fdcb9;
+
+  --color-warning: #ffb020;
+  --color-warning-solid: #ffb020; /* takes ink text */
+  --color-warning-bg: #fff2d6;
+  --color-warning-fg: #8a5300;
+  --color-warning-border: #f5cd7f;
+
+  --color-danger: #e5484d;
+  --color-danger-solid: #c8323a; /* filled with white text, 5.3:1 */
+  --color-danger-bg: #fde7e7;
+  --color-danger-fg: #a1191e;
+  --color-danger-border: #f2b3b5;
+
+  --color-info: #3b8fe0;
+  --color-info-solid: #1d5c96;
+  --color-info-bg: #e4eff9;
+  --color-info-fg: #1d5c96;
+  --color-info-border: #a9cbec;
+
+  /* ── Semantic: ink surfaces (fg ≥ 7:1 on its bg over ink) ──────────────────────── */
+  --color-success-bg-ink: rgb(0 196 106 / 0.18);
+  --color-success-fg-ink: #7cf0b5;
+  --color-success-border-ink: rgb(0 196 106 / 0.4);
+  --color-warning-bg-ink: rgb(255 176 32 / 0.18);
+  --color-warning-fg-ink: #ffc85c;
+  --color-warning-border-ink: rgb(255 176 32 / 0.45);
+  --color-danger-bg-ink: rgb(229 72 77 / 0.22);
+  --color-danger-fg-ink: #ffb4b6;
+  --color-danger-border-ink: rgb(229 72 77 / 0.45);
+  --color-info-bg-ink: rgb(59 143 224 / 0.2);
+  --color-info-fg-ink: #9fcbf5;
+  --color-info-border-ink: rgb(59 143 224 / 0.45);
+
+  /* ── Roles ──────────────────────────────────────────────────────────────── */
+  --color-surface: #ffffff; /* cards */
+  --color-surface-sunken: #eef2ea; /* wells inside cards */
+  --color-border: #dce3da;
+  --color-border-strong: #c3ccc4;
+  --color-border-ink: rgb(247 249 244 / 0.12); /* hairlines on navy */
+  --color-text: #0b1b2b;
+  --color-text-muted: #5b6b7b;
+  --color-text-subtle: #4a6680;
+  --color-text-on-ink: #f7f9f4;
+  --color-text-on-ink-muted: rgb(247 249 244 / 0.7); /* 8.5:1 on ink */
+  --color-focus: #0b1b2b;
+  --color-focus-ink: #c6f432;
+
+  /* ── v1 aliases (keep working) ─────────────────────────────────────────── */
+  --color-ink-2: #13293d;
+  --color-ink-3: #1d3a55;
   --color-verified: #00c46a;
   --color-alert: #ffb020;
-  --color-danger: #e5484d;
   --color-slate: #5b6b7b;
   --color-line: #dce3da;
   --color-mist: #eef2ea;
 
+  /* ── Type ───────────────────────────────────────────────────────────────── */
   --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 
-  --radius-card: 1.75rem;
-  --radius-tile: 1rem;
-  --shadow-card: 0 1px 0 rgb(11 27 43 / 0.04), 0 12px 32px -12px rgb(11 27 43 / 0.18);
-  --shadow-lift: 0 2px 0 rgb(11 27 43 / 0.06), 0 24px 48px -16px rgb(11 27 43 / 0.28);
+  /* display / h1–h4 pair with font-display; body / small / caption / overline with font-sans */
+  --text-display: clamp(2.5rem, 1.6rem + 3.6vw, 4.25rem);
+  --text-display--line-height: 1.02;
+  --text-display--letter-spacing: -0.04em;
+  --text-display--font-weight: 700;
+  --text-h1: clamp(2rem, 1.6rem + 1.6vw, 2.75rem);
+  --text-h1--line-height: 1.08;
+  --text-h1--letter-spacing: -0.03em;
+  --text-h1--font-weight: 700;
+  --text-h2: 1.5rem;
+  --text-h2--line-height: 1.2;
+  --text-h2--letter-spacing: -0.02em;
+  --text-h2--font-weight: 600;
+  --text-h3: 1.125rem;
+  --text-h3--line-height: 1.35;
+  --text-h3--letter-spacing: -0.01em;
+  --text-h3--font-weight: 600;
+  --text-h4: 1rem;
+  --text-h4--line-height: 1.4;
+  --text-h4--letter-spacing: -0.005em;
+  --text-h4--font-weight: 600;
+  --text-body-lg: 1.0625rem;
+  --text-body-lg--line-height: 1.6;
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.55;
+  --text-small: 0.8125rem;
+  --text-small--line-height: 1.45;
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1.35;
+  --text-caption--letter-spacing: 0.01em;
+  --text-overline: 0.6875rem;
+  --text-overline--line-height: 1.2;
+  --text-overline--letter-spacing: 0.08em;
+  --text-overline--font-weight: 600;
+  /* big numerals in Stat and headers */
+  --text-metric: clamp(1.75rem, 1.4rem + 1.2vw, 2.25rem);
+  --text-metric--line-height: 1.05;
+  --text-metric--letter-spacing: -0.03em;
+  --text-metric--font-weight: 600;
 
+  /* ── Radius: four shapes, nothing in between ─────────────────────────────── */
+  --radius-chip: 0.5rem; /* hash badges, kbd, small inline wells */
+  --radius-control: 0.75rem; /* inputs, selects, textareas, menu items */
+  --radius-tile: 0.75rem; /* tiles and wells nested inside a card */
+  --radius-card: 1.25rem; /* cards and panels */
+  --radius-sheet: 1.5rem; /* modals, drawers, hero panels */
+  --radius-pill: 9999px; /* buttons, tabs, badges */
+
+  /* ── Elevation 0–3 (navy-tinted, one light source from above) ─────────────── */
+  --shadow-0: none;
+  --shadow-1: 0 1px 2px rgb(11 27 43 / 0.04), 0 1px 1px rgb(11 27 43 / 0.03);
+  --shadow-2: 0 1px 2px rgb(11 27 43 / 0.05), 0 10px 28px -12px rgb(11 27 43 / 0.16);
+  --shadow-3: 0 2px 4px rgb(11 27 43 / 0.06), 0 24px 56px -16px rgb(11 27 43 / 0.32);
+  --shadow-card: 0 1px 2px rgb(11 27 43 / 0.04), 0 1px 1px rgb(11 27 43 / 0.03); /* v1 alias = shadow-1 */
+  --shadow-lift: 0 2px 4px rgb(11 27 43 / 0.06), 0 24px 56px -16px rgb(11 27 43 / 0.32); /* v1 alias = shadow-3 */
+
+  /* ── Layout ─────────────────────────────────────────────────────────────── */
+  --container-page: 80rem; /* max-w-page: every app page */
+  --container-wide: 90rem; /* max-w-wide: maps and full-bleed dashboards */
+  --container-reading: 42rem; /* max-w-reading: long copy, about 70 characters */
+  --container-form: 36rem; /* max-w-form: single-column forms and wizards */
+
+  /* ── Motion ─────────────────────────────────────────────────────────────── */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1); /* state changes: colour, size */
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1); /* things arriving */
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1); /* things leaving */
+
+  --animate-enter: enter 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-enter-slow: enter 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-sheet-up: sheet-up 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-sheet-right: sheet-right 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-sheet-left: sheet-left 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-update: update 320ms cubic-bezier(0.2, 0, 0, 1);
+  --animate-confirm: confirm 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-shimmer: shimmer 1.4s linear infinite;
+  /* v1 */
   --animate-rise: rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   --animate-pulse-dot: pulse-dot 1.6s ease-in-out infinite;
-  --animate-fade: fade 0.25s ease-out both;
+  --animate-fade: fade 0.2s ease-out both;
 }
 
+/* Values without a Tailwind namespace: use as e.g. duration-(--duration-base), z-(--z-overlay), p-(--space-card) */
+:root {
+  --duration-fast: 120ms; /* hover, press, focus */
+  --duration-base: 200ms; /* enter, tab switch, toggles */
+  --duration-slow: 320ms; /* sheets, confirm, value updates */
+
+  --space-card: 1.5rem; /* card padding ≥ md */
+  --space-card-sm: 1rem; /* card padding on phones and in dense cards */
+  --space-stack: 1rem; /* gap between cards in a column */
+  --space-section: 2.5rem; /* gap between page sections */
+  --space-page-y: 2.5rem; /* top padding of an app page */
+  --gutter: 1rem; /* page side gutter: 16 → 24 → 32 */
+
+  --z-sticky: 20;
+  --z-header: 40;
+  --z-overlay: 50;
+  --z-toast: 60;
+  --z-tooltip: 70;
+}
+@media (min-width: 640px) {
+  :root { --gutter: 1.5rem; }
+}
+@media (min-width: 768px) {
+  :root { --gutter: 2rem; --space-page-y: 3rem; }
+}
+
+@keyframes enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: none; }
+}
+@keyframes sheet-right {
+  from { transform: translateX(100%); }
+  to { transform: none; }
+}
+@keyframes sheet-left {
+  from { transform: translateX(-100%); }
+  to { transform: none; }
+}
+/* a value changed: the new figure lands with a brief lime wash that fades out */
+@keyframes update {
+  from { background-color: rgb(198 244 50 / 0.45); }
+  to { background-color: transparent; }
+}
+/* an action succeeded: a small settle, never a bounce */
+@keyframes confirm {
+  0% { transform: scale(0.96); }
+  60% { transform: scale(1.015); }
+  100% { transform: none; }
+}
+@keyframes shimmer {
+  from { background-position: 150% 0; }
+  to { background-position: -50% 0; }
+}
 @keyframes rise {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: none; }
@@ -56,9 +275,9 @@
   h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.02em; text-wrap: balance; }
   p { text-wrap: pretty; }
   /* ink ring on light surfaces, lime ring on navy ones: both clear 3:1 against their background */
-  :focus-visible { outline: 2px solid var(--color-ink); outline-offset: 3px; }
-  .surface-ink :focus-visible { outline-color: var(--color-signal); }
-  .surface-ink .surface-light :focus-visible { outline-color: var(--color-ink); }
+  :focus-visible { outline: 2px solid var(--color-focus); outline-offset: 3px; }
+  .surface-ink :focus-visible { outline-color: var(--color-focus-ink); }
+  .surface-ink .surface-light :focus-visible { outline-color: var(--color-focus); }
   ::selection { background: var(--color-signal); color: var(--color-ink); }
 }
 
@@ -73,7 +292,12 @@
     -webkit-box-decoration-break: clone;
     box-decoration-break: clone;
   }
+  /* Numerals that line up in columns. Amounts use this in Inter; mono is for hashes and code only. */
   .tabular { font-variant-numeric: tabular-nums; }
+  .num { font-variant-numeric: tabular-nums slashed-zero; font-feature-settings: "tnum", "zero"; letter-spacing: -0.01em; }
+  /* small uppercase label above a value */
+  .eyebrow { font-size: var(--text-overline); line-height: 1.2; letter-spacing: 0.08em; font-weight: 600; text-transform: uppercase; color: var(--color-text-muted); }
+  .surface-ink .eyebrow { color: var(--color-text-on-ink-muted); }
 
   /* One type scale for every landing section: h2, lede and the small label above data */
   .h-section {
@@ -85,16 +309,36 @@
     text-wrap: balance;
   }
   .lede { font-size: 1.125rem; line-height: 1.6; max-width: 36rem; text-wrap: pretty; }
-  .container-page { width: 100%; max-width: 80rem; margin-inline: auto; padding-inline: 1rem; }
-  @media (min-width: 768px) { .container-page { padding-inline: 2rem; } }
+  .container-page { width: 100%; max-width: var(--container-page); margin-inline: auto; padding-inline: var(--gutter); }
+  .container-wide { width: 100%; max-width: var(--container-wide); margin-inline: auto; padding-inline: var(--gutter); }
+  /* 12-column grid: 16px gaps on phones, 24px from md */
+  .grid-12 { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 1rem; row-gap: var(--space-stack); }
+  @media (min-width: 768px) { .grid-12 { column-gap: 1.5rem; } }
   .grid-bg {
     background-image:
       linear-gradient(to right, rgb(11 27 43 / 0.06) 1px, transparent 1px),
       linear-gradient(to bottom, rgb(11 27 43 / 0.06) 1px, transparent 1px);
     background-size: 40px 40px;
   }
+  /* horizontal scroller that hides its bar and fades its clipped edge, for tab rows and chip rows on phones */
+  .scroll-x {
+    overflow-x: auto;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .scroll-x::-webkit-scrollbar { display: none; }
+  .fade-x-end { mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent); }
+  /* skeleton shimmer */
+  .shimmer {
+    background-image: linear-gradient(90deg, transparent 0%, rgb(255 255 255 / 0.55) 50%, transparent 100%);
+    background-size: 200% 100%;
+    background-repeat: no-repeat;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* motion is removed, state changes still read: colour and opacity changes happen instantly */
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+  .shimmer { background-image: none; }
 }
