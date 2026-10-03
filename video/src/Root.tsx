@@ -11,6 +11,7 @@ import { S5WhyRobinhood } from "./scenes/S5WhyRobinhood";
 import { S6Proof } from "./scenes/S6Proof";
 import { S7Outro } from "./scenes/S7Outro";
 import { LibraryCompositions } from "./Library";
+import { ReadmeCompositions } from "./readme";
 import { FULL_V2_FRAMES, FullV2, SceneV2, fullV2Schema } from "./FullV2";
 import { SCENES } from "./scenes-v2/timing";
 
@@ -243,5 +244,6 @@ export const RemotionRoot: React.FC = () => (
       ))}
     </Folder>
     <LibraryCompositions />
+    <ReadmeCompositions />
   </>
 );

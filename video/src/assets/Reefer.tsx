@@ -78,6 +78,8 @@ type ReeferProps = {
   /** cutaway: greys the cargo (0..1) when it is warming. */
   warm?: number;
   band?: [number, number];
+  /** side view: hide markings and the controller display (a plain wall behind characters) */
+  bare?: boolean;
   style?: React.CSSProperties;
 };
 
@@ -107,6 +109,7 @@ export const ReeferContainer: React.FC<ReeferProps> = ({
   pulse = "slow",
   warm = 0,
   band = [2, 8],
+  bare = false,
   style,
 }) => {
   const frame = useCurrentFrame();
@@ -172,7 +175,8 @@ export const ReeferContainer: React.FC<ReeferProps> = ({
         <Casting x={W - 26} y={0} />
         <Casting x={0} y={H - 22} />
         <Casting x={W - 26} y={H - 22} />
-        {/* markings */}
+        {/* markings (hidden when bare: a plain wall to stand characters in front of) */}
+        {!bare && (<>
         <text x={56} y={52} fontFamily={F.mono} fontSize={20} fontWeight={700} fill={P.ink} letterSpacing={1}>
           {code}
         </text>
@@ -183,9 +187,10 @@ export const ReeferContainer: React.FC<ReeferProps> = ({
         <text x={W / 2} y={H / 2 + 18} textAnchor="middle" fontFamily={F.display} fontSize={44} fontWeight={700} fill={P.ink} opacity={0.9} letterSpacing={-0.5}>
           CargoFlow
         </text>
+        </>)}
         {/* reefer end: controller + lamp on the corner post */}
         <rect x={W - 168} y={56} width={136} height={96} rx={10} fill={P.ink2} />
-        <ReeferDisplay x={W - 160} y={64} temp={temp} status={status} w={120} />
+        {!bare && <ReeferDisplay x={W - 160} y={64} temp={temp} status={status} w={120} />}
         <StatusLamp x={W - 50} y={34} status={status} r={7} />
       </svg>
     );
