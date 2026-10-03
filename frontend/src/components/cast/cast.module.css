@@ -1,0 +1,58 @@
+/*
+ * Idle motion for the cast, in CSS so a character needs no JavaScript: a slow breath (4.2 s, the film's period),
+ * a weight shift (10 s), a blink every few seconds and a wave. Paused while off screen (story/Lazy.tsx marks the
+ * wrapper data-cast-offscreen) and removed entirely under prefers-reduced-motion.
+ */
+.sway {
+  animation: cast-sway 10s ease-in-out infinite;
+}
+.breathe {
+  animation: cast-breathe 4.2s ease-in-out infinite;
+}
+.head {
+  animation: cast-head 4.2s ease-in-out infinite;
+}
+.eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cast-blink 4.4s linear infinite;
+}
+.wave {
+  animation: cast-wave 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes cast-sway {
+  0%, 100% { transform: translateX(-1.5px); }
+  50% { transform: translateX(1.5px); }
+}
+@keyframes cast-breathe {
+  0%, 100% { transform: translateY(1.2px); }
+  50% { transform: translateY(-1.6px); }
+}
+@keyframes cast-head {
+  0%, 100% { transform: translateY(0.4px); }
+  50% { transform: translateY(-0.8px); }
+}
+@keyframes cast-blink {
+  0%, 93%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.08); }
+  97% { transform: scaleY(0.6); }
+}
+@keyframes cast-wave {
+  from { transform: rotate(-14deg); }
+  to { transform: rotate(12deg); }
+}
+
+:global([data-cast-offscreen]) .sway,
+:global([data-cast-offscreen]) .breathe,
+:global([data-cast-offscreen]) .head,
+:global([data-cast-offscreen]) .eye,
+:global([data-cast-offscreen]) .wave {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sway, .breathe, .head, .eye, .wave {
+    animation: none;
+  }
+}

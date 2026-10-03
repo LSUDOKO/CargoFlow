@@ -11,7 +11,7 @@ import { Button, LinkButton } from "@/components/ui/Button";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { CopyField } from "@/components/ui/CopyField";
 import { cx } from "@/components/ui/cx";
-import { EmptyState } from "@/components/ui/EmptyState";
+import { CastEmptyState } from "@/components/cast/CastEmptyState";
 import { Field } from "@/components/ui/Field";
 import { Badge, Pill } from "@/components/ui/Pill";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -33,6 +33,8 @@ export function EblPortal() {
     <div className="container-page py-(--space-page-y)">
       <PortalHeader
         eyebrow="For carriers"
+        who="carrier"
+        greeting="Hi, I'm the Carrier"
         title="Bills of lading that carry the title"
         lede="Each bill is a token, and whoever holds it controls the goods. Endorse it on, surrender it at delivery, or bind it to a facility."
       />
@@ -41,7 +43,9 @@ export function EblPortal() {
         {!contracts ? (
           <Skeleton className="h-40 rounded-card" />
         ) : !contracts.eblRegistry ? (
-          <EmptyState
+          <CastEmptyState
+            who="carrier"
+            expression="focused"
             title="Bills of lading are not enabled on this deployment"
             description="This network runs contracts without the bill of lading registry. Shipments and facilities still work as usual."
             action={<LinkButton href="/shipments" variant="secondary">Browse the fleet</LinkButton>}

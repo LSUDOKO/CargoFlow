@@ -9,7 +9,7 @@ import { Callout } from "@/components/ui/Banner";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { CopyField } from "@/components/ui/CopyField";
-import { EmptyState } from "@/components/ui/EmptyState";
+import { CastEmptyState } from "@/components/cast/CastEmptyState";
 import { Textarea } from "@/components/ui/Field";
 import { Modal } from "@/components/ui/Modal";
 import { StatusPill } from "@/components/ui/Pill";
@@ -65,6 +65,8 @@ export function ArbiterConsole() {
     <div className="container-page py-(--space-page-y)">
       <PortalHeader
         eyebrow="For arbiters"
+        who="arbiter"
+        greeting="Hi, I'm the Arbiter"
         title="Decide disputes on the record"
         lede="Holders of the on-chain dispute role resolve disputes, lift pauses on a verified basis and declare defaults. Every decision carries a hashed reference anyone can audit."
       />
@@ -105,7 +107,7 @@ export function ArbiterConsole() {
                 {queue.error.message}
               </Callout>
             ) : items.length === 0 ? (
-              <EmptyState title="Nothing to decide" description="Disputed, paused and unpaid delivered facilities appear here as soon as they happen." />
+              <CastEmptyState who="arbiter" title="Nothing to decide" description="Disputed, paused and unpaid delivered facilities appear here as soon as they happen." />
             ) : (
               <div className="flex flex-col gap-4">
                 <div className="grid grid-cols-3 gap-4">

@@ -1,28 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { CodeBlock } from "@/components/ui/CodeBlock";
 import { API_URL } from "@/lib/api/client";
-
-function Code({ children }: { children: string }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <div className="relative">
-      <pre className="overflow-x-auto rounded-tile bg-ink p-4 pr-20 font-mono text-xs leading-relaxed text-paper">{children}</pre>
-      <button
-        type="button"
-        className="absolute top-2 right-2 rounded-full bg-paper/10 px-3 py-1 text-xs font-semibold text-paper hover:bg-paper/20"
-        onClick={() => {
-          void navigator.clipboard?.writeText(children).then(() => {
-            setCopied(true);
-            setTimeout(() => setCopied(false), 1500);
-          });
-        }}
-      >
-        {copied ? "Copied" : "Copy"}
-      </button>
-    </div>
-  );
-}
 
 /** How a gateway posts readings directly, for devices that report on their own instead of through a CSV. */
 export function ApiInstructions({ shipmentId }: { shipmentId: string }) {
@@ -61,16 +40,16 @@ console.log(res.status, await res.text());`;
       </summary>
       <div className="flex flex-col gap-3 px-4 pb-4 text-sm">
         <p>A gateway can post readings itself. Each request is signed with the gateway&apos;s key:</p>
-        <Code>{`POST ${API_URL}${path}
+        <CodeBlock label="Signed request" code={`POST ${API_URL}${path}
 Content-Type: application/json
 X-Source-Id: <sourceId from the key file>
 X-Timestamp: <unix seconds, within 5 minutes of now>
 X-Signature: base64url(Ed25519(seed, signing string))
 
 signing string = "CARGOFLOW-V1\\nPOST\\n${path}\\n" + timestamp + "\\n" + hex(sha256(body))
-body = {"points":[{"timestamp":…,"sensorId":…,"temperatureX100":…,"humidityX100":…,"latitudeE6":…,"longitudeE6":…,"shockX100":…}]}`}</Code>
+body = {"points":[{"timestamp":…,"sensorId":…,"temperatureX100":…,"humidityX100":…,"latitudeE6":…,"longitudeE6":…,"shockX100":…}]}`} />
         <p>Temperatures and percentages are in hundredths, positions in millionths of a degree. At most 500 readings per request, each sensor&apos;s in time order. A complete example in Node:</p>
-        <Code>{node}</Code>
+        <CodeBlock label="Node example · gateway.mjs" code={node} />
       </div>
     </details>
   );

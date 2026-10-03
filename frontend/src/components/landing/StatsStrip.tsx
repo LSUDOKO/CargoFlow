@@ -1,20 +1,22 @@
 "use client";
 
 import Link from "next/link";
+import { CountUp } from "@/components/story/CountUp";
 import { Badge } from "@/components/ui/Pill";
 import { Stat } from "@/components/ui/Stat";
 import { useStats } from "@/lib/api/hooks";
 
 /**
  * Live testnet numbers, straight from the CargoFlow API (GET /v1/stats, refreshed every 20 s). Each figure says what
- * it counts and where it can be checked, so a small testnet number reads as a fact rather than a weak boast.
+ * it counts and where it can be checked, so a small testnet number reads as a fact rather than a weak boast. Figures count
+ * up once as the strip scrolls into view.
  */
 export function StatsStrip() {
   const { data, isPending, isError } = useStats();
   const s = data?.shipments ?? {};
   const active = (s.ACTIVE ?? 0) + (s.FINANCED ?? 0) + (s.PAUSED ?? 0);
   const settled = s.SETTLED ?? 0;
-  const show = (v: number | undefined) => (isError || v === undefined ? "–" : v.toLocaleString());
+  const show = (v: number | undefined) => (isError || v === undefined ? "–" : <CountUp value={v} />);
   const items = [
     { label: "Shipments under watch", value: show(data?.total), unit: data?.total === 1 ? "shipment" : "shipments", hint: data ? `${settled.toLocaleString()} settled end to end` : "Registered in ShipmentRegistry" },
     { label: "Facilities in transit", value: show(data ? active : undefined), unit: data && active === 1 ? "facility" : "facilities", hint: "Financed, active or paused right now" },

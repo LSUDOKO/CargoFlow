@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { CastEmptyState } from "@/components/cast/CastEmptyState";
 import { useAccount } from "wagmi";
 import { PartyLink } from "@/components/market/PartyLink";
 import { Portfolio } from "@/components/market/Portfolio";
@@ -8,7 +9,6 @@ import { PayAction } from "@/components/portal/PayAction";
 import { PortalHeader } from "@/components/portal/PortalHeader";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusPill } from "@/components/ui/Pill";
 import { Section } from "@/components/ui/Section";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -65,7 +65,7 @@ export function RolePortal({ role }: { role: Role }) {
   const loading = (isPending && !!address) || views.some((v) => v.isPending);
   return (
     <div className="container-page py-(--space-page-y)">
-      <PortalHeader eyebrow={c.eyebrow} title={c.title} lede={c.lede} />
+      <PortalHeader eyebrow={c.eyebrow} title={c.title} lede={c.lede} who={role === "financier" ? "daniel" : "weilin"} />
       <NetworkGuard purpose={c.guard} points={c.points}>
         <div className="flex flex-col gap-10">
           {role === "financier" && mine.length > 0 && <Portfolio views={mine} address={address} />}
@@ -74,7 +74,9 @@ export function RolePortal({ role }: { role: Role }) {
             {loading && mine.length === 0 ? (
               <Skeleton className="h-40 rounded-card" />
             ) : mine.length === 0 ? (
-              <EmptyState
+              <CastEmptyState
+                who={role === "financier" ? "daniel" : "weilin"}
+                prop={role === "financier" ? "phone" : "invoice"}
                 title="Nothing here yet"
                 description={c.empty}
                 action={

@@ -1,0 +1,93 @@
+/*
+ * The scroll story has two layouts.
+ * Stacked (default, no JavaScript, reduced motion, short screens): one row per step, caption then scene.
+ * Pinned (StoryMotion sets data-mode="pin"): one screen-high stage; every caption shares one grid cell and every
+ * scene another, so the area is as tall as its tallest caption and nothing shifts while steps cross-fade.
+ */
+/* scenes slide in from the side: clip that travel so the page never scrolls sideways */
+.root {
+  overflow-x: clip;
+}
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+.step {
+  display: grid;
+  gap: 1.25rem;
+  scroll-margin-top: 6rem;
+}
+.scene {
+  aspect-ratio: 640 / 440;
+  min-width: 0;
+}
+.cap {
+  min-width: 0;
+}
+/* scenes mount with JavaScript; without it, keep the captions and drop the empty frames */
+@media (scripting: none) {
+  .scene {
+    display: none;
+  }
+}
+.prog {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .step {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    align-items: center;
+    gap: 3rem;
+  }
+}
+
+.root[data-mode="pin"] .pin {
+  display: grid;
+  height: calc(100svh - var(--story-top, 4rem));
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
+  grid-template-areas: "prog" "stage" "cap";
+  align-content: start;
+  gap: 1rem;
+  padding-block: 1rem 1.25rem;
+}
+.root[data-mode="pin"] .steps,
+.root[data-mode="pin"] .step {
+  display: contents;
+}
+.root[data-mode="pin"] .prog {
+  display: block;
+  grid-area: prog;
+}
+.root[data-mode="pin"] .cap {
+  grid-area: cap;
+  align-self: start;
+}
+.root[data-mode="pin"] .scene {
+  grid-area: stage;
+  justify-self: center;
+  /* as wide as the column, but never so tall that the caption falls off a short screen */
+  width: min(100%, calc((100svh - var(--story-top, 4rem) - 21rem) * 1.4545));
+}
+/* until GSAP takes over, only the first step shows */
+.root[data-mode="pin"] .step:not(:first-child) > .cap,
+.root[data-mode="pin"] .step:not(:first-child) > .scene {
+  opacity: 0;
+}
+@media (min-width: 1024px) {
+  .root[data-mode="pin"] .pin {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    /* the caption column centres on the stage: spacer, progress, caption, spacer */
+    grid-template-rows: minmax(0, 1fr) auto auto minmax(0, 1fr);
+    grid-template-areas: ". stage" "prog stage" "cap stage" ". stage";
+    align-content: stretch;
+    column-gap: 3rem;
+    row-gap: 2rem;
+    padding-block: 2rem;
+  }
+  .root[data-mode="pin"] .scene {
+    align-self: center;
+    width: min(100%, calc((100svh - var(--story-top, 4rem) - 4rem) * 1.4545));
+  }
+}

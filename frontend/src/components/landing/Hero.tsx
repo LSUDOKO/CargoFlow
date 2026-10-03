@@ -1,5 +1,6 @@
 import { Highlight } from "@/components/brand/Highlight";
 import { Illustration } from "@/components/brand/Illustration";
+import { Parallax } from "@/components/story/Parallax";
 import { LinkButton } from "@/components/ui/Button";
 import { TrackBar } from "./TrackBar";
 
@@ -41,7 +42,9 @@ export function Hero() {
           {/* the scene in its own frame: a hairline, the sheet-in-sheet radius and a faint inner light */}
           <div className="relative min-w-0 rounded-card bg-paper/5 p-1.5 ring-1 ring-paper/10 ring-inset">
             <div className="relative aspect-[16/10] overflow-hidden rounded-[calc(var(--radius-card)-0.375rem)] bg-ink-800">
-              <Illustration name="hero" priority sizes="(min-width: 1280px) 620px, (min-width: 1024px) 50vw, 100vw" className="h-full w-full object-cover object-[30%_50%]" />
+              <Parallax className="h-full w-full motion-safe:scale-[1.08]">
+                <Illustration name="hero" priority sizes="(min-width: 1280px) 620px, (min-width: 1024px) 50vw, 100vw" className="h-full w-full object-cover object-[30%_50%]" />
+              </Parallax>
               <div aria-hidden="true" className="absolute inset-0 rounded-[inherit] shadow-[inset_0_1px_0_rgb(247_249_244/0.12)]" />
             </div>
           </div>

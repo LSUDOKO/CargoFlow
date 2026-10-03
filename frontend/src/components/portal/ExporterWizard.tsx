@@ -11,7 +11,7 @@ import { Card, CardHeader } from "@/components/ui/Card";
 import { CopyField } from "@/components/ui/CopyField";
 import { cx } from "@/components/ui/cx";
 import { DataTable, type Column } from "@/components/ui/DataTable";
-import { EmptyState } from "@/components/ui/EmptyState";
+import { CastEmptyState } from "@/components/cast/CastEmptyState";
 import { Field } from "@/components/ui/Field";
 import { KeyValue } from "@/components/ui/KeyValue";
 import { StatusPill } from "@/components/ui/Pill";
@@ -494,7 +494,7 @@ type Mine = { id: string; externalRef: string; status: string; invoiceValue?: st
 
 /** The exporter's registered shipments as a table that links to each dashboard. */
 export function MyShipments({ list, loading }: { list: Mine[]; loading?: boolean }) {
-  if (!loading && list.length === 0) return <EmptyState size="sm" title="No shipments yet" description="Shipments you register appear here with their status and a link to the dashboard." />;
+  if (!loading && list.length === 0) return <CastEmptyState who="meera" prop="tablet" size="sm" title="No shipments yet" description="Shipments you register appear here with their status and a link to the dashboard." />;
   const columns: Column<Mine>[] = [
     { key: "ref", header: "Shipment", primary: true, cell: (s) => s.externalRef },
     { key: "status", header: "Status", cell: (s) => <StatusPill status={s.status} /> },

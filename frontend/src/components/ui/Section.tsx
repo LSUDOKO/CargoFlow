@@ -22,7 +22,7 @@ export function SectionHeader({ title, description, eyebrow, actions, as: H = "h
         <H id={id} className={cx("font-display", H === "h2" ? "text-h2" : "text-h3")}>{title}</H>
         {description && <p className="mt-1 max-w-reading text-sm text-text-muted">{description}</p>}
       </div>
-      {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
+      {actions && <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">{actions}</div>}
     </div>
   );
 }
@@ -70,7 +70,7 @@ export function PageHeader({ title, description, eyebrow, actions, back, meta, c
         {description && <p className="mt-2 max-w-reading text-body-lg text-text-muted">{description}</p>}
         {meta && <div className="mt-3 flex flex-wrap items-center gap-2">{meta}</div>}
       </div>
-      {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
+      {actions && <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">{actions}</div>}
     </header>
   );
 }

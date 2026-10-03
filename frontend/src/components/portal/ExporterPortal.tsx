@@ -18,6 +18,7 @@ export function ExporterPortal() {
     <div className="container-page py-(--space-page-y)">
       <PortalHeader
         eyebrow="For exporters"
+        who="meera"
         title="Turn a shipment into working capital"
         lede="Register the cargo, fix its cold-chain policy and name a financier. Tranches reach your wallet as the cargo's evidence clears."
         actions={<LinkButton href="/market/new" variant="secondary">Request financing on the market</LinkButton>}
