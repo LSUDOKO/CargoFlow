@@ -163,7 +163,8 @@ export const ShipmentView = z.looseObject({
   usdgDecimals: z.number().optional().default(6),
   /** v2 */
   cover: Cover.nullish(),
-  openCoverOffers: z.array(CoverOffer).nullish(),
+  /** the backend sends the number of open offers; the offers themselves come from `/cover` */
+  openCoverOffers: z.number().int().nullish(),
 });
 export type ShipmentView = z.infer<typeof ShipmentView>;
 

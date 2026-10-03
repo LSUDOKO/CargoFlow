@@ -68,7 +68,7 @@ export function describeShipment(v: ShipmentView, ctx: Ctx): string {
   }
   if (v.quarantinedReadings) lines.push(`Quarantined readings: ${v.quarantinedReadings}`);
   if (v.cover) lines.push(`Default cover: ${usdg(v.cover.amount)} by ${v.cover.insurer}, ${v.cover.status}`);
-  if (v.openCoverOffers?.length) lines.push(`Open cover offers: ${v.openCoverOffers.map((o) => `${usdg(o.amount)} at ${pct(o.premiumBps)} by ${o.insurer}`).join("; ")}`);
+  if (v.openCoverOffers) lines.push(`Open cover offers: ${v.openCoverOffers} (details with get_cover)`);
   lines.push(`Dashboard: ${ctx.shipmentUrl(s.id)}`);
   return lines.join("\n");
 }

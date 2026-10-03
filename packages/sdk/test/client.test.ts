@@ -41,7 +41,7 @@ describe("createClient reads", () => {
   it("keeps v2 fields and fields it does not know", async () => {
     const m = mock({
       [`GET /v1/shipments/${id}`]: () =>
-        json({ shipment, milestones: [{ index: 0, description: "", allocatedUsdg: "1", evidenceThreshold: 75, checkpointCommitment: "0x", released: false, latE6: 1, lonE6: 2, radiusM: 50000, placeLabel: "Colombo" }], facility: null, latestEvidence: null, quarantinedReadings: 0, usdgDecimals: 6, cover: null, openCoverOffers: [], future: 1 }),
+        json({ shipment, milestones: [{ index: 0, description: "", allocatedUsdg: "1", evidenceThreshold: 75, checkpointCommitment: "0x", released: false, latE6: 1, lonE6: 2, radiusM: 50000, placeLabel: "Colombo" }], facility: null, latestEvidence: null, quarantinedReadings: 0, usdgDecimals: 6, cover: null, openCoverOffers: 0, future: 1 }),
     });
     const v = await createClient({ apiUrl: "http://api", fetch: m.fetch }).shipments.get(ID);
     expect(m.calls[0]!.url).toBe(`http://api/v1/shipments/${id}`);
