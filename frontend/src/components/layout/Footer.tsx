@@ -40,7 +40,7 @@ export function Footer() {
           <Logo tone="dark" className="h-8 w-auto" />
           <p className="mt-4 text-small text-paper/70">Working capital that releases only when the cargo&apos;s own evidence says it should.</p>
         </div>
-        <nav aria-label="Footer" className="grid grid-cols-2 gap-x-6 gap-y-8 md:grid-cols-4">
+        <nav aria-label="Footer" className="grid grid-cols-2 gap-x-6 gap-y-8 lg:grid-cols-4">
           {groups.map((g) => (
             <div key={g.title} className="min-w-0">
               <h2 className="eyebrow">{g.title}</h2>

@@ -33,7 +33,7 @@ export function ContractTable({ rows, caption, explorer, chainId = ROBINHOOD_TES
       cell: (r) => (
         <span className="block min-w-0 py-1">
           <span className="block font-semibold text-ink">{r.name}</span>
-          <span className="mt-0.5 block max-w-[44ch] text-small text-text-muted">{r.role}</span>
+          <span className="mt-0.5 block max-w-reading text-small text-text-muted">{r.role}</span>
         </span>
       ),
     },

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Highlight } from "@/components/brand/Highlight";
 import { Illustration, type IllustrationName } from "@/components/brand/Illustration";
-import { Timeline } from "@/components/ui/Timeline";
+import { Timeline, type TimelineItem } from "@/components/ui/Timeline";
 
 type Beat = { id: string; label: string; title: string; art: IllustrationName; detail: React.ReactNode };
 
@@ -32,6 +32,12 @@ const beats: Beat[] = [
     id: "settle", label: "Settle", title: "The invoice pays everyone in one step", art: "settle",
     detail: "When the buyer pays, the vault returns the financier's principal and fee and sends the exporter the residual, in a fixed waterfall nobody can reorder.",
   },
+];
+
+const RECOVERY: TimelineItem[] = [
+  { id: "pause", state: "held", title: "Excursion", description: "Releases stop" },
+  { id: "proof", state: "done", title: "Proof verified", description: "On-chain, readings stay private" },
+  { id: "resume", state: "active", title: "Facility resumes", description: "Next tranche can release" },
 ];
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -72,17 +78,10 @@ export function HowItWorks() {
                       <p className="mt-3 max-w-reading text-paper/75">{b.detail}</p>
                     </div>
                     <Illustration name={b.art} decorative className="hidden h-28 w-28 rounded-tile bg-paper p-2 md:block" />
-                    <Timeline
-                      onDark
-                      orientation="horizontal"
-                      label="What happens after an excursion"
-                      className="md:col-span-2"
-                      items={[
-                        { id: "pause", state: "held", title: "Excursion", description: "Releases stop" },
-                        { id: "proof", state: "done", title: "Proof verified", description: "On-chain, readings stay private" },
-                        { id: "resume", state: "active", title: "Facility resumes", description: "Next tranche can release" },
-                      ]}
-                    />
+                    <div className="md:col-span-2">
+                      <Timeline onDark orientation="vertical" label="What happens after an excursion" items={RECOVERY} className="md:hidden" />
+                      <Timeline onDark orientation="horizontal" label="What happens after an excursion" items={RECOVERY} className="hidden md:block" />
+                    </div>
                   </div>
                 </li>
               );

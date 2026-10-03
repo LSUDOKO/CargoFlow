@@ -54,37 +54,19 @@ function PromptLink({ label, prompt, onDark }: { label: string; prompt: string; 
   );
 }
 
-/** The full "Use CargoFlow in Claude" section of /developers. Columns size to their content (items-start). */
+/**
+ * The full "Use CargoFlow in Claude" section of /developers. On phones the order is panel, Try it, then the configs;
+ * from lg the panel and the Desktop config share the left column and Try it plus the Claude Code commands the right,
+ * so the two columns end at about the same height and no panel stretches past its content.
+ */
 export function UseWithClaude() {
   const prompts = useTryPrompts();
   return (
-    <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-12">
-      <div className="surface-ink flex min-w-0 flex-col gap-6 rounded-card bg-ink p-6 text-paper shadow-2 md:p-8 lg:col-span-7">
-        <div>
-          <p className="text-caption font-semibold tracking-[0.08em] text-signal uppercase">Remote MCP server · Streamable HTTP</p>
-          <h3 className="mt-2 font-display text-h2">Add CargoFlow to Claude</h3>
-          <p className="mt-2 max-w-reading text-paper/75">Read shipments, evidence, cover and the market, and prepare transactions for your own wallet to sign. The server holds no keys.</p>
-        </div>
-        <CopyField value={MCP_URL} label="MCP URL" kind="text" display="full" onDark className="w-full" />
-        <ol className="grid gap-2 text-small text-paper/85 sm:grid-cols-2">
-          {STEPS.map((s, i) => (
-            <li key={s} className="flex gap-2.5 rounded-tile bg-paper/5 px-3 py-2.5">
-              <span className="num grid h-5 w-5 shrink-0 place-items-center rounded-full bg-signal text-overline font-bold text-ink">{i + 1}</span>
-              {s}
-            </li>
-          ))}
-        </ol>
-        <div className="flex flex-wrap gap-2">
-          <LinkButton href={CLAUDE_CONNECTORS_URL} external variant="inverse" iconEnd={<External />}>
-            Open Claude connector settings{ext}
-          </LinkButton>
-          <a href={cursorInstallLink()} className={buttonClass("inverse")}>
-            Add to Cursor
-          </a>
-        </div>
-        <p className="text-caption text-paper/70">claude.ai has no one-click link for adding a connector, so the steps above are the official route. Custom connectors need a Claude plan that supports them.</p>
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-start">
+      <div className="flex min-w-0 flex-col gap-4 lg:col-span-7">
+        <ConnectorPanel />
+        <CodeBlock label="Claude Desktop · claude_desktop_config.json" code={CLAUDE_DESKTOP_JSON} className="hidden lg:block" />
       </div>
-
       <div className="flex min-w-0 flex-col gap-4 lg:col-span-5">
         <div className="rounded-card border border-border bg-surface p-5 shadow-1">
           <h3 className="font-display text-h3">Try it</h3>
@@ -99,8 +81,38 @@ export function UseWithClaude() {
         </div>
         <CodeBlock label="Claude Code · remote" code={CLAUDE_CODE_REMOTE} />
         <CodeBlock label="Claude Code · local (stdio)" code={CLAUDE_CODE_LOCAL} />
-        <CodeBlock label="Claude Desktop · claude_desktop_config.json" code={CLAUDE_DESKTOP_JSON} />
+        <CodeBlock label="Claude Desktop · claude_desktop_config.json" code={CLAUDE_DESKTOP_JSON} className="lg:hidden" />
       </div>
+    </div>
+  );
+}
+
+function ConnectorPanel() {
+  return (
+    <div className="surface-ink flex min-w-0 flex-col gap-6 rounded-card bg-ink p-6 text-paper shadow-2 md:p-8">
+      <div>
+        <p className="text-caption font-semibold tracking-[0.08em] text-signal uppercase">Remote MCP server · Streamable HTTP</p>
+        <h3 className="mt-2 font-display text-h2">Add CargoFlow to Claude</h3>
+        <p className="mt-2 max-w-reading text-paper/75">Read shipments, evidence, cover and the market, and prepare transactions for your own wallet to sign. The server holds no keys.</p>
+      </div>
+      <CopyField value={MCP_URL} label="MCP URL" kind="text" display="full" onDark className="w-full" />
+      <ol className="grid gap-2 text-small text-paper/85 sm:grid-cols-2">
+        {STEPS.map((s, i) => (
+          <li key={s} className="flex gap-2.5 rounded-tile bg-paper/5 px-3 py-2.5">
+            <span className="num grid h-5 w-5 shrink-0 place-items-center rounded-full bg-signal text-overline font-bold text-ink">{i + 1}</span>
+            {s}
+          </li>
+        ))}
+      </ol>
+      <div className="flex flex-wrap gap-2">
+        <LinkButton href={CLAUDE_CONNECTORS_URL} external variant="inverse" iconEnd={<External />}>
+          Open Claude connector settings{ext}
+        </LinkButton>
+        <a href={cursorInstallLink()} className={buttonClass("inverse")}>
+          Add to Cursor
+        </a>
+      </div>
+      <p className="text-caption text-paper/70">claude.ai has no one-click link for adding a connector, so the steps above are the official route. Custom connectors need a Claude plan that supports them.</p>
     </div>
   );
 }

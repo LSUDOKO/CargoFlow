@@ -43,7 +43,8 @@ const BRAND_CSS = `
   --scalar-radius-xl: var(--radius-card);
   --scalar-shadow-1: var(--shadow-1);
   --scalar-shadow-2: var(--shadow-2);
-  --scalar-custom-header-height: 64px;
+  /* no Scalar header row: the reference sits inside the page, under the site header */
+  --scalar-custom-header-height: 0px;
   --scalar-sidebar-background-1: var(--color-paper);
   --scalar-sidebar-color-1: var(--color-text);
   --scalar-sidebar-color-2: var(--color-text-muted);
@@ -56,8 +57,8 @@ const BRAND_CSS = `
 }
 .scalar-app h1, .scalar-app h2, .scalar-app h3 { font-family: var(--font-display); letter-spacing: -0.02em; }
 .scalar-app :focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
-.scalar-app .sidebar { top: 0; }
-.scalar-app .references-layout { min-height: 0; }
+/* the sidebar sticks below the 64px site header */
+.scalar-app .t-doc__sidebar { top: 64px; height: calc(100dvh - 64px); max-height: calc(100dvh - 64px); }
 `;
 
 let loading: Promise<ScalarGlobal> | null = null;
@@ -149,7 +150,7 @@ export function ApiReference({ serverUrl }: { serverUrl: string }) {
       {state.status === "ready" && state.source === "bundled" && (
         <p className="mb-3 rounded-tile border border-warning-border bg-warning-bg px-4 py-2 text-small text-warning-fg">The live API did not answer, so this shows the specification bundled with the site. It may trail the live API slightly.</p>
       )}
-      <div ref={ref} className="scalar-host min-h-[60vh] overflow-hidden rounded-card border border-border bg-surface shadow-1" />
+      <div ref={ref} className="scalar-host min-h-[60vh] overflow-clip rounded-card border border-border bg-surface shadow-1" />
     </div>
   );
 }

@@ -17,13 +17,13 @@ export function StatsStrip() {
   const show = (v: number | undefined) => (isError || v === undefined ? "–" : v.toLocaleString());
   const items = [
     { label: "Shipments under watch", value: show(data?.total), unit: data?.total === 1 ? "shipment" : "shipments", hint: data ? `${settled.toLocaleString()} settled end to end` : "Registered in ShipmentRegistry" },
-    { label: "Facilities in transit", value: show(data ? active : undefined), unit: "open", hint: "Financed, active or paused right now" },
+    { label: "Facilities in transit", value: show(data ? active : undefined), unit: data && active === 1 ? "facility" : "facilities", hint: "Financed, active or paused right now" },
     { label: "Evidence epochs committed", value: show(data?.epochsCommitted), unit: data?.epochsCommitted === 1 ? "root" : "roots", hint: "Poseidon Merkle roots in EvidenceRegistry" },
     { label: "Recoveries proven", value: show(data?.proofsVerified), unit: data?.proofsVerified === 1 ? "proof" : "proofs", hint: "Groth16, verified by the contract" },
   ];
   return (
     <section aria-labelledby="proof-title" className="container-page mt-16 md:mt-20">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
         <div className="flex flex-wrap items-center gap-3">
           <h2 id="proof-title" className="font-display text-h3">Live on testnet</h2>
           {isError ? <Badge variant="warning" dot>Backend offline</Badge> : <Badge variant="success" dot pulse={!isPending}>Live</Badge>}
