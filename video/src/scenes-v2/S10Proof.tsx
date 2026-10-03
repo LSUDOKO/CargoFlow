@@ -13,7 +13,10 @@ import { beats } from "./timing";
  */
 
 export const S10_SHOTS: ShotSpec[] = [
-  { shot: "R4-01", from: 0, frames: 141, url: "cargoflow.adoranto737.workers.dev/track/0xc57490f8…f9e5", punches: [{ from: 30, to: 128, scale: 1.4, cx: 0.4, cy: 0.3, label: "CF-LIVE-1791029236301 · Settled" }] },
+  { shot: "R4-01", from: 0, frames: 141, url: "cargoflow.adoranto737.workers.dev/track/0xc57490f8…f9e5", punches: [
+    { from: 24, to: 92, scale: 1.5, cx: 0.33, cy: 0.24, label: "CF-LIVE-1791029236301 · Settled" },
+    { from: 108, to: 141, scale: 1.45, cx: 0.7, cy: 0.5, label: "Journey · five milestones released" },
+  ] },
   { shot: "R4-02", from: 141, frames: 36, url: "explorer.testnet.chain.robinhood.com/tx/0x37571b49…4e365a35", title: "Robinhood Chain explorer" },
   { shot: "R4-03", from: 177, frames: 123, url: "cargoflow.adoranto737.workers.dev/deployments" },
 ];

@@ -46,10 +46,11 @@ export const SCENES: { id: SceneId; from: number; frames: number; title: string 
   { id: "S08", from: 8580, frames: 330, title: "Developer platform" },
   { id: "S09", from: 8910, frames: 390, title: "Sponsors, honestly" },
   { id: "S10", from: 9300, frames: 300, title: "Proof" },
-  { id: "S11", from: 9600, frames: 240, title: "Outro" },
+  { id: "S11", from: 9600, frames: 290, title: "Outro" },
 ];
 
-export const TOTAL_FRAMES = 9840;
+// 9,890 f = 329.67 s, the length of public/audio/mix-v2.wav (the outro card holds through the music fade)
+export const TOTAL_FRAMES = 9890;
 
 export const scene = (id: SceneId) => {
   const s = SCENES.find((x) => x.id === id);

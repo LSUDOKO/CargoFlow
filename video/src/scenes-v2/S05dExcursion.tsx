@@ -37,7 +37,8 @@ export const S05dExcursion: React.FC = () => {
   const progress = interpolate(frame, [0, eleven + 10], [exT - 0.012, exT + 0.004], clamp);
   const paused = frame >= pauses;
   const phaseA = env(frame, 0, disagree - 12, 12);
-  const phaseB = env(frame, disagree - 6, undefined, 12);
+  const phaseB1 = Math.min(env(frame, disagree - 6, undefined, 12), interpolate(frame, [falls - 6, falls + 6], [1, 0], clamp));
+  const phaseB2 = env(frame, falls - 1, undefined, 10);
   const dialOut = interpolate(frame, [monitor - 6, monitor + 8], [0, 1], { ...clamp, easing: IN_OUT_CUBIC });
 
   const steps = Array.from({ length: 8 }, (_, i) => {
@@ -101,33 +102,38 @@ export const S05dExcursion: React.FC = () => {
         </AbsoluteFill>
       ) : null}
 
-      {/* phase B: tray, fusion, conflict, score -> pause */}
-      {phaseB > 0.01 ? (
-        <AbsoluteFill style={{ opacity: phaseB }}>
-          <At x={60} y={492} style={{ transform: "scale(0.6)", transformOrigin: "0 0" }}>
+      {/* phase B1 ("the sensors disagree"): the epoch tray, fusion per time step, conflict */}
+      {phaseB1 > 0.01 ? (
+        <AbsoluteFill style={{ opacity: phaseB1 }}>
+          <At x={80} y={496} style={{ transform: "scale(0.72)", transformOrigin: "0 0" }}>
             <EpochTray width={1300} rows={[{ sensor: "probe-1", values: P1_ROW }, { sensor: "probe-2", values: P2_ROW }]} filled={8} />
           </At>
-          <At x={60} y={700}>
-            <FusionMeter steps={steps} width={500} height={170} label="fusion · per time step" />
+          <At x={1120} y={500}>
+            <FusionMeter steps={steps} width={480} height={170} label="fusion · per time step" />
           </At>
-          <At x={600} y={690}>
+          <At x={1620} y={500}>
             <ConflictGauge value={0.748} start={disagree + 6} width={230} />
           </At>
-          <At x={930} y={490} style={{ opacity: 1 - dialOut }}>
+        </AbsoluteFill>
+      ) : null}
+
+      {/* phase B2 ("the score falls to 48, and the facility pauses"; then the AI ratchet): dial -> ratchet, vault, ledger */}
+      {phaseB2 > 0.01 ? (
+        <AbsoluteFill style={{ opacity: phaseB2 }}>
+          <At x={150} y={500} style={{ opacity: 1 - dialOut }}>
             <ScoreDial penalties={{ physical: 30, conflict: 22 }} start={falls - 4} dropAt={falls - 2} width={560} />
           </At>
-          <At x={1010} y={480} style={{ opacity: dialOut }}>
+          <At x={280} y={490} style={{ opacity: dialOut }}>
             <Ratchet clicks={spring({ frame: frame - (stricter - 2), fps, config: { damping: 12, stiffness: 160 } })} nudgeAt={never - 14} width={300} />
           </At>
-
-          <At x={1610} y={492}>
+          <At x={820} y={590} style={{ opacity: env(frame, pauses + 2, undefined, 10) }}>
+            <LedgerMini width={600} visible={1} rows={[{ block: 18402121, call: "pauseFinancing", note: "score 48 · conflict 74.8%", hash: "", at: pauses + 2, tone: "alert" }]} />
+          </At>
+          <At x={1540} y={496}>
             <TrancheVault width={250} drawers={["released", "released", "held", "filled", "filled"]} latch={interpolate(frame, [pauses, pauses + 10], [0, 1], clamp)} titleBound />
           </At>
-          <At x={1735} y={812} anchor="tc" style={{ opacity: env(frame, pauses + 4, undefined, 10) }}>
-            <StatusPill text="PAUSED" tone="alert" size={22} />
-          </At>
-          <At x={1180} y={870} style={{ opacity: env(frame, pauses + 2, undefined, 10) }}>
-            <LedgerMini width={700} visible={1} rows={[{ block: 18402121, call: "pauseFinancing", note: "score 48 · conflict 74.8%", hash: "", at: pauses + 4, tone: "alert" }]} />
+          <At x={1665} y={816} anchor="tc" style={{ opacity: env(frame, pauses + 4, undefined, 10) }}>
+            <StatusPill text="FACILITY PAUSED" tone="alert" size={20} />
           </At>
         </AbsoluteFill>
       ) : null}

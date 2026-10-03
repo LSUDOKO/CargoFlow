@@ -11,7 +11,7 @@ import { SCENES, SceneId, TOTAL_FRAMES, scene } from "./scenes-v2/timing";
 import { routeWipe } from "./scenes-v2/transitions";
 
 /**
- * CargoFlow v2 film: 1920x1080, 30 fps, 9,840 frames (SCRIPT-v2.md), scenes in script order
+ * CargoFlow v2 film: 1920x1080, 30 fps, 9,890 frames (SCRIPT-v2.md), scenes in script order
  * with the script's transitions, audio = public/audio/mix-v2.wav.
  *
  * Every scene starts exactly on its scripted frame (the audio is placed against those frames).

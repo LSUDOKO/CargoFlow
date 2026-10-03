@@ -1373,17 +1373,17 @@
   "startMs": 250300,
   "endMs": 254852,
   "windowMs": 4552,
-  "durationMs": 3760,
+  "durationMs": 2590,
   "placedStartMs": 250300,
   "borrowedMs": 0,
   "pushedMs": 0,
-  "clipEndMs": 254060,
-  "overMs": -792,
+  "clipEndMs": 252890,
+  "overMs": -1962,
   "status": "ok",
   "speed": 1.0,
-  "inputLUFS": -19.4,
-  "text": "Wei Lin signs in with a passkey, no extension, gas sponsored.",
-  "spokenText": "Way Lin signs in with a pass key, no extension, gas sponsored."
+  "inputLUFS": -18.8,
+  "text": "Wei Lin signs in with a passkey, no extension.",
+  "spokenText": "Way Lin signs in with a pass key, no extension."
  },
  {
   "id": "c078",

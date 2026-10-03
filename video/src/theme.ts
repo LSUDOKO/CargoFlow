@@ -1,6 +1,4 @@
-import { loadFont as loadSpaceGrotesk } from "@remotion/google-fonts/SpaceGrotesk";
-import { loadFont as loadInter } from "@remotion/google-fonts/Inter";
-import { loadFont as loadJetBrainsMono } from "@remotion/google-fonts/JetBrainsMono";
+import { FONT } from "./fonts";
 
 // Brand tokens, identical to frontend/src/app/globals.css
 export const C = {
@@ -19,23 +17,10 @@ export const C = {
   teal: "#0A5A73",
 } as const;
 
-const display = loadSpaceGrotesk("normal", {
-  weights: ["500", "600", "700"],
-  subsets: ["latin"],
-});
-const body = loadInter("normal", {
-  weights: ["400", "500", "600", "700"],
-  subsets: ["latin"],
-});
-const mono = loadJetBrainsMono("normal", {
-  weights: ["400", "500", "700"],
-  subsets: ["latin"],
-});
-
 export const F = {
-  display: display.fontFamily,
-  body: body.fontFamily,
-  mono: mono.fontFamily,
+  display: FONT.display,
+  body: FONT.body,
+  mono: FONT.mono,
 } as const;
 
 export const FPS = 30;

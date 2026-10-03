@@ -3109,68 +3109,56 @@
  },
  {
   "word": "Wei",
-  "startMs": 250310,
+  "startMs": 250320,
   "endMs": 250390,
   "cue": "c077"
  },
  {
   "word": "Lin",
   "startMs": 250390,
-  "endMs": 250570,
+  "endMs": 250590,
   "cue": "c077"
  },
  {
   "word": "signs",
-  "startMs": 250570,
+  "startMs": 250590,
   "endMs": 250830,
   "cue": "c077"
  },
  {
   "word": "in",
   "startMs": 250830,
-  "endMs": 251170,
+  "endMs": 251130,
   "cue": "c077"
  },
  {
   "word": "with",
-  "startMs": 251170,
-  "endMs": 251310,
+  "startMs": 251130,
+  "endMs": 251250,
   "cue": "c077"
  },
  {
   "word": "a",
-  "startMs": 251310,
-  "endMs": 251370,
+  "startMs": 251250,
+  "endMs": 251290,
   "cue": "c077"
  },
  {
   "word": "passkey,",
-  "startMs": 251370,
-  "endMs": 252120,
+  "startMs": 251290,
+  "endMs": 251810,
   "cue": "c077"
  },
  {
   "word": "no",
-  "startMs": 252260,
-  "endMs": 252390,
+  "startMs": 251990,
+  "endMs": 252090,
   "cue": "c077"
  },
  {
-  "word": "extension,",
-  "startMs": 252390,
-  "endMs": 252810,
-  "cue": "c077"
- },
- {
-  "word": "gas",
-  "startMs": 253190,
-  "endMs": 253310,
-  "cue": "c077"
- },
- {
-  "word": "sponsored.",
-  "startMs": 253310,
-  "endMs": 254010,
+  "word": "extension.",
+  "startMs": 252090,
+  "endMs": 252850,
   "cue": "c077"
  },
  {

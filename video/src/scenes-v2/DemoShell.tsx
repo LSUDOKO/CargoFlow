@@ -25,6 +25,8 @@ export type ShotSpec = {
   punches?: Punch[];
   trimBefore?: number;
   playbackRate?: number;
+  /** Custom content instead of a <Footage> slot (e.g. the claude.ai still sequences in S07). */
+  content?: React.ReactNode;
 };
 
 export type CastCue = CharacterProps & { who: CharacterName; side: "left" | "right"; from: number; to: number; h?: number };
@@ -92,7 +94,7 @@ export const DemoShell: React.FC<{
         <div style={{ position: "relative", width: FRAME.w, height: CONTENT_H, overflow: "hidden" }}>
           {shots.map((s, i) => (
             <Sequence key={s.shot + s.from} from={s.from} durationInFrames={s.frames + (i === shots.length - 1 ? 40 : 0)} name={s.shot}>
-              <Footage shot={s.shot} frames={s.frames} punches={s.punches} trimBefore={s.trimBefore} playbackRate={s.playbackRate} />
+              {s.content ?? <Footage shot={s.shot} frames={s.frames} punches={s.punches} trimBefore={s.trimBefore} playbackRate={s.playbackRate} />}
             </Sequence>
           ))}
         </div>

@@ -231,17 +231,23 @@ export const TrancheVault: React.FC<{
           </g>
         );
       })}
-      {/* pause latch */}
+      {/* pause latch: amber bolts down both sides of the drawer stack + a PAUSED tag beside the label (never over a drawer) */}
       {latch > 0.001 ? (
-        <g transform={`translate(0 ${latchY})`} opacity={Math.min(1, latch * 3)}>
-          <rect x={dx - 18} y={y0 + 2 * (dh + gap) + 14} width={dw + 36} height={30} rx={8} fill={P.alert} />
-          <rect x={dx - 18} y={y0 + 2 * (dh + gap) + 38} width={dw + 36} height={6} rx={3} fill={P.alertShade} />
-          {[dx - 4, dx + dw - 14].map((x) => (
-            <rect key={x} x={x} y={y0 - 6} width={18} height={5 * (dh + gap)} rx={6} fill={P.alert} opacity={0.0} />
+        <g opacity={Math.min(1, latch * 3)}>
+          {[dx - 16, dx + dw + 6].map((x) => (
+            <g key={x} transform={`translate(0 ${latchY})`}>
+              <rect x={x} y={y0 - 4} width={10} height={5 * (dh + gap) - 4} rx={5} fill={P.alert} />
+              {[0, 1, 2, 3, 4].map((i) => (
+                <rect key={i} x={x - 2} y={y0 + i * (dh + gap) + dh / 2 - 5} width={14} height={10} rx={3} fill={P.alertShade} />
+              ))}
+            </g>
           ))}
-          <text x={W / 2 - 13} y={y0 + 2 * (dh + gap) + 35} textAnchor="middle" fontFamily={F.mono} fontSize={15} fontWeight={700} fill={P.ink} letterSpacing={3}>
-            PAUSED
-          </text>
+          <g transform={`translate(0 ${latchY * 0.3})`}>
+            <rect x={W - 26 - 112} y={18} width={104} height={28} rx={8} fill={P.alert} />
+            <text x={W - 26 - 60} y={37} textAnchor="middle" fontFamily={F.mono} fontSize={14} fontWeight={700} fill={P.ink} letterSpacing={2.5}>
+              PAUSED
+            </text>
+          </g>
         </g>
       ) : null}
     </svg>

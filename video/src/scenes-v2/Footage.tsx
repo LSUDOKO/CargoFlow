@@ -1,9 +1,9 @@
 import React from "react";
-import { AbsoluteFill, OffthreadVideo, interpolate, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, OffthreadVideo, Sequence, interpolate, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { P } from "../assets/palette";
 import { F } from "../theme";
 import { IN_OUT_CUBIC, clamp } from "./kit";
-import { SHOTS, ShotId, footageFile, hasFootage } from "./footage";
+import { SHOTS, ShotId, footageFile, hasFootage, headTrim, slotParts } from "./footage";
 
 /**
  * Slot for a screen recording. Plays public/footage/<shot>.mp4 when the footage manifest lists
@@ -54,7 +54,7 @@ export const Footage: React.FC<{
   volume?: number;
   /** Placeholder card scale (1 = sized for a ~1440 px frame). */
   cardScale?: number;
-}> = ({ shot, frames, trimBefore = 0, playbackRate = 1, punches = [], volume = 0, cardScale }) => {
+}> = ({ shot, frames, trimBefore, playbackRate = 1, punches = [], volume = 0, cardScale }) => {
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
   const info = SHOTS[shot];
@@ -65,13 +65,36 @@ export const Footage: React.FC<{
   const ty = (0.5 - cy) * (s - 1) * 100;
   const transform = `translate(${tx}%, ${ty}%) scale(${s})`;
 
+  const parts = slotParts(shot);
+  if (parts) {
+    let at = 0;
+    return (
+      <AbsoluteFill style={{ overflow: "hidden", background: P.white }}>
+        <AbsoluteFill style={{ transform, transformOrigin: "50% 50%" }}>
+          {parts.map((p, i) => {
+            const from = at;
+            at += p.frames;
+            const last = i === parts.length - 1;
+            return (
+              <Sequence key={p.file + i} from={from} durationInFrames={last ? undefined : p.frames} layout="none">
+                <AbsoluteFill>
+                  <OffthreadVideo src={staticFile(`footage/${p.file}`)} trimBefore={Math.round(p.trimBefore * fps)} playbackRate={p.playbackRate ?? 1} muted style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </AbsoluteFill>
+              </Sequence>
+            );
+          })}
+        </AbsoluteFill>
+      </AbsoluteFill>
+    );
+  }
+
   if (hasFootage(shot)) {
     return (
       <AbsoluteFill style={{ overflow: "hidden", background: P.white }}>
         <AbsoluteFill style={{ transform, transformOrigin: "50% 50%" }}>
           <OffthreadVideo
             src={staticFile(`footage/${footageFile(shot)}`)}
-            trimBefore={Math.round(trimBefore * fps)}
+            trimBefore={Math.round((trimBefore ?? headTrim(shot)) * fps)}
             playbackRate={playbackRate}
             volume={volume}
             muted={volume === 0}

@@ -6,7 +6,7 @@ import { beats } from "./timing";
 /**
  * S06 · Live website demo (recording R1, 10 shots). Shot windows are the script's frame ranges;
  * punch-ins sit on the spoken numbers and UI events (12 f in, hold, 12 f out). Punch regions are
- * first guesses in normalised recording coordinates: tune `cx/cy` once the recording exists.
+ * placed on the real recorder clips (normalised recording coordinates).
  * Characters change pose on the UI event, never cover a number being read.
  */
 
@@ -14,32 +14,37 @@ const HOST = "cargoflow.adoranto737.workers.dev";
 
 export const S06_SHOTS = (at: ReturnType<typeof beats>): ShotSpec[] => {
   const s = (id: keyof typeof SHOTS, from: number, to: number, url: string, punches: ShotSpec["punches"] = []): ShotSpec => ({ shot: id, from, frames: to - from, url: `${HOST}${url}`, punches });
+  // Regions placed on frames of the recorder clips (public/footage/D*.mp4, action from 0 s); times follow the voice
+  // where the clip's event allows, otherwise the event itself (marks in recorder/shots.json "marksAt").
   return [
     s("R1-01", 0, 120, "/"),
     s("R1-02", 120, 390, "/exporter", [
-      { from: at("c066", "pharma") - 120 - 6, to: at("c067", "and") - 120 - 4, scale: 1.6, cx: 0.5, cy: 0.42, label: "Pharma template · 2–8 °C" },
-      { from: at("c067", "twenty") - 120 - 6, to: 390 - 120 - 14, scale: 1.6, cx: 0.5, cy: 0.5, label: "Financing · 20 USDG · 5 milestones" },
+      { from: at("c066", "pharma") - 120 - 8, to: at("c067", "and") - 120 - 4, scale: 1.7, cx: 0.38, cy: 0.45, label: "Cargo type · Pharma 2–8 °C" },
+      { from: at("c067", "twenty") - 120 - 6, to: 190, scale: 1.5, cx: 0.45, cy: 0.55, label: "Financing · 20 USDG · 5 milestones" },
+      { from: 204, to: 390 - 120 - 10, scale: 1.6, cx: 0.4, cy: 0.72, label: "On chain · three ticks" },
     ]),
-    s("R1-03", 390, 540, "/financier", [{ from: at("c068", "twenty") - 390 - 6, to: 540 - 390 - 14, scale: 1.5, cx: 0.55, cy: 0.5, label: "settlement preview · Facility funded" }]),
+    s("R1-03", 390, 540, "/financier", [{ from: at("c068", "approves") - 390 - 4, to: 540 - 390 - 12, scale: 1.6, cx: 0.62, cy: 0.78, label: "settlement preview · Approve → Deposit" }]),
     s("R1-04", 540, 750, "/ebl", [
-      { from: at("c069", "bill") - 540 - 6, to: at("c070", "and") - 540 - 8, scale: 1.5, cx: 0.45, cy: 0.45, label: "document fingerprint · Issue bill of lading" },
-      { from: at("c070", "binds") - 540, to: 750 - 540 - 14, scale: 1.6, cx: 0.7, cy: 0.4, label: "title card · In escrow" },
+      { from: at("c069", "bill") - 540 - 6, to: 78, scale: 1.6, cx: 0.33, cy: 0.72, label: "Issue a bill of lading · fingerprint" },
+      { from: at("c070", "binds") - 540 - 8, to: 750 - 540 - 12, scale: 1.7, cx: 0.7, cy: 0.4, label: "Bind bill of lading · In escrow" },
     ]),
-    s("R1-05", 750, 960, "/track/0x…", [{ from: at("c072", "two") - 750 - 4, to: 960 - 750 - 14, scale: 1.5, cx: 0.5, cy: 0.62, label: "M1 · M2 released" }]),
+    s("R1-05", 750, 960, "/track/0x…", [{ from: at("c072", "two") - 750 - 4, to: 186, scale: 1.6, cx: 0.5, cy: 0.8, label: "Passed: milestone released ×2" }]),
     s("R1-06", 960, 1170, "/track/0x…", [
-      { from: at("c073", "Paused") - 960 - 4, to: at("c073", "reasons") - 960 - 6, scale: 1.6, cx: 0.3, cy: 0.2, label: "Paused pill · Failed: facility paused" },
-      { from: at("c073", "plain") - 960 - 4, to: 1170 - 960 - 14, scale: 1.5, cx: 0.6, cy: 0.68, label: "Where it stands · What each party does now" },
+      { from: 62, to: 120, scale: 1.7, cx: 0.5, cy: 0.86, label: "Failed: facility paused" },
+      { from: 148, to: 158, scale: 1.6, cx: 0.3, cy: 0.2, label: "Paused pill" },
+      { from: 174, to: 1170 - 960, scale: 1.6, cx: 0.42, cy: 0.42, label: "Where it stands · What each party does now" },
     ]),
     s("R1-07", 1170, 1380, "/track/0x…", [
-      { from: at("c075", "proof") - 1170 - 4, to: at("c075", "review") - 1170 + 6, scale: 1.7, cx: 0.85, cy: 0.12, label: "bell · Proof ready" },
-      { from: at("c076", "active") - 1170 - 6, to: 1380 - 1170 - 14, scale: 1.5, cx: 0.4, cy: 0.3, label: "Groth16 proof verified · Active" },
+      { from: at("c075", "proof") - 1170 - 4, to: 44, scale: 1.7, cx: 0.38, cy: 0.78, label: "Proof ready — sign to resume" },
+      { from: 140, to: 186, scale: 1.5, cx: 0.35, cy: 0.3, label: "Active · Facility resumed by zero-knowledge proof" },
     ]),
+    // R1-08 = passkey sign-in clip (0-119) then the settlement take (120-218), see SLOT_PARTS in footage.ts
     s("R1-08", 1380, 1599, "/track/0x…", [
-      { from: at("c077", "passkey") - 1380 - 4, to: at("c077", "gas") - 1380, scale: 1.5, cx: 0.5, cy: 0.5, label: "OS passkey sheet" },
-      { from: at("c078", "Settled") - 1380 - 6, to: 1599 - 1380 - 14, scale: 1.5, cx: 0.3, cy: 0.22, label: "Settled · With the buyer" },
+      { from: at("c077", "signs") - 1380 - 4, to: 108, scale: 1.7, cx: 0.5, cy: 0.42, label: "Continue with passkey · Create a passkey account" },
+      { from: at("c078", "Settled") - 1380 - 8, to: 1599 - 1380 - 4, scale: 1.5, cx: 0.3, cy: 0.22, label: "Settled · Invoice paid and settled" },
     ]),
     s("R1-09", 1599, 1704, "/track/0x…"),
-    s("R1-10", 1704, 1860, "/market", [{ from: at("c081", "suggested") - 1704 - 6, to: 1860 - 1704 - 2, scale: 1.7, cx: 0.5, cy: 0.56, label: "Suggested fee · low / mid / high" }]),
+    s("R1-10", 1704, 1860, "/market", [{ from: at("c081", "suggested") - 1704 - 8, to: 1860 - 1704, scale: 1.8, cx: 0.5, cy: 0.55, label: "Suggested fee band · request max 4%" }]),
   ];
 };
 
@@ -65,8 +70,9 @@ export const S06Demo: React.FC = () => {
     { text: "ERC-721 title · CFEBL", from: 560, to: 746 },
     { text: "Readings never go on chain. Only roots.", from: 770, to: 956 },
     { text: "Readings stay private · Groth16", from: 1190, to: 1376 },
-    { text: "30 USDG in → 20.6 Daniel · 9.4 Meera (residual)", from: at("c078", "confirms"), to: 1596 },
-    { text: "Financiers choose the fee", from: 1724, to: 1860 },
+    { text: "Payment from the CargoFlow demo wallet · testnet", from: 1502, to: 1534 },
+    { text: "30 USDG in → 20.6 Daniel · 9.4 Meera (residual)", from: at("c078", "confirms") + 2, to: 1596 },
+    { text: "Suggested band 7.25–10.25% · this request caps at 4%", from: 1724, to: 1860 },
   ];
   return <DemoShell shots={shots} cast={cast} overlays={overlays} live="LIVE · Robinhood Chain Testnet" />;
 };
