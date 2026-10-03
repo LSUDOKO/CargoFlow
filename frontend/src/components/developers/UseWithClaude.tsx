@@ -106,13 +106,13 @@ function ConnectorPanel() {
       </ol>
       <div className="flex flex-wrap gap-2">
         <LinkButton href={CLAUDE_CONNECTORS_URL} external variant="inverse" iconEnd={<External />}>
-          Open Claude connector settings{ext}
+          Open “Add custom connector” in Claude{ext}
         </LinkButton>
         <a href={cursorInstallLink()} className={buttonClass("inverse")}>
           Add to Cursor
         </a>
       </div>
-      <p className="text-caption text-paper/70">claude.ai has no one-click link for adding a connector, so the steps above are the official route. Custom connectors need a Claude plan that supports them.</p>
+      <p className="text-caption text-paper/70">The button opens Claude on its “Add custom connector” dialog: name it CargoFlow, paste the URL, then Add. Custom connectors need a Claude plan that supports them.</p>
     </div>
   );
 }

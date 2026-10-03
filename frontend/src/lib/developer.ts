@@ -12,7 +12,8 @@ export const GITHUB_URL = "https://github.com/LSUDOKO/CargoFlow";
 export const DOCS_API_URL = /127\.0\.0\.1|localhost/.test(API_URL) ? PUBLIC_API_URL : API_URL;
 
 /** claude.ai has no add-connector deep link: the settings page is where custom connectors are added. */
-export const CLAUDE_CONNECTORS_URL = "https://claude.ai/settings/connectors";
+/** Opens claude.ai straight on its "Add custom connector" dialog; paste the MCP URL there. */
+export const CLAUDE_CONNECTORS_URL = "https://claude.ai/new?modal=add-custom-connector";
 
 /** A new Claude chat with the prompt filled in. */
 export const claudeNewChat = (prompt: string) => `https://claude.ai/new?q=${encodeURIComponent(prompt)}`;
