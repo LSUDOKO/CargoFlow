@@ -7,7 +7,8 @@
 // It spends testnet gas from each party and a small amount of testnet USDG (facility 20, invoice 30).
 //
 // Partial runs for demo data: STOP=paused ends after the excursion (a live paused facility for the automatic
-// recovery worker), MODE=request registers a shipment with its policy and opens a market financing request.
+// recovery worker), STOP=created ends once the facility exists and waits for the financier's deposit, MODE=request
+// registers a shipment with its policy and opens a market financing request.
 import { readFileSync } from "node:fs";
 import { createPublicClient, createWalletClient, defineChain, http, keccak256, toBytes, type Address, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
@@ -75,6 +76,10 @@ async function main() {
   }
   await api("POST", "/v1/shipments/mirror", { shipmentId: id, externalRef: ref, route, maxGapSec: 1800, minSensors: 2 });
   console.log(`  dashboard id ${id}`);
+  if (process.env.STOP === "created") {
+    console.log(`  stopped awaiting deposit: ${id}`);
+    return;
+  }
 
   // 2. the financier funds it
   await tx("approve vault (financier)", financier, c.usdg!, usdgAbi, "approve", [c.receivableVault!, total]);
