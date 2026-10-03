@@ -2,13 +2,13 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { useId, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { Button, buttonClass } from "@/components/ui/Button";
 import { HashBadge } from "@/components/ui/HashBadge";
 import { Modal } from "@/components/ui/Modal";
 import { ApiError, postReadings } from "@/lib/api/client";
 import type { EpochOutcome, Shipment } from "@/lib/api/schemas";
-import { batches, parseReadingsCsv, templateCsv, type ParsedCsv } from "@/lib/csv";
+import { batches, CSV_COLUMNS, detectColumns, OPTIONAL_FIELDS, parseReadingsCsv, readHeader, templateCsv, type ColumnMap, type DateOrder, type Field, type ParsedCsv } from "@/lib/csv";
 import { downloadText } from "@/lib/download";
 import { decodeKeyFile, type KeyFile } from "@/lib/gateway";
 import { shortHash } from "@/lib/format";
@@ -42,8 +42,8 @@ export function UploadReadings({ open, onClose, shipment, initialKey, chainId }:
   const csvInput = useId();
   const [key, setKey] = useState<KeyFile | null>(initialKey ?? null);
   const [keyError, setKeyError] = useState<{ message: string; shipmentId?: string } | null>(null);
-  const [csvName, setCsvName] = useState<string | null>(null);
-  const [parsed, setParsed] = useState<ParsedCsv | null>(null);
+  const [csv, setCsv] = useState<{ name: string; text: string; nowSec: number } | null>(null);
+  const [read, setRead] = useState<ReadOptions>(defaultRead);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [totals, setTotals] = useState<Totals | null>(null);
   const [sendError, setSendError] = useState<string | null>(null);
@@ -58,8 +58,7 @@ export function UploadReadings({ open, onClose, shipment, initialKey, chainId }:
 
   async function pickKey(file: File | undefined) {
     setKeyError(null);
-    setParsed(null);
-    setCsvName(null);
+    setCsv(null);
     setTotals(null);
     if (!file) return;
     try {
@@ -80,9 +79,31 @@ export function UploadReadings({ open, onClose, shipment, initialKey, chainId }:
     setTotals(null);
     setSendError(null);
     if (!file || !key) return;
-    setCsvName(file.name);
-    setParsed(parseReadingsCsv(await file.text(), { nowSec: Math.floor(Date.now() / 1000), band, sensors: key.sensorIds }));
+    const text = await file.text();
+    setCsv({ name: file.name, text, nowSec: Math.floor(Date.now() / 1000) });
+    // a new file starts from detection again; with other column names, optional fields the file lacks start as "not in the file"
+    const d = detectColumns(readHeader(text));
+    setRead(d.exact ? defaultRead : { ...defaultRead, mapping: { ...d.columns } });
   }
+
+  const csvName = csv?.name ?? null;
+  const parsed: ParsedCsv | null = useMemo(
+    () =>
+      csv && key
+        ? parseReadingsCsv(csv.text, {
+            nowSec: csv.nowSec,
+            band: { minC: shipment.policy.minTempX100 / 100, maxC: shipment.policy.maxTempX100 / 100 },
+            sensors: key.sensorIds,
+            mapping: read.mapping,
+            fahrenheit: read.fahrenheit,
+            timeZone: read.timeZone,
+            dateOrder: read.dateOrder,
+            sensorId: read.sensorId,
+          })
+        : null,
+    [csv, key, read, shipment.policy.minTempX100, shipment.policy.maxTempX100],
+  );
+  const detected = useMemo(() => (parsed ? detectColumns(parsed.header) : null), [parsed]);
 
   async function send() {
     if (!key || !parsed || parsed.errors.length || !parsed.points.length) return;
@@ -145,7 +166,7 @@ export function UploadReadings({ open, onClose, shipment, initialKey, chainId }:
         <li>
           <h3 className="font-semibold">2. Logger export</h3>
           <p className="mt-1 text-sm text-slate">
-            A CSV with the columns <code className="font-mono text-ink">timestamp, sensor_id, temperature_c, humidity_pct, latitude, longitude, shock_g</code>. Timestamps in unix seconds or ISO 8601.{" "}
+            A CSV with the columns <code className="font-mono text-ink">timestamp, sensor_id, temperature_c, humidity_pct, latitude, longitude, shock_g</code>. Other column names, °F and local times can be mapped once the file is chosen.{" "}
             <button type="button" className="font-semibold text-ink underline" onClick={() => downloadText("cargoflow-readings-template.csv", templateCsv(key?.sensorIds ?? ["probe-1", "probe-2"]), "text/csv")}>
               Download a template
             </button>
@@ -161,9 +182,13 @@ export function UploadReadings({ open, onClose, shipment, initialKey, chainId }:
             {csvName && <span className="truncate text-sm">{csvName}</span>}
           </div>
 
+          {parsed && key && detected && (
+            <ReadSettings parsed={parsed} exact={detected.exact} detectedF={detected.fahrenheit} sensors={key.sensorIds} value={read} onChange={setRead} />
+          )}
+
           {parsed && parsed.errors.length > 0 && (
             <div role="alert" className="mt-3 rounded-2xl border-2 border-danger/40 p-3 text-sm">
-              <p className="font-semibold text-danger">Fix {parsed.errors.length === 1 ? "this problem" : `these ${parsed.errors.length} problems`} and choose the file again. Nothing has been sent.</p>
+              <p className="font-semibold text-danger">Fix {parsed.errors.length === 1 ? "this problem" : `these ${parsed.errors.length} problems`} (map the columns above, or correct the file and choose it again). Nothing has been sent.</p>
               <ul className="mt-2 max-h-48 overflow-y-auto font-mono text-xs leading-relaxed">
                 {parsed.errors.slice(0, 50).map((e) => (
                   <li key={`${e.line}-${e.message}`}>Line {e.line}: {e.message}</li>
@@ -183,6 +208,7 @@ export function UploadReadings({ open, onClose, shipment, initialKey, chainId }:
                   {parsed.summary.outOfBand} reading{parsed.summary.outOfBand > 1 ? "s are" : " is"} outside the shipment&apos;s {band.minC} to {band.maxC} °C band. They are evidence too: an epoch that contains them can pause the facility.
                 </p>
               )}
+              <ReadNotes parsed={parsed} />
               {sensorsCovered < shipment.policy.minSensors && (
                 <p className="col-span-full font-medium">The policy needs {shipment.policy.minSensors} sensors per epoch and this file has {sensorsCovered}; its epochs will not pass on their own.</p>
               )}
@@ -246,5 +272,128 @@ export function UploadReadings({ open, onClose, shipment, initialKey, chainId }:
         </section>
       )}
     </Modal>
+  );
+}
+
+// --- how the file is read: column mapping, unit, time zone and date order
+
+type ReadOptions = { mapping?: Partial<ColumnMap>; fahrenheit?: boolean; timeZone: string; dateOrder?: DateOrder; sensorId?: string };
+const defaultRead: ReadOptions = { timeZone: "UTC" };
+
+const FIELD_LABELS: Record<Field, string> = {
+  timestamp: "Time",
+  sensor_id: "Sensor",
+  temperature_c: "Temperature",
+  humidity_pct: "Humidity",
+  latitude: "Latitude",
+  longitude: "Longitude",
+  shock_g: "Shock",
+};
+
+function timeZones(): string[] {
+  const local = typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : "UTC";
+  let all: string[] = [];
+  try {
+    all = (Intl as unknown as { supportedValuesOf?: (k: string) => string[] }).supportedValuesOf?.("timeZone") ?? [];
+  } catch {
+    /* older runtimes: UTC and the local zone only */
+  }
+  return [...new Set(["UTC", local, ...all.filter((z) => z !== "UTC")])];
+}
+
+const CHOOSE = "choose";
+const selectClass = "h-10 w-full min-w-0 rounded-xl border-2 border-line bg-white px-3 text-sm outline-none focus:border-ink";
+
+function ReadSettings({ parsed, exact, detectedF, sensors, value, onChange }: { parsed: ParsedCsv; exact: boolean; detectedF: boolean; sensors: string[]; value: ReadOptions; onChange: (v: ReadOptions) => void }) {
+  const id = useId();
+  const zones = useMemo(() => timeZones(), []);
+  const cols = parsed.columns;
+  const showMapping = !exact || !!value.mapping;
+  const setField = (f: Field, v: string) => {
+    const mapping: Partial<ColumnMap> = { ...cols, ...value.mapping, [f]: v === "" ? null : Number(v) };
+    onChange({ ...value, mapping, sensorId: f === "sensor_id" && v === "" ? (value.sensorId ?? sensors[0]) : value.sensorId });
+  };
+  const fahrenheit = value.fahrenheit ?? detectedF;
+  // "" means deliberately not in the file; CHOOSE means nothing matched yet
+  const selectValue = (f: Field) => {
+    const c = cols[f];
+    if (c !== null) return String(c);
+    if (f === "sensor_id") return value.mapping?.sensor_id === null && value.sensorId ? "" : CHOOSE;
+    return OPTIONAL_FIELDS.includes(f) && value.mapping?.[f] === null ? "" : CHOOSE;
+  };
+  return (
+    <div className="mt-3 rounded-2xl border-2 border-line p-4 text-sm">
+      {showMapping && (
+        <>
+          <p className="font-semibold">Match the file&apos;s columns</p>
+          <p className="mt-0.5 text-slate">The header does not use CargoFlow&apos;s column names, so we matched them by their usual names. Check each one.</p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {CSV_COLUMNS.map((f) => (
+              <div key={f}>
+                <label htmlFor={`${id}-${f}`} className="mb-1 block text-xs font-semibold text-slate">{FIELD_LABELS[f]}</label>
+                <select id={`${id}-${f}`} value={selectValue(f)} onChange={(e) => setField(f, e.target.value)} className={selectClass}>
+                  {selectValue(f) === CHOOSE && <option value={CHOOSE} disabled>Choose a column</option>}
+                  {(OPTIONAL_FIELDS.includes(f) || f === "sensor_id") && <option value="">{f === "sensor_id" ? "Not in the file (one sensor)" : "Not in the file (sent as 0)"}</option>}
+                  {parsed.header.map((h, i) => (
+                    <option key={i} value={i}>{h || `Column ${i + 1}`}</option>
+                  ))}
+                </select>
+              </div>
+            ))}
+          </div>
+          {cols.sensor_id === null && value.mapping?.sensor_id === null && value.sensorId && (
+            <div className="mt-3 max-w-xs">
+              <label htmlFor={`${id}-sensor`} className="mb-1 block text-xs font-semibold text-slate">Every row comes from</label>
+              <select id={`${id}-sensor`} value={value.sensorId ?? sensors[0]} onChange={(e) => onChange({ ...value, sensorId: e.target.value })} className={selectClass}>
+                {sensors.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+          )}
+        </>
+      )}
+      <div className={`grid gap-3 sm:grid-cols-3 ${showMapping ? "mt-4 border-t border-line pt-4" : ""}`}>
+        <div>
+          <label htmlFor={`${id}-unit`} className="mb-1 block text-xs font-semibold text-slate">Temperature unit</label>
+          <select id={`${id}-unit`} value={fahrenheit ? "F" : "C"} onChange={(e) => onChange({ ...value, fahrenheit: e.target.value === "F" })} className={selectClass}>
+            <option value="C">°C</option>
+            <option value="F">°F (converted to °C)</option>
+          </select>
+        </div>
+        <div>
+          <label htmlFor={`${id}-tz`} className="mb-1 block text-xs font-semibold text-slate">Time zone for times without one</label>
+          <select id={`${id}-tz`} value={value.timeZone} onChange={(e) => onChange({ ...value, timeZone: e.target.value })} className={selectClass}>
+            {zones.map((z) => <option key={z} value={z}>{z}</option>)}
+          </select>
+        </div>
+        {parsed.notes.dateOrder && (
+          <div>
+            <label htmlFor={`${id}-order`} className="mb-1 block text-xs font-semibold text-slate">Dates like 03/04</label>
+            <select id={`${id}-order`} value={value.dateOrder ?? parsed.notes.dateOrder} onChange={(e) => onChange({ ...value, dateOrder: e.target.value as DateOrder })} className={selectClass}>
+              <option value="dmy">Day first (3 April)</option>
+              <option value="mdy">Month first (March 4)</option>
+            </select>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Plain statements of how the file was read, shown with the preview before anything is sent. */
+function ReadNotes({ parsed }: { parsed: ParsedCsv }) {
+  const n = parsed.notes;
+  const lines: string[] = [];
+  if (n.zoneless > 0) lines.push(`${n.zoneless.toLocaleString("en-US")} timestamp${n.zoneless === 1 ? " has" : "s have"} no time zone and ${n.zoneless === 1 ? "was" : "were"} read as ${n.timeZone === "UTC" ? "UTC" : `local time in ${n.timeZone}`}.`);
+  if (n.milliseconds > 0) lines.push("13-digit timestamps were read as milliseconds since 1970.");
+  if (n.fahrenheit) lines.push("Temperatures were converted from °F to °C.");
+  if (n.dateOrder) lines.push(`Dates were read ${n.dateOrder === "dmy" ? "day first" : "month first"}${n.dateOrderAmbiguous ? "; no date in the file settles the order, so check it" : ""}.`);
+  if (n.filled.includes("humidity_pct")) lines.push("Humidity is not in the file and is sent as 0.");
+  if (n.filled.includes("shock_g")) lines.push("Shock is not in the file and is sent as 0.");
+  if (n.filled.includes("sensor_id")) lines.push(`Every reading is attributed to ${parsed.points[0]?.sensorId ?? "one sensor"}.`);
+  if (!lines.length) return null;
+  return (
+    <ul className="col-span-full list-disc space-y-0.5 pl-5 text-ink/80">
+      {lines.map((l) => <li key={l}>{l}</li>)}
+    </ul>
   );
 }

@@ -79,3 +79,16 @@ export function buildMilestones(total: bigint, count: number, threshold: number,
     checkpointCommitment: keccak256(toBytes(`${ref}:checkpoint:${i + 1}`)),
   }));
 }
+
+/** The invoice hash used when no invoice document is attached: derived from the reference and the amount. */
+export function textInvoiceHash(ref: string, invoice: bigint): Hex {
+  return keccak256(toBytes(`invoice:${ref}:${invoice}`));
+}
+
+export const MAX_INVOICE_BYTES = 50 * 1024 * 1024;
+
+/** keccak256 of a file's bytes, computed in the browser: the file itself never leaves the device. */
+export async function fileKeccak(file: Blob): Promise<Hex> {
+  if (file.size > MAX_INVOICE_BYTES) throw new Error("The file is larger than 50 MB.");
+  return keccak256(new Uint8Array(await file.arrayBuffer()));
+}
