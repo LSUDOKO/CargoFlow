@@ -118,7 +118,7 @@ export function PasskeyGasNote({ sponsorship }: { sponsorship: ReturnType<typeof
     return (
       <p className="mx-1 my-1 flex items-center gap-2 rounded-control bg-success-bg px-3 py-2 text-sm font-semibold text-success-fg" role="status">
         <span className="grid h-4 w-4 place-items-center rounded-full bg-success-solid text-micro text-white" aria-hidden="true">✓</span>
-        Gas paid by CargoFlow
+        Gas sponsored
       </p>
     );
   }

@@ -7,7 +7,7 @@ import { PASSKEY_CONNECTOR_ID } from "@/lib/passkey/env";
 import { isPasskeyCancel } from "@/lib/passkey/provider";
 import { savePasskey } from "@/lib/passkey/store";
 
-export const PASSKEY_EXPLAINER = "A smart account secured by your device's Face ID, fingerprint or security key. Gas is paid by CargoFlow when sponsorship is on.";
+export const PASSKEY_EXPLAINER = "A smart account secured by your device's Face ID, fingerprint or security key. Gas is sponsored, so the account needs no ETH.";
 
 type Busy = "register" | "login" | null;
 

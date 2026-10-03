@@ -332,7 +332,7 @@ function PasskeyRow({ recent, onClick, autoFocus }: { recent: boolean; onClick: 
             {recent && <RecentBadge />}
           </span>
           <span className="mt-0.5 block text-small text-text-muted">
-            {known ? "Use the passkey account on this device" : "Face ID, fingerprint or security key. Gas paid by CargoFlow."}
+            {known ? "Use the passkey account on this device" : "Face ID, fingerprint or security key. Gas sponsored."}
           </span>
         </span>
         <Chevron />

@@ -238,6 +238,20 @@ payment).
 
 <p align="center"><a href="https://cargoflow.adoranto737.workers.dev"><img src="docs/assets/v3/web-landing.jpg" alt="CargoFlow landing page: 'Capital that moves with your cargo', USDG working capital for physical trade released only when the shipment's own sensor evidence clears it, with Start as an exporter and Fund a facility buttons, a track bar and live-on-testnet counters." width="100%"></a></p>
 
+**The cast, on the site.** The landing page introduces the same six people as the film, then tells how it works as a
+scroll story: the route draws, the vault fills, the door probe warms and the payment pauses, the proof unlocks it.
+
+<table>
+  <tr>
+    <td width="50%" valign="top"><a href="https://cargoflow.adoranto737.workers.dev/#how-it-works"><img src="docs/assets/v3/web-story-pause.jpg" alt="Landing scroll story, step 4 of 6: off Sri Lanka the door probe reads 9.1 °C, probe-1 out of range, payments paused and the escrow vault latched, with Meera looking on."></a><br><b>Step 4, pause.</b> A warm reading pauses the money; nobody has to notice or call.</td>
+    <td width="50%" valign="top"><a href="https://cargoflow.adoranto737.workers.dev/#how-it-works"><img src="docs/assets/v3/web-story-proof.jpg" alt="Landing scroll story, step 5 of 6: proof ready, eight sealed readings become a shield and the vault latch lifts."></a><br><b>Step 5, prove.</b> Eight sealed readings prove the cargo is fine; the latch lifts.</td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top"><img src="docs/assets/v3/web-cast.jpg" alt="Meet the people section: Meera the exporter, Daniel the financier and Wei Lin the buyer, each with a one-line role."><br><b>Meet the people.</b> Every screen belongs to one of them.</td>
+    <td width="50%" valign="top" align="center"><img src="docs/assets/v3/web-cast-mobile.jpg" alt="Meet the people on a phone: a swipeable carousel of character cards." width="55%"><br><b>On a phone.</b> A swipe carousel; motion turns off with reduced-motion settings.</td>
+  </tr>
+</table>
+
 <table>
   <tr>
     <td width="33%" valign="top"><a href="https://cargoflow.adoranto737.workers.dev/exporter"><img src="docs/assets/v3/web-exporter.jpg" alt="Exporter wizard, cold-chain policy step: cargo type chips with Pharma 2 to 8 °C selected, temperature limits, evidence and conflict thresholds, humidity and shock."></a><br><b>Exporter.</b> Four steps (shipment, cold-chain policy, financing, sign); the Pharma template fills 2 to 8 °C, humidity and shock. <a href="https://cargoflow.adoranto737.workers.dev/exporter">/exporter</a></td>
