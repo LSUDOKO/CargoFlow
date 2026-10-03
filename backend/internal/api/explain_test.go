@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/LSUDOKO/CargoFlow/backend/internal/ai"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/api"
@@ -53,8 +54,10 @@ func TestExplanationIsRuleDerivedWithATemperatureForecast(t *testing.T) {
 		t.Fatalf("explanation = %+v", x)
 	}
 	// a probe warming 0.6 C every 10 minutes towards the 8 C limit
+	// (recent readings: a trend is only shown while the cargo is still reporting)
+	start := time.Now().Unix() - 1900
 	for i, temp := range []int32{500, 560, 620, 680} {
-		if _, err := e.store.InsertPoint(ctxBG(), sh, reading(1_000_000+int64(i)*600, "probe-a", temp, 1_000_000, 103_000_000), ""); err != nil {
+		if _, err := e.store.InsertPoint(ctxBG(), sh, reading(start+int64(i)*600, "probe-a", temp, 1_000_000, 103_000_000), ""); err != nil {
 			t.Fatal(err)
 		}
 	}
