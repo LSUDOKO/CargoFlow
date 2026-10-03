@@ -67,5 +67,8 @@
       "esbuild",
       "workerd"
     ]
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
