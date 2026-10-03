@@ -95,19 +95,23 @@ export const ROUTE_WAYPOINTS: LonLat[] = [
   [72.6, 15.6], // off Goa
   [73.8, 12.2], // off Mangalore
   [75.4, 9.2], // off Kochi
-  [77.2, 7.0], // off Kanyakumari
-  [79.6, 6.9], // off Colombo (28 km: inside the illustrative 50 km M3 place)
-  [79.85, 6.0], // off Galle
-  [80.4, 5.6], // south of Dondra Head, Sri Lanka
-  [82.6, 5.7],
+  [77.2, 7.05], // off Kanyakumari
+  [78.7, 7.05], // Gulf of Mannar approach, well south of the Indian coast
+  [79.62, 6.92], // off Colombo (~21 km: inside the illustrative 50 km M3 place, at sea)
+  [79.72, 6.45], // off Kalutara (route stays >= 17 km off Sri Lanka's west coast)
+  [79.93, 5.98], // off Galle
+  [80.45, 5.68], // south of Dondra Head, Sri Lanka
+  [81.3, 5.72],
+  [82.6, 5.75],
   [88.0, 5.9],
   [94.6, 6.35], // north of Pulau Weh / Aceh
   [97.5, 5.75], // clear of the Aceh coast (checked against Natural Earth land)
   [98.8, 4.3],
   [100.55, 2.85], // Malacca Strait off Port Klang
-  [101.6, 2.15],
-  [102.6, 1.62],
-  [103.35, 1.2], // Singapore Strait
+  [101.45, 2.35], // mid-strait, clear of Rupat / Sumatra
+  [102.3, 1.8],
+  [102.95, 1.4],
+  [103.4, 1.17], // Singapore Strait
   [103.84, 1.26], // Singapore
 ];
 

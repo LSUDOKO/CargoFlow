@@ -8,7 +8,7 @@ export type Camera = { lon: number; lat: number; zoom: number };
 export type ProgressTimeline = { frames: number[]; values: number[] };
 
 /** A milestone pip on the route (`M1`…). Give `t` (route fraction) or `ll` (nearest route point). */
-export type Milestone = { label: string; t?: number; ll?: LonLat; sub?: string; labelSide?: "below" | "above" | "left" | "right"; reached?: boolean };
+export type Milestone = { label: string; t?: number; ll?: LonLat; sub?: string; labelSide?: "below" | "above" | "left" | "right"; reached?: boolean; /** 0..1 pop-in scale independent of `reached` (e.g. pips landing as the lane draws). */ show?: number };
 
 /** A milestone place circle, drawn to scale. */
 export type PlaceState = "pending" | "active" | "held" | "met";
@@ -22,10 +22,13 @@ const LAND = "#ECEFE7";
 const SEA = "#FBFCFC"; // white with ~2% teal
 const COAST = "rgba(11,27,43,0.7)";
 
-const COUNTRY_LABELS: { text: string; ll: LonLat; size?: number }[] = [
-  { text: "INDIA", ll: [78.4, 20.2], size: 24 },
-  { text: "SRI LANKA", ll: [84.4, 7.7] },
-  { text: "MALAYSIA", ll: [102.6, 4.4] },
+/** Country labels sit on land. Close-ups (zoom >= 1.8) swap to labels placed for that framing. */
+const COUNTRY_LABELS: { text: string; ll: LonLat; size?: number; minZoom?: number; maxZoom?: number }[] = [
+  { text: "INDIA", ll: [78.4, 20.2], size: 24, maxZoom: 1.8 },
+  { text: "INDIA", ll: [77.9, 11.4], minZoom: 1.8 },
+  { text: "SRI LANKA", ll: [80.72, 7.95], size: 11, maxZoom: 1.8 },
+  { text: "SRI LANKA", ll: [80.72, 7.6], minZoom: 1.8 },
+  { text: "MALAYSIA", ll: [102.2, 4.6] },
 ];
 const SEA_LABELS: { text: string; ll: LonLat; rotate?: number; minZoom?: number }[] = [
   { text: "Arabian Sea", ll: [65.8, 13.5] },
@@ -77,6 +80,8 @@ export const RouteMap: React.FC<{
   shipStatus?: ShipStatus;
   shipLabel?: string;
   labels?: boolean;
+  /** Draw the live position (dot / ship glyph). */
+  ship?: boolean;
   scaleBar?: boolean;
   attribution?: boolean;
   style?: React.CSSProperties;
@@ -98,6 +103,7 @@ export const RouteMap: React.FC<{
   shipStatus = "ok",
   shipLabel,
   labels = true,
+  ship: showShip = true,
   scaleBar = true,
   attribution = true,
   style,
@@ -199,10 +205,10 @@ export const RouteMap: React.FC<{
               </text>
             );
           })}
-          {COUNTRY_LABELS.map((l) => {
+          {COUNTRY_LABELS.filter((l) => (l.minZoom === undefined || camera.zoom >= l.minZoom) && (l.maxZoom === undefined || camera.zoom < l.maxZoom)).map((l) => {
             const s = llScreen(l.ll);
             return (
-              <text key={l.text} x={s.x} y={s.y} textAnchor="middle" fontFamily={F.body} fontWeight={600} fontSize={l.size ?? 15} fill={P.ink} opacity={0.4} letterSpacing={l.size ? 9 : 4}>
+              <text key={`${l.text}-${l.ll[1]}`} x={s.x} y={s.y} textAnchor="middle" fontFamily={F.body} fontWeight={600} fontSize={l.size ?? 15} fill={P.ink} opacity={0.4} letterSpacing={l.size === 24 ? 9 : l.size && l.size < 15 ? 2 : 4}>
                 {l.text}
               </text>
             );
@@ -261,8 +267,9 @@ export const RouteMap: React.FC<{
         const t = m.t ?? (m.ll ? routeFractionNear(m.ll) : 0);
         const pt = routeAt(t);
         const s = toScreen(pt.x, pt.y);
-        const k = m.reached === undefined ? popAt(t) : m.reached ? 1 : 0;
-        const reached = k > 0.5;
+        const k = m.show !== undefined ? m.show : m.reached === undefined ? popAt(t) : m.reached ? 1 : 0;
+        if (k <= 0.001) return null;
+        const reached = m.show !== undefined ? Boolean(m.reached) : k > 0.5;
         const sc = 0.85 + 0.15 * Math.min(1.2, k);
         const side = m.labelSide ?? "below";
         const lx = side === "left" ? s.x - 28 : side === "right" ? s.x + 28 : s.x;
@@ -310,7 +317,8 @@ export const RouteMap: React.FC<{
         : null}
 
       {/* live position */}
-      <g transform={`translate(${shipS.x} ${shipS.y})`}>
+      {showShip ? (
+        <g transform={`translate(${shipS.x} ${shipS.y})`}>
         <circle r={6 * (1 + halo * 0.6) * 2} fill={statusColor} opacity={(1 - halo) * 0.5} />
         {camera.zoom >= 2 ? (
           <g transform={`rotate(${ship.heading})`}>
@@ -325,7 +333,8 @@ export const RouteMap: React.FC<{
           </g>
         )}
         {shipLabel ? chip(0, -40, shipLabel, P.ink, P.white, "ship") : null}
-      </g>
+        </g>
+      ) : null}
 
       {scaleBar ? (
         <g transform={`translate(48 ${height - 48})`}>

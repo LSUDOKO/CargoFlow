@@ -26,7 +26,7 @@ export const cameraAt = (frame: number, keys: { f: number; cam: Camera }[]): Cam
 export const T = {
   m1: 0.004,
   m2: routeFractionNear([75.4, 9.2]),
-  m3: routeFractionNear([79.6, 6.9]),
+  m3: routeFractionNear([79.62, 6.92]),
   m4: routeFractionNear([98.8, 4.3]),
   m5: 0.999,
   /** First point 412 km (straight line) from Colombo: where M3 is "held". */

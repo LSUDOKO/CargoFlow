@@ -11,6 +11,8 @@ import { S5WhyRobinhood } from "./scenes/S5WhyRobinhood";
 import { S6Proof } from "./scenes/S6Proof";
 import { S7Outro } from "./scenes/S7Outro";
 import { LibraryCompositions } from "./Library";
+import { FULL_V2_FRAMES, FullV2, SceneV2, fullV2Schema } from "./FullV2";
+import { SCENES } from "./scenes-v2/timing";
 
 const demoMetadata: CalculateMetadataFunction<DemoProps> = ({ props }) => {
   const resolved = withAutoMedia(props);
@@ -215,6 +217,30 @@ export const RemotionRoot: React.FC = () => (
         width={1920}
         height={1080}
       />
+    </Folder>
+    <Composition
+      id="FullV2"
+      component={FullV2}
+      durationInFrames={FULL_V2_FRAMES}
+      fps={30}
+      width={1920}
+      height={1080}
+      schema={fullV2Schema}
+      defaultProps={{ showCaptions: true, audio: true, audioVolume: 1 }}
+    />
+    <Folder name="V2-Scenes">
+      {SCENES.map((s) => (
+        <Composition
+          key={s.id}
+          id={`V2-${s.id}`}
+          component={SceneV2}
+          durationInFrames={s.frames}
+          fps={30}
+          width={1920}
+          height={1080}
+          defaultProps={{ id: s.id, showCaptions: true, audio: true }}
+        />
+      ))}
     </Folder>
     <LibraryCompositions />
   </>
