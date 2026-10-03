@@ -38,9 +38,9 @@ export const T = {
 export const MAP_MILESTONES: Milestone[] = [
   { label: "Departed Nhava Sheva", t: T.m1, labelSide: "left" },
   { label: "Off Kochi", t: T.m2, labelSide: "left" },
-  { label: "Colombo", t: T.m3, labelSide: "below" },
+  { label: "", t: T.m3 },
   { label: "Malacca Strait", t: T.m4, labelSide: "left" },
-  { label: "Singapore", t: T.m5, labelSide: "below" },
+  { label: "", t: T.m5 },
 ];
 
 export const EXCURSION_T = T.excursion;
@@ -81,7 +81,7 @@ export const MapDemo: React.FC = () => {
       center: PORTS.colombo.ll,
       km: 50,
       grow: colomboGrow,
-      state: resumed ? "met" : held ? "held" : "active",
+      state: resumed ? "met" : held && frame < 162 ? "held" : "active",
       label: "M3 · within 50 km of Colombo",
       distance: "412 km away",
     },

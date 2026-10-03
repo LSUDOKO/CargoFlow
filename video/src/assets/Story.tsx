@@ -83,7 +83,7 @@ export const ExpenseTag: React.FC<{ label: string; amount?: string; stampAt?: nu
       <circle cx={100} cy={24} r={8} fill={P.ink3} />
       <rect x={20} y={30} width={160} height={110} rx={14} fill={P.white} />
       <rect x={166} y={40} width={8} height={90} rx={4} fill={P.whiteShade} />
-      <text x={40} y={78} fontFamily={F.display} fontSize={26} fontWeight={700} fill={P.ink}>
+      <text x={40} y={70} fontFamily={F.display} fontSize={26} fontWeight={700} fill={P.ink}>
         {label}
       </text>
       {amount ? (
@@ -92,7 +92,7 @@ export const ExpenseTag: React.FC<{ label: string; amount?: string; stampAt?: nu
         </text>
       ) : null}
       {k > 0.01 ? (
-        <g transform={`translate(110 90) rotate(-12) scale(${1.6 - 0.6 * k})`} opacity={Math.min(1, k * 1.6)}>
+        <g transform={`translate(112 112) rotate(-10) scale(${1.6 - 0.6 * k})`} opacity={Math.min(1, k * 1.6)}>
           <rect x={-46} y={-20} width={92} height={40} rx={8} fill="none" stroke={P.ink} strokeWidth={4} />
           <text x={0} y={8} textAnchor="middle" fontFamily={F.mono} fontSize={22} fontWeight={700} fill={P.ink} letterSpacing={2}>
             PAID

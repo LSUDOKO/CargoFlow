@@ -125,7 +125,7 @@ export const EpochTray: React.FC<{
               if (land <= 0) return null;
               const fx = labelW + i * (cw + gap);
               const tx = fx + (cx - cw / 2 - fx) * c;
-              const ty = y - (1 - land) * 60 + (cy - 32 - y) * c;
+              const ty = y - (1 - land) * 22 + (cy - 32 - y) * c;
               return (
                 <g key={i} transform={`translate(${tx} ${ty}) scale(${1 - c * 0.6})`} opacity={Math.min(1, land * 2) * (1 - chipK)}>
                   <ReadingCardG value={v} sensor={r.sensor} time={`14:${String(i * 2).padStart(2, "0")}`} band={band} flip={flip} dot={dots} />
@@ -136,7 +136,7 @@ export const EpochTray: React.FC<{
         );
       })}
       {chipK > 0 ? (
-        <g transform={`translate(${cx} ${cy}) scale(${0.6 + 0.4 * chipK})`} opacity={chipK}>
+        <g transform={`translate(${cx} ${cy}) scale(${(0.6 + 0.4 * chipK) * 1.6})`} opacity={chipK}>
           <rect x={-150} y={-30} width={300} height={60} rx={30} fill={P.ink} />
           <g transform="translate(-118 0)" stroke={P.signal} strokeWidth={2.4} fill="none" strokeLinecap="round">
             <path d="M-8 6 a9 9 0 0 1 16 -8" />
@@ -297,7 +297,7 @@ export const ScoreDial: React.FC<{ penalties?: Partial<Record<(typeof PENALTIES)
         })}
       </div>
       {formula ? (
-        <div style={{ fontFamily: F.mono, fontSize: 15, color: P.slate }}>100 − physical − conflict − freshness − route − source − fraud − coverage</div>
+        <div style={{ fontFamily: F.mono, fontSize: 13, color: P.slate, marginTop: 30, whiteSpace: "nowrap" }}>100 − physical − conflict − freshness − route − source − fraud − coverage</div>
       ) : null}
     </div>
   );
@@ -400,14 +400,30 @@ export const ProofEnvelope: React.FC<{ fill?: number; seal?: number; stamp?: num
       <rect x={20} y={20} width={320} height={200} rx={14} fill={P.paperShade} />
       {/* cards inside (thickness), face-down */}
       {Array.from({ length: cards }).map((_, i) => (
-        <rect key={i} x={50 + i * 1.5} y={40 - i * 5} width={260} height={120} rx={10} fill={i % 2 ? P.ink3 : P.ink2} />
+        <rect key={i} x={50 + i * 1.5} y={44 - i * 2.5} width={260} height={120} rx={10} fill={i % 2 ? P.ink3 : P.ink2} />
       ))}
-      {/* front pocket */}
+      {seal > 0.5 ? (
+        <g>
+          {/* sealed: the front covers the cards entirely; their thickness shows as edges */}
+          <rect x={20} y={20} width={320} height={200} rx={14} fill={P.white} />
+          <rect x={312} y={28} width={20} height={186} rx={8} fill={P.whiteShade} />
+          <text x={300} y={52} textAnchor="end" fontFamily={F.mono} fontSize={12} fill={P.slate}>
+            {cards} readings · face-down
+          </text>
+          <path d="M20 30 L180 150 L340 30" fill="none" stroke={P.line} strokeWidth={2.5} strokeLinejoin="round" />
+          <path d="M20 214 L150 120 M340 214 L210 120" fill="none" stroke={P.line} strokeWidth={2} />
+        </g>
+      ) : null}
+{seal <= 0.5 ? (
+        <g>
+
       <path d="M20 90 L180 170 L340 90 V206 a14 14 0 0 1 -14 14 H34 a14 14 0 0 1 -14 -14 Z" fill={P.white} />
       <path d="M340 90 V206 a14 14 0 0 1 -14 14 H300 Z" fill={P.whiteShade} />
       {/* flap: folds from open (up) to closed (down) */}
       <path d={`M20 30 Q20 20 30 20 H330 Q340 20 340 30 L180 ${30 + 120 * flapA} Z`} fill={flapA > 0 ? P.white : P.paperShade} />
       <path d={`M20 30 L180 ${30 + 120 * flapA} L340 30`} fill="none" stroke={P.line} strokeWidth={2} />
+        </g>
+      ) : null}
       {/* stamp */}
       {st > 0.01 ? (
         <g transform={`translate(240 178) rotate(-8) scale(${1.6 - 0.6 * st})`} opacity={Math.min(1, st * 2)}>
@@ -455,10 +471,10 @@ export const Ratchet: React.FC<{ clicks?: number; nudgeAt?: number; width?: numb
   }).join(" ");
   return (
     <svg width={width} viewBox="-170 -170 340 360" style={{ display: "block", overflow: "visible", ...style }}>
-      <text x={-150} y={-130} fontFamily={F.mono} fontSize={16} fontWeight={700} fill={P.ink}>
+      <text x={-122} y={6} textAnchor="end" fontFamily={F.mono} fontSize={16} fontWeight={700} fill={P.ink}>
         ← stricter
       </text>
-      <text x={150} y={-130} textAnchor="end" fontFamily={F.mono} fontSize={16} fill={P.slate}>
+      <text x={122} y={6} fontFamily={F.mono} fontSize={16} fill={P.slate}>
         looser →
       </text>
       <g transform={`rotate(${rot})`}>

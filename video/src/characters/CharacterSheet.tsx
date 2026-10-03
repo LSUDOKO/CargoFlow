@@ -66,15 +66,23 @@ export const CharacterSheet: React.FC = () => (
   </AbsoluteFill>
 );
 
-/** Large lineup for detail review (1920×1080). */
+/** Large lineup in each character's signature pose from SCRIPT-v2 (1920×1080). */
+const LINEUP: { who: CharacterName; p: React.ComponentProps<(typeof CHARACTERS)["meera"]> }[] = [
+  { who: "carrier", p: { prop: "bol", expression: "confident", look: "right" } },
+  { who: "meera", p: { prop: "tablet", gesture: "present", expression: "happy", look: "right" } },
+  { who: "daniel", p: { pose: "crossed", expression: "skeptical", look: "left" } },
+  { who: "weilin", p: { prop: "invoice", expression: "neutral", look: "left" } },
+  { who: "insurer", p: { prop: "umbrella", expression: "confident", look: "left" } },
+  { who: "arbiter", p: { pose: "hips", expression: "focused", look: "left" } },
+];
+
 export const CharacterLineup: React.FC = () => (
-  <AbsoluteFill style={{ background: P.paper, alignItems: "flex-end", justifyContent: "center", flexDirection: "row", gap: 0, paddingBottom: 40 }}>
-    {ORDER.map((who, i) => {
+  <AbsoluteFill style={{ background: P.paper, alignItems: "flex-end", justifyContent: "center", flexDirection: "row", paddingBottom: 40 }}>
+    {LINEUP.map(({ who, p }) => {
       const Comp = CHARACTERS[who];
-      const info = CHARACTER_INFO[who];
       return (
-        <div key={who} style={{ margin: "0 -36px" }}>
-          <Comp scale={1.0} prop={info.defaultProp} expression={i % 2 ? "confident" : "happy"} look={i < 3 ? "right" : "left"} />
+        <div key={who} style={{ margin: "0 -40px" }}>
+          <Comp scale={1.0} {...p} />
         </div>
       );
     })}

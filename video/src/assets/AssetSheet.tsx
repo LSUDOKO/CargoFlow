@@ -6,7 +6,8 @@ import { BlockChain, EvidenceEpochCard, Gauge, ProofVerified, SensorFusion } fro
 import { DataLogger, PasskeyPhone, Thermometer, VialTray } from "./Devices";
 import { BLHandoff, BLToken, Invoice, PaperworkStack } from "./Documents";
 import { BrowserFrame, ChatWindow, SponsorRow, Toast } from "./Frames";
-import { Coin, CoinFlow, CoinStack, EscrowVault, arcPoints } from "./Money";
+import { arcPoints } from "./Money";
+import { BarFlow, BarStack, USDGBar } from "./Vault";
 import { P } from "./palette";
 import { ReeferContainer } from "./Reefer";
 import { ContainerShip } from "./Ship";
@@ -41,8 +42,8 @@ export const AssetSheet: React.FC = () => (
       <Cell label='view="doors"' note="doorOpen 0.55">
         <ReeferContainer view="doors" width={250} doorOpen={0.55} />
       </Cell>
-      <Cell label='view="unit"' note='status="excursion"'>
-        <ReeferContainer view="unit" width={250} temp={11.7} status="excursion" />
+      <Cell label='view="front34"' note="unit faces camera">
+        <ReeferContainer view="front34" width={330} temp={5.2} status="ok" />
       </Cell>
     </div>
     <div style={{ display: "grid", gridTemplateColumns: "1.5fr 0.9fr 0.5fr", gap: 48, height: 400, marginTop: 48 }}>
@@ -66,16 +67,16 @@ export const AssetSheet: React.FC = () => (
       <Cell label="" note="excursion">
         <Thermometer height={340} value={11.7} />
       </Cell>
-      <Cell label="Coin · CoinStack · CoinFlow · EscrowVault" note="unlock 0 / 1">
-        <div style={{ position: "relative", display: "flex", alignItems: "flex-end", gap: 18 }}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
-            <Coin size={84} />
-            <CoinStack count={7} size={110} label="8,000" />
+      <Cell label="USDG bars · BarStack · BarFlow" note="money slides, never spins">
+        <div style={{ position: "relative", display: "flex", alignItems: "flex-end", gap: 30 }}>
+          <BarStack count={5} width={170} label="5 × 8,000" />
+          <div style={{ display: "flex", flexDirection: "column", gap: 14, paddingBottom: 30 }}>
+            <USDGBar width={200} amount="8,000" />
+            <USDGBar width={200} amount="58,800" fill="flow" />
+            <USDGBar width={200} amount="40,000" fill="emerald" />
           </div>
-          <EscrowVault width={190} unlock={0} />
-          <EscrowVault width={190} unlock={1} />
-          <svg width={400} height={200} viewBox="0 0 400 200" style={{ position: "absolute", left: 40, top: -60, overflow: "visible" }}>
-            <CoinFlow path={arcPoints({ x: 40, y: 150 }, { x: 260, y: 120 }, -120)} start={-20} duration={40} count={5} gap={6} r={14} />
+          <svg width={300} height={200} viewBox="0 0 300 200" style={{ overflow: "visible" }}>
+            <BarFlow path={arcPoints({ x: 20, y: 170 }, { x: 280, y: 120 }, -110)} start={-8} duration={18} barW={110} />
           </svg>
         </div>
       </Cell>

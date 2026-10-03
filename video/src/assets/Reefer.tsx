@@ -126,8 +126,10 @@ export const ReeferContainer: React.FC<ReeferProps> = ({
       <svg width={width} viewBox={`0 ${-dy} ${L + FW} ${H + dy + 12}`} style={{ display: "block", overflow: "visible", ...style }}>
         <rect x={20} y={H + 2} width={L + FW - 30} height={8} rx={4} fill={P.ink} opacity={0.08} />
         {/* top */}
-        <path d={`M${L} 0 L${L + FW} 0 L${FW} ${-dy} L0 ${-dy} Z`} fill={P.whiteShade} />
-        <path d={`M${L} 0 L${L + FW} 0 L${L + FW - 10} -4 L${L - 8} -4 Z`} fill={P.ink2} />
+        <path d={`M${L} 0 L${L + FW} 0 L${FW} ${-dy} L0 ${-dy} Z`} fill={P.line} />
+        {/* roof rails on the far long edge and the far end */}
+        <path d={`M0 ${-dy} L${FW} ${-dy} L${FW} ${-dy + 10} L0 ${-dy + 10} Z`} fill={P.ink2} />
+        <path d={`M${FW} ${-dy} L${L + FW} 0 L${L + FW} 12 L${FW} ${-dy + 12} Z`} fill={P.ink2} />
         {/* side wall, receding to the back-left */}
         <path d={`M0 ${-dy} L${L} 0 L${L} ${H} L0 ${H - dy} Z`} fill={P.white} />
         {Array.from({ length: ribs }).map((_, i) => {

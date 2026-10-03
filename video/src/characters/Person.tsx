@@ -99,7 +99,7 @@ const REST: Arm = { a: 7, e: 5 };
 const POSES: Record<Pose, { L: Arm; R: Arm }> = {
   stand: { L: REST, R: REST },
   hold: { L: { a: 12, e: -100, l2: 0.5 }, R: { a: 12, e: -100, l2: 0.5 } },
-  crossed: { L: { a: 14, e: -104, l2: 0.72 }, R: { a: 16, e: -100, l2: 0.7 } },
+  crossed: { L: { a: 16, e: -104, l2: 1.45 }, R: { a: 14, e: -98, l2: 1.4 } },
   hips: { L: { a: 42, e: -78 }, R: { a: 42, e: -78 } },
   thinking: { L: { a: 14, e: -106, l2: 0.85 }, R: { a: 14, e: -168, l1: 0.62, l2: 1 } },
 };
@@ -545,8 +545,12 @@ export const Person: React.FC<CharacterProps & { look_: Appearance }> = ({
             {prop === "umbrella" ? <HeldProp item="umbrella" x={armL.hx} y={armL.hy} dir={armL.dir} /> : null}
             {drawSleeve(CX - pivot, armL, ap.top)}
             {drawSleeve(CX + pivot, armR, ap.topShade)}
-            {cuff(armL)}
-            {cuff(armR)}
+            {pose === "crossed" && gesture === "none" ? (
+              // the top forearm laps over the lower one; hands tuck under the opposite arm
+              <path d={`M${armL.ex} ${armL.ey} L${armL.hx} ${armL.hy}`} stroke={ap.top} strokeWidth={sleeveW} strokeLinecap="round" />
+            ) : null}
+            {pose === "crossed" && gesture === "none" ? null : cuff(armL)}
+            {pose === "crossed" && gesture === "none" ? null : cuff(armR)}
             {prop !== "none" && prop !== "umbrella" ? (
               twoHanded ? (
                 <HeldProp item={prop} x={twoHandMid.x} y={twoHandMid.y} dir={0} />
@@ -556,7 +560,7 @@ export const Person: React.FC<CharacterProps & { look_: Appearance }> = ({
             ) : null}
             {propRight !== "none" && !rightGesture ? <HeldProp item={propRight} x={armR.hx} y={armR.hy} dir={armR.dir} oneHand right /> : null}
             {hand(armL, kindL)}
-            {hand(armR, kindR)}
+            {pose === "crossed" && gesture === "none" ? null : hand(armR, kindR)}
           </g>
         </g>
       </g>

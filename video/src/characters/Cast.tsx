@@ -139,7 +139,7 @@ export const WEI_LIN: Appearance = {
 
 /* ---------------------------------------- Arbiter -------------------------------------- */
 const ARB_HAIR = "#C3CBD2";
-const ArbiterFront: React.FC<FaceLayerProps> = ({ lx }) => (
+const ArbiterFront: React.FC<FaceLayerProps> = () => (
   <g>
     <path d="M155 116 C152 92 156 76 166 70 C164 82 162 96 162 116 Z" fill={ARB_HAIR} />
     <path d="M245 116 C248 92 244 76 234 70 C236 82 238 96 238 116 Z" fill={ARB_HAIR} />

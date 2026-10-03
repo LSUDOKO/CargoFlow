@@ -1,6 +1,7 @@
 import React from "react";
 import { Composition, Folder } from "remotion";
 import { ASSET_SHEET, ASSET_SHEET_DATA, AssetSheet, AssetSheetData } from "./assets/AssetSheet";
+import { STORY_SHEET, StorySheet } from "./assets/StorySheet";
 import { MapDemo } from "./maps/MapDemo";
 import { CharacterLineup, CharacterSheet, SHEET_H, SHEET_W } from "./characters/CharacterSheet";
 
@@ -11,6 +12,7 @@ export const LibraryCompositions: React.FC = () => (
     <Composition id="CharacterLineup" component={CharacterLineup} durationInFrames={150} fps={30} width={1920} height={1080} />
     <Composition id="AssetSheet" component={AssetSheet} durationInFrames={150} fps={30} width={ASSET_SHEET.w} height={ASSET_SHEET.h} />
     <Composition id="AssetSheetData" component={AssetSheetData} durationInFrames={150} fps={30} width={ASSET_SHEET_DATA.w} height={ASSET_SHEET_DATA.h} />
+    <Composition id="StorySheet" component={StorySheet} durationInFrames={150} fps={30} width={STORY_SHEET.w} height={STORY_SHEET.h} />
     <Composition id="MapDemo" component={MapDemo} durationInFrames={300} fps={30} width={1920} height={1080} />
   </Folder>
 );

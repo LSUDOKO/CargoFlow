@@ -24,15 +24,13 @@ const COAST = "rgba(11,27,43,0.7)";
 
 const COUNTRY_LABELS: { text: string; ll: LonLat; size?: number }[] = [
   { text: "INDIA", ll: [78.4, 20.2], size: 24 },
-  { text: "SRI LANKA", ll: [82.9, 8.6] },
+  { text: "SRI LANKA", ll: [84.4, 7.7] },
   { text: "MALAYSIA", ll: [102.6, 4.4] },
-  { text: "SINGAPORE", ll: [104.6, 0.55] },
 ];
 const SEA_LABELS: { text: string; ll: LonLat; rotate?: number; minZoom?: number }[] = [
   { text: "Arabian Sea", ll: [65.8, 13.5] },
   { text: "Bay of Bengal", ll: [88.6, 14.8] },
   { text: "Indian Ocean", ll: [84, -3.2] },
-  { text: "Strait of Malacca", ll: [99.4, 4.25], rotate: -36, minZoom: 1.6 },
 ];
 
 /** The frame at which a progress timeline reaches t. */
@@ -229,11 +227,11 @@ export const RouteMap: React.FC<{
         return (
           <g key={`pl${i}`} opacity={o}>
             {pl.label ? (
-              <text x={c.x - r - 16} y={c.y + 5} textAnchor="end" fontFamily={F.body} fontWeight={600} fontSize={16} fill={P.ink} stroke={SEA} strokeWidth={5} paintOrder="stroke">
+              <text x={c.x - r * 0.7 - 10} y={c.y - r * 0.7 - 14} textAnchor="end" fontFamily={F.body} fontWeight={600} fontSize={16} fill={P.ink} stroke={SEA} strokeWidth={5} paintOrder="stroke">
                 {pl.label}
               </text>
             ) : null}
-            {st === "held" && pl.distance ? chip(c.x - r - 16, c.y + 32, pl.distance, P.alert, P.ink, `d${i}`, "left") : null}
+            {st === "held" && pl.distance ? chip(c.x - r * 0.7 - 10, c.y - r * 0.7 + 18, pl.distance, P.alert, P.ink, `d${i}`, "left") : null}
           </g>
         );
       })}
@@ -271,14 +269,14 @@ export const RouteMap: React.FC<{
         const ly = side === "above" ? s.y - (m.sub ? 46 : 28) : side === "below" ? s.y + 40 : s.y + (m.sub ? -2 : 5);
         const anchor = side === "left" ? "end" : side === "right" ? "start" : "middle";
         return (
-          <g key={m.label}>
+          <g key={`m${i}`}>
             <g transform={`translate(${s.x} ${s.y}) scale(${sc})`}>
               <rect x={-18} y={-13} width={36} height={26} rx={13} fill={reached ? P.verified : P.white} stroke={reached ? P.white : P.ink} strokeWidth={2.5} />
               <text y={5} textAnchor="middle" fontFamily={F.mono} fontSize={12} fontWeight={700} fill={reached ? P.white : P.ink}>
                 M{i + 1}
               </text>
             </g>
-            <g opacity={interpolate(k, [0, 0.6], [0, 1], clamp)}>
+            <g opacity={m.label ? interpolate(k, [0, 0.6], [0, 1], clamp) : 0}>
               <text x={lx} y={ly} textAnchor={anchor} fontFamily={F.body} fontWeight={600} fontSize={15} fill={P.ink} stroke={SEA} strokeWidth={5} paintOrder="stroke">
                 {m.label}
               </text>
@@ -342,9 +340,12 @@ export const RouteMap: React.FC<{
         </g>
       ) : null}
       {attribution ? (
-        <text x={width - 32} y={height - 32} textAnchor="end" fontFamily={F.mono} fontSize={12} fill={P.slate} opacity={0.7}>
-          Natural Earth 1:50m · equirectangular
-        </text>
+        <g>
+          <rect x={width - 330} y={height - 52} width={306} height={28} rx={14} fill={P.white} opacity={0.85} />
+          <text x={width - 40} y={height - 33} textAnchor="end" fontFamily={F.mono} fontSize={12} fill={P.slate}>
+            Natural Earth 1:50m · equirectangular
+          </text>
+        </g>
       ) : null}
     </svg>
   );
