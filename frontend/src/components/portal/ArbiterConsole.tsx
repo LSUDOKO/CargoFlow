@@ -12,14 +12,14 @@ import { Modal } from "@/components/ui/Modal";
 import { StatusPill } from "@/components/ui/Pill";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { NetworkGuard } from "@/components/wallet/NetworkGuard";
-import { useShipmentsByStatus, useShipmentViews } from "@/lib/api/hooks";
+import { useConfig, useShipmentsByStatus, useShipmentViews } from "@/lib/api/hooks";
 import type { ShipmentView } from "@/lib/api/schemas";
 import { accessAbi, controllerAbi } from "@/lib/chain/abis";
 import { useContracts } from "@/lib/chain/contracts";
 import { useTx } from "@/lib/chain/useTx";
 import { formatUSDG } from "@/lib/format";
 
-export const DISPUTE_ROLE = keccak256(toBytes("DISPUTE_ROLE"));
+import { DISPUTE_ROLE } from "@/lib/chain/roles";
 const QUEUE = ["DISPUTED", "PAUSED", "DELIVERED"];
 const ORDER: Record<string, number> = { DISPUTED: 0, PAUSED: 1, DELIVERED: 2 };
 
@@ -36,6 +36,7 @@ type Decision = {
 export function ArbiterConsole() {
   const { address } = useAccount();
   const { contracts, chainId } = useContracts();
+  const config = useConfig();
   const role = useReadContract({
     address: contracts?.access,
     abi: accessAbi,
@@ -51,6 +52,8 @@ export function ArbiterConsole() {
     .filter((v): v is ShipmentView => !!v?.facility && QUEUE.includes(v.facility.status))
     .sort((a, b) => (ORDER[a.facility!.status] ?? 9) - (ORDER[b.facility!.status] ?? 9));
   const isArbiter = role.data === true;
+  // a disabled query (no contracts or no wallet yet) stays "pending" forever in TanStack Query: that is "unknown", not loading
+  const roleDisabled = !contracts || !address;
 
   return (
     <div className="container-page flex flex-col gap-6 py-10">
@@ -61,8 +64,22 @@ export function ArbiterConsole() {
         art="zk"
       />
       <NetworkGuard purpose="Arbitration happens from the wallet that holds the dispute role on chain.">
-        {role.isPending ? (
+        {config.isError ? (
+          <Card role="alert" className="border-danger/40">
+            <h2 className="font-display text-2xl font-semibold">The deployment&apos;s configuration could not be loaded</h2>
+            <p className="mt-2 max-w-2xl text-slate">Without it this page cannot find the access contract to check the dispute role. {config.error.message}</p>
+            <Button className="mt-4" variant="secondary" loading={config.isFetching} onClick={() => void config.refetch()}>Try again</Button>
+          </Card>
+        ) : roleDisabled ? (
+          config.isPending ? <Skeleton className="h-24" /> : null
+        ) : role.isPending ? (
           <Skeleton className="h-24" />
+        ) : role.isError ? (
+          <Card role="alert" className="border-alert/50">
+            <h2 className="font-display text-2xl font-semibold">The dispute role could not be checked</h2>
+            <p className="mt-2 max-w-2xl text-slate">The network did not answer. You can follow the queue below and try again in a moment.</p>
+            <Button className="mt-4" variant="secondary" loading={role.isFetching} onClick={() => void role.refetch()}>Check again</Button>
+          </Card>
         ) : !isArbiter ? (
           <Card>
             <h2 className="font-display text-2xl font-semibold">This wallet is not an arbiter</h2>
@@ -75,6 +92,12 @@ export function ArbiterConsole() {
 
         {queue.isPending ? (
           <Skeleton className="h-40" />
+        ) : queue.isError ? (
+          <Card role="alert" className="text-center">
+            <p className="font-display text-2xl font-semibold">The queue could not be loaded</p>
+            <p className="mx-auto mt-2 max-w-md text-slate">{queue.error.message}</p>
+            <Button className="mt-4" variant="secondary" loading={queue.isFetching} onClick={() => void queue.refetch()}>Try again</Button>
+          </Card>
         ) : items.length === 0 ? (
           <Card className="text-center">
             <p className="font-display text-2xl font-semibold">Nothing to decide</p>

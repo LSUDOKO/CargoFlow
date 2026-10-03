@@ -29,23 +29,28 @@ export function useTx() {
 
   const send = useCallback(
     async (req: TxRequest): Promise<Hash | undefined> => {
-      let reason = appChain === undefined ? "The network configuration is still loading." : txGuard({ pending: busy.current, walletChain: isConnected ? walletChain : undefined, appChain });
-      if (reason && appChain !== undefined && isConnected && !busy.current && walletChain !== appChain) {
-        // ask the wallet to change network itself; only if it refuses does the person have to do it by hand
-        try {
-          await switchChain(wagmiConfig, { chainId: appChain as SupportedChainId });
-          reason = null;
-        } catch {
-          /* keep the reason */
-        }
-      }
-      if (reason) {
-        toast({ tone: "alert", title: reason });
+      if (appChain === undefined || busy.current) {
+        toast({ tone: "alert", title: appChain === undefined ? "The network configuration is still loading." : txGuard({ pending: true, walletChain, appChain })! });
         return undefined;
       }
+      // claim the guard before anything is awaited: a second click during the network switch must not send twice
       busy.current = true;
       setPending(true);
       try {
+        let reason = txGuard({ pending: false, walletChain: isConnected ? walletChain : undefined, appChain });
+        if (reason && isConnected && walletChain !== appChain) {
+          // ask the wallet to change network itself; only if it refuses does the person have to do it by hand
+          try {
+            await switchChain(wagmiConfig, { chainId: appChain as SupportedChainId });
+            reason = null;
+          } catch {
+            /* keep the reason */
+          }
+        }
+        if (reason) {
+          toast({ tone: "alert", title: reason });
+          return undefined;
+        }
         const chainId = appChain as SupportedChainId;
         // the request is dynamic (any function of any CargoFlow ABI), so it is checked at the call sites instead
         const params = { address: req.address, abi: req.abi, functionName: req.functionName, args: req.args, chainId };

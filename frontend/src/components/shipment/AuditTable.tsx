@@ -14,7 +14,10 @@ const filters = [
 ];
 const kindWord: Record<string, string> = { chain_event: "On-chain", epoch: "Evidence", monitoring: "Monitor", action: "Transaction" };
 
+const special: Record<string, string> = { "ADVISORY AIS_MISMATCH": "Advisory: the ship's AIS position and the logger disagree" };
+
 function title(e: AuditEntry) {
+  if (special[e.title]) return special[e.title];
   // the backend numbers milestones from zero ("Epoch M2#1"); people count from one
   return e.title
     .replace(/^Epoch M(\d+)#(\d+)/, (_, m: string, seq: string) => (m === "255" ? `Observation #${seq}` : `Epoch for milestone ${Number(m) + 1} (#${seq})`)).replace(/^(\w+)\.(\w+)$/, "$2 · $1").replace(/_/g, " ").replace(/\b([A-Z]+)\b/g, (w) => w.charAt(0) + w.slice(1).toLowerCase());

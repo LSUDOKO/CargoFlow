@@ -38,10 +38,14 @@ export function RecoveryPanel({ view }: { view: ShipmentView }) {
   const [sensor, setSensor] = useState("");
   const [stage, setStage] = useState<"sign" | "prove" | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [proof, setProof] = useState<RecoveryProof | null>(null);
+  // a proof is bound to the pause it was prepared for: once that pause ends (or a new one starts) it is stale
+  const [held, setHeld] = useState<{ proof: RecoveryProof; sensor: string; pausedAt: number; pauseCount: number } | null>(null);
+  const f = view.facility;
+  const proof = held && f && held.pausedAt === f.pausedAt && held.pauseCount === f.pauseCount ? held.proof : null;
 
   const isExporter = hydrated && !!address && address.toLowerCase() === view.shipment.exporter.toLowerCase();
-  if (!isExporter || view.facility?.status !== "PAUSED" || !contracts) return null;
+  if (!isExporter || f?.status !== "PAUSED" || !contracts) return null;
+  const pause = { pausedAt: f.pausedAt, pauseCount: f.pauseCount };
 
   const sensors = [...new Set([...(gateways.data?.sources ?? []).flatMap((g) => g.sensorIds), ...(telemetry.data?.epochs ?? []).flatMap((e) => e.sensors.map((s) => s.sensorId))])].sort();
   const chosen = sensor || sensors[0] || "";
@@ -62,7 +66,8 @@ export function RecoveryPanel({ view }: { view: ShipmentView }) {
     }
     try {
       setStage("prove");
-      setProof(await apiPost(`/v1/shipments/${view.shipment.id}/recovery`, { sensorId: chosen, submitter: address, issuedAt, signature }, RecoveryProof));
+      const p = await apiPost(`/v1/shipments/${view.shipment.id}/recovery`, { sensorId: chosen, submitter: address, issuedAt, signature }, RecoveryProof);
+      setHeld({ proof: p, sensor: chosen, ...pause });
       void qc.invalidateQueries(); // the recovery epoch is now committed
     } catch (err) {
       if (err instanceof ApiError && err.code === "not_recoverable") {
@@ -84,7 +89,7 @@ export function RecoveryPanel({ view }: { view: ShipmentView }) {
       label: "Submit recovery proof",
       successTitle: "Facility resumed by zero-knowledge proof",
     });
-    if (hash) setProof(null);
+    if (hash) setHeld(null);
   }
 
   return (
@@ -93,9 +98,12 @@ export function RecoveryPanel({ view }: { view: ShipmentView }) {
       {proof ? (
         <>
           <p className="mt-1 text-sm text-slate">
-            The proof is ready: eight readings from {chosen}, committed on chain and proven inside the band. Submit it from your wallet to resume the facility; then release milestone {proof.milestoneIndex + 1} above.
+            The proof is ready: eight readings from {held?.sensor ?? chosen}, committed on chain and proven inside the band. Submit it from your wallet to resume the facility; then release milestone {proof.milestoneIndex + 1} above.
           </p>
-          <Button className="mt-3" loading={pending} onClick={() => void submit(proof)}>Submit proof and resume</Button>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button loading={pending} onClick={() => void submit(proof)}>Submit proof and resume</Button>
+            <Button variant="ghost" disabled={pending} onClick={() => setHeld(null)}>Discard proof</Button>
+          </div>
         </>
       ) : (
         <>
