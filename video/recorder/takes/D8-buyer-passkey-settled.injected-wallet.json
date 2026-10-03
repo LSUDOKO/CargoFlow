@@ -1,0 +1,85 @@
+{
+  "id": "D8-buyer-passkey-settled",
+  "take": "D8-buyer-passkey-settled.take.mp4",
+  "recordedAt": "2026-10-03T16:34:46.457Z",
+  "durationSec": 52.19,
+  "marks": [
+    {
+      "name": "start",
+      "t": 0
+    },
+    {
+      "name": "modal",
+      "t": 2.847
+    },
+    {
+      "name": "connected",
+      "t": 10.927
+    },
+    {
+      "name": "confirm",
+      "t": 14.82
+    },
+    {
+      "name": "delivered",
+      "t": 20.732
+    },
+    {
+      "name": "approve",
+      "t": 23.301
+    },
+    {
+      "name": "approved",
+      "t": 28.199
+    },
+    {
+      "name": "pay",
+      "t": 30.404
+    },
+    {
+      "name": "settled",
+      "t": 35.792
+    },
+    {
+      "name": "pill",
+      "t": 41.77
+    },
+    {
+      "name": "title",
+      "t": 51.388
+    },
+    {
+      "name": "end",
+      "t": 52.188
+    }
+  ],
+  "txs": [
+    {
+      "at": "2026-10-03T16:34:12.506Z",
+      "shot": "D8-buyer-passkey-settled",
+      "role": "buyer",
+      "to": "0x06daf9462ecf2434ed0314a005bf762ccded7fe1",
+      "selector": "0xb6914c52",
+      "hash": "0xaa5de24691c6a4482157f2d16c1ab7c42a70551e408a3483aaafbd2e73d6321f"
+    },
+    {
+      "at": "2026-10-03T16:34:20.011Z",
+      "shot": "D8-buyer-passkey-settled",
+      "role": "buyer",
+      "to": "0x7e955252e15c84f5768b83c41a71f9eba181802f",
+      "selector": "0x095ea7b3",
+      "hash": "0x51781a185884a6a532cc4b4d906d6aa7e57957785b0210aba10594bc071abf8b"
+    },
+    {
+      "at": "2026-10-03T16:34:28.156Z",
+      "shot": "D8-buyer-passkey-settled",
+      "role": "buyer",
+      "to": "0x06daf9462ecf2434ed0314a005bf762ccded7fe1",
+      "selector": "0x987757dd",
+      "hash": "0xabba66b6f602ed9e04bbabcd1a56e118cf188ae8bd9934b3f7e405e341f6e562"
+    }
+  ],
+  "notes": [
+    "Buyer connected with the injected demo wallet: ZeroDev passkey registration on the live origin fails (rpId 'localhost')."
+  ]
+}

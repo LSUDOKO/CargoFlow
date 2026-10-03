@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-03T17:33:28.620Z",
+  "generatedAt": "2026-10-03T18:42:04.887Z",
   "files": {
     "D1-landing.mp4": {
       "bytes": 750494,
@@ -50,8 +50,8 @@
       "height": 1080
     },
     "D8-buyer-passkey-settled.mp4": {
-      "bytes": 519118,
-      "durationSec": 8.3,
+      "bytes": 521151,
+      "durationSec": 9.3,
       "width": 1920,
       "height": 1080
     },

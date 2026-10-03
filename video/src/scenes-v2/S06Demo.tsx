@@ -38,7 +38,7 @@ export const S06_SHOTS = (at: ReturnType<typeof beats>): ShotSpec[] => {
       { from: at("c075", "proof") - 1170 - 4, to: 44, scale: 1.7, cx: 0.38, cy: 0.78, label: "Proof ready — sign to resume" },
       { from: 140, to: 186, scale: 1.5, cx: 0.35, cy: 0.3, label: "Active · Facility resumed by zero-knowledge proof" },
     ]),
-    // R1-08 = passkey sign-in clip (0-119) then the settlement take (120-218), see SLOT_PARTS in footage.ts
+    // R1-08 = one live passkey take: sign-in, then confirm, approve and pay from the smart account
     s("R1-08", 1380, 1599, "/track/0x…", [
       { from: at("c077", "signs") - 1380 - 4, to: 108, scale: 1.7, cx: 0.5, cy: 0.42, label: "Continue with passkey · Create a passkey account" },
       { from: at("c078", "Settled") - 1380 - 8, to: 1599 - 1380 - 4, scale: 1.5, cx: 0.3, cy: 0.22, label: "Settled · Invoice paid and settled" },

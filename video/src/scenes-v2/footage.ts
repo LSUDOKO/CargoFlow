@@ -39,7 +39,7 @@ export const SHOTS: Record<ShotId, Shot> = {
   "R1-05": { id: "R1-05", list: "R1 step 5", scene: "S06", seconds: 7.0, url: "cargoflow.adoranto737.workers.dev/track/…", show: ["Start transit; Submit readings result table", "'Passed: milestone released' x2; map live dot; M1, M2 released"] },
   "R1-06": { id: "R1-06", list: "R1 step 6", scene: "S06", seconds: 7.0, url: "cargoflow.adoranto737.workers.dev/track/…", show: ["Out-of-band warning -> 'Failed: facility paused', amber Paused pill", "Temperature chart (probe-1 above band); ExplainPanel"] },
   "R1-07": { id: "R1-07", list: "R1 step 7", scene: "S06", seconds: 7.0, url: "cargoflow.adoranto737.workers.dev/track/…", show: ["Bell 'Proof ready' -> Review and sign -> Resume with a proof", "'Groth16 proof verified on-chain'; pill Active"] },
-  "R1-08": { id: "R1-08", list: "R1 step 8", scene: "S06", seconds: 7.3, url: "cargoflow.adoranto737.workers.dev/track/…", show: ["Continue with passkey -> Create a passkey account -> 'Passkey account' badge (D8-passkey-signin)", "Settlement take (demo wallet): Confirm delivery; Approve 30 / Pay; 'Invoice paid and settled'"] },
+  "R1-08": { id: "R1-08", list: "R1 step 8", scene: "S06", seconds: 7.3, url: "cargoflow.adoranto737.workers.dev/track/…", show: ["Continue with passkey -> 'Passkey account' badge", "From the passkey smart account: Confirm delivery; Approve 30 / Pay; 'Invoice paid and settled'"] },
   "R1-09": { id: "R1-09", list: "R1 step 9", scene: "S06", seconds: 3.5, url: "cargoflow.adoranto737.workers.dev/track/…", show: ["Download certificate -> settlement certificate PDF in a new tab"] },
   "R1-10": { id: "R1-10", list: "R1 step 10", scene: "S06", seconds: 5.2, url: "cargoflow.adoranto737.workers.dev/market", show: ["Open requests; Review offers", "Offer modal: Suggested fee band 7.25-10.25% (request max 4%), 3.8% typed, not sent"] },
   "R2-01": { id: "R2-01", list: "R2 step 1 (R3)", scene: "S07", seconds: 2.8, url: "cargoflow.adoranto737.workers.dev/developers", show: ["'Use CargoFlow in Claude' panel -> Copy URL", "cargoflow-mcp.adoranto737.workers.dev/mcp + copy confirmation"] },
@@ -107,10 +107,9 @@ export const headTrim = (id: ShotId) => {
  */
 export type SlotPart = { file: string; trimBefore: number; frames: number; playbackRate?: number };
 export const SLOT_PARTS: Partial<Record<ShotId, SlotPart[]>> = {
-  "R1-08": [
-    { file: "D8-passkey-signin.mp4", trimBefore: 0, frames: 120, playbackRate: 1.15 },
-    { file: "D8-buyer-passkey-settled.mp4", trimBefore: 3.95, frames: 99 },
-  ],
+  // one live take: passkey sign-in, then confirm, approve and pay from the passkey smart account (8.3 s of content
+  // before the 1 s tail handle, played at 1.13x to fill the 220-frame slot)
+  "R1-08": [{ file: "D8-buyer-passkey-settled.mp4", trimBefore: 0, frames: 220, playbackRate: 1.13 }],
 };
 export const slotParts = (id: ShotId) => {
   const parts = SLOT_PARTS[id];

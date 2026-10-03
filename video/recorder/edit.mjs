@@ -11,7 +11,7 @@ import { TAKES } from "./lib/take.mjs";
 // S10Proof.tsx). Each clip is cut to slot + HANDLE: the action starts at 0 s, the extra second is a tail handle.
 const PLANNED = {
   "D1-landing": 4.0, "D2-exporter-wizard": 9.0, "D3-financier-funds": 5.0, "D4-carrier-ebl": 7.0, "D5-transit-releases": 7.0,
-  "D6-excursion-pause": 7.0, "D7-recovery": 7.0, "D8-buyer-passkey-settled": 7.3, "D9-certificate": 3.5, "D10-market": 5.2,
+  "D6-excursion-pause": 7.0, "D7-recovery": 7.0, "D8-buyer-passkey-settled": 8.3, "D9-certificate": 3.5, "D10-market": 5.2,
   "M1-developers-copy-url": 2.8, "R3-docs-reference": 9.5, "R4a-track-settled": 4.7, "R4a-explorer-tx": 1.2, "R4b-deployments": 4.1,
   "D8-passkey-signin": 5.0,
 };
@@ -43,9 +43,12 @@ const CUTS = {
     U("ready-0.3", "ready+0.9", 1.2), U("review-0.3", "review+0.5", 1.2), U("panel", "signed+0.2", 1.5), W("signed+0.2", "resumed+1.0"),
     // take 90.5-97.8 s is the mis-aimed "Open a dispute" dialog (closed, nothing sent): never cut into it
     U("resumed+3.0", "resumed+4.4", 1), U("proofcard-1.4", "proofcard+0.6", 1.2)] },
+  // real passkey take (passkey-d8.mjs): sign in with the passkey, wallet menu "Gas paid by CargoFlow", then three
+  // user operations (confirm delivery, approve, pay) whose bundler waits are compressed
   "D8-buyer-passkey-settled": { take: "D8-buyer-passkey-settled", segs: [
-    U("modal-0.4", "connected+0.3", 2.2), W("connected+0.3", "confirm+0.2"), W("confirm+0.2", "delivered+0.2"), W("approve-0.2", "approved"),
-    W("pay-0.2", "settled+0.6"), U("pill-0.4", "pill+0.8", 1), U("title-0.6", "title+0.6", 1)] },
+    U("modal-0.5", "modal+0.2", 1.6), U("passkey-1.2", "passkey+0.1", 1.6), U("signin-0.9", "signin+0.1", 1.6), W("signin+0.1", "account+0.3"),
+    U("menu-0.7", "gas+0.3", 2), U("confirm-1.1", "confirm+0.1", 1.6), W("confirm+0.1", "delivered+0.3"), U("approve-0.8", "approve+0.1", 1.6),
+    W("approve+0.1", "approved+0.3"), U("pay-0.8", "pay+0.1", 1.6), W("pay+0.1", "settled+0.2"), U("settled+0.2", "settled+1.8", 1)] },
   "D8-passkey-signin": { take: "D8-passkey-signin", segs: [W("modal-0.3", "passkey+0.3"), W("passkey+0.3", "create+0.3"), W("create+0.3", "account+0.2"), U("account+0.2", "account+1.6", 1)] },
   "D9-certificate": { take: "D9-certificate", segs: [U("download-0.6", "downloaded+0.3", 1.2), W("pdf-0.2", "scrolled")] },
   "D10-market": { take: "D10-market", segs: [

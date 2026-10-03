@@ -1,8 +1,8 @@
 {
   "id": "D8-buyer-passkey-settled",
   "take": "D8-buyer-passkey-settled.take.mp4",
-  "recordedAt": "2026-10-03T16:34:46.457Z",
-  "durationSec": 52.19,
+  "recordedAt": "2026-10-03T18:39:30.160Z",
+  "durationSec": 46.94,
   "marks": [
     {
       "name": "start",
@@ -10,76 +10,100 @@
     },
     {
       "name": "modal",
-      "t": 2.847
+      "t": 2.765
     },
     {
-      "name": "connected",
-      "t": 10.927
+      "name": "passkey",
+      "t": 7.44
+    },
+    {
+      "name": "signin",
+      "t": 10.227
+    },
+    {
+      "name": "account",
+      "t": 14.068
+    },
+    {
+      "name": "menu",
+      "t": 18.021
+    },
+    {
+      "name": "gas",
+      "t": 19.981
     },
     {
       "name": "confirm",
-      "t": 14.82
+      "t": 25.178
     },
     {
       "name": "delivered",
-      "t": 20.732
+      "t": 29.086
     },
     {
       "name": "approve",
-      "t": 23.301
+      "t": 31.534
     },
     {
       "name": "approved",
-      "t": 28.199
+      "t": 35.414
     },
     {
       "name": "pay",
-      "t": 30.404
+      "t": 37.088
     },
     {
       "name": "settled",
-      "t": 35.792
+      "t": 40.461
     },
     {
       "name": "pill",
-      "t": 41.77
-    },
-    {
-      "name": "title",
-      "t": 51.388
+      "t": 46.34
     },
     {
       "name": "end",
-      "t": 52.188
+      "t": 46.94
     }
   ],
   "txs": [
     {
-      "at": "2026-10-03T16:34:12.506Z",
       "shot": "D8-buyer-passkey-settled",
-      "role": "buyer",
-      "to": "0x06daf9462ecf2434ed0314a005bf762ccded7fe1",
-      "selector": "0xb6914c52",
-      "hash": "0xaa5de24691c6a4482157f2d16c1ab7c42a70551e408a3483aaafbd2e73d6321f"
+      "role": "buyer (passkey smart account)",
+      "what": "deploy + markDelivered",
+      "userOpHash": "0x8d15b67bcea6fbec534ecfb3ddcfe70272a93c0eb3e2d7c0862d5c288a302abf",
+      "hash": "0x485e2b6e38bf99c3cda001b0c166d0e045e282fec907c72103a58a4ffed0f121"
     },
     {
-      "at": "2026-10-03T16:34:20.011Z",
       "shot": "D8-buyer-passkey-settled",
-      "role": "buyer",
-      "to": "0x7e955252e15c84f5768b83c41a71f9eba181802f",
-      "selector": "0x095ea7b3",
-      "hash": "0x51781a185884a6a532cc4b4d906d6aa7e57957785b0210aba10594bc071abf8b"
+      "role": "buyer (passkey smart account)",
+      "what": "approve 30 USDG to the vault",
+      "userOpHash": "0x677b82a9228fef6289f1f9fe88d9854c5d299f9c4a1bbc90f48dc381ed156827",
+      "hash": "0x6dd4b06d67b31d72e8a4df1fb92c81b8c090ee6754a4cf8b848d05cc6eb8c742"
     },
     {
-      "at": "2026-10-03T16:34:28.156Z",
       "shot": "D8-buyer-passkey-settled",
-      "role": "buyer",
-      "to": "0x06daf9462ecf2434ed0314a005bf762ccded7fe1",
-      "selector": "0x987757dd",
-      "hash": "0xabba66b6f602ed9e04bbabcd1a56e118cf188ae8bd9934b3f7e405e341f6e562"
+      "role": "buyer (passkey smart account)",
+      "what": "settle",
+      "userOpHash": "0xf70d30af0d08c715eea3ff40d84aed78e0d68edad5eabddb274f49f0ead4cc1d",
+      "hash": "0xee1d5ba8731c027a79c1ce68696360e694f687c7926cd36bca1a6db215815956"
     }
   ],
   "notes": [
-    "Buyer connected with the injected demo wallet: ZeroDev passkey registration on the live origin fails (rpId 'localhost')."
+    "shipment CF-SG-VAX-0401 0x195c3fb058809fac41122a6540827510c79c7fe29462c8dea46bc18549c53f51; buyer is the passkey smart account 0xBCf284379b7Ce7144d4154BCc73043A750125E56",
+    "wallet menu: Robinhood Chain TestnetPasskey account 0xBCf284379b7Ce7144d4154BCc73043A750125E56 30 USDG ✓ Gas paid by CargoFlow Your track record Copy addressDisconnect"
+  ],
+  "userOps": [
+    "0x8d15b67bcea6fbec534ecfb3ddcfe70272a93c0eb3e2d7c0862d5c288a302abf",
+    "0x677b82a9228fef6289f1f9fe88d9854c5d299f9c4a1bbc90f48dc381ed156827",
+    "0xf70d30af0d08c715eea3ff40d84aed78e0d68edad5eabddb274f49f0ead4cc1d"
+  ],
+  "sponsor": [
+    "200 {\"jsonrpc\":\"2.0\",\"id\":11,\"result\":{\"preVerificationGas\":\"0x1c437\",\"verificationGasLimit\":\"0xc8720\",\"callGasLimit\":\"0x0\",",
+    "200 {\"jsonrpc\":\"2.0\",\"id\":16,\"result\":{\"preVerificationGas\":\"0x1dbbd\",\"verificationGasLimit\":\"0xc8720\",\"callGasLimit\":\"0x78f",
+    "200 {\"jsonrpc\":\"2.0\",\"id\":40,\"result\":{\"preVerificationGas\":\"0x1a995\",\"verificationGasLimit\":\"0x8e54b\",\"callGasLimit\":\"0xb23",
+    "200 {\"jsonrpc\":\"2.0\",\"id\":58,\"result\":{\"preVerificationGas\":\"0x1aa0c\",\"verificationGasLimit\":\"0x8e54b\",\"callGasLimit\":\"0x209"
+  ],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 ()"
   ]
 }

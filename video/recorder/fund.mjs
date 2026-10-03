@@ -1,12 +1,12 @@
 // Top up a demo role with testnet USDG (and optionally ETH) from the deployer. Logs tx hashes only.
-//   node fund.mjs <role> <usdg> [eth]
+//   node fund.mjs <role or address> <usdg> [eth]
 import fs from "node:fs";
 import path from "node:path";
 import { RECORDER, viem } from "./lib/deps.mjs";
 import { USDG, address, erc20, publicClient, walletFor } from "./lib/chain.mjs";
 
 const [role, usdg = "0", eth = "0"] = process.argv.slice(2);
-const to = address(role);
+const to = /^0x[0-9a-fA-F]{40}$/.test(role) ? role : address(role); // a role name or an address
 if (!to) throw new Error(`unknown role ${role}`);
 const w = walletFor("carrier");
 const log = (e) => fs.appendFileSync(path.join(RECORDER, "txlog.jsonl"), JSON.stringify({ at: new Date().toISOString(), shot: "funding", ...e }) + "\n");

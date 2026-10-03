@@ -32,14 +32,14 @@
     "edit": "jump cuts and speed ramps from takes/D2-exporter-wizard.take.mp4; segment speeds 1.30, 1.30, 1.50, 2.00, 2.00, 1.56, 1.56, 1.56, 1.00; action from 0 s, 1 s tail handle",
     "notes": [
       "Pharma is the wizard's default cargo type, so the Pharma chip is already selected when the policy step opens; the click confirms it.",
-      "Buyer is the BUYER_KEY demo wallet (0x6248\u20261d4a), not a passkey account: ZeroDev passkey registration fails on the live origin.",
+      "Buyer is the BUYER_KEY demo wallet (0x6248…1d4a), not a passkey account: ZeroDev passkey registration fails on the live origin.",
       "No browser wallet pop-ups exist with the injected demo wallet; the three signatures show as the on-chain timeline ticks and toasts.",
       "reference CF-SG-VAX-0202",
       "shipment 0xc99131cb35886c991398b53530e1cfedb12fa1f7205a3f95f49b13cd1f7d761a"
     ],
     "extraNotes": [
       "Pharma is the wizard's default cargo type, so the Pharma chip is already selected when the policy step opens; the click confirms it.",
-      "Buyer is the BUYER_KEY demo wallet (0x6248\u20261d4a), not a passkey account: ZeroDev passkey registration fails on the live origin.",
+      "Buyer is the BUYER_KEY demo wallet (0x6248…1d4a), not a passkey account: ZeroDev passkey registration fails on the live origin.",
       "No browser wallet pop-ups exist with the injected demo wallet; the three signatures show as the on-chain timeline ticks and toasts."
     ],
     "marksAt": {
@@ -134,7 +134,7 @@
     "notes": [
       "Milestones 1 and 2 released by the leg-1 readings (CSV generated seconds before upload, timestamps under 2 min old).",
       "leg 1 32 readings 2026-10-03T16:27:54.000Z..2026-10-03T16:29:09.000Z",
-      "Result 32 readings accepted. Epoch Score Outcome Transaction #1 (milestone 1) 100 Passed: milestone released 0x5a9c\u2026ea94 #1 (milestone 2) 100 Passed: milestone released 0xe6ba\u2026dcdc"
+      "Result 32 readings accepted. Epoch Score Outcome Transaction #1 (milestone 1) 100 Passed: milestone released 0x5a9c…ea94 #1 (milestone 2) 100 Passed: milestone released 0xe6ba…dcdc"
     ],
     "extraNotes": [
       "Milestones 1 and 2 released by the leg-1 readings (CSV generated seconds before upload, timestamps under 2 min old)."
@@ -161,7 +161,7 @@
     "notes": [
       "Epoch score 48: Failed, facility paused (score below threshold, not compliant, conflict too high). Ends on the Evidence tab temperature chart with the excursion.",
       "leg 2 16 readings 2026-10-03T16:29:24.000Z..2026-10-03T16:29:59.000Z",
-      "Result 16 readings accepted. Epoch Score Outcome Transaction #1 (milestone 3) 48 Failed: facility paused score below threshold, not compliant, conflict too high 0x0bac\u2026a9dc"
+      "Result 16 readings accepted. Epoch Score Outcome Transaction #1 (milestone 3) 48 Failed: facility paused score below threshold, not compliant, conflict too high 0x0bac…a9dc"
     ],
     "extraNotes": [
       "Epoch score 48: Failed, facility paused (score below threshold, not compliant, conflict too high). Ends on the Evidence tab temperature chart with the excursion."
@@ -190,14 +190,14 @@
     "notes": [
       "Real automatic ZK recovery on the same shipment: RECOVERY_READY arrived 45 s after leg 3; bell -> Review and sign -> Sign and resume (one signature + one tx).",
       "Milestone 3 was then released by the backend automatically (12 USDG drawn). In the raw take a mis-aimed click opened (and closed) the 'Open a dispute' dialog; it is cut out and nothing was submitted.",
-      "Not recorded on CF-LIVE-1791034258807 (0x6d86\u2026): its recovery evidence ended 13:19 UTC, older than the policy's 30-minute evidence age, so resumeWithProof would revert (EvidenceStale). Left untouched.",
+      "Not recorded on CF-LIVE-1791034258807 (0x6d86…): its recovery evidence ended 13:19 UTC, older than the policy's 30-minute evidence age, so resumeWithProof would revert (EvidenceStale). Left untouched.",
       "leg 3 16 readings 2026-10-03T16:30:29.000Z..2026-10-03T16:31:04.000Z",
       "RECOVERY_READY after 45 s"
     ],
     "extraNotes": [
       "Real automatic ZK recovery on the same shipment: RECOVERY_READY arrived 45 s after leg 3; bell -> Review and sign -> Sign and resume (one signature + one tx).",
       "Milestone 3 was then released by the backend automatically (12 USDG drawn). In the raw take a mis-aimed click opened (and closed) the 'Open a dispute' dialog; it is cut out and nothing was submitted.",
-      "Not recorded on CF-LIVE-1791034258807 (0x6d86\u2026): its recovery evidence ended 13:19 UTC, older than the policy's 30-minute evidence age, so resumeWithProof would revert (EvidenceStale). Left untouched."
+      "Not recorded on CF-LIVE-1791034258807 (0x6d86…): its recovery evidence ended 13:19 UTC, older than the policy's 30-minute evidence age, so resumeWithProof would revert (EvidenceStale). Left untouched."
     ],
     "marksAt": {
       "ready": 0.25,
@@ -211,38 +211,52 @@
   {
     "shotId": "D8-buyer-passkey-settled",
     "file": "video/public/footage/D8-buyer-passkey-settled.mp4",
-    "durationSec": 8.3,
-    "plannedSec": 7.3,
+    "durationSec": 9.3,
+    "plannedSec": 8.3,
     "handlesSec": 1,
-    "recordedAt": "2026-10-03T16:34:46.457Z",
+    "recordedAt": "2026-10-03T18:39:30.160Z",
     "txHashes": [
-      "0xaa5de24691c6a4482157f2d16c1ab7c42a70551e408a3483aaafbd2e73d6321f",
-      "0x51781a185884a6a532cc4b4d906d6aa7e57957785b0210aba10594bc071abf8b",
-      "0xabba66b6f602ed9e04bbabcd1a56e118cf188ae8bd9934b3f7e405e341f6e562"
+      "0x485e2b6e38bf99c3cda001b0c166d0e045e282fec907c72103a58a4ffed0f121",
+      "0x6dd4b06d67b31d72e8a4df1fb92c81b8c090ee6754a4cf8b848d05cc6eb8c742",
+      "0xee1d5ba8731c027a79c1ce68696360e694f687c7926cd36bca1a6db215815956"
     ],
-    "edit": "jump cuts and speed ramps from takes/D8-buyer-passkey-settled.take.mp4; segment speeds 2.20, 11.00, 11.00, 11.00, 11.00, 1.00, 1.00; action from 0 s, 1 s tail handle",
+    "edit": "jump cuts and speed ramps from takes/D8-buyer-passkey-settled.take.mp4; segment speeds 1.60, 1.60, 1.60, 6.36, 2.00, 1.60, 6.36, 1.60, 6.36, 1.60, 6.36, 1.00; action from 0 s, 1 s tail handle",
     "notes": [
-      "Passkey not possible on the live site: passkeys.zerodev.app returns rpId 'localhost' for this project, so Chromium refuses ('The RP ID \"localhost\" is invalid for this domain'). The clip hovers 'Continue with passkey' and connects 'CargoFlow Demo Wallet \u00b7 Wei Lin' instead; change the D8 line to drop 'passkey' and 'gas sponsored'. Fix: set the deployed domain in the ZeroDev dashboard.",
-      "Leg 4 (milestones 4 and 5 released) was uploaded just before this shot; that take is takes/D7b-leg4-releases.take.mp4.",
-      "Buyer connected with the injected demo wallet: ZeroDev passkey registration on the live origin fails (rpId 'localhost').",
-      "Re-test after the passkey domain fix (3 Oct, ~17:00 UTC): passkey creation now works, but the bundler RPC refuses the origin (403 allowlist), so the passkey buyer cannot confirm or pay. This injected-wallet clip is kept."
+      "Real passkey take (4 Oct 2026, passkey-d8.mjs): Wei Lin signs in with \"Sign in with an existing passkey\" (Chromium virtual authenticator, ES256 credential created on the live site by passkey-probe.mjs), the wallet menu shows \"Passkey account\" and \"Gas paid by CargoFlow\", then Confirm delivery, Approve 30 USDG and Pay the 30 USDG invoice run as three ERC-4337 user operations from the ZeroDev Kernel smart account 0xBCf284379b7Ce7144d4154BCc73043A750125E56 (deployed by the first one).",
+      "Shipment CF-SG-VAX-0401 (0x195c3fb058809fac41122a6540827510c79c7fe29462c8dea46bc18549c53f51), buyer = the smart account, set up by passkey-shipment.ts (register, policy, facility 20 USDG / 5 milestones, deposit, transit, 3 healthy legs releasing all 5). The smart account got 30 USDG from the deployer and holds no ETH.",
+      "Gas: the account paid nothing (actualGasCost 0x0, ETH balance 0). ZeroDev quotes maxFeePerGas 0 on this chain and zd_sponsorUserOperation returns gas limits without paymaster fields; the bundler EOA 0x21196F1DAbA498D64EB31423D392EF3ccE546AD7 paid the chain fee for the handleOps transactions.",
+      "userOps: 0x8d15b67bcea6fbec534ecfb3ddcfe70272a93c0eb3e2d7c0862d5c288a302abf (deploy + markDelivered, tx 0x485e2b6e38bf99c3cda001b0c166d0e045e282fec907c72103a58a4ffed0f121), 0x677b82a9228fef6289f1f9fe88d9854c5d299f9c4a1bbc90f48dc381ed156827 (approve, tx 0x6dd4b06d67b31d72e8a4df1fb92c81b8c090ee6754a4cf8b848d05cc6eb8c742), 0xf70d30af0d08c715eea3ff40d84aed78e0d68edad5eabddb274f49f0ead4cc1d (settle, tx 0xee1d5ba8731c027a79c1ce68696360e694f687c7926cd36bca1a6db215815956).",
+      "Previous injected-wallet version of this clip: takes/D8-buyer-passkey-settled.injected-wallet.{json,take.mp4}.",
+      "shipment CF-SG-VAX-0401 0x195c3fb058809fac41122a6540827510c79c7fe29462c8dea46bc18549c53f51; buyer is the passkey smart account 0xBCf284379b7Ce7144d4154BCc73043A750125E56",
+      "wallet menu: Robinhood Chain TestnetPasskey account 0xBCf284379b7Ce7144d4154BCc73043A750125E56 30 USDG ✓ Gas paid by CargoFlow Your track record Copy addressDisconnect"
     ],
     "extraNotes": [
-      "Passkey not possible on the live site: passkeys.zerodev.app returns rpId 'localhost' for this project, so Chromium refuses ('The RP ID \"localhost\" is invalid for this domain'). The clip hovers 'Continue with passkey' and connects 'CargoFlow Demo Wallet \u00b7 Wei Lin' instead; change the D8 line to drop 'passkey' and 'gas sponsored'. Fix: set the deployed domain in the ZeroDev dashboard.",
-      "Leg 4 (milestones 4 and 5 released) was uploaded just before this shot; that take is takes/D7b-leg4-releases.take.mp4."
+      "Real passkey take (4 Oct 2026, passkey-d8.mjs): Wei Lin signs in with \"Sign in with an existing passkey\" (Chromium virtual authenticator, ES256 credential created on the live site by passkey-probe.mjs), the wallet menu shows \"Passkey account\" and \"Gas paid by CargoFlow\", then Confirm delivery, Approve 30 USDG and Pay the 30 USDG invoice run as three ERC-4337 user operations from the ZeroDev Kernel smart account 0xBCf284379b7Ce7144d4154BCc73043A750125E56 (deployed by the first one).",
+      "Shipment CF-SG-VAX-0401 (0x195c3fb058809fac41122a6540827510c79c7fe29462c8dea46bc18549c53f51), buyer = the smart account, set up by passkey-shipment.ts (register, policy, facility 20 USDG / 5 milestones, deposit, transit, 3 healthy legs releasing all 5). The smart account got 30 USDG from the deployer and holds no ETH.",
+      "Gas: the account paid nothing (actualGasCost 0x0, ETH balance 0). ZeroDev quotes maxFeePerGas 0 on this chain and zd_sponsorUserOperation returns gas limits without paymaster fields; the bundler EOA 0x21196F1DAbA498D64EB31423D392EF3ccE546AD7 paid the chain fee for the handleOps transactions.",
+      "userOps: 0x8d15b67bcea6fbec534ecfb3ddcfe70272a93c0eb3e2d7c0862d5c288a302abf (deploy + markDelivered, tx 0x485e2b6e38bf99c3cda001b0c166d0e045e282fec907c72103a58a4ffed0f121), 0x677b82a9228fef6289f1f9fe88d9854c5d299f9c4a1bbc90f48dc381ed156827 (approve, tx 0x6dd4b06d67b31d72e8a4df1fb92c81b8c090ee6754a4cf8b848d05cc6eb8c742), 0xf70d30af0d08c715eea3ff40d84aed78e0d68edad5eabddb274f49f0ead4cc1d (settle, tx 0xee1d5ba8731c027a79c1ce68696360e694f687c7926cd36bca1a6db215815956).",
+      "Previous injected-wallet version of this clip: takes/D8-buyer-passkey-settled.injected-wallet.{json,take.mp4}."
     ],
     "marksAt": {
-      "modal": 0.18,
-      "connected": 3.85,
-      "confirm": 4.32,
-      "delivered": 4.86,
-      "approve": 4.89,
-      "approved": 5.34,
-      "pay": 5.36,
-      "settled": 5.85,
-      "pill": 6.3,
-      "title": 7.7
-    }
+      "modal": 0.31,
+      "passkey": 1.19,
+      "signin": 1.81,
+      "account": 2.46,
+      "menu": 2.86,
+      "gas": 3.84,
+      "confirm": 4.68,
+      "delivered": 5.34,
+      "approve": 5.89,
+      "approved": 6.54,
+      "pay": 7.09,
+      "settled": 7.67
+    },
+    "userOpHashes": [
+      "0x8d15b67bcea6fbec534ecfb3ddcfe70272a93c0eb3e2d7c0862d5c288a302abf",
+      "0x677b82a9228fef6289f1f9fe88d9854c5d299f9c4a1bbc90f48dc381ed156827",
+      "0xf70d30af0d08c715eea3ff40d84aed78e0d68edad5eabddb274f49f0ead4cc1d"
+    ],
+    "smartAccount": "0xBCf284379b7Ce7144d4154BCc73043A750125E56"
   },
   {
     "shotId": "D9-certificate",
@@ -362,10 +376,10 @@
     "txHashes": [],
     "edit": "jump cuts and speed ramps from takes/R4a-explorer-tx.take.mp4; segment speeds 1.52; action from 0 s, 1 s tail handle",
     "notes": [
-      "Explorer page for settle tx 0x37571b49\u2026cf4e365a35, status Success."
+      "Explorer page for settle tx 0x37571b49…cf4e365a35, status Success."
     ],
     "extraNotes": [
-      "Explorer page for settle tx 0x37571b49\u2026cf4e365a35, status Success."
+      "Explorer page for settle tx 0x37571b49…cf4e365a35, status Success."
     ],
     "marksAt": {
       "status": 0.26,
@@ -404,9 +418,10 @@
     },
     "notes": [
       "Passkey account created on the live site; ZeroDev bundler RPC answers 403 'Access denied: Neither IP nor domain is on the allowlist.', so no user operation can be sent.",
-      "Optional insert for D8 (not in footage.ts): live passkey sign-in up to where it works: 'Continue with passkey' -> 'Create a passkey account' -> header 'Passkey account 0x2ff\u2026F90c'.",
+      "Optional insert for D8 (not in footage.ts): live passkey sign-in up to where it works: 'Continue with passkey' -> 'Create a passkey account' -> header 'Passkey account 0x2ff…F90c'.",
       "Virtual authenticator limited to ES256 by an init script: Chromium's virtual authenticator otherwise picks Ed25519 (alg -8, listed first in ZeroDev's options), which the Kernel WebAuthn validator cannot use; the app then shows 'The passkey account could not be opened.' after a WebCrypto DataError.",
-      "No transaction possible: rpc.zerodev.app (bundler and paymaster) returns HTTP 403 'Access denied: Neither IP nor domain is on the allowlist.' for zd_getUserOperationGasPrice; the wallet menu says 'Gas sponsorship isn't on; this account needs a little testnet ETH.'"
+      "No transaction possible: rpc.zerodev.app (bundler and paymaster) returns HTTP 403 'Access denied: Neither IP nor domain is on the allowlist.' for zd_getUserOperationGasPrice; the wallet menu says 'Gas sponsorship isn't on; this account needs a little testnet ETH.'",
+      "Superseded on 4 Oct 2026: the bundler allowlist is fixed and D8-buyer-passkey-settled now shows the full passkey sign-in and payment."
     ],
     "plannedSec": 5
   }
