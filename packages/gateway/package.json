@@ -1,0 +1,73 @@
+{
+  "name": "@cargoflow/gateway",
+  "version": "0.1.0",
+  "description": "CargoFlow evidence gateway: watches data-logger exports, USB loggers and serial streams, signs readings with an Ed25519 key and delivers them to the CargoFlow API with a durable offline queue.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "cargoflow-gateway": "./dist/cli.js"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "deploy",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18.17"
+  },
+  "scripts": {
+    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@noble/curves": "^1.9.7",
+    "@noble/hashes": "^1.8.0",
+    "chokidar": "^4.0.3",
+    "commander": "^12.1.0"
+  },
+  "optionalDependencies": {
+    "serialport": "^12.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.130",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7"
+  },
+  "keywords": [
+    "cargoflow",
+    "cold-chain",
+    "data-logger",
+    "iot",
+    "gateway",
+    "ed25519",
+    "telemetry"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LSUDOKO/CargoFlow.git",
+    "directory": "packages/gateway"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "packageManager": "pnpm@12.8.1"
+}

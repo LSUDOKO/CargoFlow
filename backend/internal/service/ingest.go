@@ -303,6 +303,7 @@ func (s *Service) handleEpoch(ctx context.Context, sh store.Shipment, e *epoch.E
 	} else {
 		out.CommitTx = commit.Hash.Hex()
 		_ = s.o.Store.SetEpochCommitted(ctx, hex32(epochID), out.CommitTx)
+		s.recordSourcesByID(ctx, canon, hex32(epochID))
 	}
 
 	if dec.Pass && out.CommitTx != "" {

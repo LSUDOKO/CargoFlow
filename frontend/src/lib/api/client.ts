@@ -1,5 +1,6 @@
 import type { z } from "zod";
 import type { Reading } from "@/lib/csv";
+import { chainRejectedText } from "@/lib/chain/errors";
 import { signRequest } from "@/lib/gateway";
 
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8080").replace(/\/+$/, "");
@@ -40,7 +41,9 @@ async function request<S extends z.ZodTypeAny>(method: string, path: string, sch
   }
   if (!res.ok && !(opts.accept ?? []).includes(res.status)) {
     const e = (json as { error?: { code?: string; message?: string } } | undefined)?.error;
-    throw new ApiError(res.status, e?.code ?? "http_error", e?.message ?? `Request failed with status ${res.status}.`);
+    // a contract revert relayed by the backend (409 chain_rejected) reads in the app's own words
+    const message = e?.message ? (e.code === "chain_rejected" ? chainRejectedText(e.message) : e.message) : `Request failed with status ${res.status}.`;
+    throw new ApiError(res.status, e?.code ?? "http_error", message);
   }
   const parsed = schema.safeParse(json);
   if (!parsed.success) {
@@ -51,6 +54,8 @@ async function request<S extends z.ZodTypeAny>(method: string, path: string, sch
 
 export const apiGet = <S extends z.ZodTypeAny>(path: string, schema: S) => request("GET", path, schema);
 export const apiPost = <S extends z.ZodTypeAny>(path: string, body: unknown, schema: S) => request("POST", path, schema, { body });
+/** POST an exact body string with extra headers (source-signed requests: the signed bytes are the sent bytes). */
+export const apiPostRaw = <S extends z.ZodTypeAny>(path: string, raw: string, headers: Record<string, string>, schema: S) => request("POST", path, schema, { raw, headers });
 
 /** WebSocket URL for a shipment's live events. */
 export function wsURL(apiURL: string, shipmentId: string): string {

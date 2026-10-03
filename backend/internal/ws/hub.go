@@ -30,6 +30,8 @@ const (
 	MilestoneHeld = "MILESTONE_HELD"
 	// CoverUpdated: a default-cover offer, acceptance, release or claim was indexed.
 	CoverUpdated = "COVER_UPDATED"
+	// RecoveryReady: the automatic recovery worker proved a paused facility's recovery; the exporter can sign it.
+	RecoveryReady = "RECOVERY_READY"
 )
 
 // Event is one message to clients. Seq is assigned by the hub and increases across all events, so a

@@ -26,6 +26,8 @@ abstract contract ScriptBase is Script {
         "0x92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b2b4ec1564e";
     string internal constant ANVIL_KEY_7 =
         "0x4bbbf85ce3377467afe5d46f804f221813b2bb87f24d81f60f1fcdbf7cbf4356";
+    string internal constant ANVIL_KEY_8 =
+        "0xdbda1821b80551c9d65939329250298aa3472ba22feea921c0cf5d620ea67b97";
 
     function _isLocal() internal view returns (bool) {
         return block.chainid == LOCAL_CHAIN_ID;

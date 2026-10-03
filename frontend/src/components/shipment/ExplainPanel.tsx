@@ -9,6 +9,7 @@ import { ageText, forecastText, useExplanation, type Explanation, type PartyRole
 import type { ShipmentView, TelemetrySummary } from "@/lib/api/schemas";
 import { coordText, kmText, moneyReleased, voyageProgress } from "@/lib/brief";
 import { formatUSDG } from "@/lib/format";
+import { distanceText, placeName, radiusText } from "@/lib/places";
 import { statusTone } from "@/lib/status";
 
 const roleWord = (r: string) => r.charAt(0).toUpperCase() + r.slice(1);
@@ -78,6 +79,8 @@ export function ExplainPanel({ view, fallback, roles, position, vesselName, chil
         )}
       </div>
 
+      {!loading && e.hold && <HoldNotice hold={e.hold} />}
+
       <Facts view={view} position={position} vesselName={vesselName} next={loading ? undefined : e.nextSteps[0]} mine={mine} />
 
       <div className="grid gap-x-8 gap-y-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
@@ -128,6 +131,34 @@ export function ExplainPanel({ view, fallback, roles, position, vesselName, chil
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * A milestone waiting for evidence from its place (contracts v2). Not a failure and not a pause: the latest
+ * evidence passed, it was just taken too far from where the milestone pays out.
+ */
+function HoldNotice({ hold }: { hold: NonNullable<Explanation["hold"]> }) {
+  const where = `${radiusText(hold.radiusM)} of ${placeName(hold)}`;
+  const away = Math.max(0, hold.distanceM - hold.radiusM);
+  // how close the cargo is to the circle's edge, on a scale of ten radii (a rough "getting there")
+  const pct = hold.distanceM <= hold.radiusM ? 100 : Math.max(4, 100 - (100 * away) / (hold.radiusM * 10));
+  return (
+    <section aria-label="Milestone waiting for its place" className="flex flex-col gap-2 rounded-[var(--radius-tile)] border border-ink/12 bg-signal/18 px-4 py-3.5 sm:flex-row sm:items-center sm:gap-5">
+      <div className="min-w-0 flex-1">
+        <p className="flex flex-wrap items-center gap-2 text-xs font-semibold tracking-wide text-ink uppercase">
+          <svg aria-hidden="true" viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M8 14.5s4.5-4.2 4.5-8a4.5 4.5 0 0 0-9 0c0 3.8 4.5 8 4.5 8Z" /><circle cx="8" cy="6.5" r="1.6" /></svg>
+          Held: not at the place yet
+          <span className="font-normal tracking-normal text-slate normal-case">· not a failure</span>
+        </p>
+        <p className="mt-1 text-[0.9375rem]">{tidy(hold.message || `Milestone ${hold.milestoneIndex + 1} waits until the cargo is within ${where}; it is ${distanceText(hold.distanceM)} away.`)}</p>
+      </div>
+      <div className="shrink-0 sm:w-48">
+        <p className="flex justify-between text-xs text-slate"><span>Milestone {hold.milestoneIndex + 1}</span><span className="font-mono">{distanceText(hold.distanceM)} away</span></p>
+        <Bar pct={pct} tone="bg-ink" />
+        <p className="mt-1 text-xs text-slate">Releases inside {where}</p>
+      </div>
+    </section>
   );
 }
 

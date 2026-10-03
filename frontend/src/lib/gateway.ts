@@ -45,8 +45,10 @@ export function signRequest(seed: Uint8Array, method: string, path: string, ts: 
   return toBase64Url(ed25519.sign(utf8ToBytes(signingString(method, path, ts, body)), seed));
 }
 
-export function sourceAuthorizationMessage(shipmentId: string, publicKey: string, sensorIds: string[], issued: number): string {
-  return `CargoFlow evidence source\nshipment: ${shipmentId.toLowerCase()}\npublic key: ${publicKey}\nsensors: ${sensorIds.join(",")}\nissued: ${issued}`;
+/** keyType other than ed25519 adds the "key type:" line (backend auth.DeviceAuthorization), so the type is signed too. */
+export function sourceAuthorizationMessage(shipmentId: string, publicKey: string, sensorIds: string[], issued: number, keyType: "ed25519" | "p256" | "webauthn" = "ed25519"): string {
+  const keyLine = keyType === "ed25519" ? "" : `key type: ${keyType}\n`;
+  return `CargoFlow evidence source\nshipment: ${shipmentId.toLowerCase()}\npublic key: ${publicKey}\nsensors: ${sensorIds.join(",")}\n${keyLine}issued: ${issued}`;
 }
 
 export function recoveryAuthorizationMessage(shipmentId: string, sensorId: string, submitter: string, issued: number): string {

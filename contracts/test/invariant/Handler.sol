@@ -47,7 +47,7 @@ contract CargoFlowHandler is Test {
     uint256 public violations;
 
     /// Reachability evidence: how often each status was entered / tranches released.
-    uint256[9] public entered;
+    uint256[10] public entered; // v3: index 9 = CANCELLED
     uint256 public tranchesReleased;
 
     struct Snap {
@@ -328,6 +328,30 @@ contract CargoFlowHandler is Test {
         _post(s, pre);
     }
 
+    /// v3: the exporter, the financier or someone else tries to cancel (sometimes after the timeout).
+    /// Only the two parties may cancel, only before transit, and only a never-drawn facility.
+    function cancel(uint256 s, uint256 who, bool late) external {
+        s = bound(s, 0, N - 1);
+        if (!created[s]) return;
+        if (late) vm.warp(block.timestamp + 14 days);
+        Snap memory pre = _pre(s);
+        address[3] memory callers = [exporters[s], financier, stranger];
+        uint256 w = bound(who, 0, 2);
+        uint256 before = usdg.balanceOf(financier);
+        vm.prank(callers[w]);
+        try controller.cancelFacility(ids[s]) {
+            if (w == 2) violations++;
+            if (
+                pre.status != IFinancingController.Status.CREATED
+                    && pre.status != IFinancingController.Status.FINANCED
+            ) violations++;
+            // a funded facility returns the whole deposit to the financier
+            uint256 refund = pre.status == IFinancingController.Status.FINANCED ? COMMITTED : 0;
+            if (usdg.balanceOf(financier) - before != refund) violations++;
+        } catch {}
+        _post(s, pre);
+    }
+
     /// Hostile callers attempting to move money through every entry point. None may succeed.
     function attack(uint256 s, uint256 who, uint256 amount) external {
         s = bound(s, 0, N - 1);
@@ -346,6 +370,10 @@ contract CargoFlowHandler is Test {
         } catch {}
         vm.prank(a);
         try vault.closeDefaulted(id) {
+            violations++;
+        } catch {}
+        vm.prank(a);
+        try vault.closeCancelled(id) {
             violations++;
         } catch {}
         vm.prank(a);
@@ -383,7 +411,8 @@ contract CargoFlowHandler is Test {
         // terminal states are absorbing
         if (
             (st == IFinancingController.Status.SETTLED
-                    || st == IFinancingController.Status.DEFAULTED) && post.status != st
+                    || st == IFinancingController.Status.DEFAULTED
+                    || st == IFinancingController.Status.CANCELLED) && post.status != st
         ) violations++;
     }
 }

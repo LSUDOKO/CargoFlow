@@ -260,6 +260,8 @@ func explainRules(sh store.Shipment, f *FacilityView, ev *EpochSummary) Explanat
 		x.Headline = "Settled: the financier was repaid and the exporter received the rest of the invoice."
 	case "DEFAULTED":
 		x.Headline = "Defaulted: the undrawn capital went back to the financier."
+	case "CANCELLED":
+		x.Headline = "Cancelled before transit; the financier's deposit was returned."
 	default:
 		x.Headline = "Status " + x.Status + "."
 	}

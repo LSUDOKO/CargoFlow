@@ -39,6 +39,7 @@ type EpochRecord struct {
 	MaxHumidityX100 int
 	MaxShockX100    int
 	HeldDistanceM   *int64 // set when the epoch passed but was outside the milestone's place
+	SourcesTxHash   string // v3: the recordEpochSources transaction, "" until recorded
 }
 
 // InsertEpoch stores an epoch. A second epoch for the same (shipment, milestone, sequence), or the same
@@ -79,7 +80,7 @@ func (s *Store) InsertEpoch(ctx context.Context, e EpochRecord) (EpochRecord, er
 const epochColumns = `id::text, shipment_id, milestone_index, sequence, epoch_id, merkle_root, reading_count,
 	start_time, end_time, score, conflict_bps, risk_bps, compliant, penalties, decision_pass, decision_action,
 	decision_reasons, points, COALESCE(commit_tx_hash,''), proof_verified, created_at,
-	lat_e6, lon_e6, max_humidity_x100, max_shock_x100, held_distance_m`
+	lat_e6, lon_e6, max_humidity_x100, max_shock_x100, held_distance_m, COALESCE(sources_tx_hash,'')`
 
 func scanEpoch(row pgx.Row) (EpochRecord, error) {
 	var e EpochRecord
@@ -87,7 +88,7 @@ func scanEpoch(row pgx.Row) (EpochRecord, error) {
 	err := row.Scan(&e.ID, &e.ShipmentID, &e.MilestoneIndex, &e.Sequence, &e.EpochID, &e.MerkleRoot, &e.ReadingCount,
 		&e.StartTime, &e.EndTime, &e.Score, &e.ConflictBps, &e.RiskBps, &e.Compliant, &penalties, &e.DecisionPass,
 		&e.DecisionAction, &e.DecisionReasons, &points, &e.CommitTxHash, &e.ProofVerified, &e.CreatedAt,
-		&e.LatE6, &e.LonE6, &e.MaxHumidityX100, &e.MaxShockX100, &e.HeldDistanceM)
+		&e.LatE6, &e.LonE6, &e.MaxHumidityX100, &e.MaxShockX100, &e.HeldDistanceM, &e.SourcesTxHash)
 	if err != nil {
 		return EpochRecord{}, mapErr(err)
 	}
@@ -172,4 +173,9 @@ func (s *Store) epochUpdate(ctx context.Context, epochID, set string, args ...an
 		return ErrNotFound
 	}
 	return nil
+}
+
+// SetEpochSourcesRecorded records the recordEpochSources transaction of an epoch.
+func (s *Store) SetEpochSourcesRecorded(ctx context.Context, epochID, txHash string) error {
+	return s.epochUpdate(ctx, epochID, "sources_tx_hash = $2", txHash)
 }

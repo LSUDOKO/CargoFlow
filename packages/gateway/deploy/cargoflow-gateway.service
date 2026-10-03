@@ -1,0 +1,46 @@
+# systemd unit for the CargoFlow evidence gateway (Raspberry Pi OS, Debian, Ubuntu).
+#
+#   sudo useradd --system --create-home --home-dir /var/lib/cargoflow-gateway --groups dialout,plugdev cargoflow
+#   sudo install -m 0644 cargoflow-gateway.service /etc/systemd/system/
+#   sudo -u cargoflow CARGOFLOW_GATEWAY_HOME=/var/lib/cargoflow-gateway cargoflow-gateway init --key /path/to/key.json
+#   sudo systemctl daemon-reload && sudo systemctl enable --now cargoflow-gateway
+#   journalctl -u cargoflow-gateway -f
+#
+# Edit ExecStart for your input mode (watch / mount --watch / serial) and the path of the binary
+# (`command -v cargoflow-gateway`; /usr/local/bin with npm's default prefix, /usr/bin with some Node packages).
+[Unit]
+Description=CargoFlow evidence gateway
+Documentation=https://github.com/LSUDOKO/CargoFlow/tree/main/packages/gateway
+# Signatures carry a timestamp the API checks; a Raspberry Pi has no RTC, so wait for NTP before sending.
+After=network-online.target time-sync.target
+Wants=network-online.target time-sync.target
+
+[Service]
+Type=simple
+User=cargoflow
+Group=cargoflow
+Environment=CARGOFLOW_GATEWAY_HOME=/var/lib/cargoflow-gateway
+Environment=NODE_ENV=production
+# Environment=CARGOFLOW_API_URL=https://cargoflow-api-75ul.onrender.com
+ExecStart=/usr/local/bin/cargoflow-gateway --log-format json watch /srv/cargoflow/exports
+# ExecStart=/usr/local/bin/cargoflow-gateway --log-format json --position 1.264,103.84 mount --watch
+# ExecStart=/usr/local/bin/cargoflow-gateway --log-format json serial /dev/ttyUSB0 --baud 115200
+Restart=always
+RestartSec=10
+# queued readings are on disk; a stop never loses them
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+StateDirectory=cargoflow-gateway
+StateDirectoryMode=0700
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+ReadWritePaths=/var/lib/cargoflow-gateway
+# everything else (the export folder, removable media under /media) is read-only through ProtectSystem=strict
+SupplementaryGroups=dialout plugdev
+
+[Install]
+WantedBy=multi-user.target

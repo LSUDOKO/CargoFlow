@@ -1,8 +1,8 @@
 "use client";
 
 import { useInfiniteQuery, useQueries, useQuery } from "@tanstack/react-query";
-import { apiGet, fetchHealth } from "./client";
-import { AuditList, Config, EpochList, GatewayList, ShipmentList, ShipmentView, Stats, TelemetrySummary } from "./schemas";
+import { ApiError, apiGet, fetchHealth } from "./client";
+import { AuditList, Config, EpochList, GatewayList, ShipmentCover, ShipmentList, ShipmentView, Stats, TelemetrySummary } from "./schemas";
 
 export const useConfig = () => useQuery({ queryKey: ["config"], queryFn: () => apiGet("/v1/config", Config), staleTime: 5 * 60_000 });
 
@@ -66,6 +66,22 @@ export const useAudit = (id?: string) =>
 
 export const useTelemetry = (id?: string) =>
   useQuery({ queryKey: ["telemetry", id], queryFn: () => apiGet(`/v1/shipments/${id}/telemetry`, TelemetrySummary), enabled: enabled(id) });
+
+/** The shipment's default cover (open offers and the accepted cover); null on a backend without the endpoint. */
+export const useCover = (id?: string, on = true) =>
+  useQuery({
+    queryKey: ["cover", id],
+    queryFn: async () => {
+      try {
+        return await apiGet(`/v1/shipments/${id}/cover`, ShipmentCover);
+      } catch (e) {
+        if (e instanceof ApiError && [404, 405, 501, 503].includes(e.status)) return null;
+        throw e;
+      }
+    },
+    enabled: enabled(id) && on,
+    refetchInterval: 30_000,
+  });
 
 export const useGateways = (id?: string) =>
   useQuery({ queryKey: ["gateways", id], queryFn: () => apiGet(`/v1/shipments/${id}/sources`, GatewayList), enabled: enabled(id) });

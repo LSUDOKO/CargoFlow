@@ -8,6 +8,7 @@ import {PolicyEngine} from "../../src/PolicyEngine.sol";
 import {EvidenceRegistry} from "../../src/EvidenceRegistry.sol";
 import {ReceivableVault} from "../../src/ReceivableVault.sol";
 import {FinancingController} from "../../src/FinancingController.sol";
+import {EBLRegistry} from "../../src/EBLRegistry.sol";
 import {IEvidenceRegistry} from "../../src/interfaces/IEvidenceRegistry.sol";
 import {IFinancingController} from "../../src/interfaces/IFinancingController.sol";
 import {IPolicyEngine} from "../../src/interfaces/IPolicyEngine.sol";
@@ -26,6 +27,7 @@ abstract contract ControllerBase is Test {
     FinancingController internal controller;
     MockUSDG internal usdg;
     MockGroth16Verifier internal verifier;
+    EBLRegistry internal ebl;
 
     address internal admin = makeAddr("admin");
     address internal exporter = makeAddr("exporter");
@@ -57,6 +59,7 @@ abstract contract ControllerBase is Test {
         evidence = new EvidenceRegistry(address(access));
         vault = new ReceivableVault(address(access), address(usdg));
         verifier = new MockGroth16Verifier();
+        ebl = new EBLRegistry(address(access));
         controller = _deployController();
 
         vm.startPrank(admin);
@@ -97,7 +100,8 @@ abstract contract ControllerBase is Test {
             address(policies),
             address(evidence),
             address(vault),
-            address(verifier)
+            address(verifier),
+            address(ebl)
         );
     }
 

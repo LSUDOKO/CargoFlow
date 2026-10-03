@@ -1,0 +1,148 @@
+{
+  "name": "@cargoflow/sdk",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for CargoFlow: typed API client, contract ABIs and unsigned transaction builders, gateway signing, logger CSV parsing, evidence aggregates and Merkle verification.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./api": {
+      "import": {
+        "types": "./dist/api/index.d.ts",
+        "default": "./dist/api/index.js"
+      },
+      "require": {
+        "types": "./dist/api/index.d.cts",
+        "default": "./dist/api/index.cjs"
+      }
+    },
+    "./contracts": {
+      "import": {
+        "types": "./dist/contracts/index.d.ts",
+        "default": "./dist/contracts/index.js"
+      },
+      "require": {
+        "types": "./dist/contracts/index.d.cts",
+        "default": "./dist/contracts/index.cjs"
+      }
+    },
+    "./gateway": {
+      "import": {
+        "types": "./dist/gateway.d.ts",
+        "default": "./dist/gateway.js"
+      },
+      "require": {
+        "types": "./dist/gateway.d.cts",
+        "default": "./dist/gateway.cjs"
+      }
+    },
+    "./messages": {
+      "import": {
+        "types": "./dist/messages.d.ts",
+        "default": "./dist/messages.js"
+      },
+      "require": {
+        "types": "./dist/messages.d.cts",
+        "default": "./dist/messages.cjs"
+      }
+    },
+    "./csv": {
+      "import": {
+        "types": "./dist/csv.d.ts",
+        "default": "./dist/csv.js"
+      },
+      "require": {
+        "types": "./dist/csv.d.cts",
+        "default": "./dist/csv.cjs"
+      }
+    },
+    "./evidence": {
+      "import": {
+        "types": "./dist/evidence.d.ts",
+        "default": "./dist/evidence.js"
+      },
+      "require": {
+        "types": "./dist/evidence.d.cts",
+        "default": "./dist/evidence.cjs"
+      }
+    },
+    "./documents": {
+      "import": {
+        "types": "./dist/documents.d.ts",
+        "default": "./dist/documents.js"
+      },
+      "require": {
+        "types": "./dist/documents.d.cts",
+        "default": "./dist/documents.cjs"
+      }
+    },
+    "./merkle": {
+      "import": {
+        "types": "./dist/merkle.d.ts",
+        "default": "./dist/merkle.js"
+      },
+      "require": {
+        "types": "./dist/merkle.d.cts",
+        "default": "./dist/merkle.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "keywords": [
+    "cargoflow",
+    "trade-finance",
+    "cold-chain",
+    "viem",
+    "sdk"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LSUDOKO/CargoFlow",
+    "directory": "packages/sdk"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "abi": "node scripts/gen-abis.mjs"
+  },
+  "dependencies": {
+    "@noble/curves": "^1.9.7",
+    "@noble/hashes": "^1.8.0",
+    "poseidon-lite": "^0.3.0",
+    "viem": "^2.57.2",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsup": "^8.5.1",
+    "typescript": "~5.9.3",
+    "vitest": "^3.2.4"
+  },
+  "packageManager": "pnpm@10.19.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

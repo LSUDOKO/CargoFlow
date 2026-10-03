@@ -17,4 +17,12 @@ library Roles {
     bytes32 internal constant DISPUTE_ROLE = keccak256("DISPUTE_ROLE");
     /// Held by the FinancingController; marks an evidence epoch as proof-verified.
     bytes32 internal constant PROOF_VERIFIER_ROLE = keccak256("PROOF_VERIFIER_ROLE");
+    /// v3: verifies a device's X.509 / WebAuthn attestation off chain and records it in the
+    /// DeviceRegistry (the backend). Cannot move funds.
+    bytes32 internal constant ATTESTOR_ROLE = keccak256("ATTESTOR_ROLE");
+    /// v3: a carrier allowed to issue electronic bills of lading in the EBLRegistry.
+    bytes32 internal constant CARRIER_ROLE = keccak256("CARRIER_ROLE");
+    /// v3: emergency guardian. May pause and unpause NEW risk only (facility creation, deposits,
+    /// cover offers and acceptance, title binding, device registration); exits are never pausable.
+    bytes32 internal constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 }

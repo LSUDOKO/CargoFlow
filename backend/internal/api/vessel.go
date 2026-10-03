@@ -24,7 +24,7 @@ var mmsiPattern = regexp.MustCompile(`^[0-9]{9}$`)
 
 type vesselRequest struct {
 	MMSI      baseUnits `json:"mmsi"` // a string; a bare JSON number keeps its digits
-	Name      string    `json:"name"`
+	Name      string    `json:"name" optional:"true"`
 	IssuedAt  int64     `json:"issuedAt"`
 	Signature string    `json:"signature"`
 }

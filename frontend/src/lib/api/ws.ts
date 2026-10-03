@@ -33,7 +33,7 @@ export function useShipmentStream(id: string | undefined) {
     let delay = 500;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const invalidate = () => {
-      for (const k of ["shipment", "epochs", "audit", "telemetry"]) void qc.invalidateQueries({ queryKey: [k, id] });
+      for (const k of ["shipment", "epochs", "audit", "telemetry", "cover", "explanation"]) void qc.invalidateQueries({ queryKey: [k, id] });
       void qc.invalidateQueries({ queryKey: ["stats"] });
     };
     const open = () => {

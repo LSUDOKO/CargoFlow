@@ -6,6 +6,8 @@ import type { AuditEntry, EpochSummary, ShipmentView } from "@/lib/api/schemas";
 import { kindLabel, formatBytes } from "@/lib/documents";
 import { chainName, explorerAddress, explorerTx } from "@/lib/explorer";
 import { formatBps, formatTempX100, formatUSDG, shortHash } from "@/lib/format";
+import { claimSplit } from "@/lib/cover";
+import { distanceText, hasPlace, HELD, placePhrase } from "@/lib/places";
 import { waterfall } from "@/lib/waterfall";
 
 export type CertificateInput = {
@@ -289,7 +291,9 @@ export async function buildCertificate(input: CertificateInput): Promise<{ bytes
   w.paragraph(
     isSettled(view)
       ? "This certificate records how the shipment's financing was released and settled: the policy all parties agreed, the evidence committed for each milestone, any zero-knowledge recovery, the settlement waterfall and the documents attested by the parties. Every transaction can be checked on the public explorer."
-      : "This record shows the shipment's financing so far: the policy all parties agreed, the evidence committed for each milestone, any zero-knowledge recovery and the documents attested by the parties. It becomes a settlement certificate once the buyer pays the invoice.",
+      : status === "CANCELLED"
+        ? "This record shows a facility that was cancelled before transit started: nothing was released to the exporter, any deposit went back to the financier in full and a bound bill of lading went back to the exporter. The policy, the evidence and the documents attested by the parties are kept below."
+        : "This record shows the shipment's financing so far: the policy all parties agreed, the evidence committed for each milestone, any zero-knowledge recovery and the documents attested by the parties. It becomes a settlement certificate once the buyer pays the invoice.",
     { size: 9, color: C.slate },
   );
   w.y -= 6;
@@ -334,7 +338,16 @@ export async function buildCertificate(input: CertificateInput): Promise<{ bytes
     ["Max risk", formatBps(p.maxRiskBps)],
     ["Min sensors", String(p.minSensors)],
     ["Proof required", p.requiresZk ? "Yes, every release" : "Only to lift a pause"],
+    ["Max humidity", p.maxHumidityX100 ? `${(p.maxHumidityX100 / 100).toLocaleString("en-GB")}% relative humidity` : "No limit"],
+    ["Max shock", p.maxShockX100 ? `${(p.maxShockX100 / 100).toLocaleString("en-GB")} g` : "No limit"],
   ]);
+  const placed = view.milestones.filter((m) => hasPlace(m));
+  if (placed.length) {
+    w.pairs(
+      placed.map((m): [string, Cell] => [`Milestone ${m.index + 1} place`, `Releases only on evidence taken ${placePhrase(m)} (${(m.latE6 / 1e6).toFixed(4)}, ${(m.lonE6 / 1e6).toFixed(4)})`]),
+      1,
+    );
+  }
 
   if (f) {
     w.section("Facility");
@@ -406,7 +419,9 @@ export async function buildCertificate(input: CertificateInput): Promise<{ bytes
         String(e.score),
         formatBps(e.conflictBps),
         formatBps(e.riskBps),
-        { text: e.decisionPass ? "Pass" : `Fail${e.decisionAction ? ` (${e.decisionAction.toLowerCase()})` : ""}`, color: e.decisionPass ? C.verified : C.danger },
+        e.decisionAction === HELD
+          ? { text: `Held: not at the place${e.heldDistanceM !== null ? ` (${distanceText(e.heldDistanceM)} away)` : ""}`, color: C.ink }
+          : { text: e.decisionPass ? "Pass" : `Fail${e.decisionAction ? ` (${e.decisionAction.toLowerCase()})` : ""}`, color: e.decisionPass ? C.verified : C.danger },
         e.commitTx ? { text: shortHash(e.commitTx, 8, 6), href: explorerTx(chainId, e.commitTx) } : "–",
       ]),
     );
@@ -455,6 +470,45 @@ export async function buildCertificate(input: CertificateInput): Promise<{ bytes
         [{ text: "Residual to the exporter", bold: true }, { text: formatUSDG(wf.residual), bold: true, color: C.verified }],
       ],
     );
+  }
+
+  // default cover (contracts v2)
+  const cv = view.cover;
+  if (cv || view.openCoverOffers > 0) {
+    w.section("Default cover", "An insurer escrowed USDG in the CoverPool contract; the financier bought the cover with a premium paid straight to the insurer. On settlement the cover returns to the insurer; on default the financier is paid up to the principal drawn.");
+    if (!cv) {
+      w.paragraph(`No cover was accepted. ${view.openCoverOffers} ${view.openCoverOffers === 1 ? "offer was" : "offers were"} open when this record was made.`, { color: C.slate });
+    } else {
+      const outcome =
+        cv.status === "RELEASED"
+          ? { text: `Returned to the insurer: ${usdg(cv.insurerReturn)}`, color: C.verified }
+          : cv.status === "CLAIMED"
+            ? { text: `Paid out: ${usdg(cv.financierPayout)} to the financier, ${usdg(cv.insurerReturn)} back to the insurer`, color: C.alert }
+            : cv.status === "TRIGGERED"
+              ? { text: `Parametric trigger met: ${usdg(cv.financierPayout)} to the financier, ${usdg(cv.parametric?.exporterSalvage ?? "0")} salvage to the exporter, ${usdg(cv.insurerReturn)} back to the insurer`, color: C.alert }
+              : { text: f ? `Active: on default it would pay the financier ${usdg(claimSplit(cv.amount, f.drawn).payout)}` : "Active" };
+      w.pairs([
+        ["Cover", usdg(cv.amount)],
+        ["Premium paid", usdg(cv.premium)],
+        ...(cv.parametric ? ([["Parametric trigger", `${cv.parametric.consecutiveFailedEpochs} failed batches in a row`]] as [string, string][]) : []),
+      ]);
+      w.pairs(
+        [
+          ["Insurer", { text: cv.insurer, href: explorerAddress(chainId, cv.insurer) }],
+          ["Outcome", outcome],
+        ],
+        1,
+      );
+    }
+  }
+
+  // electronic bill of lading (contracts v3), when the backend reports one bound to the facility
+  if (view.title) {
+    w.section("Bill of lading", "An electronic bill of lading (an ERC-721 title token) was bound to the facility: documents against payment. Designed around MLETR concepts; not a legal compliance claim.");
+    w.pairs([
+      ["Bill", `#${view.title.tokenId}`],
+      ["Holder", view.title.holder || "–"],
+    ]);
   }
 
   // documents

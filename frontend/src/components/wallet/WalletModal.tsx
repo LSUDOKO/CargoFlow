@@ -7,6 +7,8 @@ import { Portal } from "@/components/ui/Portal";
 import { Spinner } from "@/components/ui/Spinner";
 import { useDialog } from "@/components/ui/useDialog";
 import { EMBEDDED_CONNECTOR_ID, wagmiConfig } from "@/lib/chain/config";
+import { PASSKEYS_ENABLED, PASSKEY_CONNECTOR_ID } from "@/lib/passkey/env";
+import { loadPasskey } from "@/lib/passkey/store";
 import {
   resetEmailFlow,
   resumeEmail,
@@ -16,7 +18,8 @@ import {
   useEmbedded,
   verifyEmailCode,
 } from "./embedded";
-import { AnnouncedIcon, GenericWalletIcon, MailIcon, PuzzleIcon, TestAccountIcon, WalletConnectIcon } from "./icons";
+import { AnnouncedIcon, GenericWalletIcon, MailIcon, PasskeyIcon, PuzzleIcon, TestAccountIcon, WalletConnectIcon } from "./icons";
+import { PASSKEY_EXPLAINER, PasskeyStep } from "./PasskeyStep";
 import { orderWallets, type WalletOption } from "./walletList";
 import { connectError } from "./walletErrors";
 
@@ -60,7 +63,7 @@ export function WalletModal({ open, onClose }: { open: boolean; onClose: () => v
   const embedded = useEmbedded();
   const availability = useEmailAvailability();
   const recent = useRecentConnector(open);
-  const [view, setView] = useState<"list" | "email">("list");
+  const [view, setView] = useState<"list" | "email" | "passkey">("list");
   const [row, setRow] = useState<RowState | null>(null);
   const attempt = useRef(0);
 
@@ -78,7 +81,7 @@ export function WalletModal({ open, onClose }: { open: boolean; onClose: () => v
 
   const hasLegacyInjected = typeof window !== "undefined" && !!(window as { ethereum?: unknown }).ethereum;
   const options = orderWallets(
-    connectors.filter((c) => c.id !== EMBEDDED_CONNECTOR_ID).map(describe),
+    connectors.filter((c) => c.id !== EMBEDDED_CONNECTOR_ID && c.id !== PASSKEY_CONNECTOR_ID).map(describe),
     { recent, hasLegacyInjected },
   );
   const installed = options.filter((o) => o.group === "installed");
@@ -118,9 +121,16 @@ export function WalletModal({ open, onClose }: { open: boolean; onClose: () => v
     rows[next]?.focus();
   }
 
+  function openPasskey() {
+    attempt.current++;
+    setRow(null);
+    setView("passkey");
+  }
+
   const emailRecent = recent === EMBEDDED_CONNECTOR_ID;
+  const passkeyRecent = recent === PASSKEY_CONNECTOR_ID;
   // the first row takes initial focus
-  const firstKey = installed[0]?.key ?? (availability.status !== "off" ? "email" : (more[0]?.key ?? tests[0]?.key));
+  const firstKey = installed[0]?.key ?? (availability.status !== "off" ? "email" : PASSKEYS_ENABLED ? "passkey" : (more[0]?.key ?? tests[0]?.key));
 
   return (
     <Portal>
@@ -137,11 +147,11 @@ export function WalletModal({ open, onClose }: { open: boolean; onClose: () => v
         >
           <div className="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-ink/15 sm:hidden" aria-hidden="true" />
           <header className="flex shrink-0 items-start gap-3 px-5 pt-4 pb-1 sm:px-6 sm:pt-6">
-            {view === "email" && (
+            {view !== "list" && (
               <button
                 type="button"
                 onClick={() => {
-                  if (embedded.step !== "connecting") resetEmailFlow();
+                  if (view === "email" && embedded.step !== "connecting") resetEmailFlow();
                   setView("list");
                 }}
                 className="-ml-2 grid h-10 w-10 shrink-0 place-items-center rounded-full hover:bg-ink/6"
@@ -152,10 +162,14 @@ export function WalletModal({ open, onClose }: { open: boolean; onClose: () => v
             )}
             <div className="min-w-0 flex-1 pt-1">
               <h2 id={titleId} className="font-display text-[1.375rem] leading-tight font-semibold">
-                {view === "email" ? "Continue with email" : "Connect a wallet"}
+                {view === "email" ? "Continue with email" : view === "passkey" ? "Continue with passkey" : "Connect a wallet"}
               </h2>
               <p id={descId} className="mt-1 text-sm text-slate">
-                {view === "email" ? "A wallet is created for your email the first time you sign in." : "CargoFlow never holds your keys. You approve every step in your wallet."}
+                {view === "email"
+                  ? "A wallet is created for your email the first time you sign in."
+                  : view === "passkey"
+                    ? "No extension, no seed phrase: your device's passkey signs."
+                    : "CargoFlow never holds your keys. You approve every step in your wallet."}
               </p>
             </div>
             <button type="button" onClick={close} className="-mr-2 grid h-10 w-10 shrink-0 place-items-center rounded-full hover:bg-ink/6" aria-label="Close">
@@ -166,6 +180,8 @@ export function WalletModal({ open, onClose }: { open: boolean; onClose: () => v
           <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-3 pb-5 sm:px-6">
             {view === "email" ? (
               <EmailStep onUseWallet={() => setView("list")} />
+            ) : view === "passkey" ? (
+              <PasskeyStep onDone={onClose} />
             ) : (
               <>
                 {installed.length > 0 ? (
@@ -180,8 +196,9 @@ export function WalletModal({ open, onClose }: { open: boolean; onClose: () => v
                   </Section>
                 )}
 
-                {(availability.status !== "off" || more.length > 0) && (
+                {(availability.status !== "off" || more.length > 0 || PASSKEYS_ENABLED) && (
                   <Section title="More options">
+                    {PASSKEYS_ENABLED && <PasskeyRow recent={passkeyRecent} onClick={openPasskey} autoFocus={firstKey === "passkey"} />}
                     {availability.status !== "off" && (
                       <EmailRow availability={availability} authenticated={embedded.authenticated} recent={emailRecent} onClick={openEmail} autoFocus={firstKey === "email"} />
                     )}
@@ -207,6 +224,7 @@ export function WalletModal({ open, onClose }: { open: boolean; onClose: () => v
                   <div className="mt-2 space-y-2 text-slate">
                     <p>A wallet is an app that holds your account&apos;s keys and signs on your behalf. CargoFlow never sees those keys: every financing step is a transaction you review and approve.</p>
                     <p>New to this? <span className="font-semibold text-ink">Continue with email</span> and a wallet is created for you, no extension needed.</p>
+                    {PASSKEYS_ENABLED && <p><span className="font-semibold text-ink">Passkey account:</span> {PASSKEY_EXPLAINER}</p>}
                   </div>
                 </details>
               </>
@@ -296,6 +314,28 @@ function EmailRow({ availability, authenticated, recent, onClick, autoFocus }: {
           </span>
         </span>
         {loading ? <Spinner className="h-4 w-4 shrink-0 text-slate" /> : <Chevron />}
+      </button>
+    </li>
+  );
+}
+
+function PasskeyRow({ recent, onClick, autoFocus }: { recent: boolean; onClick: () => void; autoFocus?: boolean }) {
+  // a passkey remembered on this device reconnects without the passkey server; say so
+  const known = typeof window !== "undefined" && !!loadPasskey();
+  return (
+    <li>
+      <button type="button" data-wallet-row data-autofocus={autoFocus || undefined} onClick={onClick} className={`${rowClass} border-line`}>
+        <PasskeyIcon />
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center gap-2">
+            <span className="truncate text-[0.9375rem] font-semibold">Continue with passkey</span>
+            {recent && <RecentBadge />}
+          </span>
+          <span className="mt-0.5 block text-[0.8125rem] leading-snug text-slate">
+            {known ? "Use the passkey account on this device" : "Face ID, fingerprint or security key. Gas paid by CargoFlow."}
+          </span>
+        </span>
+        <Chevron />
       </button>
     </li>
   );

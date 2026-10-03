@@ -3,6 +3,8 @@ import { injected, mock, walletConnect } from "wagmi/connectors";
 import { defineChain, type Address, type EIP1193Provider } from "viem";
 import { anvil } from "viem/chains";
 import { ROBINHOOD_EXPLORER } from "@/lib/explorer";
+import { passkeyConnector } from "@/lib/passkey/connector";
+import { PASSKEYS_ENABLED } from "@/lib/passkey/env";
 
 export const robinhoodTestnet = defineChain({
   id: 46630,
@@ -81,6 +83,12 @@ export function setEmbeddedProvider(p: EIP1193Provider | undefined) {
 if (PRIVY_APP_ID) {
   connectors.push(injected({ shimDisconnect: true, target: { id: EMBEDDED_CONNECTOR_ID, name: "Email wallet", provider: () => embeddedProvider } }));
 }
+
+/**
+ * Passkey smart accounts (ZeroDev Kernel + WebAuthn), only when NEXT_PUBLIC_ZERODEV_PROJECT_ID is set. The connector
+ * module is small; the ZeroDev SDK loads the first time someone uses a passkey.
+ */
+if (PASSKEYS_ENABLED) connectors.push(passkeyConnector());
 
 const create = () =>
   createConfig({

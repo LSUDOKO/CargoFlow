@@ -1,0 +1,18 @@
+Sensitech TempTale Manager Desktop - Data Export
+Product,TempTale 4 USB MultiAlarm
+Serial Number,T4-55012345
+Trip Number,PO-88231
+Temperature Unit,Fahrenheit
+Measurement Interval,00:10:00
+Start Time,10/01/2026 08:00:00 AM
+Time Zone,(UTC-05:00) Eastern Time (US & Canada)
+
+Data Point,Date,Time,Temperature (°F)
+1,10/01/2026,08:00:00 AM,39.2
+2,10/01/2026,08:10:00 AM,39.6
+3,10/01/2026,08:20:00 AM,40.1
+4,10/01/2026,08:30:00 AM,41.0
+5,10/01/2026,08:40:00 AM,46.9
+6,10/01/2026,08:50:00 AM,40.3
+7,10/01/2026,09:00:00 AM,39.8
+8,10/01/2026,12:10:00 PM,39.5

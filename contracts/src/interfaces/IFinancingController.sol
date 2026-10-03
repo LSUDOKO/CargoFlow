@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
+import {IEvidenceRegistry} from "./IEvidenceRegistry.sol";
 import {IReceivableVault} from "./IReceivableVault.sol";
 
 interface IFinancingController {
@@ -13,7 +14,8 @@ interface IFinancingController {
         DISPUTED,
         DELIVERED,
         SETTLED,
-        DEFAULTED
+        DEFAULTED,
+        CANCELLED // v3: closed before transit; any deposit returned to the financier
     }
 
     struct MilestoneSpec {
@@ -179,6 +181,9 @@ interface IFinancingController {
 
     /// @notice The vault this controller drives (read by the CoverPool).
     function VAULT() external view returns (IReceivableVault);
+
+    /// @notice The evidence registry this controller reads (read by the CoverPool's parametric cover).
+    function EVIDENCE() external view returns (IEvidenceRegistry);
 
     function getFacility(bytes32 shipmentId) external view returns (FacilityState memory);
 

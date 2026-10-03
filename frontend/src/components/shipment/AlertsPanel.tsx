@@ -13,8 +13,11 @@ import { useToast } from "@/components/ui/Toast";
 import { WalletButton } from "@/components/wallet/WalletButton";
 import { ApiError, apiPost } from "@/lib/api/client";
 import { useConfig } from "@/lib/api/hooks";
+import { useContracts } from "@/lib/chain/contracts";
 import {
   ALERT_EVENTS,
+  COVER_ALERT_EVENTS,
+  V3_ALERT_EVENTS,
   ALERT_EVENT_LABEL,
   SubscriptionCreated,
   alertsMessage,
@@ -39,10 +42,11 @@ const CHANNELS: { id: AlertChannel; label: string; hint: string }[] = [
   { id: "webhook", label: "Webhook", hint: "Signed JSON POSTs to your system" },
   { id: "telegram", label: "Telegram", hint: "Messages from the CargoFlow bot" },
   { id: "email", label: "Email", hint: "A short email per event" },
+  { id: "slack", label: "Slack", hint: "Posts to a Slack channel through an incoming webhook" },
 ];
 const channelLabel = (c: string) => CHANNELS.find((x) => x.id === c)?.label ?? c;
 
-/** Parties subscribe to the shipment's events by webhook, Telegram or email, each request signed by their wallet. */
+/** Parties subscribe to the shipment's events by webhook, Telegram, email or Slack, each request signed by their wallet. */
 export function AlertsPanel({ view }: { view: ShipmentView }) {
   const hydrated = useHydrated();
   const { address, isConnected } = useAccount();
@@ -56,7 +60,7 @@ export function AlertsPanel({ view }: { view: ShipmentView }) {
   if (!alerts) {
     return <p className="rounded-2xl bg-mist px-4 py-3 text-sm text-slate">Alerts are not available on this deployment yet.</p>;
   }
-  const available: Record<AlertChannel, boolean> = { webhook: alerts.webhook, telegram: alerts.telegram, email: alerts.email };
+  const available: Record<AlertChannel, boolean> = { webhook: alerts.webhook, telegram: alerts.telegram, email: alerts.email, slack: alerts.slack };
 
   if (!hydrated || !isConnected || roles.length === 0) {
     return (
@@ -116,7 +120,12 @@ function SubscribeForm({ view, available, telegramBot, onCreated }: { view: Ship
   const first = CHANNELS.find((c) => available[c.id])?.id ?? "webhook";
   const [channel, setChannel] = useState<AlertChannel>(first);
   const [target, setTarget] = useState("");
-  const [events, setEvents] = useState<AlertEvent[]>([...ALERT_EVENTS]);
+  const { contracts } = useContracts();
+  // cover events exist only on a deployment with a CoverPool (contracts v2)
+  // and the v3 events (cancellation, parametric trigger) only on a v3 deployment (it configures the v3 registries)
+  const v3 = !!(contracts?.deviceRegistry || contracts?.eblRegistry);
+  const offered = ALERT_EVENTS.filter((e) => (contracts?.coverPool || !COVER_ALERT_EVENTS.includes(e)) && (v3 || !V3_ALERT_EVENTS.includes(e)));
+  const [events, setEvents] = useState<AlertEvent[]>([...offered]);
   const [touched, setTouched] = useState(false);
   const [busy, setBusy] = useState<"sign" | "save" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -141,7 +150,7 @@ function SubscribeForm({ view, available, telegramBot, onCreated }: { view: Ship
     }
     try {
       setBusy("save");
-      const ordered = ALERT_EVENTS.filter((e) => events.includes(e));
+      const ordered = offered.filter((e) => events.includes(e));
       const res = await apiPost(`/v1/shipments/${id}/subscriptions`, { channel, target: t, events: ordered, issuedAt, signature }, SubscriptionCreated);
       await qc.invalidateQueries({ queryKey: ["subscriptions", id] });
       setTarget("");
@@ -165,7 +174,7 @@ function SubscribeForm({ view, available, telegramBot, onCreated }: { view: Ship
     >
       <fieldset>
         <legend className="mb-1.5 text-sm font-semibold">Channel</legend>
-        <div className="grid grid-cols-3 gap-1 rounded-2xl bg-mist p-1">
+        <div className="grid grid-cols-2 gap-1 rounded-2xl bg-mist p-1 sm:grid-cols-4">
           {CHANNELS.map((c) => {
             const on = channel === c.id;
             const off = !available[c.id];
@@ -194,6 +203,20 @@ function SubscribeForm({ view, available, telegramBot, onCreated }: { view: Ship
       {channel === "webhook" && (
         <Field label="Webhook URL" type="url" inputMode="url" autoComplete="off" placeholder="https://ops.example.com/cargoflow" value={target} onChange={(e) => setTarget(e.target.value)} onBlur={() => setTouched(true)} error={touched ? tErr : null} />
       )}
+      {channel === "slack" && (
+        <Field
+          label="Slack webhook URL"
+          type="url"
+          inputMode="url"
+          autoComplete="off"
+          placeholder="https://hooks.slack.com/services/T000/B000/XXXX"
+          value={target}
+          onChange={(e) => setTarget(e.target.value)}
+          onBlur={() => setTouched(true)}
+          error={touched ? tErr : null}
+          hint="In Slack: Apps → Incoming Webhooks → Add to a channel, then copy the URL."
+        />
+      )}
       {channel === "email" && (
         <Field label="Email address" type="email" autoComplete="email" placeholder="ops@exporter.example" value={target} onChange={(e) => setTarget(e.target.value)} onBlur={() => setTouched(true)} error={touched ? tErr : null} />
       )}
@@ -206,7 +229,7 @@ function SubscribeForm({ view, available, telegramBot, onCreated }: { view: Ship
       <fieldset>
         <legend className="mb-1.5 text-sm font-semibold">Events</legend>
         <div className="flex flex-wrap gap-1.5">
-          {ALERT_EVENTS.map((ev) => {
+          {offered.map((ev) => {
             const on = events.includes(ev);
             return (
               <label
@@ -310,7 +333,7 @@ function SubscriptionRow({ s, shipmentId }: { s: Subscription; shipmentId: strin
             {!s.active && <Pill tone="alert">{s.channel === "telegram" ? "Waiting for Start" : "Inactive"}</Pill>}
           </p>
           {s.targetMasked && <p className={`truncate text-xs text-ink/80 ${s.channel === "telegram" ? "" : "font-mono"}`} title={s.targetMasked}>{s.targetMasked}</p>}
-          <p className="text-xs text-slate">{s.events.length === ALERT_EVENTS.length ? "Every event" : s.events.map((e) => ALERT_EVENT_LABEL[e as AlertEvent] ?? e).join(", ")}</p>
+          <p className="text-xs text-slate">{ALERT_EVENTS.filter((e) => !COVER_ALERT_EVENTS.includes(e) && !V3_ALERT_EVENTS.includes(e)).every((e) => s.events.includes(e)) ? "Every event" : s.events.map((e) => ALERT_EVENT_LABEL[e as AlertEvent] ?? e).join(", ")}</p>
         </div>
         <Button size="sm" variant="ghost" loading={busy} onClick={() => void remove()} aria-label={`Remove ${channelLabel(s.channel)} alert`}>Remove</Button>
       </div>

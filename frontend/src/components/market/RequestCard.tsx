@@ -10,6 +10,7 @@ import { useHydrated } from "@/lib/useHydrated";
 import { useAccount } from "wagmi";
 import { OfferModal } from "./OfferModal";
 import { PartyLink } from "./PartyLink";
+import { FeeBand } from "./FeeBand";
 import { BandChip, RequestStatusPill, RouteLabel, Term } from "./RequestBits";
 
 /** One financing request in the market grid. The reference link stretches over the card; inner controls sit above it. */
@@ -55,6 +56,7 @@ export function RequestCard({ request: r }: { request: MarketRequest }) {
             <div className="h-full rounded-full bg-ink" style={{ width: `${Math.min(rate, 100)}%` }} />
           </div>
         </div>
+        {r.pricing && r.status === "open" && <FeeBand pricing={r.pricing} maxFeeBps={r.maxFeeBps} compact />}
         {r.note && <p className="line-clamp-2 text-sm text-ink/75">“{r.note}”</p>}
       </div>
 

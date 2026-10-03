@@ -5,9 +5,10 @@ import { Button, LinkButton } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Modal } from "@/components/ui/Modal";
 import { WalletButton } from "@/components/wallet/WalletButton";
-import { offerMessage, parsePctToBps, pct, postOffer, rankOffers, roleOn, validateOffer, type MarketRequest } from "@/lib/api/market";
+import { offerMessage, parsePctToBps, pct, postOffer, rankOffers, roleOn, usePricing, validateOffer, type MarketRequest } from "@/lib/api/market";
 import { formatUSDG } from "@/lib/format";
 import { useHydrated } from "@/lib/useHydrated";
+import { FeeBand } from "./FeeBand";
 import { useSigned } from "./useSigned";
 
 /** A financier offers a fee on an open request. The fee is signed (no gas) and capped at the exporter's maximum. */
@@ -22,6 +23,9 @@ export function OfferModal({ request: r, open, onClose }: { request: MarketReque
   const role = roleOn(r, hydrated ? address : undefined);
   const err = validateOffer(fee, r.maxFeeBps);
   const bps = parsePctToBps(fee);
+  // the live suggestion (fresh inputs), falling back to the one the request list carried
+  const live = usePricing(open ? r.shipmentId : undefined);
+  const pricing = live.data ?? r.pricing;
   const earn = bps !== undefined ? (BigInt(r.amount) * BigInt(bps)) / 10_000n : null;
 
   const close = () => {
@@ -85,6 +89,7 @@ export function OfferModal({ request: r, open, onClose }: { request: MarketReque
               error={touched || fee.trim() !== "" ? err : null}
               hint={earn !== null ? `${formatUSDG(earn)} USDG if fully drawn, paid from the invoice at settlement.` : undefined}
             />
+            {pricing && <FeeBand pricing={pricing} maxFeeBps={r.maxFeeBps} feeBps={bps} reasons />}
             {mine && <p className="text-sm text-slate">You offered {pct(mine.feeBps)}. Sending a new fee replaces it.</p>}
             {error && <p role="alert" className="text-sm font-medium text-danger">{error}</p>}
             <p className="text-sm text-slate">Your wallet signs a message naming this request and the fee. Signing costs no gas.</p>

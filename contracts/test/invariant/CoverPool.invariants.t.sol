@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {StdInvariant} from "forge-std/StdInvariant.sol";
 import {console2} from "forge-std/console2.sol";
 import {ICoverPool} from "../../src/interfaces/ICoverPool.sol";
+import {ICoverPoolV3} from "../../src/interfaces/ICoverPoolV3.sol";
 import {IReceivableVault} from "../../src/interfaces/IReceivableVault.sol";
 import {CoverPoolBase} from "../core/CoverPoolBase.sol";
 import {CoverPoolHandler} from "./CoverPoolHandler.sol";
@@ -26,7 +27,8 @@ contract CoverPoolInvariants is StdInvariant, CoverPoolBase {
             ],
             [worker, monitor, arbiter, financier, buyer, stranger]
         );
-        bytes4[] memory selectors = new bytes4[](14);
+        handler.setAdmin(admin);
+        bytes4[] memory selectors = new bytes4[](24);
         selectors[0] = CoverPoolHandler.create.selector;
         selectors[1] = CoverPoolHandler.offer.selector;
         selectors[2] = CoverPoolHandler.offer.selector;
@@ -41,6 +43,17 @@ contract CoverPoolInvariants is StdInvariant, CoverPoolBase {
         selectors[11] = CoverPoolHandler.withdraw.selector;
         selectors[12] = CoverPoolHandler.attack.selector;
         selectors[13] = CoverPoolHandler.warp.selector;
+        // v3
+        selectors[14] = CoverPoolHandler.offerParametric.selector;
+        selectors[15] = CoverPoolHandler.offerParametric.selector;
+        selectors[16] = CoverPoolHandler.failEpoch.selector;
+        selectors[17] = CoverPoolHandler.trigger.selector;
+        selectors[18] = CoverPoolHandler.cancel.selector;
+        selectors[19] = CoverPoolHandler.stray.selector;
+        selectors[20] = CoverPoolHandler.rescue.selector;
+        selectors[21] = CoverPoolHandler.failEpoch.selector;
+        selectors[22] = CoverPoolHandler.failEpoch.selector;
+        selectors[23] = CoverPoolHandler.trigger.selector;
         targetSelector(FuzzSelector({addr: address(handler), selectors: selectors}));
         targetContract(address(handler));
     }
@@ -58,10 +71,38 @@ contract CoverPoolInvariants is StdInvariant, CoverPoolBase {
             handler.coversClaimed(),
             handler.withdrawals()
         );
+        console2.log(
+            "v3 parametric offers / triggers, cancels, rescues:",
+            handler.parametricOffers(),
+            handler.coversTriggered(),
+            handler.facilitiesCancelled() * 1000 + handler.rescues()
+        );
     }
 
-    /// 1. The pool's USDG balance equals open offers + accepted (active) covers + credited payouts,
-    ///    recomputed here from per-facility state rather than trusting the pool's running totals.
+    /// Reachability: the handler's v3 paths (parametric offer -> accept -> transit -> trigger, cancel,
+    /// stray + rescue) all succeed in a scripted sequence, so the random campaign can reach them.
+    function test_handlerReachesV3Paths() public {
+        handler.offerParametric(0, 0, 20_000e6, 2, 1_000e6);
+        handler.accept(0, 0);
+        handler.progress(0, 0); // deposit
+        handler.progress(0, 0); // start transit
+        handler.progress(0, 1); // M1
+        handler.trigger(0, true);
+        assertEq(handler.coversTriggered(), 1, "trigger not reached");
+        handler.create(1);
+        handler.cancel(1, 4);
+        assertEq(handler.facilitiesCancelled(), 1, "cancel not reached");
+        handler.stray(5e6);
+        handler.rescue();
+        assertEq(handler.rescues(), 1, "rescue not reached");
+        assertEq(handler.violations(), 0);
+        invariant_balanceEqualsOffersPlusCoversPlusCredits();
+        invariant_totalPaidNeverExceedsTheCover();
+    }
+
+    /// 1. The pool's USDG balance equals open offers + accepted (active) covers + credited payouts
+    ///    (+ v3: USDG sent to it directly and not yet rescued), recomputed here from per-facility
+    ///    state rather than trusting the pool's running totals.
     function invariant_balanceEqualsOffersPlusCoversPlusCredits() public view {
         uint256 offers;
         uint256 active;
@@ -77,10 +118,18 @@ contract CoverPoolInvariants is StdInvariant, CoverPoolBase {
         for (uint256 i; i < handler.INSURERS(); ++i) {
             credits += pool.claimable(handler.insurers(i));
         }
+        for (uint256 s; s < handler.N(); ++s) {
+            credits += pool.claimable(handler.exporters(s)); // v3 parametric salvage
+        }
         assertEq(offers, pool.totalOpenOffers(), "open offer total");
         assertEq(active, pool.totalActiveCover(), "active cover total");
         assertEq(credits, pool.totalClaimable(), "claimable total");
-        assertEq(usdg.balanceOf(address(pool)), offers + active + credits, "pool balance");
+        assertEq(
+            usdg.balanceOf(address(pool)),
+            offers + active + credits + handler.strayUsdg(),
+            "balance"
+        );
+        assertEq(pool.untrackedUsdg(), handler.strayUsdg(), "untracked != stray");
     }
 
     /// 2. A cover pays out at most once.
@@ -103,6 +152,15 @@ contract CoverPoolInvariants is StdInvariant, CoverPoolBase {
             } else if (c.status == ICoverPool.CoverStatus.CLAIMED) {
                 assertEq(c.financierPayout + c.insurerReturn, c.amount, "claim split != cover");
                 assertLe(c.financierPayout, vault.getFacility(sid).drawn, "payout above loss");
+            } else if (c.status == ICoverPool.CoverStatus.TRIGGERED) {
+                ICoverPoolV3.ParametricCover memory p = pool.getParametricCover(sid);
+                assertEq(
+                    c.financierPayout + p.exporterSalvage + c.insurerReturn,
+                    c.amount,
+                    "trigger split != cover"
+                );
+                assertLe(c.financierPayout, vault.getFacility(sid).drawn, "payout above principal");
+                assertLe(p.exporterSalvage, p.salvageToExporter, "salvage above terms");
             } else {
                 assertEq(c.financierPayout + c.insurerReturn, 0, "unsettled cover paid");
             }

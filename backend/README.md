@@ -41,7 +41,13 @@ The image compiles the circuit at build time and runs as a non-root user on a re
 | Variable | Required | Meaning |
 |---|---|---|
 | `DATABASE_URL` | yes | Postgres connection string |
-| `RPC_URL`, `CHAIN_ID`, `DEPLOYMENT_FILE` | yes | chain endpoint, expected chain id (verified at startup), deployment manifest |
+| `RPC_URL`, `CHAIN_ID`, `DEPLOYMENT_FILE` | yes | chain endpoint, expected chain id (verified at startup), deployment manifest. `RPC_URL` may carry a token in its path (QuickNode); it is never logged |
+| `RPC_FALLBACK_URL` | no | further RPC endpoints, comma-separated, tried in order ([failover](#rpc-failover)); all must be http(s) and on `CHAIN_ID` |
+| `ALCHEMY_RPC_URL` or `ALCHEMY_API_KEY` | no | the last failover tier: `ALCHEMY_RPC_URL`, or built from the key as `https://robinhood-testnet.g.alchemy.com/v2/<key>`; redacted in logs |
+| `ALCHEMY_WEBHOOK_SIGNING_KEYS` | no | signing keys of the [Alchemy webhook](#alchemy-webhook), comma-separated (two during a rotation); unset answers 503 |
+| `ZERODEV_WEBHOOK_SECRET`, `ZERODEV_PROJECT_ID` | no (both together) | turn on the [ZeroDev gas policy webhook](#zerodev-gas-policy); the secret (24+ characters) is the last path segment of the webhook URL |
+| `ZERODEV_SPONSOR_PER_DAY`, `ZERODEV_SPONSOR_GLOBAL_DAY`, `ZERODEV_SPONSOR_MAX_WEI` | no | sponsorships per sender and overall per rolling 24 hours (default 25 and 500), and the cap on one user operation's maximum gas cost (default 200000000000000 wei, 0.0002 ETH) |
+| `DUNE_API_KEY`, `DUNE_NAMESPACE`, `DUNE_UPLOAD_INTERVAL` | no | turn on the [Dune upload](#dune-upload) (Read/Write key, team or user handle; every 15m by default, at least 1m; `DUNE_PUSH_INTERVAL` is accepted as an alias) |
 | `ADMIN_API_KEY` | yes (16+ chars) | guards administrative endpoints |
 | `SALT_SECRET` | yes (16+ chars) | derives the private per-reading salts behind every committed reading |
 | `WORKER_KEY`, `MONITOR_KEY`, `MANAGER_KEY` | yes | the three role keys; **use three different wallets** |
@@ -51,6 +57,10 @@ The image compiles the circuit at build time and runs as a non-root user on a re
 | `RESEND_API_KEY`, `ALERT_EMAIL_FROM` | no (both together) | enable [email alerts](#alerts) through Resend; `ALERT_EMAIL_FROM` is the sender, e.g. `"CargoFlow <alerts@example.com>"` |
 | `AISSTREAM_API_KEY` | no | follows registered vessels through aisstream.io ([vessels](#vessels-and-ais)); without it vessels are shown without live positions |
 | `GAS_DRIP_KEY`, `GAS_DRIP_WEI`, `GAS_DRIP_DAILY` | no | enables the [gas drip](#gas-drip) from a dedicated funded key; default 50000000000000 wei (0.00005 ETH) per drip, 200 drips a day |
+| `APP_URL` | no | the web app's origin, for links in notifications and alerts (e.g. `https://app.example.com/track/<id>?recover=1`); empty gives relative links |
+| `RECOVERY_SCAN_INTERVAL` | no | how often the [automatic ZK recovery worker](#automatic-zk-recovery) scans paused facilities (default `1m`, `0s` disables) |
+| `DEVICE_ROOTS_DIR` | no | directory of manufacturer root certificates (`*.pem`, `*.crt`) that [device attestation](#device-trust) chains must verify to; without it attestation chains are refused |
+| `WEBAUTHN_ORIGINS` | no | origins passkey ceremonies may come from (comma-separated); defaults to `CORS_ORIGINS`, and when both are empty any https origin or `http://localhost` |
 | `HTTP_ADDR`, `LOG_LEVEL`, `CORS_ORIGINS`, `START_BLOCK`, `CONFIRMATIONS`, `INDEXER_POLL`, `CIRCUITS_DIR` | no | see `.env.example` |
 
 Every problem in the configuration is reported at once, weak secrets are rejected, and secrets cannot be
@@ -69,7 +79,8 @@ Public reads need no credentials. Everything that writes is authenticated.
 
 | Method and path | Auth | Purpose |
 |---|---|---|
-| `GET /v1/health` | none | database and chain reachability, head block |
+| `GET /v1/health` | none | database and chain reachability, head block, and `rpc`: `primary` or `fallback` |
+| `GET /v1/openapi.json` | none | the [OpenAPI 3.1 document](#openapi), generated from the route table |
 | `GET /v1/config` | none | chain id, USDG decimals, contract addresses (with `coverPool` on a v2 deployment), and which optional integrations are on: `alerts {webhook, telegram, email, telegramBot}`, `gasDrip`, `ais` |
 | `GET /v1/stats` | none | shipments by status, committed epochs, verified proofs |
 | `POST /v1/sources` | admin key | register an evidence source (Ed25519 public key, its sensors, reliability) |
@@ -79,8 +90,15 @@ Public reads need no credentials. Everything that writes is authenticated.
 | `GET /v1/shipments/{id}/cover` | none | default cover: `{offers:[{insurer, amount, premiumBps, createdAt}], cover:{insurer, financier, amount, premium, status, financierPayout, insurerReturn}\|null}`; open offers only, amounts in base units, `status` `ACTIVE`, `RELEASED` or `CLAIMED` |
 | `POST /v1/shipments/{id}/telemetry` | **signed by a source** | submit up to 500 readings, none dated more than 5 minutes ahead; each shipment accepts at most 20,000 readings an hour across all its sources, which bounds the evidence commits the worker pays for |
 | `POST /v1/shipments/{id}/sources` | **the exporter's wallet signature** | register an evidence gateway (Ed25519 public key and its sensors) bound to this shipment; a repeat with the same sensors returns it (200), the same key with other sensors is 409; at most 8 per shipment, 20 registrations a minute per shipment |
-| `GET /v1/shipments/{id}/sources` | none | the shipment's evidence gateways |
-| `POST /v1/shipments/{id}/recovery` | **the exporter's wallet signature** | prepare a ZK recovery bound to the exporter's wallet; returns the calldata for `resumeWithProof` (3 per minute per shipment) |
+| `GET /v1/shipments/{id}/sources` | none | the shipment's evidence gateways: `{sources:[{id, shipmentId, label, publicKey, keyType, deviceClass, keyHash, attested, reliabilityBps, sensorIds, createdAt, attestation}]}` |
+| `GET /v1/devices/{keyHash}` | none | one device key: `{keyHash, keyType, deviceClass, reliabilityBps, sourceId, shipmentId, label, sensorIds, disabled, attested, attestation, registeredAt, onChain:{registered, deviceClass, revoked, txHash}\|null}` ([device trust](#device-trust)) |
+| `GET /v1/shipments/{id}/epcis` | none | the shipment as a [GS1 EPCIS 2.0](#gs1-epcis-20) JSON-LD document (`application/ld+json`) |
+| `POST /v1/shipments/{id}/epcis` | **signed by a source** | import sensor ObjectEvents as readings (same limits and binding as telemetry) |
+| `GET /v1/notifications?address=0x..` | none | a wallet's [in-app notifications](#in-app-notifications), newest first: `{notifications:[{id, address, shipmentId, kind, title, body, link, data, readAt, createdAt}], unread}` (`unread=true`, `limit`) |
+| `POST /v1/notifications/read` | **the notified wallet's signature** | `{address, ids?, issuedAt, signature}` marks those (or all) read: `{marked, unread}` |
+| `GET /v1/pricing/suggest?shipment=0x..` | none | [fee guidance](#fee-guidance): `{shipmentId, lowBps, midBps, highBps, reasons:[{factor, bps, detail}], inputs:{exporterGrade, routeExcursionRate, routeConflictRate, cargoTemplate, coverStatus, tenorDays, corridorShipments, corridorEpochs}, model}` |
+| `GET /v1/ebl`, `GET /v1/ebl/{tokenId}` | none | [electronic bills of lading](#contracts-v3) (`?holder=0x..`): `{tokenId, documentHash, issuer, shipper, consignee, holder, status, issuedAt, closedAt, transfers, history:[{from, to, txHash, at}], boundShipmentId}`; 404 without an EBLRegistry |
+| `POST /v1/shipments/{id}/recovery` | **the exporter's wallet signature** | prepare a ZK recovery bound to the exporter's wallet; returns the calldata for `resumeWithProof` (3 per minute per shipment); `cached: true` when the [recovery worker](#automatic-zk-recovery) had already proven it, so only the commit ran |
 | `POST /v1/shipments/{id}/proof` | admin key | ZK recovery of a paused facility from a sensor's fresh readings |
 | `GET /v1/shipments/{id}/epochs` | none | evidence epochs (scores, roots and the committed aggregates `latE6, lonE6, maxHumidityX100, maxShockX100, heldDistanceM`; **never raw readings**) |
 | `GET /v1/shipments/{id}/telemetry` | none | per-epoch, per-sensor min / mean / max temperature and the latest position; aggregates only |
@@ -89,19 +107,21 @@ Public reads need no credentials. Everything that writes is authenticated.
 | `GET /v1/shipments/{id}/explanation` | none | why the shipment is where it is: `{status, headline, causes, nextSteps:[{role, action}], forecast:{sensorId, trend, minutesToLimit}\|null, hold:{milestoneIndex, placeLabel, latE6, lonE6, radiusM, distanceM, message}\|null, source}`; rule-derived, optionally reworded by the model |
 | `POST /v1/shipments/{id}/documents` | **a party's wallet signature** | attest a file by its SHA-256 and keccak256 (the file is never uploaded); 201, or 200 with the existing record when the signer attested that file before; at most 100 per shipment |
 | `GET /v1/shipments/{id}/documents` | none | the attestations, each with `matchesInvoiceHash` (its keccak256 equals the on-chain `invoiceHash`) |
-| `POST /v1/shipments/{id}/subscriptions` | **a party's (or an offering / covering insurer's) wallet signature** | subscribe to [alerts](#alerts) by webhook, Telegram or email; 503 `channel_unavailable` for a channel without credentials; at most 10 per address per shipment |
+| `POST /v1/shipments/{id}/subscriptions` | **a party's (or an offering / covering insurer's) wallet signature** | subscribe to [alerts](#alerts) by webhook, Telegram, email or Slack; 503 `channel_unavailable` for a channel without credentials; at most 10 per address per shipment |
 | `GET /v1/shipments/{id}/subscriptions?address=0x..` | none | that address's subscriptions, targets masked |
 | `DELETE /v1/shipments/{id}/subscriptions/{sid}` | **the subscriber's wallet signature** | remove a subscription; answers `{id, deleted: true}` |
 | `POST /v1/shipments/{id}/vessel` | **the exporter's wallet signature** | name the vessel by its 9-digit MMSI (and a display name); naming it again replaces it (200) |
 | `GET /v1/shipments/{id}/vessel` | none | `{mmsi, name, live, last, track, crossCheck}`; 404 when no vessel is named |
 | `GET /v1/parties/{address}` | none | an address's track record as exporter, financier, buyer and insurer (`insurer: {offered, active, released, claimed, coverWritten, premiumsEarned, paidOut}`), and a grade (`A`, `B`, `C` or `new`) |
 | `POST /v1/requests` | **the exporter's wallet signature** | post a [financing request](#financing-marketplace) for a mirrored, policy-set shipment without a facility |
-| `GET /v1/requests?status=&exporter=` | none | requests newest first, with their offers cheapest first |
+| `GET /v1/requests?status=&exporter=` | none | requests newest first, with their offers cheapest first, each with `pricing` (the [fee guidance](#fee-guidance)) |
 | `POST /v1/requests/{rid}/offers` | **a financier's wallet signature** | offer a fee (anyone but the exporter and buyer); offering again replaces your fee (200) |
 | `POST /v1/requests/{rid}/accept` | **the exporter's wallet signature** | accept one offer |
 | `POST /v1/requests/{rid}/close` | **the exporter's wallet signature** | withdraw an open or accepted request |
 | `POST /v1/gas` | **the receiving wallet's signature** | the [gas drip](#gas-drip); 10 requests a minute per client |
 | `GET /v1/ws?shipment=0x..` | none | WebSocket event stream |
+| `POST /v1/webhooks/alchemy` | **`X-Alchemy-Signature`** | [Alchemy Notify deliveries](#alchemy-webhook): wakes the indexer; answers `{accepted, duplicate, matched, block, woken}` |
+| `POST /v1/webhooks/zerodev/{secret}` | **the path secret** | [ZeroDev custom gas policy](#zerodev-gas-policy): always 200 `{proceed}`; 404 for a wrong or unset secret |
 
 **Shipment registration mirrors the chain.** The caller supplies only the id, the external reference, the
 route and two off-chain scoring parameters (and optional place labels). Parties, invoice value, commitments,
@@ -114,13 +134,23 @@ the revealed policy does not hash (`hashPolicy`) to the registry's policy commit
 milestone waits for evidence from there` (`internal/chain/revert_message.go` covers every controller, registry,
 policy, vault and CoverPool error, including `EvidenceBelowPolicy` and `InvalidMilestonePlace`).
 
-**Source authentication.** A source signs each submission with Ed25519; the database stores only its public
-key, so a leak exposes nothing that could forge data. Headers: `X-Source-Id`, `X-Timestamp` (unix seconds,
-within 5 minutes), `X-Signature` (base64url, unpadded) over:
+**Source authentication.** A source signs each submission with its device key; the database stores only the
+public key, so a leak exposes nothing that could forge data. Headers: `X-Source-Id`, `X-Timestamp` (unix seconds,
+within 5 minutes), `X-Signature` (base64url, unpadded) over the signing string:
 
 ```
 CARGOFLOW-V1\n<METHOD>\n<PATH>\n<TIMESTAMP>\n<hex sha256(body)>
 ```
+
+- `ed25519`: Ed25519 over the signing string (64-byte signature).
+- `p256` (secure elements such as the ATECC608A or nRF91): ECDSA P-256 over SHA-256 of the signing string;
+  `X-Signature` is the ASN.1 DER signature or the raw 64-byte `r||s`.
+- `webauthn` (passkeys): `navigator.credentials.get` with `challenge = sha256(signing string)` (32 raw bytes) and
+  `allowCredentials` = the registered credential id. Send `X-Signature` = the assertion's signature,
+  `X-WebAuthn-Authenticator-Data` = authenticatorData, `X-WebAuthn-Client-Data` = clientDataJSON (all base64url).
+  The backend checks `type == "webauthn.get"`, the challenge, an allowed origin, the registered RP id hash, the
+  user-present flag, the signature over `authenticatorData || sha256(clientDataJSON)`, and that the signature
+  counter advances (a counter that stays at 0 is accepted, as most passkeys do).
 
 The body is verified before it is decoded. Unknown sources and bad signatures return the same error so source
 ids cannot be enumerated, and a source may only report the sensors it was registered for. Replays inside the
@@ -139,7 +169,9 @@ account holds code is cached for 10 minutes so bad signatures cannot turn into a
 messages:
 
 ```
-CargoFlow evidence source\nshipment: <id>\npublic key: <base64url>\nsensors: <a,b>\nissued: <t>
+CargoFlow evidence source\nshipment: <id>\npublic key: <base64url as sent>\nsensors: <a,b>\nissued: <t>
+CargoFlow evidence source\nshipment: <id>\npublic key: <as sent>\nsensors: <a,b>\nkey type: <p256|webauthn>\nissued: <t>
+CargoFlow notifications read\naddress: <address>\nids: <id,id | all>\nissued: <t>
 CargoFlow recovery\nshipment: <id>\nsensor: <sensor>\nsubmitter: <address>\nissued: <t>
 CargoFlow document\nshipment: <id>\nkind: <kind>\nsha256: <0x..>\nissued: <t>
 CargoFlow alerts\nshipment: <id>\nchannel: <channel>\ntarget: <target as sent>\nissued: <t>
@@ -196,6 +228,220 @@ alerts twice.
 - **Telegram** (`TELEGRAM_BOT_TOKEN`): the response carries `linkUrl` (`https://t.me/<bot>?start=<code>`); the
   subscription activates when the subscriber presses Start, which the backend sees by long-polling `getUpdates`.
 - **Email** (`RESEND_API_KEY`, `ALERT_EMAIL_FROM`): plain-text email through Resend's HTTP API.
+- **Slack**: an incoming-webhook URL, `https://hooks.slack.com/services/...` only (any other host is refused),
+  posted as `{"text": ...}` with the same timeout, no-redirect and internal-address guards as webhooks. Always on.
+
+`RECOVERY_READY` (the [recovery worker](#automatic-zk-recovery) proved a recovery) goes only to the exporter's
+subscriptions that asked for it or for `PAUSED`, with a `link` (also in the webhook payload) to
+`/track/<id>?recover=1`. Contracts v3 add `CANCELLED` (`FacilityCancelled`) and `COVER_TRIGGERED`
+(`ParametricTriggered`).
+
+### In-app notifications
+
+Every alertable chain event (pause, release, resume, dispute, delivery, settlement, default, cover offered /
+accepted / released / claimed / triggered, cancellation, title bound) creates a notification for each party (and
+the insurers, for cover and default events), as do milestone holds (`HELD`, exporter and financier), recovery ready
+(`RECOVERY_READY`, exporter) and marketplace offers (`OFFER_RECEIVED` to the exporter, `OFFER_ACCEPTED` to the
+financier). Each is stored once per (wallet, event) so a redelivered chain event never notifies twice, and carries a
+`link` into the web app (`APP_URL`).
+
+## Automatic ZK recovery
+
+A background worker (every `RECOVERY_SCAN_INTERVAL`) looks at each shipment mirrored as `PAUSED`, confirms the
+facility is paused on chain, and finds a probe with at least 8 fresh readings after the last evaluated epoch that
+pass the policy, sit inside the next milestone's place, and are provable. It builds the witness and the Groth16
+proof bound to the **exporter** as submitter, and caches it keyed by (shipment, sensor, readings root, pause time)
+together with the epoch id it was proven for. **It sends nothing to the chain**, so it never spends worker gas on a
+recovery nobody asked for. The first proof for a pause notifies the exporter in-app, through `RECOVERY_READY`
+alerts and on the event stream, with a link to `/track/<id>?recover=1`. When the exporter then signs the existing
+`POST /v1/shipments/{id}/recovery`, the cached proof is used as it is (same readings, pause, epoch id and
+submitter; otherwise it is proven again) and only the evidence commit runs, so the answer comes back in about one
+block instead of after proving. A pause that already has a committed, unsubmitted recovery is left to the exporter's
+request, which re-proves it.
+
+## Device trust
+
+Gateways register with `keyType` `ed25519` (default), `p256` or `webauthn`:
+
+| Key | Attestation | Device class | Reliability |
+|---|---|---|---|
+| `ed25519` | none | `software` | 9500 bps |
+| `p256` | none | `software` | 9500 bps |
+| `p256` | `{format: "x509", chain: [PEM, device first]}` verified to a root in `DEVICE_ROOTS_DIR`, leaf key = the device key | `secure_element` | 9900 bps |
+| `webauthn` | `{format: "webauthn", attestationObject, clientDataJSON}`, fmt `packed` (self, or x5c verified to a root, WebAuthn L2 8.2.1 certificate rules and AAGUID) or `none` | `passkey` | 9700 bps |
+
+The passkey registration ceremony uses `challenge = sha256("CARGOFLOW-V1-REGISTER\n" + lowercase shipment id)`;
+the clientDataJSON must be `webauthn.create` from an allowed origin, the RP id hash must match the origin's host or a
+parent domain, user presence must be set and the credential must be ES256 (P-256). `publicKey` is the credential's
+key (SEC1 point or SubjectPublicKeyInfo, base64url) and must equal the attested one. The reliability is the
+evidence engine's per-sensor source reliability (Shafer discounting and the risk model's provider factor), so a
+secure element's readings weigh most. The device key hash is `0x + keccak256(public key bytes)` (the raw 32-byte
+Ed25519 key or the 65-byte uncompressed P-256 point). `scripts/make-device-certs.sh` makes a test manufacturer
+root, intermediate and device certificate with OpenSSL; `internal/devicetrust/testdata` holds one such set (test
+only: never put that root in a production `DEVICE_ROOTS_DIR`).
+
+## GS1 EPCIS 2.0
+
+`GET /v1/shipments/{id}/epcis` renders `ObjectEvent`s: `commissioning` (ADD, with the invoice as a `inv`
+bizTransaction), `shipping`, one `sensor_reporting` event per evidence epoch with the EPCIS 2.0
+`sensorElementList` (per sensor: min / max / mean temperature in `CEL`, max / mean relative humidity in `P1`, peak
+acceleration in `MSK`; readPoint = the epoch centroid as a `geo:` URI; the score, decision, Merkle root and commit
+transaction in the CargoFlow namespace `https://cargoflow.app/epcis/`), `receiving` on delivery, and financing events
+whose bizStep is `https://cargoflow.app/epcis/bizstep/<milestone_released|financing_paused|...>`. The shipment is
+`urn:cargoflow:shipment:<id>`; event ids are deterministic `urn:uuid`s. The export validates against the official
+EPCIS 2.0.1 JSON schema, vendored at `internal/epcis/testdata/epcis-json-schema.json` (the test substitutes an
+RE2-compatible matcher for the schema's two negative-lookahead patterns). Financing-event times are the indexing
+time of their block, not the block timestamp.
+
+`POST /v1/shipments/{id}/epcis` (source-signed, like telemetry) reads every `ObjectEvent` with a sensorElementList:
+one reading per sensor element; time from the report, the metadata or `eventTime`; sensor = the last segment of
+`deviceID`; position = the readPoint `geo:` URI (required); `Temperature` (`CEL`, `FAH`, `KEL`; `value` or
+`meanValue`) required, `RelativeHumidity` (`P1`) and `Acceleration` (`MSK`, or `K40` for g) optional.
+
+## Fee guidance
+
+`GET /v1/pricing/suggest` is a transparent, deterministic, integer model (`internal/pricing`); financiers still
+choose the fee:
+
+```
+mid    = clamp(300 + grade + excursion + conflict + cargo + cover + tenor, 50, 2000)
+spread = 50 (+100 when the corridor has < 20 evaluated epochs) (+50 for a new exporter)
+low    = clamp(mid - spread, 0, 2000)     high = clamp(mid + spread, 0, 2000)
+
+grade      A -75, B 0, C +150, new +50                        (the exporter's party grade)
+excursion  +routeExcursionRate / 5, at most +400               (bps of the corridor's evaluated epochs out of band)
+conflict   +routeConflictRate / 10, at most +200               (bps whose sensor conflict exceeded the policy)
+cargo      frozen +75, chilled +50, controlled_ambient +25, ambient 0, custom +50   (from the policy band)
+cover      active -100, offered -25, none 0
+tenor      +5 per day beyond 14, at most +150                  (route length at 16 knots + 2 days in port)
+```
+
+The corridor is every other mirrored shipment whose first and last waypoints share this one's 1-degree cells; each
+reason lists its contribution so the band can be audited.
+
+## RPC failover
+
+With `RPC_FALLBACK_URL` (a comma-separated list) or an Alchemy endpoint set, the chain client sends JSON-RPC through a
+transport that tries the tiers in order, primary → each `RPC_FALLBACK_URL` → Alchemy (`ALCHEMY_RPC_URL`, or
+`ALCHEMY_API_KEY` as `https://robinhood-testnet.g.alchemy.com/v2/<key>`), and moves on when an endpoint cannot be
+reached or answers 5xx or 429; the failed endpoint is skipped for 30 seconds and then tried again, so traffic returns
+to the earlier tiers on their own. JSON-RPC errors (reverts) are answers, never a reason to fail over. Every endpoint
+must report `CHAIN_ID` (a fallback unreachable at startup is tolerated, one on another chain is refused).
+`/v1/health` reports which endpoint serves (`primary`, `fallback`, `fallback-2`, ...). Retrying on another tier can
+resend a signed transaction, which is harmless (same hash).
+
+## Alchemy webhook
+
+`POST /v1/webhooks/alchemy` turns Alchemy Notify deliveries into an immediate indexer pass, so dashboards update in
+about a second instead of on the `INDEXER_POLL` interval.
+
+- **Authentication.** The raw body (at most 1 MB) must carry `X-Alchemy-Signature` = hex HMAC-SHA256 with one of
+  `ALCHEMY_WEBHOOK_SIGNING_KEYS`, compared in constant time; several keys may be configured so a webhook can be
+  replaced without a gap. Missing or wrong signature: 401. No keys configured: 503 `webhook_unavailable`.
+- **Replays.** Each delivery `id` (`whevt_...`) is remembered for 24 hours in Postgres; a repeat answers 200
+  `{"accepted": false, "duplicate": true}` and does nothing (200, so Alchemy stops retrying).
+- **Payloads.** Custom Webhook (GraphQL) deliveries (`event.data.block.number`, `event.data.block.logs[]` with
+  `account.address`, `topics`, `transaction.hash`) and Address Activity deliveries (`event.activity[]` with `blockNum`,
+  `rawContract.address`, `toAddress`, `log.address`) are read. Logs from addresses the indexer does not follow are ignored.
+- **Never trusted.** A matching delivery only wakes the indexer (a non-blocking signal; wakes coalesce), which then
+  re-reads the logs from the RPC up to its usual safe head (`CONFIRMATIONS`); while the woken block is not yet indexed
+  it re-polls every 250 ms for up to 15 seconds. A forged or replayed delivery can cost one extra pass, never a state
+  change.
+
+`go run ./cmd/alchemy-webhook -deployment <manifest> -api https://<api host>` (with `ALCHEMY_AUTH_TOKEN`, the dashboard's
+Notify auth token) creates the Custom Webhook through the Notify API (`POST https://dashboard.alchemy.com/api/create-webhook`,
+`X-Alchemy-Token`, network `ROBINHOOD_TESTNET` for chain 46630, `webhook_type: GRAPHQL`) with a GraphQL log filter over every
+indexed contract in the manifest:
+
+```graphql
+{ block { number hash logs(filter: {addresses: ["0x…controller", "0x…vault", …], topics: []}) { account { address } topics index transaction { hash } } } }
+```
+
+A Custom Webhook's query cannot be edited, so when one already exists for the same URL and network the command creates
+the new webhook first and then deletes the old one. It prints the new signing key once on stdout (everything else goes
+to stderr): add it to `ALCHEMY_WEBHOOK_SIGNING_KEYS` (keep the old key until the old webhook is gone). `-dry-run` prints
+the request without sending it. References: [create-webhook](https://www.alchemy.com/docs/data/webhooks/webhooks-api-endpoints/notify-api-endpoints/create-webhook),
+[Custom Webhook payload](https://www.alchemy.com/docs/reference/custom-webhook),
+[log filters](https://www.alchemy.com/docs/reference/custom-webhook-filters).
+
+## ZeroDev gas policy
+
+ZeroDev's paymaster asks `POST /v1/webhooks/zerodev/{secret}` before sponsoring a passkey account's user operation.
+ZeroDev sends no authentication header, so the path secret (`ZERODEV_WEBHOOK_SECRET`, compared in constant time) is the
+credential; a wrong or unset secret answers the same 404 as an unknown path. Every other outcome is 200
+`{"proceed": true|false}` within a second (a "no" is never an error status). It proceeds only when all hold:
+
+- `projectId` is `ZERODEV_PROJECT_ID` and `chainId` is `CHAIN_ID`;
+- the callData is a Kernel v3 `execute(bytes32 mode, bytes executionCalldata)` with ERC-7579 call type single or batch
+  (never delegatecall), or a Kernel v2 `execute(address,uint256,bytes,uint8)` with operation call or `executeBatch`;
+- every call has value 0 and targets a contract the indexer follows (controller, vault, cover pool, evidence, shipment
+  and policy registries, eBL and device registries), or is USDG `approve(spender, amount)` with such a spender;
+- (callGasLimit + verificationGasLimit + preVerificationGas + any paymaster gas limits) × maxFeePerGas is at most
+  `ZERODEV_SPONSOR_MAX_WEI`;
+- the sender has had fewer than `ZERODEV_SPONSOR_PER_DAY` and everyone fewer than `ZERODEV_SPONSOR_GLOBAL_DAY`
+  sponsorships in the last 24 hours (Postgres `sponsorships`, checked and recorded under one advisory lock, counted
+  only when proceeding).
+
+Account deployment (`initCode`, or v0.7 `factory` / `factoryData`) is sponsored only together with such calls. Each
+decision is logged with the sender and a reason, never the secret.
+
+## Dune upload
+
+With `DUNE_API_KEY` and `DUNE_NAMESPACE` the service pushes its indexed data to Dune every `DUNE_UPLOAD_INTERVAL`
+(default 15m) through the uploads API, so the queries in `analytics/dune` run on `dune.<namespace>.cargoflow_*` even
+though Dune does not decode Robinhood Chain Testnet. The tables and columns are exactly those of
+`analytics/dune/upload-schema.md`:
+
+| Table | Mode |
+|---|---|
+| `cargoflow_chain_events` | append-only: rows after the stored `(block, log index)` cursor (`dune_uploads`), oldest first, 10,000 per insert, only `CONFIRMATIONS` deep; with `block_time` from `chain_events.block_time` (the indexer stores each log's block timestamp; older rows are backfilled from the block header) and `args` as compact JSON text |
+| `cargoflow_shipments` | full refresh (clear + insert) when changed; no waypoints, only a `route_label` |
+| `cargoflow_epochs` | full refresh when changed; scores and public aggregates, never the readings |
+
+Endpoints ([create](https://docs.dune.com/api-reference/tables/endpoint/uploads-create),
+[insert](https://docs.dune.com/api-reference/tables/endpoint/uploads-insert),
+[clear](https://docs.dune.com/api-reference/tables/endpoint/uploads-clear)): `POST https://api.dune.com/api/v1/uploads`
+(an existing table counts as created), `POST /v1/uploads/<namespace>/<table>/insert` (`application/x-ndjson`; Dune
+applies a request entirely or not at all) and `POST /v1/uploads/<namespace>/<table>/clear`, with `X-DUNE-API-KEY`. The
+cursor advances only after Dune answers 200, so a failed run is retried whole at the next tick. If the cursor's row
+disappears (the indexer rewound past it after a reorg) the event table is cleared and re-pushed from the start. A crash
+between a successful insert and saving the cursor would push that batch twice; the queries should treat
+`(tx_hash, log_index)` as the key.
+
+## OpenAPI
+
+`backend/openapi.json` (OpenAPI 3.1) is generated from the route table in `internal/api/routes.go`: each route names
+its request and response Go types and the generator reflects their JSON tags (`doc`, `enum` and `optional` tags add
+descriptions, enums and optional request fields). Wallet-signed operations carry their exact message in
+`x-cargoflow-signed-message`; source-signed ones document the headers and signing string. Regenerate with
+`go generate ./internal/api`; `TestOpenAPISpecIsCurrent` fails when the committed file is stale and
+`TestEveryRouteIsDocumented` when a route lacks its entry. Served at `GET /v1/openapi.json`.
+
+## Contracts v3
+
+A v3 manifest adds `contracts.deviceRegistry` and `contracts.eblRegistry` (optional: absent turns the feature off;
+the ABIs are in `internal/chain/abi`). The backend:
+
+- indexes `FacilityCancelled`, `TitleBound`, `TitleReleased`, `Paused`/`Unpaused`, `CapitalReturned`,
+  `EpochSourcesRecorded`, `DeviceRegistered`, `DeviceRevoked`, `BillIssued`, `BillSurrendered`, `BillVoided`, the
+  bill `Transfer`s, `ParametricTermsOffered`, `ParametricTriggered` and `Rescued`;
+- knows status `CANCELLED` (9): views, the `CANCELLED` alert, and the explanation *"Cancelled before transit; the
+  financier's deposit was returned."*;
+- folds parametric cover: offers and the cover carry `parametric: {consecutiveFailedEpochs, salvageToExporter,
+  epochFloor, exporterSalvage}` (the floor is read from `getParametricCover` after acceptance) and a triggered cover
+  has status `TRIGGERED` (counted as a claim in the insurer's record);
+- after each committed epoch, the worker calls `recordEpochSources` with the keccak256 key hashes of the gateways
+  whose readings fed it (none for trusted local ingestion); epochs carry `sources: [{keyHash, deviceClass, onChain}]`
+  (`onChain`: registered and not revoked in the DeviceRegistry) and `sourcesTx`;
+- registers each shipment gateway in the DeviceRegistry as attestor (the worker key holds `ATTESTOR_ROLE` by
+  default) with its class (0 software, 1 passkey, 2 secure element), `attestationHash = keccak256(DER chain)` for a
+  secure element or `keccak256(attestationObject)` for a passkey (zero for software) and the exporter as owner; the
+  registration answers `deviceTx` and `GET /v1/devices/{keyHash}` reads the record live;
+- serves bills of lading (`GET /v1/ebl`, `/v1/ebl/{tokenId}`), the shipment view's `title: {tokenId, status, holder}`
+  when a bill is bound, and `matchesBill: <tokenId>` on a `bill_of_lading` document whose keccak256 equals an issued
+  bill's `documentHash`;
+- adds `contracts.deviceRegistry`, `contracts.eblRegistry` and `paused: {controller, coverPool}` (read from chain,
+  cached 30 s) to `/v1/config`. The monitor key must not hold `ATTESTOR_ROLE`, `CARRIER_ROLE` or `PAUSER_ROLE`.
 
 ## Vessels and AIS
 
@@ -327,8 +573,11 @@ Decision actions recorded on an epoch: `APPROVE_ADVANCE`, `REQUEST_SECONDARY_PRO
   verified recovery (proof or verifier). That is a liveness cost, not a fund-safety one; raise
   `AI_MIN_CONFIDENCE` or leave `GROQ_API_KEY` unset to remove it. The model is consulted once per epoch and adds
   its latency (seconds) to the epoch that triggers it, bounded by `AI_TIMEOUT`.
-- **Recovery proving runs inside the HTTP request** (about 2 s on a 16-core machine). Move it to a queue before
-  exposing it at scale.
+- **Recovery proving runs inside the HTTP request** when the worker has not proven it ahead (about 2 s on a
+  16-core machine); the worker proves serially, one shipment at a time.
+- **The recovery worker relies on the mirrored status**: it scans shipments the indexer has marked `PAUSED`.
+- **Gateway device registration on chain is synchronous** and best effort: a failure is logged and retried when the
+  same key is registered again.
 - The evidence score weights are explicit design parameters, not statistically calibrated.
 
 ## Try it
@@ -378,6 +627,13 @@ Runs are reproducible: the same `-seed` gives byte-identical output.
 | `internal/decision` | policy gate: approve, request secondary proof, or pause, with reason codes |
 | `internal/ai` | AI monitor: injection-safe brief, strict assessment schema, guardrails, Groq provider, fallback |
 | `internal/proof` | recovery-proof context hash (pinned to the contract) and the snarkjs prover worker |
+| `internal/devicetrust` | P-256 keys, X.509 attestation chains, WebAuthn registration and assertions, device classes |
+| `internal/epcis` | GS1 EPCIS 2.0 export and sensor ObjectEvent import |
+| `internal/pricing` | the fee-guidance model |
+| `cmd/openapi` | writes `openapi.json` from the route table |
+| `cmd/alchemy-webhook` | creates or replaces the Alchemy Custom Webhook from the deployment manifest |
+| `internal/dune` | the Dune uploads client and the scheduled uploader |
+| `internal/sponsor` | the ZeroDev gas policy: Kernel callData decoding and the sponsorship rules |
 
 ### Tests
 
@@ -394,6 +650,9 @@ createdb cargoflow_test
 export TEST_DATABASE_URL="postgres:///cargoflow_test?host=/run/postgresql"
 make backend-test
 ```
+
+`CHAINTEST_CONTRACTS_DIR` points the chain tests at another checkout of `contracts/` (for example a pinned
+snapshot while the working tree's contracts are mid-change).
 
 ## The evidence score
 

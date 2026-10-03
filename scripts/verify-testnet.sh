@@ -20,5 +20,16 @@ verify PolicyEngine "$POL" src/PolicyEngine.sol:PolicyEngine "$("$CAST" abi-enco
 verify EvidenceRegistry "$EV" src/EvidenceRegistry.sol:EvidenceRegistry "$("$CAST" abi-encode 'c(address)' "$ACCESS")"
 verify ReceivableVault "$VAULT" src/ReceivableVault.sol:ReceivableVault "$("$CAST" abi-encode 'c(address,address)' "$ACCESS" "$USDG")"
 verify Groth16Verifier "$VER" generated/Groth16Verifier.sol:Groth16Verifier
+COVER=$(get coverPool); DEVICES=$(get deviceRegistry); EBL=$(get eblRegistry)
+EBL_ARG=${EBL:-0x0000000000000000000000000000000000000000}; [ "$EBL_ARG" = None ] && EBL_ARG=0x0000000000000000000000000000000000000000
 verify FinancingController "$CTRL" src/FinancingController.sol:FinancingController \
-  "$("$CAST" abi-encode 'c(address,address,address,address,address,address)' "$ACCESS" "$REG" "$POL" "$EV" "$VAULT" "$VER")"
+  "$("$CAST" abi-encode 'c(address,address,address,address,address,address,address)' "$ACCESS" "$REG" "$POL" "$EV" "$VAULT" "$VER" "$EBL_ARG")"
+if [ -n "$COVER" ] && [ "$COVER" != None ]; then
+  verify CoverPool "$COVER" src/CoverPool.sol:CoverPool "$("$CAST" abi-encode 'c(address,address)' "$ACCESS" "$CTRL")"
+fi
+if [ -n "$DEVICES" ] && [ "$DEVICES" != None ]; then
+  verify DeviceRegistry "$DEVICES" src/DeviceRegistry.sol:DeviceRegistry "$("$CAST" abi-encode 'c(address)' "$ACCESS")"
+fi
+if [ "$EBL_ARG" != 0x0000000000000000000000000000000000000000 ]; then
+  verify EBLRegistry "$EBL" src/EBLRegistry.sol:EBLRegistry "$("$CAST" abi-encode 'c(address)' "$ACCESS")"
+fi

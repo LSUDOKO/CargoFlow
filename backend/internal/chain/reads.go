@@ -21,11 +21,12 @@ const (
 	StatusDelivered uint8 = 6
 	StatusSettled   uint8 = 7
 	StatusDefaulted uint8 = 8
+	StatusCancelled uint8 = 9 // v3: cancelled before transit; the financier's deposit was returned
 )
 
 // StatusName returns the contract's name for a status value.
 func StatusName(s uint8) string {
-	names := []string{"NONE", "CREATED", "FINANCED", "ACTIVE", "PAUSED", "DISPUTED", "DELIVERED", "SETTLED", "DEFAULTED"}
+	names := []string{"NONE", "CREATED", "FINANCED", "ACTIVE", "PAUSED", "DISPUTED", "DELIVERED", "SETTLED", "DEFAULTED", "CANCELLED"}
 	if int(s) < len(names) {
 		return names[s]
 	}

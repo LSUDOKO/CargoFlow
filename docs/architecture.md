@@ -76,8 +76,11 @@ stateDiagram-v2
     DELIVERED --> SETTLED: buyer settle (pays the invoice)
     PAUSED --> DEFAULTED: markDefaulted
     DELIVERED --> DEFAULTED: markDefaulted
+    CREATED --> CANCELLED: cancelFacility (exporter or financier, v3)
+    FINANCED --> CANCELLED: cancelFacility after 14 days (exporter or financier, v3)
     SETTLED --> [*]
     DEFAULTED --> [*]
+    CANCELLED --> [*]
 ```
 
 Release is binary and sequential: a milestone releases its exact tranche or nothing, strictly in order, once.
@@ -98,11 +101,54 @@ Contracts v2 adds three conditions without adding a state:
   the financier is credited `min(cover, drawn)` and the insurer the rest; payouts are pulled with `withdraw()`.
   The pool holds no role and cannot touch the vault.
 
+Contracts v3 (one redeploy; additive: every v2 function, struct, event and error keeps its signature, the
+`Status` enum gains `CANCELLED` and `CoverStatus` gains `TRIGGERED`, both at the end):
+
+- **Cancellation.** A facility that never started can be closed: while CREATED by the exporter or the
+  financier at any time, while FINANCED by either of them once `CANCEL_TIMEOUT` (14 days) has passed since the
+  deposit. The vault (`closeCancelled`) returns the whole deposit to the financier; nothing was drawn, so
+  nothing else moves. A cover on a cancelled facility is released to the insurer through the unchanged
+  `release()`.
+- **Electronic bill of lading (`EBLRegistry`, OpenZeppelin ERC-721).** A carrier (`CARRIER_ROLE`) issues one
+  token per bill (document hash, issuer, shipper, consignee or "to order"); holding the token is holding the
+  title, transfers are endorsements, and `surrender` returns it to the carrier at delivery and freezes it.
+  The exporter can bind a bill to its facility before transit (`bindTitle`): the token is escrowed in the
+  controller. **Rule: documents against payment.** On `settle` the title passes to the buyer in the same
+  transaction as the payment; on default it passes to the financier (its security); on cancellation it returns
+  to the exporter. While bound nobody, including the exporter, the carrier and the admin, can move it. This
+  is the safest of the options considered: the buyer can never hold the title without having paid, and the
+  financier never depends on a third party handing it over. Designed around MLETR concepts (exclusive control:
+  a single token owner; singularity: one token per document hash; integrity: an immutable hash and a frozen
+  state once surrendered or voided). This is not a legal compliance claim: legal recognition depends on the
+  jurisdiction and on a reliable-system assessment that code cannot grant.
+- **Device registry (`DeviceRegistry`).** A write-once record of evidence device keys and their class
+  (0 software, 1 passkey, 2 secure element). The backend verifies X.509 / WebAuthn attestations off chain and
+  records them with `ATTESTOR_ROLE`; anyone may self-register a software key. The evidence worker can record
+  which device keys fed an epoch (`EvidenceRegistry.recordEpochSources`), so anyone can audit the sources.
+- **Parametric cover.** An offer may carry a trigger (N consecutive non-compliant epochs, salvage to the
+  exporter). Every committed epoch now has a 1-based commit ordinal within its shipment; anyone proves the
+  trigger with N epoch ids whose ordinals are consecutive, all non-compliant, all committed after acceptance,
+  while the facility is ACTIVE, PAUSED or DISPUTED. The pool pays the financier `min(cover, drawn)`, the
+  exporter `min(salvage, rest)`, the insurer the remainder, once, pull-based. It is final: a later settle or
+  default does not reopen it (the insurer prices that).
+- **Circuit breaker (OpenZeppelin `Pausable`).** A guardian (`PAUSER_ROLE`) can stop new risk only:
+  `createFacility`, `depositCapital`, `bindTitle`, `offerCover`, `offerParametricCover`, `acceptCover`,
+  `registerDevice`. Exits are never pausable: milestone release, `markDelivered`, `settle`, pauses and dispute
+  resolution, defaults, `cancelFacility` refunds, cover `release` / `claim` / `triggerParametric` /
+  `withdraw` / `withdrawOffer`, device revocation. Funds can therefore never be trapped by a pause.
+- **Rescue.** The access contract's admin can sweep tokens sent to the CoverPool by mistake: for USDG only
+  the excess over open offers + active covers + credited payouts, for other tokens the balance.
+- **Smart-account callers.** No contract uses `tx.origin` or assumes an EOA: buyer, exporter and arbiter may
+  be ERC-4337 accounts (ZeroDev Kernel with the WebAuthn validator is already deployed on Robinhood Chain
+  Testnet, and the RIP-7212 P-256 precompile at `0x100` answers there). Gas sponsorship is off chain (Alchemy
+  Gas Manager); CargoFlow ships no account or paymaster contracts. Titles are moved with `transferFrom`, so a
+  contract recipient needs no receiver hook and cannot block a transition.
+
 ## Who may do what
 
 | Actor | Authority | Cannot |
 |---|---|---|
-| Exporter | register shipment, set policy, create facility, start transit, trigger release | change a committed policy, redirect funds (recipient is fixed to the exporter) |
+| Exporter | register shipment, set policy, create facility, start transit, trigger release, bind a bill of lading (v3), cancel before transit (v3) | change a committed policy, redirect funds (recipient is fixed to the exporter) |
 | Financier | deposit the committed amount, trigger release, accept a cover offer (pays the premium) | withdraw once deposited |
 | Insurer (v2, any address) | offer default cover before transit, withdraw an unaccepted offer, withdraw credited payouts | take back an accepted cover, or be paid before the facility settles or defaults |
 | Buyer | confirm delivery, pay the invoice | settle on someone else's behalf (`NotBuyer`) |
@@ -110,7 +156,10 @@ Contracts v2 adds three conditions without adding a state:
 | Monitor key (`MONITOR`) | request a pause | anything else; the service refuses to start if it holds another role |
 | Manager key (`FACILITY_MANAGER`) | start transit, release, submit recovery proofs | resume without a proof, change policy, move funds elsewhere |
 | Arbiter (`DISPUTE`) | pause, resume by verifier (the trusted fallback), open and resolve disputes, declare default | release |
-| Admin | grant and revoke roles (two-step, delayed transfer) | touch a facility, the vault or the cover pool |
+| Carrier (`CARRIER`, v3) | issue bills of lading; void a live bill it holds | move a bill held by anyone else, or one escrowed by the controller |
+| Attestor (`ATTESTOR`, v3, the backend) | record attested devices of any class, revoke devices | move funds |
+| Guardian (`PAUSER`, v3) | pause / unpause new risk (facilities, deposits, cover, title binding, devices) | block any exit: release, delivery, settlement, refunds, cover payouts |
+| Admin | grant and revoke roles (two-step, delayed transfer); rescue tokens sent to the cover pool by mistake (untracked excess only) | touch a facility, the vault, tracked cover funds or a title |
 | AI model | recommend a stricter outcome | hold any key or call anything: the service acts on its behalf only through the monitor key, and only to pause |
 
 ## Trust boundaries

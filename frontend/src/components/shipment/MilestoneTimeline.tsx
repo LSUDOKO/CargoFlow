@@ -1,7 +1,21 @@
 import { HashBadge } from "@/components/ui/HashBadge";
 import type { Facility, Milestone } from "@/lib/api/schemas";
 import { formatUSDG } from "@/lib/format";
+import { placeStatus, type PlaceStatus } from "@/lib/places";
 import { milestoneStates } from "@/lib/shipment";
+
+const placeTone: Record<PlaceStatus["tone"], string> = { done: "text-[#00733e]", held: "text-ink", inside: "text-ink", info: "text-slate" };
+
+/** The milestone's place line (contracts v2), with a pin; nothing when the milestone may release anywhere. */
+function PlaceLine({ status, className = "" }: { status: PlaceStatus | null; className?: string }) {
+  if (!status) return null;
+  return (
+    <p className={`flex items-start gap-1.5 text-[0.8125rem] leading-snug ${placeTone[status.tone]} ${className}`}>
+      <svg aria-hidden="true" viewBox="0 0 16 16" className="mt-0.5 h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M8 14.5s4.5-4.2 4.5-8a4.5 4.5 0 0 0-9 0c0 3.8 4.5 8 4.5 8Z" /><circle cx="8" cy="6.5" r="1.6" /></svg>
+      <span className="min-w-0">{status.text}</span>
+    </p>
+  );
+}
 
 const label = { released: "Released", next: "Awaiting evidence", blocked: "Blocked: facility paused", pending: "Pending" } as const;
 const dot = {
@@ -11,7 +25,7 @@ const dot = {
   pending: "bg-paper border-line text-slate",
 } as const;
 
-export function MilestoneTimeline({ milestones, facility, chainId }: { milestones: Milestone[]; facility: Facility | null; chainId?: number }) {
+export function MilestoneTimeline({ milestones, facility, chainId, nextDistanceM = null }: { milestones: Milestone[]; facility: Facility | null; chainId?: number; nextDistanceM?: number | null }) {
   const states = milestoneStates(facility, milestones.length || 5);
   return (
     <ol className="relative">
@@ -29,6 +43,7 @@ export function MilestoneTimeline({ milestones, facility, chainId }: { milestone
                 {m && <span className="ml-2 font-mono text-sm font-normal text-slate">{formatUSDG(m.allocatedUsdg)} USDG</span>}
               </p>
               <p className={`text-sm ${st === "blocked" ? "font-semibold text-[#8a5300]" : "text-slate"}`}>{label[st]}</p>
+              <PlaceLine status={placeStatus(m, st, st === "next" ? nextDistanceM : null)} className="mt-0.5" />
               {m?.releaseTxHash && <HashBadge value={m.releaseTxHash} kind="tx" chainId={chainId} className="mt-1.5" />}
             </div>
           </li>
@@ -40,7 +55,7 @@ export function MilestoneTimeline({ milestones, facility, chainId }: { milestone
 
 const shortDate = (iso?: string) => (iso ? new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "");
 
-type Step = { key: string; overline: string; title: string; amount?: string; state: "done" | "next" | "blocked" | "pending"; status: string; date?: string };
+type Step = { key: string; overline: string; title: string; amount?: string; state: "done" | "next" | "blocked" | "pending"; status: string; date?: string; place?: PlaceStatus | null };
 
 const node = {
   done: "border-verified bg-verified text-white",
@@ -55,11 +70,12 @@ const statusTone = { done: "text-[#00733e] font-semibold", next: "text-ink font-
  * The journey at a glance: each milestone with the money it releases, then delivery and payment. A released
  * milestone reads exactly "Released" (one per milestone; the lifecycle test counts them).
  */
-export function JourneyStrip({ milestones, facility, invoiceValue }: { milestones: Milestone[]; facility: Facility | null; invoiceValue: string }) {
+export function JourneyStrip({ milestones, facility, invoiceValue, nextDistanceM = null }: { milestones: Milestone[]; facility: Facility | null; invoiceValue: string; nextDistanceM?: number | null }) {
   const states = milestoneStates(facility, milestones.length || 5);
   const status = facility?.status ?? "";
   const steps: Step[] = states.map((st, i) => {
     const m = milestones[i];
+    const place = placeStatus(m, st, st === "next" ? nextDistanceM : null);
     return {
       key: `m${i}`,
       overline: `Milestone ${i + 1}`,
@@ -68,6 +84,7 @@ export function JourneyStrip({ milestones, facility, invoiceValue }: { milestone
       state: st === "released" ? "done" : st === "next" ? "next" : st === "blocked" ? "blocked" : "pending",
       status: st === "released" ? "Released" : st === "next" ? "Waiting for evidence" : st === "blocked" ? "Blocked by the pause" : "Not yet",
       date: st === "released" ? shortDate(m?.releasedAt) : undefined,
+      place,
     };
   });
   const delivered = ["DELIVERED", "SETTLED"].includes(status);
@@ -85,7 +102,7 @@ export function JourneyStrip({ milestones, facility, invoiceValue }: { milestone
     title: "Buyer pays the invoice",
     amount: `${formatUSDG(invoiceValue)} USDG`,
     state: status === "SETTLED" ? "done" : status === "DELIVERED" ? "next" : "pending",
-    status: status === "SETTLED" ? "Paid and split" : status === "DELIVERED" ? "Waiting for payment" : status === "DEFAULTED" ? "Defaulted" : "Not yet",
+    status: status === "SETTLED" ? "Paid and split" : status === "DELIVERED" ? "Waiting for payment" : status === "DEFAULTED" ? "Defaulted" : status === "CANCELLED" ? "Cancelled" : "Not yet",
   });
 
   return (
@@ -108,6 +125,7 @@ export function JourneyStrip({ milestones, facility, invoiceValue }: { milestone
                 <span className={statusTone[s.state]}>{s.status}</span>
                 {s.date && <span className="text-slate"> · {s.date}</span>}
               </p>
+              <PlaceLine status={s.place ?? null} className="mt-1" />
             </div>
           </li>
         ))}

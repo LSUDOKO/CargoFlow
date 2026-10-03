@@ -14,6 +14,8 @@ export function statusTone(status: string | undefined | null): Tone {
       return "ink";
     case "DEFAULTED":
       return "danger";
+    case "CANCELLED":
+      return "slate";
     default:
       return "slate";
   }

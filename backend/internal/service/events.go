@@ -55,6 +55,7 @@ func (s *Service) onChainEvent(ctx context.Context, ev store.ChainEvent) error {
 		return err
 	}
 	defer s.alert(ev, sh)
+	defer s.notifyChainEvent(context.WithoutCancel(ctx), ev, sh)
 
 	switch ev.Name {
 	case "FacilityCreated":
@@ -109,17 +110,30 @@ func (s *Service) onChainEvent(ctx context.Context, ev store.ChainEvent) error {
 	case "EvidenceTelemetryCommitted":
 		// the aggregates were computed and stored when the epoch was built; the event only confirms them on chain
 
-	case "CoverOffered", "OfferWithdrawn", "CoverAccepted", "CoverReleased", "CoverClaimed":
+	case "CoverOffered", "OfferWithdrawn", "CoverAccepted", "CoverReleased", "CoverClaimed", "ParametricTermsOffered", "ParametricTriggered":
 		if err := s.o.Store.RebuildCover(ctx, shipment); err != nil {
 			return err
 		}
+		if ev.Name == "CoverAccepted" || ev.Name == "ParametricTriggered" {
+			s.syncEpochFloor(ctx, shipment)
+		}
 		data := map[string]any{"change": ev.Name}
-		for _, k := range []string{"insurer", "financier", "amount", "premiumBps", "premium", "loss", "payout", "remainder"} {
+		for _, k := range []string{"insurer", "financier", "amount", "premiumBps", "premium", "loss", "payout", "remainder",
+			"consecutiveFailedEpochs", "salvageToExporter", "financierPayout", "exporterSalvage", "insurerReturn", "lastEpochId"} {
 			if v, ok := ev.Args[k]; ok {
 				data[k] = v
 			}
 		}
 		s.publish(ws.Event{Type: ws.CoverUpdated, ShipmentID: shipment, Data: withTx(ev, data)})
+
+	case "FacilityCancelled":
+		if err := s.o.Store.SetShipmentStatus(ctx, shipment, "CANCELLED"); err != nil {
+			return err
+		}
+		s.publish(ws.Event{Type: ws.ShipmentUpdated, ShipmentID: shipment, Data: withTx(ev, map[string]any{"change": ev.Name, "status": "CANCELLED", "refund": ev.Args["refund"]})})
+
+	case "TitleBound", "TitleReleased":
+		s.publish(ws.Event{Type: ws.ShipmentUpdated, ShipmentID: shipment, Data: withTx(ev, map[string]any{"change": ev.Name, "tokenId": ev.Args["tokenId"]})})
 
 	case "DisputeOpened", "DisputeResolved", "DefaultDeclared":
 		s.publish(ws.Event{Type: ws.ShipmentUpdated, ShipmentID: shipment, Data: withTx(ev, map[string]any{"change": ev.Name})})
@@ -140,6 +154,8 @@ var alertEvents = map[string][2]string{
 	"CoverOffered":             {alerts.CoverOffered, ""},
 	"CoverAccepted":            {alerts.CoverAccepted, ""},
 	"CoverClaimed":             {alerts.CoverClaimed, ""},
+	"FacilityCancelled":        {alerts.Cancelled, "CANCELLED"},
+	"ParametricTriggered":      {alerts.CoverTriggered, ""},
 }
 
 // alert queues an alert for an alertable event. It never blocks or fails event handling.
@@ -182,4 +198,24 @@ func num(v any) float64 {
 		return float64(x)
 	}
 	return 0
+}
+
+// syncEpochFloor reads a parametric cover's epoch floor from the chain (it is not in any event). Best effort.
+func (s *Service) syncEpochFloor(ctx context.Context, shipment string) {
+	cv, err := s.o.Store.CoverOf(ctx, shipment)
+	if err != nil || cv.Cover == nil || cv.Cover.Parametric == nil || cv.Cover.Parametric.EpochFloor != nil {
+		return
+	}
+	id, _, err := parseID(shipment)
+	if err != nil {
+		return
+	}
+	p, err := s.o.Chain.ParametricCoverOf(ctx, id)
+	if err != nil {
+		s.o.Log.Warn("read parametric cover", "shipment", shipment, "err", err)
+		return
+	}
+	if err := s.o.Store.SetCoverEpochFloor(ctx, shipment, int(p.EpochFloor)); err != nil {
+		s.o.Log.Warn("store parametric epoch floor", "shipment", shipment, "err", err)
+	}
 }

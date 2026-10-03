@@ -68,7 +68,7 @@ describe("schemas", () => {
   });
   it("read the config's optional alert, gas and AIS flags", () => {
     expect(ConfigExtras.parse({ chainId: 1, alerts: { webhook: true, telegram: false, email: true, telegramBot: "cf_bot" }, gasDrip: true, ais: false })).toEqual({
-      alerts: { webhook: true, telegram: false, email: true, telegramBot: "cf_bot" },
+      alerts: { webhook: true, telegram: false, email: true, slack: true, telegramBot: "cf_bot" }, // Slack needs no credentials: on by default
       gasDrip: true,
       ais: false,
     });

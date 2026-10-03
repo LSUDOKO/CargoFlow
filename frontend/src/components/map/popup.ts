@@ -101,3 +101,18 @@ export function aisPopup(v: SceneVessel, link: "ok" | "warn" | "idle"): string {
   </dl>
 </div>`;
 }
+
+const PLACE_CHIP = { released: ["ms-released", "Released here"], next: ["ms-next", "Next"], held: ["held", "Waiting to arrive"], paused: ["ms-paused", "Blocked: facility paused"], pending: ["ms-pending", "Pending"], draft: ["ms-pending", "Draft"] } as const;
+
+/** A milestone's place (contracts v2): the circle its evidence must come from, and where the cargo stands. */
+export function placePopup(index: number, state: keyof typeof PLACE_CHIP, phrase: string, status: string | null, amount: string | undefined): string {
+  const [chip, word] = PLACE_CHIP[state];
+  return `<div class="cf-pop">
+  <div class="cf-pop__head"><span class="cf-pop__title">Milestone ${index + 1} place</span><span class="cf-chip cf-chip--${chip}">${word}</span></div>
+  <p class="cf-pop__body">Releases only on evidence taken ${esc(phrase)}.</p>
+  <dl>
+    ${amount ? row("Releases", `<b>${esc(amount)} USDG</b>`) : ""}
+    ${status ? row("Now", esc(status)) : ""}
+  </dl>
+</div>`;
+}

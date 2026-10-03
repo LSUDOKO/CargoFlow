@@ -64,7 +64,7 @@ func Chain(next http.Handler, o Options) http.Handler {
 				w.Header().Set("Access-Control-Allow-Origin", origin)
 				if r.Method == http.MethodOptions && r.Header.Get("Access-Control-Request-Method") != "" {
 					w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
-					w.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-API-Key, X-Source-Id, X-Timestamp, X-Signature, X-Request-Id")
+					w.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-API-Key, X-Source-Id, X-Timestamp, X-Signature, X-WebAuthn-Authenticator-Data, X-WebAuthn-Client-Data, X-Request-Id")
 					w.Header().Set("Access-Control-Max-Age", "600")
 					rec.WriteHeader(http.StatusNoContent)
 					return

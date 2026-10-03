@@ -4,6 +4,10 @@
 // A request carries X-Source-Id, X-Timestamp (unix seconds) and X-Signature (base64url, unpadded)
 // over: "CARGOFLOW-V1\n" METHOD "\n" PATH "\n" TIMESTAMP "\n" hex(sha256(body)).
 //
+// The signature depends on the source's key type: Ed25519 signs the string itself; a P-256 key (a secure element)
+// signs it with ECDSA over SHA-256 (DER or raw r||s); a WebAuthn passkey signs an assertion whose challenge is
+// sha256(signing string), sent with X-WebAuthn-Authenticator-Data and X-WebAuthn-Client-Data.
+//
 // The timestamp window stops stale captures being replayed indefinitely. Inside the window a replay is
 // harmless rather than prevented: readings are idempotent on (shipment, sensor, timestamp), so a
 // replayed body is recorded as a duplicate and quarantined.
@@ -21,6 +25,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/LSUDOKO/CargoFlow/backend/internal/devicetrust"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/store"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/telemetry"
 )
@@ -53,6 +58,12 @@ type Verifier struct {
 	Lookup  func(ctx context.Context, sourceID string) (store.Source, error)
 	Now     func() time.Time
 	MaxSkew time.Duration
+
+	// Origins are the origins a passkey assertion may come from (see devicetrust.Origins).
+	Origins devicetrust.Origins
+	// SignCount records a passkey's signature counter and reports false when it did not advance (a cloned
+	// authenticator). Nil skips the check.
+	SignCount func(ctx context.Context, sourceID string, count uint32) (bool, error)
 }
 
 // Verify authenticates r, whose body bytes are supplied separately so the caller can read them once.
@@ -84,10 +95,39 @@ func (v *Verifier) Verify(ctx context.Context, r *http.Request, body []byte) (st
 	}
 
 	sig, err := base64.RawURLEncoding.DecodeString(sigRaw)
-	if err != nil || len(sig) != ed25519.SignatureSize || len(src.PublicKey) != ed25519.PublicKeySize {
+	if err != nil || len(sig) == 0 || len(sig) > 256 {
 		return store.Source{}, ErrBadSignature
 	}
-	if !ed25519.Verify(ed25519.PublicKey(src.PublicKey), SigningString(r.Method, r.URL.Path, ts, body), sig) {
+	msg := SigningString(r.Method, r.URL.Path, ts, body)
+	switch src.KeyType {
+	case "", store.KeyEd25519:
+		if len(sig) != ed25519.SignatureSize || len(src.PublicKey) != ed25519.PublicKeySize || !ed25519.Verify(ed25519.PublicKey(src.PublicKey), msg, sig) {
+			return store.Source{}, ErrBadSignature
+		}
+	case store.KeyP256:
+		if !devicetrust.VerifyP256(src.PublicKey, msg, sig) {
+			return store.Source{}, ErrBadSignature
+		}
+	case store.KeyWebAuthn:
+		ad, err1 := base64.RawURLEncoding.DecodeString(r.Header.Get("X-WebAuthn-Authenticator-Data"))
+		cd, err2 := base64.RawURLEncoding.DecodeString(r.Header.Get("X-WebAuthn-Client-Data"))
+		if err1 != nil || err2 != nil || len(ad) == 0 || len(cd) == 0 || len(cd) > 4096 || len(ad) > 1024 {
+			return store.Source{}, ErrBadSignature
+		}
+		count, err := devicetrust.VerifyAssertion(src.PublicKey, src.RPIDHash, devicetrust.Assertion{AuthenticatorData: ad, ClientDataJSON: cd, Signature: sig}, msg, v.Origins)
+		if err != nil {
+			return store.Source{}, ErrBadSignature
+		}
+		if v.SignCount != nil {
+			ok, err := v.SignCount(ctx, src.ID, count)
+			if err != nil {
+				return store.Source{}, err
+			}
+			if !ok {
+				return store.Source{}, fmt.Errorf("%w: the passkey's signature counter went backwards", ErrBadSignature)
+			}
+		}
+	default:
 		return store.Source{}, ErrBadSignature
 	}
 	// Checked only after the signature: a disabled source is reported solely to its own key holder,

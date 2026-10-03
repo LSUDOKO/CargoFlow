@@ -17,7 +17,8 @@ export type FleetFilter = { tab: FleetTab; q: string; sort: FleetSort; dir: "asc
 
 const tabOf = (status: string): Exclude<FleetTab, "all"> => {
   if (status === "PAUSED" || status === "DISPUTED") return "paused";
-  if (status === "SETTLED" || status === "DELIVERED" || status === "DEFAULTED") return "settled";
+  // the "Settled" tab holds every closed facility: settled, delivered, defaulted and cancelled (contracts v3)
+  if (status === "SETTLED" || status === "DELIVERED" || status === "DEFAULTED" || status === "CANCELLED") return "settled";
   return "active";
 };
 

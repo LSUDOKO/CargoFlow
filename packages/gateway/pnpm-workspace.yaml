@@ -1,0 +1,10 @@
+# Standalone package: this file makes packages/gateway its own pnpm root and lists the dependencies whose
+# install scripts may run (esbuild for the build, the optional serialport native binding).
+packages:
+  - "."
+allowBuilds:
+  esbuild: true
+  "@serialport/bindings-cpp": true
+onlyBuiltDependencies:
+  - esbuild
+  - "@serialport/bindings-cpp"

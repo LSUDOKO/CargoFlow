@@ -8,13 +8,16 @@ import {EvidenceRegistry} from "../src/EvidenceRegistry.sol";
 import {ReceivableVault} from "../src/ReceivableVault.sol";
 import {FinancingController} from "../src/FinancingController.sol";
 import {CoverPool} from "../src/CoverPool.sol";
+import {EBLRegistry} from "../src/EBLRegistry.sol";
+import {DeviceRegistry} from "../src/DeviceRegistry.sol";
 import {MockUSDG} from "../src/mocks/MockUSDG.sol";
 import {Groth16Verifier} from "../generated/Groth16Verifier.sol";
 import {Roles} from "../src/libraries/Roles.sol";
 import {ScriptBase} from "./ScriptBase.sol";
 
-/// @notice Deploys the full CargoFlow core (v2: with the CoverPool) and writes
-///         `deployments/<network>.json`. The manifest keeps every v1 key; v2 adds `contracts.coverPool`.
+/// @notice Deploys the full CargoFlow core (v3: with the CoverPool, DeviceRegistry and EBLRegistry)
+///         and writes `deployments/<network>.json`. The manifest keeps every v1 and v2 key; v2 added
+///         `contracts.coverPool`, v3 adds `contracts.deviceRegistry` and `contracts.eblRegistry`.
 ///
 ///   Local:    anvil &  then  forge script script/Deploy.s.sol --rpc-url local --broadcast
 ///   Testnet:  forge script script/Deploy.s.sol --rpc-url robinhood_testnet --broadcast
@@ -22,6 +25,9 @@ import {ScriptBase} from "./ScriptBase.sol";
 /// Uses the real USDG from `USDG_ADDRESS` on public networks; deploys a 6-decimal MockUSDG only on
 /// the local chain. Operational role holders come from WORKER_ADDRESS / MONITOR_ADDRESS /
 /// ARBITER_ADDRESS / MANAGER_ADDRESS (defaulting to anvil accounts locally, else the deployer).
+/// v3 roles: ATTESTOR_ADDRESS (DeviceRegistry attestor; defaults to the evidence worker),
+/// CARRIER_ADDRESS (may issue bills of lading; anvil account 8 locally, else the deployer) and
+/// PAUSER_ADDRESS (emergency guardian; defaults to the deployer).
 contract Deploy is ScriptBase {
     struct Deployed {
         address access;
@@ -33,6 +39,8 @@ contract Deploy is ScriptBase {
         address verifier;
         address usdg;
         address coverPool;
+        address deviceRegistry;
+        address eblRegistry;
     }
 
     function run() external returns (Deployed memory d) {
@@ -46,49 +54,49 @@ contract Deploy is ScriptBase {
 
         vm.startBroadcast(pk);
         if (usdg == address(0)) usdg = address(new MockUSDG());
+        d.usdg = usdg;
 
         CargoFlowAccess access = new CargoFlowAccess(adminDelay, deployer);
-        ShipmentRegistry registry = new ShipmentRegistry();
-        PolicyEngine policies = new PolicyEngine(address(registry));
-        EvidenceRegistry evidence = new EvidenceRegistry(address(access));
-        ReceivableVault vault = new ReceivableVault(address(access), usdg);
+        d.access = address(access);
+        d.registry = address(new ShipmentRegistry());
+        d.policies = address(new PolicyEngine(d.registry));
+        d.evidence = address(new EvidenceRegistry(d.access));
+        d.vault = address(new ReceivableVault(d.access, usdg));
         // the snarkjs-generated verifier for circuits/telemetry_epoch.circom, unless one is supplied
-        address verifier = vm.envOr("VERIFIER_ADDRESS", address(0));
-        if (verifier == address(0)) verifier = address(new Groth16Verifier());
-        FinancingController controller = new FinancingController(
-            address(access),
-            address(registry),
-            address(policies),
-            address(evidence),
-            address(vault),
-            verifier
+        d.verifier = vm.envOr("VERIFIER_ADDRESS", address(0));
+        if (d.verifier == address(0)) d.verifier = address(new Groth16Verifier());
+        // v3: bills of lading the controller can escrow (documents against payment)
+        d.eblRegistry = address(new EBLRegistry(d.access));
+        d.controller = address(
+            new FinancingController(
+                d.access, d.registry, d.policies, d.evidence, d.vault, d.verifier, d.eblRegistry
+            )
         );
 
         // Default cover reads facility state from the controller; it is granted no role at all.
-        CoverPool coverPool = new CoverPool(address(access), address(controller));
+        d.coverPool = address(new CoverPool(d.access, d.controller));
+        // v3: audit registry of evidence devices (holds no funds and no role)
+        d.deviceRegistry = address(new DeviceRegistry(d.access));
 
+        _grantRoles(access, d.controller, deployer);
+        vm.stopBroadcast();
+
+        _writeManifest(d, deployer);
+    }
+
+    function _grantRoles(CargoFlowAccess access, address controller, address deployer) internal {
         // The controller is the only contract that may drive the vault or mark proofs verified.
-        access.grantRole(Roles.CONTROLLER_ROLE, address(controller));
-        access.grantRole(Roles.PROOF_VERIFIER_ROLE, address(controller));
+        access.grantRole(Roles.CONTROLLER_ROLE, controller);
+        access.grantRole(Roles.PROOF_VERIFIER_ROLE, controller);
 
         access.grantRole(Roles.EVIDENCE_VERIFIER_ROLE, workerFor(deployer));
         access.grantRole(Roles.MONITOR_ROLE, monitorFor(deployer));
         access.grantRole(Roles.DISPUTE_ROLE, arbiterFor(deployer));
         access.grantRole(Roles.FACILITY_MANAGER_ROLE, managerFor(deployer));
-        vm.stopBroadcast();
-
-        d = Deployed({
-            access: address(access),
-            registry: address(registry),
-            policies: address(policies),
-            evidence: address(evidence),
-            vault: address(vault),
-            controller: address(controller),
-            verifier: verifier,
-            usdg: usdg,
-            coverPool: address(coverPool)
-        });
-        _writeManifest(d, deployer);
+        // v3 roles: none of them can move USDG
+        access.grantRole(Roles.ATTESTOR_ROLE, attestorFor(deployer));
+        access.grantRole(Roles.CARRIER_ROLE, carrierFor(deployer));
+        access.grantRole(Roles.PAUSER_ROLE, pauserFor(deployer));
     }
 
     function workerFor(address deployer) public view returns (address) {
@@ -105,6 +113,18 @@ contract Deploy is ScriptBase {
 
     function managerFor(address deployer) public view returns (address) {
         return vm.envOr("MANAGER_ADDRESS", deployer);
+    }
+
+    function attestorFor(address deployer) public view returns (address) {
+        return vm.envOr("ATTESTOR_ADDRESS", workerFor(deployer));
+    }
+
+    function carrierFor(address deployer) public view returns (address) {
+        return _roleHolder("CARRIER_ADDRESS", ANVIL_KEY_8, deployer);
+    }
+
+    function pauserFor(address deployer) public view returns (address) {
+        return vm.envOr("PAUSER_ADDRESS", deployer);
     }
 
     function _roleHolder(string memory envName, string memory anvilKey, address fallbackAddr)
@@ -126,6 +146,8 @@ contract Deploy is ScriptBase {
         vm.serializeAddress(c, "receivableVault", d.vault);
         vm.serializeAddress(c, "groth16Verifier", d.verifier);
         vm.serializeAddress(c, "coverPool", d.coverPool);
+        vm.serializeAddress(c, "deviceRegistry", d.deviceRegistry);
+        vm.serializeAddress(c, "eblRegistry", d.eblRegistry);
         string memory contractsJson = vm.serializeAddress(c, "financingController", d.controller);
 
         string memory root = "manifest";

@@ -12,6 +12,7 @@ import (
 	"github.com/LSUDOKO/CargoFlow/backend/internal/ais"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/auth"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/chain"
+	"github.com/LSUDOKO/CargoFlow/backend/internal/devicetrust"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/service"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/store"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/ws"
@@ -35,6 +36,16 @@ type Config struct {
 	Alerts AlertChannels // which alert channels can deliver; webhooks always can
 	AIS    *ais.Tracker  // follows vessels through AIS; nil or without a stream when AISSTREAM_API_KEY is unset
 	Gas    *GasDrip      // nil when GAS_DRIP_KEY is unset
+
+	// Alchemy webhooks (POST /v1/webhooks/alchemy): the signing keys (any one may sign; empty answers 503) and the
+	// indexer to wake.
+	AlchemySigningKeys []string
+	Indexer            IndexerWaker
+	// ZeroDev gas policy webhook (POST /v1/webhooks/zerodev/{secret}); nil answers 404.
+	ZeroDev *ZeroDevSponsor
+
+	DeviceRoots     *devicetrust.Roots  // manufacturer roots device attestations must chain to; nil or empty refuses attestation chains
+	WebAuthnOrigins devicetrust.Origins // origins passkey registrations may come from (empty: any https origin or localhost)
 
 	AdminKey    string   // required for administrative endpoints
 	CORSOrigins []string // exact browser origins allowed cross-origin
@@ -60,6 +71,7 @@ type Server struct {
 	c       Config
 	limiter *limiter
 	codes   codeCache
+	paused  pausedCache
 }
 
 // NewServer builds the API server.
@@ -94,42 +106,13 @@ func NewServer(c Config) *Server {
 // Handler returns the routed, middleware-wrapped API.
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /v1/health", s.handle(s.health))
-	mux.HandleFunc("GET /v1/config", s.handle(s.config))
-	mux.HandleFunc("GET /v1/stats", s.handle(s.stats))
-	mux.HandleFunc("GET /v1/parties/{address}", s.handle(s.party))
-	mux.HandleFunc("POST /v1/gas", s.handle(s.gas))
-	mux.HandleFunc("POST /v1/requests", s.handle(s.createRequest))
-	mux.HandleFunc("GET /v1/requests", s.handle(s.listRequests))
-	mux.HandleFunc("POST /v1/requests/{rid}/offers", s.handle(s.placeOffer))
-	mux.HandleFunc("POST /v1/requests/{rid}/accept", s.handle(s.acceptOffer))
-	mux.HandleFunc("POST /v1/requests/{rid}/close", s.handle(s.closeRequest))
-	mux.HandleFunc("POST /v1/sources", s.handle(s.admin(s.createSource)))
-	mux.HandleFunc("POST /v1/shipments", s.handle(s.admin(s.createShipment)))
-	mux.HandleFunc("POST /v1/shipments/mirror", s.handle(s.mirror))
-	mux.HandleFunc("POST /v1/admin/reconcile", s.handle(s.admin(s.reconcile)))
-	mux.HandleFunc("GET /v1/shipments", s.handle(s.listShipments))
-	mux.HandleFunc("GET /v1/shipments/{id}", s.handle(s.getShipment))
-	mux.HandleFunc("POST /v1/shipments/{id}/telemetry", s.handle(s.telemetry))
-	mux.HandleFunc("GET /v1/shipments/{id}/telemetry", s.handle(s.telemetrySummary))
-	mux.HandleFunc("GET /v1/shipments/{id}/track", s.handle(s.track))
-	mux.HandleFunc("GET /v1/shipments/{id}/explanation", s.handle(s.explanation))
-	mux.HandleFunc("GET /v1/shipments/{id}/cover", s.handle(s.cover))
-	mux.HandleFunc("POST /v1/shipments/{id}/documents", s.handle(s.attestDocument))
-	mux.HandleFunc("GET /v1/shipments/{id}/documents", s.handle(s.listDocuments))
-	mux.HandleFunc("POST /v1/shipments/{id}/subscriptions", s.handle(s.subscribe))
-	mux.HandleFunc("GET /v1/shipments/{id}/subscriptions", s.handle(s.listSubscriptions))
-	mux.HandleFunc("DELETE /v1/shipments/{id}/subscriptions/{sid}", s.handle(s.unsubscribe))
-	mux.HandleFunc("POST /v1/shipments/{id}/vessel", s.handle(s.setVessel))
-	mux.HandleFunc("GET /v1/shipments/{id}/vessel", s.handle(s.getVessel))
-	mux.HandleFunc("POST /v1/shipments/{id}/sources", s.handle(s.registerGateway))
-	mux.HandleFunc("GET /v1/shipments/{id}/sources", s.handle(s.listGateways))
-	mux.HandleFunc("POST /v1/shipments/{id}/recovery", s.handle(s.prepareRecovery))
-	mux.HandleFunc("POST /v1/shipments/{id}/proof", s.handle(s.admin(s.proof)))
-	mux.HandleFunc("GET /v1/shipments/{id}/epochs", s.handle(s.epochs))
-	mux.HandleFunc("GET /v1/shipments/{id}/audit", s.handle(s.audit))
-	if s.c.Hub != nil {
-		mux.Handle("GET /v1/ws", s.c.Hub.Handler(originHosts(s.c.CORSOrigins)))
+	for _, rt := range s.routes() {
+		pattern := rt.Method + " " + rt.Path
+		if rt.raw != nil {
+			mux.Handle(pattern, rt.raw(s))
+			continue
+		}
+		mux.HandleFunc(pattern, s.handle(rt.h))
 	}
 	return Chain(mux, Options{Log: s.c.Log, CORSOrigins: s.c.CORSOrigins, MaxBody: s.c.MaxBody})
 }
@@ -175,21 +158,21 @@ func (s *Server) rateLimit(w http.ResponseWriter, key string, perMinute int) err
 func (s *Server) health(w http.ResponseWriter, r *http.Request) error {
 	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
 	defer cancel()
-	out := map[string]any{"status": "ok", "database": "ok", "chainId": s.c.Chain.M.ChainID}
+	out := healthResponse{Status: "ok", Database: "ok", ChainID: s.c.Chain.M.ChainID, RPC: s.c.Chain.ActiveRPC()}
 	status := http.StatusOK
 	if err := s.c.Store.Ping(ctx); err != nil {
-		out["database"], out["status"], status = "unavailable", "degraded", http.StatusServiceUnavailable
+		out.Database, out.Status, status = "unavailable", "degraded", http.StatusServiceUnavailable
 	}
 	if head, err := s.c.Chain.Eth.BlockNumber(ctx); err != nil {
-		out["chain"], out["status"], status = "unavailable", "degraded", http.StatusServiceUnavailable
+		out.Chain, out.Status, status = "unavailable", "degraded", http.StatusServiceUnavailable
 	} else {
-		out["headBlock"] = head
+		out.HeadBlock = head
 	}
 	writeJSON(w, status, out)
 	return nil
 }
 
-func (s *Server) config(w http.ResponseWriter, _ *http.Request) error {
+func (s *Server) config(w http.ResponseWriter, r *http.Request) error {
 	m := s.c.Chain.M
 	contracts := map[string]string{
 		"usdg": hexAddr(m.USDG), "access": hexAddr(m.Access), "shipmentRegistry": hexAddr(m.Registry),
@@ -199,15 +182,16 @@ func (s *Server) config(w http.ResponseWriter, _ *http.Request) error {
 	if s.c.Chain.HasCoverPool() {
 		contracts["coverPool"] = hexAddr(m.CoverPool)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{
-		"chainId":      m.ChainID,
-		"usdgDecimals": 6,
-		"contracts":    contracts,
-		"alerts": map[string]any{
-			"webhook": true, "telegram": s.c.Alerts.TelegramBot != "", "email": s.c.Alerts.Email, "telegramBot": s.c.Alerts.TelegramBot,
-		},
-		"gasDrip": s.c.Gas != nil,
-		"ais":     s.c.AIS.Enabled(),
+	if s.c.Chain.HasDeviceRegistry() {
+		contracts["deviceRegistry"] = hexAddr(m.DeviceRegistry)
+	}
+	if s.c.Chain.HasEBL() {
+		contracts["eblRegistry"] = hexAddr(m.EBLRegistry)
+	}
+	writeJSON(w, http.StatusOK, configResponse{
+		ChainID: m.ChainID, USDGDecimals: 6, Contracts: contracts,
+		Alerts:  alertChannelsDTO{Webhook: true, Telegram: s.c.Alerts.TelegramBot != "", Email: s.c.Alerts.Email, Slack: true, TelegramBot: s.c.Alerts.TelegramBot},
+		GasDrip: s.c.Gas != nil, AIS: s.c.AIS.Enabled(), Paused: s.pausedFlags(r),
 	})
 	return nil
 }

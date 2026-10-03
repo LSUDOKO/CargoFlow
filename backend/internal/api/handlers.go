@@ -18,6 +18,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/LSUDOKO/CargoFlow/backend/internal/auth"
+	"github.com/LSUDOKO/CargoFlow/backend/internal/devicetrust"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/service"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/store"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/telemetry"
@@ -69,10 +70,12 @@ var (
 )
 
 type sourceRequest struct {
-	ID             string   `json:"id"`
-	PublicKey      string   `json:"publicKey"` // Ed25519, base64url or hex
-	SensorIDs      []string `json:"sensorIds"`
-	ReliabilityBps *int     `json:"reliabilityBps"`
+	ID             string            `json:"id"`
+	PublicKey      string            `json:"publicKey" doc:"Ed25519 (base64url or hex), or for p256 a SEC1 point / DER SubjectPublicKeyInfo in base64url"`
+	KeyType        string            `json:"keyType,omitempty" enum:"ed25519,p256"`
+	Attestation    *attestationInput `json:"attestation,omitempty" doc:"p256 only: an x509 chain to a manufacturer root makes the source a secure_element"`
+	SensorIDs      []string          `json:"sensorIds"`
+	ReliabilityBps *int              `json:"reliabilityBps,omitempty" doc:"default: by device class (software 9500, passkey 9700, secure_element 9900)"`
 }
 
 func decodePublicKey(s string) ([]byte, error) {
@@ -95,9 +98,25 @@ func (s *Server) createSource(w http.ResponseWriter, r *http.Request) error {
 	if !sourceIDPattern.MatchString(req.ID) {
 		return ErrBadRequest("id must be 1-64 characters of a-z, 0-9, '.', '_' or '-'")
 	}
-	key, err := decodePublicKey(req.PublicKey)
-	if err != nil {
-		return ErrBadRequest(err.Error())
+	var dev device
+	switch req.KeyType {
+	case "", devicetrust.KeyEd25519:
+		key, err := decodePublicKey(req.PublicKey)
+		if err != nil {
+			return ErrBadRequest(err.Error())
+		}
+		if req.Attestation != nil {
+			return ErrBadRequest("an Ed25519 key carries no attestation; secure elements use keyType p256")
+		}
+		dev = device{pub: key, keyType: devicetrust.KeyEd25519, class: devicetrust.ClassSoftware, attestation: map[string]any{}}
+	case devicetrust.KeyP256:
+		d, err := s.verifyDevice("", req.KeyType, req.PublicKey, req.Attestation)
+		if err != nil {
+			return err
+		}
+		dev = d
+	default:
+		return ErrBadRequest("keyType is ed25519 or p256 (passkeys register per shipment)")
 	}
 	if len(req.SensorIDs) == 0 || len(req.SensorIDs) > 64 {
 		return ErrBadRequest("sensorIds must list between 1 and 64 sensors")
@@ -107,28 +126,31 @@ func (s *Server) createSource(w http.ResponseWriter, r *http.Request) error {
 			return ErrBadRequest("sensor ids must be 1-64 characters of letters, digits, '.', '_' or '-'")
 		}
 	}
-	reliability := 9500
+	reliability := classReliability(dev.class)
 	if req.ReliabilityBps != nil {
 		reliability = *req.ReliabilityBps
 	}
 	if reliability < 0 || reliability > 10_000 {
 		return ErrBadRequest("reliabilityBps must be between 0 and 10000")
 	}
-	if err := s.c.Store.UpsertSource(r.Context(), store.Source{ID: req.ID, PublicKey: key, SensorIDs: req.SensorIDs, ReliabilityBps: reliability}); err != nil {
+	src := store.Source{ID: req.ID, PublicKey: dev.pub, SensorIDs: req.SensorIDs, ReliabilityBps: reliability, KeyType: dev.keyType,
+		DeviceClass: dev.class, Attestation: dev.attestation}
+	if err := s.c.Store.UpsertSource(r.Context(), src); err != nil {
 		return err
 	}
-	writeJSON(w, http.StatusCreated, map[string]any{"id": req.ID, "sensorIds": req.SensorIDs, "reliabilityBps": reliability})
+	writeJSON(w, http.StatusCreated, sourceCreated{ID: req.ID, SensorIDs: req.SensorIDs, ReliabilityBps: reliability, KeyType: dev.keyType,
+		DeviceClass: dev.class, KeyHash: store.KeyHash(dev.pub)})
 	return nil
 }
 
 type shipmentRequest struct {
 	ShipmentID  string             `json:"shipmentId"`
 	ExternalRef string             `json:"externalRef"`
-	Route       []store.RoutePoint `json:"route"`
-	MaxGapSec   int                `json:"maxGapSec"`
-	MinSensors  int                `json:"minSensors"`
+	Route       []store.RoutePoint `json:"route" optional:"true"`
+	MaxGapSec   int                `json:"maxGapSec" optional:"true"`
+	MinSensors  int                `json:"minSensors" optional:"true"`
 	// PlaceLabels names the milestone places by milestone index ("" for none), for display. Optional.
-	PlaceLabels []string `json:"placeLabels"`
+	PlaceLabels []string `json:"placeLabels" optional:"true"`
 }
 
 // input validates the request shape and converts it for the service.
@@ -201,7 +223,7 @@ func (s *Server) listShipments(w http.ResponseWriter, r *http.Request) error {
 	if list == nil {
 		list = []store.Shipment{}
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"shipments": list, "limit": limit, "offset": offset})
+	writeJSON(w, http.StatusOK, shipmentList{Shipments: list, Limit: limit, Offset: offset})
 	return nil
 }
 
@@ -229,6 +251,25 @@ type telemetryRequest struct {
 }
 
 func (s *Server) telemetry(w http.ResponseWriter, r *http.Request) error {
+	return s.signedIngest(w, r, func(body []byte) ([]telemetry.Point, error) {
+		var req telemetryRequest
+		if err := decodeBytes(strings.NewReader(string(body)), &req); err != nil {
+			return nil, err
+		}
+		points := make([]telemetry.Point, len(req.Points))
+		for i, p := range req.Points {
+			points[i] = telemetry.Point{
+				Timestamp: p.Timestamp, SensorID: p.SensorID, TemperatureX100: p.TemperatureX100, HumidityX100: p.HumidityX100,
+				LatitudeE6: p.LatitudeE6, LongitudeE6: p.LongitudeE6, ShockX100: p.ShockX100,
+			}
+		}
+		return points, nil
+	})
+}
+
+// signedIngest authenticates a source-signed request, decodes its readings with decode, applies the per-request and
+// per-shipment limits and the source's sensor and shipment binding, and ingests the readings.
+func (s *Server) signedIngest(w http.ResponseWriter, r *http.Request, decode func(body []byte) ([]telemetry.Point, error)) error {
 	// The body is read once, verified against the source's signature, and only then decoded: unauthenticated
 	// callers never reach the parser beyond the size cap.
 	body, err := io.ReadAll(r.Body)
@@ -245,38 +286,23 @@ func (s *Server) telemetry(w http.ResponseWriter, r *http.Request) error {
 	if err := s.rateLimit(w, "source:"+src.ID, s.c.TelemetryPerMinute); err != nil {
 		return err
 	}
-	if mt, _, perr := mime.ParseMediaType(r.Header.Get("Content-Type")); perr != nil || mt != "application/json" {
+	if mt, _, perr := mime.ParseMediaType(r.Header.Get("Content-Type")); perr != nil || (mt != "application/json" && mt != "application/ld+json") {
 		return &Error{http.StatusUnsupportedMediaType, "unsupported_media_type", "Content-Type must be application/json"}
 	}
-	var req telemetryRequest
-	if err := decodeBytes(strings.NewReader(string(body)), &req); err != nil {
+	points, err := decode(body)
+	if err != nil {
 		return err
 	}
-	if len(req.Points) == 0 {
+	if len(points) == 0 {
 		return ErrBadRequest("points must contain at least one reading")
 	}
-	if len(req.Points) > maxPointsPerBatch {
+	if len(points) > maxPointsPerBatch {
 		return &Error{http.StatusRequestEntityTooLarge, "payload_too_large", fmt.Sprintf("at most %d readings per request", maxPointsPerBatch)}
 	}
-	now := time.Now()
-	if s.c.Now != nil {
-		now = s.c.Now()
-	}
-	for i, p := range req.Points {
+	now := s.now()
+	for i, p := range points {
 		if p.Timestamp > now.Unix()+maxFutureSkewSec {
 			return ErrBadRequest(fmt.Sprintf("reading %d is dated in the future; check the device clock", i))
-		}
-	}
-	budgetKey := "readings:" + strings.ToLower(strings.TrimSpace(r.PathValue("id")))
-	if ok, wait := s.limiter.allowN(budgetKey, len(req.Points), s.c.ShipmentReadingsPerHour, time.Hour); !ok {
-		w.Header().Set("Retry-After", strconv.Itoa(int(wait.Seconds())+1))
-		return &Error{http.StatusTooManyRequests, "rate_limited", "this shipment has received its hourly allowance of readings; retry later"}
-	}
-	points := make([]telemetry.Point, len(req.Points))
-	for i, p := range req.Points {
-		points[i] = telemetry.Point{
-			Timestamp: p.Timestamp, SensorID: p.SensorID, TemperatureX100: p.TemperatureX100, HumidityX100: p.HumidityX100,
-			LatitudeE6: p.LatitudeE6, LongitudeE6: p.LongitudeE6, ShockX100: p.ShockX100,
 		}
 	}
 	if err := auth.CheckSensors(src, points); err != nil {
@@ -284,6 +310,11 @@ func (s *Server) telemetry(w http.ResponseWriter, r *http.Request) error {
 	}
 	if src.ShipmentID != "" && !strings.EqualFold(src.ShipmentID, strings.TrimSpace(r.PathValue("id"))) {
 		return ErrForbidden("this evidence source is registered for a different shipment")
+	}
+	budgetKey := "readings:" + strings.ToLower(strings.TrimSpace(r.PathValue("id")))
+	if ok, wait := s.limiter.allowN(budgetKey, len(points), s.c.ShipmentReadingsPerHour, time.Hour); !ok {
+		w.Header().Set("Retry-After", strconv.Itoa(int(wait.Seconds())+1))
+		return &Error{http.StatusTooManyRequests, "rate_limited", "this shipment has received its hourly allowance of readings; retry later"}
 	}
 	res, err := s.c.Service.IngestTelemetry(r.Context(), r.PathValue("id"), src.ID, points)
 	if err != nil {
@@ -303,9 +334,7 @@ func isAuthFailure(err error) bool {
 }
 
 func (s *Server) proof(w http.ResponseWriter, r *http.Request) error {
-	var req struct {
-		SensorID string `json:"sensorId"`
-	}
+	var req proofRequest
 	if err := decodeJSON(r, &req); err != nil {
 		return err
 	}
@@ -332,7 +361,7 @@ func (s *Server) epochs(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"epochs": eps})
+	writeJSON(w, http.StatusOK, epochList{Epochs: eps})
 	return nil
 }
 
@@ -349,7 +378,7 @@ func (s *Server) audit(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"entries": entries})
+	writeJSON(w, http.StatusOK, auditList{Entries: entries})
 	return nil
 }
 

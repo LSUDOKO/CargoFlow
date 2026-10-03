@@ -42,6 +42,9 @@ interface IReceivableVault {
         uint256 undrawnRefund
     );
 
+    /// @notice v3: a facility cancelled before transit returned its deposit (0 when never funded).
+    event CapitalReturned(bytes32 indexed shipmentId, address indexed financier, uint256 amount);
+
     error FacilityNotFound();
     error FacilityAlreadyExists();
     error InvalidFacility();
@@ -51,6 +54,7 @@ interface IReceivableVault {
     error FacilityPaused();
     error ExceedsCommittedFacility();
     error ZeroAmount();
+    error CannotCancel();
 
     function openFacility(
         bytes32 shipmentId,
@@ -80,6 +84,10 @@ interface IReceivableVault {
     ///         `drawn` is preserved as the record of the outstanding exposure. No off-chain recovery
     ///         claims are modelled.
     function closeDefaulted(bytes32 shipmentId) external;
+
+    /// @notice v3: closes a facility that never drew (cancelled before transit) and returns the whole
+    ///         deposit, if any, to the financier. Reverts CannotCancel if anything was drawn.
+    function closeCancelled(bytes32 shipmentId) external;
 
     function getFacility(bytes32 shipmentId) external view returns (Facility memory);
 

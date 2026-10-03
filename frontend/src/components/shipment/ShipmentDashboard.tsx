@@ -12,20 +12,25 @@ import { StatusPill } from "@/components/ui/Pill";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { Tabs } from "@/components/ui/Tabs";
-import { rolesOf, useDocuments, useVessel } from "@/lib/api/extras";
+import { rolesOf, useDocuments, useExplanation, useVessel } from "@/lib/api/extras";
 import type { EpochSummary, ShipmentView } from "@/lib/api/schemas";
 import { useAudit, useConfig, useEpochs, useShipment, useTelemetry } from "@/lib/api/hooks";
 import { useShipmentStream } from "@/lib/api/ws";
 import { fallbackBrief } from "@/lib/brief";
 import { formatBps, formatTempX100, formatUSDG } from "@/lib/format";
+import { distanceText, hasPlace, isHeld, nextPlaceDistance, placePhrase } from "@/lib/places";
 import { latestAssessment } from "@/lib/shipment";
 import { useHydrated } from "@/lib/useHydrated";
+import { useSearchFlag } from "@/lib/useSearchFlag";
+import { claudeNewChat, shipmentPrompt } from "@/lib/developer";
 import { waterfall } from "@/lib/waterfall";
 import { AiPanel } from "./AiPanel";
 import { AlertsPanel } from "./AlertsPanel";
 import { AuditTable } from "./AuditTable";
 import { CertificateButton } from "./CertificateButton";
+import { CoverPanel, CoverSummary, useCoverEnabled } from "./CoverPanel";
 import { DocumentsPanel } from "./DocumentsPanel";
+import { EpcisDownload } from "./EpcisDownload";
 import { EpochList } from "./EpochList";
 import { EscrowPanel } from "./EscrowPanel";
 import { ExplainPanel } from "./ExplainPanel";
@@ -36,7 +41,9 @@ import { RecoveryPanel } from "./RecoveryPanel";
 import { RoleActions } from "./RoleActions";
 import { RouteMap } from "./RouteMap";
 import { ShareCard } from "./ShareCard";
+import { DeviceBadge } from "./DeviceBadge";
 import { SourcesPanel } from "./SourcesPanel";
+import { TitleCard, useTitleEnabled } from "./TitleCard";
 import { TelemetryChart } from "./TelemetryChart";
 import { VesselPanel } from "./VesselPanel";
 
@@ -67,7 +74,12 @@ export function ShipmentDashboard({ id, compact }: { id: string; compact?: boole
   const { address } = useAccount();
   const documents = useDocuments(valid ? id : undefined);
   const vessel = useVessel(valid ? id : undefined);
+  const explanation = useExplanation(valid ? id : undefined); // same cache entry as the status brief's
+  const coverOn = useCoverEnabled();
+  const titleOn = useTitleEnabled();
   const [section, setSection] = useState<Section>("overview");
+  // ?recover=1 (from a RECOVERY_READY notification or alert): open on the overview with the recovery panel focused
+  const recoverLink = useSearchFlag("recover");
   const tabsRef = useRef<HTMLDivElement>(null);
   const roles = hydrated && shipment.data ? rolesOf(shipment.data, address) : [];
 
@@ -108,6 +120,9 @@ export function ShipmentDashboard({ id, compact }: { id: string; compact?: boole
   const status = v?.facility?.status ?? v?.shipment.status;
   const closed = ["SETTLED", "DEFAULTED", "CANCELLED"].includes(v?.facility?.status ?? "");
   const recovery = status === "PAUSED" || ev.some((e) => e.proofVerified);
+  // how far the cargo is from the next milestone's place (contracts v2), for the journey strip and the timeline
+  const nextIdx = v?.facility?.nextMilestone ?? 0;
+  const nextDistanceM = v ? nextPlaceDistance({ milestone: v.milestones[nextIdx], index: nextIdx, hold: explanation.data?.hold, latest, position: telemetry.data?.position }) : null;
   const go = (s: Section) => {
     setSection(s);
     tabsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -155,6 +170,17 @@ export function ShipmentDashboard({ id, compact }: { id: string; compact?: boole
                 <Button size="sm" variant="inverse" onClick={() => go("records")}>Share</Button>
               </div>
             )}
+            {!compact && (
+              <a
+                href={claudeNewChat(shipmentPrompt(v.shipment.id, v.shipment.externalRef))}
+                target="_blank"
+                rel="noreferrer"
+                title="Opens Claude with this shipment. Enable the CargoFlow connector in that chat (see Developers → Use with Claude)."
+                className="text-sm font-semibold text-paper/80 underline decoration-paper/30 underline-offset-2 hover:text-paper hover:decoration-paper"
+              >
+                Ask Claude about this shipment<span className="sr-only"> (opens claude.ai in a new tab; needs the CargoFlow connector)</span>
+              </a>
+            )}
           </div>
         )}
       </div>
@@ -187,10 +213,10 @@ export function ShipmentDashboard({ id, compact }: { id: string; compact?: boole
                   </span>
                 )}
               </CardHeader>
-              {v ? <JourneyStrip milestones={v.milestones} facility={v.facility} invoiceValue={v.shipment.invoiceValue} /> : <Skeleton className="h-28" />}
+              {v ? <JourneyStrip milestones={v.milestones} facility={v.facility} invoiceValue={v.shipment.invoiceValue} nextDistanceM={nextDistanceM} /> : <Skeleton className="h-28" />}
             </Card>
 
-            <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
               <div className="flex min-w-0 flex-col gap-4">
                 <Card>
                   <CardHeader title="Route and position" />
@@ -208,7 +234,7 @@ export function ShipmentDashboard({ id, compact }: { id: string; compact?: boole
                   <Card className={status === "PAUSED" ? "ring-2 ring-alert/60" : undefined}>
                     <CardHeader title="Zero-knowledge recovery" />
                     <ProofCard epochs={ev} audit={au} chainId={chainId} paused={status === "PAUSED"} />
-                    {v && !compact && <RecoveryPanel view={v} />}
+                    {v && !compact && <RecoveryPanel view={v} focus={recoverLink && section === "overview"} />}
                   </Card>
                 )}
                 {!compact && (
@@ -228,6 +254,18 @@ export function ShipmentDashboard({ id, compact }: { id: string; compact?: boole
                     </button>
                   )}
                 </Card>
+                {v && coverOn && v.facility && (
+                  <Card>
+                    <CardHeader title="Default cover" />
+                    <CoverSummary view={v} onOpen={compact ? undefined : () => go("money")} />
+                  </Card>
+                )}
+                {v && titleOn && v.facility && (
+                  <Card>
+                    <CardHeader title="Title (bill of lading)" />
+                    <TitleCard view={v} />
+                  </Card>
+                )}
                 {v && <AgreedTerms view={v} chainId={chainId} />}
               </div>
             </div>
@@ -236,7 +274,7 @@ export function ShipmentDashboard({ id, compact }: { id: string; compact?: boole
 
         {section === "evidence" && !compact && (
           <>
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <Card>
                 <CardHeader title="Latest evidence">
                   {latest && <span className="text-sm text-slate">Milestone {latest.milestoneIndex === 255 ? "–" : latest.milestoneIndex + 1} · batch #{latest.sequence}</span>}
@@ -254,7 +292,7 @@ export function ShipmentDashboard({ id, compact }: { id: string; compact?: boole
               </CardHeader>
               {telemetry.data && v ? <TelemetryChart epochs={telemetry.data.epochs} policy={v.shipment.policy} /> : <Skeleton className="h-56" />}
             </Card>
-            <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
               <Card>
                 <CardHeader title="Committed evidence">
                   <span className="text-sm text-slate">Only each batch&apos;s fingerprint (Merkle root) is on chain</span>
@@ -270,7 +308,7 @@ export function ShipmentDashboard({ id, compact }: { id: string; compact?: boole
         )}
 
         {section === "money" && !compact && v && (
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <div className="flex min-w-0 flex-col gap-4">
               <Card>
                 <CardHeader title="Escrow" />
@@ -280,13 +318,19 @@ export function ShipmentDashboard({ id, compact }: { id: string; compact?: boole
                 <CardHeader title="When the buyer pays" />
                 <Waterfall view={v} />
               </Card>
+              {coverOn && (
+                <Card>
+                  <CardHeader title="Default cover" />
+                  <CoverPanel view={v} />
+                </Card>
+              )}
             </div>
             <div className="flex min-w-0 flex-col gap-4">
               <Card>
                 <CardHeader title="Milestone releases">
                   <span className="text-sm text-slate">Each release is a transaction you can check</span>
                 </CardHeader>
-                <MilestoneTimeline milestones={v.milestones} facility={v.facility} chainId={chainId} />
+                <MilestoneTimeline milestones={v.milestones} facility={v.facility} chainId={chainId} nextDistanceM={nextDistanceM} />
               </Card>
               <Card>
                 <CardHeader title="Records" />
@@ -298,7 +342,7 @@ export function ShipmentDashboard({ id, compact }: { id: string; compact?: boole
         )}
 
         {section === "records" && !compact && v && (
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
             <Card>
               <CardHeader title="Documents" />
               <DocumentsPanel view={v} />
@@ -307,6 +351,10 @@ export function ShipmentDashboard({ id, compact }: { id: string; compact?: boole
               <Card>
                 <CardHeader title="Alerts" />
                 <AlertsPanel view={v} />
+              </Card>
+              <Card>
+                <CardHeader title="Standards export" />
+                <EpcisDownload shipmentId={v.shipment.id} reference={v.shipment.externalRef} />
               </Card>
               <Card>
                 <CardHeader title="Share" />
@@ -340,7 +388,10 @@ function EvidenceGauges({ view, latest }: { view: ShipmentView; latest: EpochSum
   if (!latest) {
     return <p className="rounded-2xl bg-mist px-4 py-3 text-sm text-slate">No evidence yet. The gauges appear when the data logger&apos;s first batch of eight readings is evaluated.</p>;
   }
+  const hum = latest.maxHumidityX100, shock = latest.maxShockX100;
+  const showLimits = p.maxHumidityX100 > 0 || p.maxShockX100 > 0 || hum > 0 || shock > 0;
   return (
+    <>
     <div className="grid grid-cols-3 gap-2">
       <Gauge
         value={latest.score}
@@ -374,6 +425,46 @@ function EvidenceGauges({ view, latest }: { view: ShipmentView; latest: EpochSum
         hint={`The combined risk to the cargo from temperature drift, missing readings and route deviation. It must stay at or below ${formatBps(p.maxRiskBps)}.`}
       />
     </div>
+    {showLimits && (
+      <dl className="mt-2 grid grid-cols-2 gap-2 text-sm">
+        <Maximum label="Highest humidity" value={`${formatPct(hum)} RH`} limit={p.maxHumidityX100 ? `limit ${formatPct(p.maxHumidityX100)}` : "no limit"} over={p.maxHumidityX100 > 0 && hum > p.maxHumidityX100} />
+        <Maximum label="Hardest shock" value={formatG(shock)} limit={p.maxShockX100 ? `limit ${formatG(p.maxShockX100)}` : "no limit"} over={p.maxShockX100 > 0 && shock > p.maxShockX100} />
+      </dl>
+    )}
+    {latest.sources.length > 0 && (
+      <div className="mt-3 border-t border-line pt-3">
+        <p className="text-xs font-semibold tracking-wide text-slate uppercase">Source devices</p>
+        <ul className="mt-1.5 flex flex-col gap-1.5">
+          {latest.sources.map((s) => (
+            <li key={s.keyHash} className="flex flex-wrap items-center gap-2 text-sm">
+              <DeviceBadge deviceClass={s.deviceClass} onChain={s.onChain} />
+              <HashBadge value={s.keyHash} label="device key" compact />
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+    {isHeld(latest) && (
+      <p className="mt-2 rounded-2xl bg-signal/25 px-4 py-2.5 text-sm">
+        <span className="font-semibold">Held: not at the place yet.</span> This evidence passed, but it was taken {latest.heldDistanceM !== null ? `${distanceText(latest.heldDistanceM)} from` : "outside"} the milestone&apos;s place, so the milestone waits. Nothing failed.
+      </p>
+    )}
+    </>
+  );
+}
+
+const formatPct = (x100: number) => `${Number((x100 / 100).toFixed(1))}%`;
+const formatG = (x100: number) => `${Number((x100 / 100).toFixed(2))} g`;
+
+function Maximum({ label, value, limit, over }: { label: string; value: string; limit: string; over: boolean }) {
+  return (
+    <div className={`rounded-[var(--radius-tile)] px-3 py-2 ${over ? "bg-danger/10" : "bg-mist"}`}>
+      <dt className="text-xs text-slate">{label} in the batch</dt>
+      <dd className="flex flex-wrap items-baseline justify-between gap-x-2">
+        <span className={`font-mono font-semibold ${over ? "text-[#a1191e]" : ""}`}>{value}</span>
+        <span className="text-xs text-slate">{limit}</span>
+      </dd>
+    </div>
   );
 }
 
@@ -384,8 +475,12 @@ function AgreedTerms({ view, chainId }: { view: ShipmentView; chainId?: number }
     ["Temperature", `${formatTempX100(p.minTempX100)} to ${formatTempX100(p.maxTempX100)}`],
     ["Readings", `At least every ${Math.round(p.maxGapSec / 60)} min, from ${p.minSensors}+ probes`],
     ["Route", `Within ${Math.round(p.maxRouteDeviationM / 1000)} km of the plan`],
+    ["Humidity", p.maxHumidityX100 ? `At most ${formatPct(p.maxHumidityX100)} relative humidity` : "No limit"],
+    ["Shock", p.maxShockX100 ? `No shock above ${formatG(p.maxShockX100)}` : "No limit"],
     ["To release money", `Evidence score ${p.minEvidenceScore}+${p.requiresZk ? " and a proof" : ""}`],
     ...(f ? ([["Financing fee", `${f.feeBps / 100}% of what is drawn`]] as [string, string][]) : []),
+    // milestone places (contracts v2): where each placed milestone's evidence must come from
+    ...view.milestones.filter((m) => hasPlace(m)).map((m): [string, string] => [`Milestone ${m.index + 1}`, `Releases only ${placePhrase(m)}`]),
   ];
   return (
     <Card>

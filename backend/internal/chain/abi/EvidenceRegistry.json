@@ -25,6 +25,19 @@
   },
   {
     "type": "function",
+    "name": "MAX_SOURCES",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "commitEpoch",
     "inputs": [
       {
@@ -116,6 +129,25 @@
   },
   {
     "type": "function",
+    "name": "epochCount",
+    "inputs": [
+      {
+        "name": "shipmentId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "epochIdFor",
     "inputs": [
       {
@@ -142,6 +174,25 @@
       }
     ],
     "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "epochOrdinal",
+    "inputs": [
+      {
+        "name": "epochId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "ordinal",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -241,6 +292,25 @@
   },
   {
     "type": "function",
+    "name": "getEpochSources",
+    "inputs": [
+      {
+        "name": "epochId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "markProofVerified",
     "inputs": [
       {
@@ -251,6 +321,49 @@
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "recordEpochSources",
+    "inputs": [
+      {
+        "name": "epochId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "deviceKeyHashes",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "EpochSourcesRecorded",
+    "inputs": [
+      {
+        "name": "epochId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "shipmentId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "deviceKeyHashes",
+        "type": "bytes32[]",
+        "indexed": false,
+        "internalType": "bytes32[]"
+      }
+    ],
+    "anonymous": false
   },
   {
     "type": "event",
@@ -386,7 +499,17 @@
   },
   {
     "type": "error",
+    "name": "InvalidSources",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "ProofAlreadyVerified",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SourcesAlreadyRecorded",
     "inputs": []
   },
   {

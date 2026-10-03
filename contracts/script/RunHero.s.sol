@@ -8,6 +8,8 @@ import {ShipmentRegistry} from "../src/ShipmentRegistry.sol";
 import {ReceivableVault} from "../src/ReceivableVault.sol";
 import {CoverPool} from "../src/CoverPool.sol";
 import {ICoverPool} from "../src/interfaces/ICoverPool.sol";
+import {EBLRegistry} from "../src/EBLRegistry.sol";
+import {IEBLRegistry} from "../src/interfaces/IEBLRegistry.sol";
 import {IEvidenceRegistry} from "../src/interfaces/IEvidenceRegistry.sol";
 import {IFinancingController} from "../src/interfaces/IFinancingController.sol";
 import {IPolicyEngine} from "../src/interfaces/IPolicyEngine.sol";
@@ -15,7 +17,7 @@ import {MockUSDG} from "../src/mocks/MockUSDG.sol";
 import {ScriptBase} from "./ScriptBase.sol";
 
 /// @notice Runs the hero scenario (docs/project/18-demo-script.md) as real transactions against a
-///         deployed CargoFlow v2:
+///         deployed CargoFlow v3:
 ///
 ///   CF-2026-SG01  fund -> M1 -> M2 -> thermal anomaly -> pause -> recovery -> M3
 ///                 -> M4 is place-based (Singapore, 25 km): evidence from the Malacca Strait waits,
@@ -24,13 +26,22 @@ import {ScriptBase} from "./ScriptBase.sol";
 ///                 -> delivery -> settle
 ///   CF-2026-SG02  insurer offers 20,000 USDG cover, financier buys it (500 premium) -> fund -> M1, M2
 ///                 -> shock breach -> pause -> default -> claim: the financier recovers its 16,000 loss
+///   CF-2026-SG03  (v3) electronic bill of lading: the carrier issues it to the exporter, the exporter
+///                 binds it to the facility (escrowed in the controller) -> M1..M5 -> delivery -> the
+///                 buyer pays and receives the title in the same transaction -> surrenders it
+///   CF-2026-SG04  (v3) parametric cover (3 consecutive failed epochs, 2,000 salvage): M1, M2 -> three
+///                 non-compliant epochs -> anyone triggers: financier 16,000, exporter 2,000, insurer
+///                 2,000, without waiting for a default
+///   CF-2026-SG05  (v3) a facility that never starts: covered, then cancelled by the exporter -> the
+///                 cover is released back to the insurer
 ///
 ///   forge script script/RunHero.s.sol --rpc-url local --broadcast
 ///
 /// Locally the roles use anvil accounts. On a public network set DEMO_EXPORTER_KEY, DEMO_FINANCIER_KEY,
-/// DEMO_BUYER_KEY, DEMO_WORKER_KEY, DEMO_MONITOR_KEY, DEMO_ARBITER_KEY, DEMO_INSURER_KEY (the
-/// worker/monitor/arbiter keys must match the addresses granted at deploy time) and pre-fund the
-/// financier (80,500 USDG), the buyer (100,000 USDG) and the insurer (20,000 USDG). Deliberately
+/// DEMO_BUYER_KEY, DEMO_WORKER_KEY, DEMO_MONITOR_KEY, DEMO_ARBITER_KEY, DEMO_INSURER_KEY,
+/// DEMO_CARRIER_KEY (the worker/monitor/arbiter/carrier keys must match the addresses granted at
+/// deploy time) and pre-fund the financier (161,250 USDG), the buyer (200,000 USDG) and the insurer
+/// (50,000 USDG). Deliberately
 /// reverting transactions (the "blocked M3" and "M4 waits" moments) are not broadcast; the script
 /// shows them with on-chain reads instead.
 contract RunHero is ScriptBase {
@@ -41,6 +52,12 @@ contract RunHero is ScriptBase {
     uint256 internal constant COVER = 20_000e6;
     uint16 internal constant PREMIUM_BPS = 250;
     uint256 internal constant PREMIUM = 500e6;
+    uint256 internal constant SALVAGE = 2_000e6;
+    uint256 internal constant SMALL_COVER = 10_000e6;
+    uint256 internal constant SMALL_PREMIUM = 250e6;
+    uint256 internal constant FINANCIER_FUNDS = 4 * COMMITTED + 2 * PREMIUM + SMALL_PREMIUM;
+    uint256 internal constant BUYER_FUNDS = 2 * INVOICE;
+    uint256 internal constant INSURER_FUNDS = 2 * COVER + SMALL_COVER;
 
     uint16 internal constant HUMIDITY = 6500;
     uint16 internal constant SHOCK = 30;
@@ -58,6 +75,7 @@ contract RunHero is ScriptBase {
         uint256 monitor;
         uint256 arbiter;
         uint256 insurer;
+        uint256 carrier;
     }
 
     FinancingController internal controller;
@@ -66,6 +84,7 @@ contract RunHero is ScriptBase {
     PolicyEngine internal policies;
     ReceivableVault internal vault;
     CoverPool internal pool;
+    EBLRegistry internal ebl;
     MockUSDG internal usdg;
     bytes32 internal id;
 
@@ -75,6 +94,9 @@ contract RunHero is ScriptBase {
         _ensureFunds(k);
         _settledShipment(k);
         _coveredDefault(k);
+        _titleBoundShipment(k);
+        _parametricPayout(k);
+        _cancelledFacility(k);
     }
 
     // ------------------------------------------------------------------ CF-2026-SG01
@@ -207,6 +229,143 @@ contract RunHero is ScriptBase {
         require(usdg.balanceOf(address(pool)) == 0, "pool not empty");
     }
 
+    // ------------------------------------------------------------------ CF-2026-SG03 (v3)
+
+    function _titleBoundShipment(Keys memory k) internal {
+        address exporter = vm.addr(k.exporter);
+        address buyer = vm.addr(k.buyer);
+        address carrier = vm.addr(k.carrier);
+
+        id = _openFacility(k, "CF-2026-SG03-", _milestones());
+        bytes32 doc = keccak256(abi.encode("bill-of-lading", id));
+        vm.broadcast(k.carrier);
+        uint256 tokenId = ebl.issue(doc, exporter, buyer);
+        vm.startBroadcast(k.exporter);
+        ebl.approve(address(controller), tokenId);
+        controller.bindTitle(id, tokenId);
+        vm.stopBroadcast();
+        require(ebl.ownerOf(tokenId) == address(controller), "title not escrowed");
+
+        _fundAndStart(k);
+        for (uint8 i; i < 5; ++i) {
+            _commit(k.worker, i, 1, 95, 300);
+            _release(k.exporter, i, 1);
+        }
+        vm.broadcast(k.buyer);
+        controller.markDelivered(id);
+        require(ebl.ownerOf(tokenId) == address(controller), "title left before payment");
+
+        // documents against payment: the title moves to the buyer in the paying transaction
+        vm.startBroadcast(k.buyer);
+        usdg.approve(address(vault), INVOICE);
+        controller.settle(id);
+        vm.stopBroadcast();
+        require(ebl.ownerOf(tokenId) == buyer, "buyer did not receive the title");
+
+        // the buyer surrenders the bill to the carrier to take the goods
+        vm.broadcast(k.buyer);
+        ebl.surrender(tokenId);
+        require(ebl.ownerOf(tokenId) == carrier, "bill not surrendered");
+        require(
+            ebl.getBill(tokenId).status == IEBLRegistry.TitleStatus.SURRENDERED, "not SURRENDERED"
+        );
+    }
+
+    // ------------------------------------------------------------------ CF-2026-SG04 (v3)
+
+    function _parametricPayout(Keys memory k) internal {
+        address exporter = vm.addr(k.exporter);
+        address financier = vm.addr(k.financier);
+        address insurer = vm.addr(k.insurer);
+
+        id = _openFacility(k, "CF-2026-SG04-", _milestones());
+        vm.startBroadcast(k.insurer);
+        usdg.approve(address(pool), COVER);
+        pool.offerParametricCover(id, COVER, PREMIUM_BPS, 3, SALVAGE);
+        vm.stopBroadcast();
+        vm.startBroadcast(k.financier);
+        usdg.approve(address(pool), PREMIUM);
+        pool.acceptCover(id, insurer);
+        vm.stopBroadcast();
+        _fundAndStart(k);
+
+        _commit(k.worker, 0, 1, 94, 500);
+        _release(k.exporter, 0, 1);
+        _commit(k.worker, 1, 1, 95, 300);
+        _release(k.exporter, 1, 1);
+
+        // the reefer fails: three consecutive non-compliant epochs, the monitor pauses
+        bytes32[] memory failed = new bytes32[](3);
+        for (uint32 s; s < 3; ++s) {
+            failed[s] = evidence.epochIdFor(id, 2, s + 1);
+            _commit(k.worker, 2, s + 1, 41, 6500);
+        }
+        vm.broadcast(k.monitor);
+        controller.pauseFinancing(id, keccak256("THERMAL_EXCURSION"));
+
+        // anyone proves the trigger from the stored epochs; nobody waits for a default
+        uint256 exporterBefore = usdg.balanceOf(exporter);
+        vm.broadcast(k.exporter);
+        pool.triggerParametric(id, failed);
+        ICoverPool.Cover memory c = pool.getCover(id);
+        require(c.status == ICoverPool.CoverStatus.TRIGGERED, "not triggered");
+        require(c.financierPayout == 2 * TRANCHE, "financier payout != 16,000");
+        require(pool.getParametricCover(id).exporterSalvage == SALVAGE, "salvage != 2,000");
+        require(c.insurerReturn == COVER - 2 * TRANCHE - SALVAGE, "insurer remainder != 2,000");
+        vm.broadcast(k.financier);
+        pool.withdraw();
+        vm.broadcast(k.exporter);
+        pool.withdraw();
+        vm.broadcast(k.insurer);
+        pool.withdraw();
+        require(usdg.balanceOf(exporter) == exporterBefore + SALVAGE, "exporter salvage");
+
+        // the arbiter closes the facility; the undrawn 24,000 returns to the financier
+        uint256 financierBefore = usdg.balanceOf(financier);
+        vm.broadcast(k.arbiter);
+        controller.markDefaulted(id, keccak256("cargo-spoiled"));
+        require(usdg.balanceOf(financier) == financierBefore + 3 * TRANCHE, "undrawn refund");
+        require(usdg.balanceOf(address(pool)) == 0, "pool not empty");
+    }
+
+    // ------------------------------------------------------------------ CF-2026-SG05 (v3)
+
+    function _cancelledFacility(Keys memory k) internal {
+        address insurer = vm.addr(k.insurer);
+        id = _openFacility(k, "CF-2026-SG05-", _milestones());
+        vm.startBroadcast(k.insurer);
+        usdg.approve(address(pool), SMALL_COVER);
+        pool.offerCover(id, SMALL_COVER, PREMIUM_BPS);
+        vm.stopBroadcast();
+        vm.startBroadcast(k.financier);
+        usdg.approve(address(pool), SMALL_PREMIUM);
+        pool.acceptCover(id, insurer);
+        vm.stopBroadcast();
+
+        // the deal falls through before any deposit: the exporter cancels, the cover comes back
+        vm.broadcast(k.exporter);
+        controller.cancelFacility(id);
+        require(
+            controller.getFacility(id).status == IFinancingController.Status.CANCELLED,
+            "not cancelled"
+        );
+        uint256 insurerBefore = usdg.balanceOf(insurer);
+        vm.broadcast(k.exporter);
+        pool.release(id);
+        vm.broadcast(k.insurer);
+        pool.withdraw();
+        require(usdg.balanceOf(insurer) == insurerBefore + SMALL_COVER, "cover not returned");
+    }
+
+    function _fundAndStart(Keys memory k) internal {
+        vm.startBroadcast(k.financier);
+        usdg.approve(address(vault), COMMITTED);
+        controller.depositCapital(id);
+        vm.stopBroadcast();
+        vm.broadcast(k.exporter);
+        controller.startTransit(id);
+    }
+
     // ------------------------------------------------------------------ helpers
 
     function _policy() internal pure returns (IPolicyEngine.Policy memory) {
@@ -335,15 +494,15 @@ contract RunHero is ScriptBase {
         if (_isLocal()) {
             // local MockUSDG is freely mintable
             vm.broadcast(k.financier);
-            usdg.mint(financier, 2 * COMMITTED + PREMIUM);
+            usdg.mint(financier, FINANCIER_FUNDS);
             vm.broadcast(k.buyer);
-            usdg.mint(buyer, INVOICE);
+            usdg.mint(buyer, BUYER_FUNDS);
             vm.broadcast(k.insurer);
-            usdg.mint(insurer, COVER);
+            usdg.mint(insurer, INSURER_FUNDS);
         }
-        require(usdg.balanceOf(financier) >= 2 * COMMITTED + PREMIUM, "financier needs 80,500 USDG");
-        require(usdg.balanceOf(buyer) >= INVOICE, "buyer needs 100,000 USDG");
-        require(usdg.balanceOf(insurer) >= COVER, "insurer needs 20,000 USDG");
+        require(usdg.balanceOf(financier) >= FINANCIER_FUNDS, "financier needs 161,250 USDG");
+        require(usdg.balanceOf(buyer) >= BUYER_FUNDS, "buyer needs 200,000 USDG");
+        require(usdg.balanceOf(insurer) >= INSURER_FUNDS, "insurer needs 50,000 USDG");
     }
 
     function _load() internal {
@@ -355,6 +514,7 @@ contract RunHero is ScriptBase {
         policies = PolicyEngine(vm.parseJsonAddress(json, ".contracts.policyEngine"));
         vault = ReceivableVault(vm.parseJsonAddress(json, ".contracts.receivableVault"));
         pool = CoverPool(vm.parseJsonAddress(json, ".contracts.coverPool"));
+        ebl = EBLRegistry(vm.parseJsonAddress(json, ".contracts.eblRegistry"));
         usdg = MockUSDG(vm.parseJsonAddress(json, ".usdg"));
     }
 
@@ -366,6 +526,7 @@ contract RunHero is ScriptBase {
         k.monitor = _demoKey("DEMO_MONITOR_KEY", ANVIL_KEY_5);
         k.arbiter = _demoKey("DEMO_ARBITER_KEY", ANVIL_KEY_6);
         k.insurer = _demoKey("DEMO_INSURER_KEY", ANVIL_KEY_7);
+        k.carrier = _demoKey("DEMO_CARRIER_KEY", ANVIL_KEY_8);
     }
 
     function _demoKey(string memory envName, string memory anvilKey)

@@ -1,0 +1,14 @@
+# CargoFlow public remote MCP server: https://cargoflow-mcp.adoranto737.workers.dev/mcp
+# Deploy: pnpm deploy:worker (wrangler deploy). Local: pnpm dev:worker -> http://127.0.0.1:8787/mcp
+name = "cargoflow-mcp"
+main = "src/worker.ts"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+[observability]
+enabled = true
+
+[vars]
+CARGOFLOW_API_URL = "https://cargoflow-api-75ul.onrender.com"
+CARGOFLOW_APP_URL = "https://cargoflow.adoranto737.workers.dev"
+CARGOFLOW_RPC_URL = "https://rpc.testnet.chain.robinhood.com"

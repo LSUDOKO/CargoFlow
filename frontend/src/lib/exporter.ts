@@ -1,4 +1,5 @@
 import { keccak256, toBytes, type Hex } from "viem";
+import { NO_PLACE, toPlaceSpec, type PlaceDraft } from "./places";
 
 export type RoutePoint = { latE6: number; lonE6: number };
 
@@ -26,9 +27,16 @@ export type PolicyForm = {
   minScore: string; // 0-100
   maxConflictPct: string;
   maxRiskPct: string;
+  /** relative humidity %, "" for no limit (contracts v2) */
+  maxHumidityPct: string;
+  /** shock in g, "" for no limit (contracts v2) */
+  maxShockG: string;
 };
 
-export const defaultPolicyForm: PolicyForm = { minTemp: "2", maxTemp: "8", maxAgeMin: "30", maxDeviationKm: "25", minScore: "75", maxConflictPct: "30", maxRiskPct: "35" };
+export const defaultPolicyForm: PolicyForm = { minTemp: "2", maxTemp: "8", maxAgeMin: "30", maxDeviationKm: "25", minScore: "75", maxConflictPct: "30", maxRiskPct: "35", maxHumidityPct: "85", maxShockG: "3" };
+
+/** The humidity and shock limits are optional: an empty field means "no limit" (0 on chain). */
+export const NO_LIMIT = "";
 
 const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
 
@@ -49,10 +57,21 @@ export function validatePolicy(f: PolicyForm): Partial<Record<keyof PolicyForm, 
     const v = num(f[k]);
     if (!Number.isFinite(v) || v < 0 || v > 100) e[k] = "Use a percentage from 0 to 100.";
   }
+  if (f.maxHumidityPct.trim() !== NO_LIMIT) {
+    const h = num(f.maxHumidityPct);
+    // on chain 0 means "no limit", so a limit is at least 0.01 %
+    if (!Number.isFinite(h) || Math.round(h * 100) < 1 || h > 100) e.maxHumidityPct = "Use 0.01 to 100 %, or no limit.";
+  }
+  if (f.maxShockG.trim() !== NO_LIMIT) {
+    const g = num(f.maxShockG);
+    if (!Number.isFinite(g) || Math.round(g * 100) < 1 || Math.round(g * 100) > 65_535) e.maxShockG = "Use 0.01 to 655 g, or no limit.";
+  }
   return e;
 }
 
-/** The on-chain Policy struct (PolicyEngine.setPolicy). */
+const limitX100 = (s: string) => (s.trim() === NO_LIMIT ? 0 : Math.round(num(s) * 100));
+
+/** The on-chain Policy struct (PolicyEngine.setPolicy): all ten fields in declaration order (hashPolicy encodes them). */
 export function buildPolicy(f: PolicyForm) {
   return {
     minTempX100: Math.round(num(f.minTemp) * 100),
@@ -63,13 +82,19 @@ export function buildPolicy(f: PolicyForm) {
     maxConflictBps: Math.round(num(f.maxConflictPct) * 100),
     maxRiskBps: Math.round(num(f.maxRiskPct) * 100),
     requiresZK: false,
+    maxHumidityX100: limitX100(f.maxHumidityPct),
+    maxShockX100: limitX100(f.maxShockG),
   };
 }
 
-export type MilestoneSpec = { allocation: bigint; evidenceThreshold: number; checkpointCommitment: Hex };
+/** IFinancingController.MilestoneSpec (v2): radiusM 0 means the milestone may release anywhere. */
+export type MilestoneSpec = { allocation: bigint; evidenceThreshold: number; checkpointCommitment: Hex; latE6: number; lonE6: number; radiusM: number };
 
-/** Splits a facility into equal tranches (the remainder goes to the last), each with a distinct checkpoint commitment. */
-export function buildMilestones(total: bigint, count: number, threshold: number, ref: string): MilestoneSpec[] {
+/**
+ * Splits a facility into equal tranches (the remainder goes to the last), each with a distinct checkpoint commitment
+ * and, when `places[i]` is set, the place its evidence must come from.
+ */
+export function buildMilestones(total: bigint, count: number, threshold: number, ref: string, places: (PlaceDraft | null | undefined)[] = []): MilestoneSpec[] {
   if (!Number.isInteger(count) || count < 1 || count > 8) throw new Error("A facility has 1 to 8 milestones.");
   if (total < BigInt(count)) throw new Error("The facility is too small to split into that many milestones.");
   const each = total / BigInt(count);
@@ -77,6 +102,7 @@ export function buildMilestones(total: bigint, count: number, threshold: number,
     allocation: i === count - 1 ? total - each * BigInt(count - 1) : each,
     evidenceThreshold: threshold,
     checkpointCommitment: keccak256(toBytes(`${ref}:checkpoint:${i + 1}`)),
+    ...(places[i] ? toPlaceSpec(places[i]) : NO_PLACE),
   }));
 }
 

@@ -186,7 +186,10 @@ func TestTelegramLinksAChatFromStartAndSendsAlerts(t *testing.T) {
 	deadline := time.Now().Add(5 * time.Second)
 	for {
 		got, _ := st.GetSubscription(context.Background(), sub.ID)
-		if got.Active && got.Target == "424242" {
+		mu.Lock()
+		confirmed := len(sent) > 0 // the bot's reply to Start, sent after linking
+		mu.Unlock()
+		if got.Active && got.Target == "424242" && confirmed {
 			break
 		}
 		if time.Now().After(deadline) {

@@ -61,6 +61,11 @@ func (s *Service) recordHold(ctx context.Context, canon string, e store.EpochRec
 		s.o.Log.Error("record held epoch event", "epoch", e.EpochID, "err", err)
 	}
 	s.publish(ws.Event{Type: ws.MilestoneHeld, ShipmentID: canon, Data: data})
+	if sh, err := s.o.Store.GetShipment(ctx, canon); err == nil {
+		msg, _ := data["message"].(string)
+		s.Notify(ctx, Note{ShipmentID: canon, Kind: NoteHeld, Title: fmt.Sprintf("Milestone %d of %s is held until the cargo reaches its place", e.MilestoneIndex+1, shipmentName(sh)),
+			Body: msg, Link: s.TrackLink(canon), Data: data, DedupeKey: "held:" + e.EpochID, To: []string{sh.Exporter, sh.Financier}})
+	}
 }
 
 // holdMessage says in words why a milestone waits, for example "Milestone 3 waits until the cargo is within 50 km of

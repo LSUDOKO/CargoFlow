@@ -6,6 +6,9 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"net/url"
+	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -36,7 +39,13 @@ type Config struct {
 	AdminAPIKey Secret
 	SaltSecret  Secret
 
-	RPCURL         string
+	RPCURL string // may carry a credential (a QuickNode token in the path): print it only through RedactURL
+	// RPCFallbackURLs are optional further endpoints (RPC_FALLBACK_URL, comma-separated), tried in order while the
+	// ones before them are unhealthy. Like RPCURL they may carry credentials: print them only through RedactURL.
+	RPCFallbackURLs []string
+	// AlchemyRPCURL is an optional last tier after the fallbacks: ALCHEMY_RPC_URL, or built from ALCHEMY_API_KEY as
+	// https://robinhood-testnet.g.alchemy.com/v2/<key>. It carries the key in its path.
+	AlchemyRPCURL  string
 	ChainID        uint64
 	DeploymentFile string
 	StartBlock     uint64
@@ -70,7 +79,54 @@ type Config struct {
 	GasDripKey   Key
 	GasDripWei   uint64
 	GasDripDaily int
+
+	// AppURL is the web app's origin, used to build links in notifications (e.g. https://app.example.com); empty
+	// gives relative links.
+	AppURL string
+	// RecoveryScanInterval is how often the automatic ZK recovery worker looks for provable recoveries; 0 disables.
+	RecoveryScanInterval time.Duration
+	// DeviceRootsDir holds manufacturer root certificates (PEM) that device attestation chains must verify against.
+	DeviceRootsDir string
+	// WebAuthnOrigins are the origins a passkey assertion may come from; empty accepts CORS_ORIGINS.
+	WebAuthnOrigins []string
+
+	// AlchemyWebhookSigningKeys verify X-Alchemy-Signature on POST /v1/webhooks/alchemy (several, so a key can be
+	// rotated without downtime); empty turns the route off (503).
+	AlchemyWebhookSigningKeys []Secret
+
+	// ZeroDev gas policy webhook (optional): POST /v1/webhooks/zerodev/{secret} decides which user operations
+	// CargoFlow sponsors. Off (404) without both the secret and the project id.
+	ZeroDevWebhookSecret Secret
+	ZeroDevProjectID     string
+	SponsorPerDay        int    // per sender, rolling 24 hours
+	SponsorGlobalDay     int    // everyone, rolling 24 hours
+	SponsorMaxWei        uint64 // cap on a user operation's maximum gas cost
+
+	// Dune upload (optional): pushes indexed data to Dune's uploads API every DuneUploadInterval.
+	DuneAPIKey         Secret
+	DuneNamespace      string
+	DuneUploadInterval time.Duration
 }
+
+// RPCFallbacks lists the failover tiers after the primary: the RPC_FALLBACK_URL entries, then the Alchemy endpoint.
+func (c Config) RPCFallbacks() []string {
+	out := append([]string(nil), c.RPCFallbackURLs...)
+	if c.AlchemyRPCURL != "" && !slices.Contains(out, c.AlchemyRPCURL) && c.AlchemyRPCURL != c.RPCURL {
+		out = append(out, c.AlchemyRPCURL)
+	}
+	return out
+}
+
+// AlchemyWebhookEnabled reports whether webhook deliveries can be verified.
+func (c Config) AlchemyWebhookEnabled() bool { return len(c.AlchemyWebhookSigningKeys) > 0 }
+
+// ZeroDevWebhookEnabled reports whether the gas policy webhook answers.
+func (c Config) ZeroDevWebhookEnabled() bool {
+	return c.ZeroDevWebhookSecret != "" && c.ZeroDevProjectID != ""
+}
+
+// DuneEnabled reports whether the Dune uploader runs.
+func (c Config) DuneEnabled() bool { return c.DuneAPIKey != "" && c.DuneNamespace != "" }
 
 // TelegramEnabled reports whether Telegram alerts are configured.
 func (c Config) TelegramEnabled() bool { return c.TelegramBotToken != "" }
@@ -89,9 +145,32 @@ func (c Config) AIEnabled() bool { return c.GroqAPIKey != "" }
 
 // String renders the configuration without any secret material.
 func (c Config) String() string {
-	return fmt.Sprintf("config{http=%s chain=%d rpc=%s deployment=%s confirmations=%d poll=%s circuits=%s}",
-		c.HTTPAddr, c.ChainID, c.RPCURL, c.DeploymentFile, c.Confirmations, c.IndexerPoll, c.CircuitsDir)
+	fallback := "none"
+	if fbs := c.RPCFallbacks(); len(fbs) > 0 {
+		red := make([]string, len(fbs))
+		for i, f := range fbs {
+			red[i] = RedactURL(f)
+		}
+		fallback = strings.Join(red, ",")
+	}
+	return fmt.Sprintf("config{http=%s chain=%d rpc=%s rpcFallback=%s deployment=%s confirmations=%d poll=%s circuits=%s}",
+		c.HTTPAddr, c.ChainID, RedactURL(c.RPCURL), fallback, c.DeploymentFile, c.Confirmations, c.IndexerPoll, c.CircuitsDir)
 }
+
+// RedactURL keeps a URL's scheme and host and hides what may be a credential (user info, path, query).
+func RedactURL(raw string) string {
+	u, err := url.Parse(raw)
+	if err != nil || u.Host == "" {
+		return "[redacted]"
+	}
+	out := u.Scheme + "://" + u.Host
+	if (u.Path != "" && u.Path != "/") || u.RawQuery != "" || u.User != nil {
+		out += "/…"
+	}
+	return out
+}
+
+var duneName = regexp.MustCompile(`^[A-Za-z0-9_-]{1,64}$`)
 
 // Minimum secret sizes.
 const (
@@ -153,6 +232,44 @@ func Load(getenv func(string) string) (Config, error) {
 		RPCURL:         required("RPC_URL"),
 		DeploymentFile: required("DEPLOYMENT_FILE"),
 		CircuitsDir:    str("CIRCUITS_DIR", "../circuits"),
+	}
+	for _, raw := range strings.Split(getenv("RPC_FALLBACK_URL"), ",") {
+		if raw = strings.TrimSpace(raw); raw != "" {
+			c.RPCFallbackURLs = append(c.RPCFallbackURLs, raw)
+		}
+	}
+	c.AlchemyRPCURL = str("ALCHEMY_RPC_URL", "")
+	if c.AlchemyRPCURL == "" {
+		if k := strings.TrimSpace(getenv("ALCHEMY_API_KEY")); k != "" {
+			if strings.ContainsAny(k, "/?#@ ") {
+				fail("ALCHEMY_API_KEY", "must be the bare Alchemy API key")
+			} else {
+				c.AlchemyRPCURL = "https://robinhood-testnet.g.alchemy.com/v2/" + k
+			}
+		}
+	}
+	check := func(name, raw string) {
+		u, err := url.Parse(raw)
+		if err != nil || u.Host == "" || !slices.Contains([]string{"http", "https", "ws", "wss"}, u.Scheme) {
+			fail(name, "must be an http(s) or ws(s) URL")
+		}
+	}
+	if c.RPCURL != "" {
+		check("RPC_URL", c.RPCURL)
+	}
+	for _, f := range c.RPCFallbackURLs {
+		check("RPC_FALLBACK_URL", f)
+	}
+	if c.AlchemyRPCURL != "" {
+		check("ALCHEMY_RPC_URL", c.AlchemyRPCURL)
+	}
+	if fbs := c.RPCFallbacks(); len(fbs) > 0 {
+		for _, f := range append([]string{c.RPCURL}, fbs...) {
+			if !strings.HasPrefix(f, "http") {
+				fail("RPC_FALLBACK_URL", "failover works over HTTP(S): use http(s) URLs for RPC_URL, RPC_FALLBACK_URL and ALCHEMY_RPC_URL")
+				break
+			}
+		}
 	}
 	c.ChainID = uintVal("CHAIN_ID", 0, true)
 	c.StartBlock = uintVal("START_BLOCK", 0, false)
@@ -236,6 +353,66 @@ func Load(getenv func(string) string) (Config, error) {
 	c.GasDripDaily = int(uintVal("GAS_DRIP_DAILY", 200, false))
 	if c.GasDripDaily <= 0 {
 		fail("GAS_DRIP_DAILY", "must be a positive number of drips")
+	}
+
+	c.AppURL = strings.TrimRight(str("APP_URL", ""), "/")
+	if c.AppURL != "" {
+		if u, err := url.Parse(c.AppURL); err != nil || u.Host == "" || (u.Scheme != "https" && u.Scheme != "http") {
+			fail("APP_URL", "must be the web app's origin, such as https://app.example.com")
+		}
+	}
+	c.RecoveryScanInterval = time.Minute
+	if raw := strings.TrimSpace(getenv("RECOVERY_SCAN_INTERVAL")); raw != "" {
+		d, err := time.ParseDuration(raw)
+		if err != nil || d < 0 {
+			fail("RECOVERY_SCAN_INTERVAL", "must be a non-negative duration such as 1m (0s disables)")
+		} else {
+			c.RecoveryScanInterval = d
+		}
+	}
+	c.DeviceRootsDir = str("DEVICE_ROOTS_DIR", "")
+	if origins := strings.TrimSpace(getenv("WEBAUTHN_ORIGINS")); origins != "" {
+		for _, o := range strings.Split(origins, ",") {
+			if o = strings.TrimSpace(o); o != "" {
+				c.WebAuthnOrigins = append(c.WebAuthnOrigins, o)
+			}
+		}
+	}
+
+	for _, k := range strings.Split(getenv("ALCHEMY_WEBHOOK_SIGNING_KEYS"), ",") {
+		if k = strings.TrimSpace(k); k != "" {
+			if len(k) < 16 {
+				fail("ALCHEMY_WEBHOOK_SIGNING_KEYS", "each signing key must be at least 16 characters (the whsec_ key Alchemy issues)")
+				continue
+			}
+			c.AlchemyWebhookSigningKeys = append(c.AlchemyWebhookSigningKeys, Secret(k))
+		}
+	}
+
+	c.ZeroDevWebhookSecret = Secret(strings.TrimSpace(getenv("ZERODEV_WEBHOOK_SECRET")))
+	if c.ZeroDevWebhookSecret != "" && len(c.ZeroDevWebhookSecret) < 24 {
+		fail("ZERODEV_WEBHOOK_SECRET", "must be at least 24 characters (it is the only credential on the webhook URL)")
+	}
+	c.ZeroDevProjectID = str("ZERODEV_PROJECT_ID", "")
+	c.SponsorPerDay = int(uintVal("ZERODEV_SPONSOR_PER_DAY", 25, false))
+	c.SponsorGlobalDay = int(uintVal("ZERODEV_SPONSOR_GLOBAL_DAY", 500, false))
+	c.SponsorMaxWei = uintVal("ZERODEV_SPONSOR_MAX_WEI", 200_000_000_000_000, false) // 0.0002 ETH
+
+	c.DuneAPIKey = Secret(strings.TrimSpace(getenv("DUNE_API_KEY")))
+	c.DuneNamespace = str("DUNE_NAMESPACE", "")
+	if c.DuneNamespace != "" && !duneName.MatchString(c.DuneNamespace) {
+		fail("DUNE_NAMESPACE", "must be a Dune user or team handle (letters, digits, _ and -)")
+	}
+	c.DuneUploadInterval = 15 * time.Minute
+	for _, name := range []string{"DUNE_PUSH_INTERVAL", "DUNE_UPLOAD_INTERVAL"} { // the latter wins
+		if raw := strings.TrimSpace(getenv(name)); raw != "" {
+			d, err := time.ParseDuration(raw)
+			if err != nil || d < time.Minute {
+				fail(name, "must be a duration of at least 1m, such as 15m")
+			} else {
+				c.DuneUploadInterval = d
+			}
+		}
 	}
 
 	c.WorkerKey = key("WORKER_KEY")

@@ -10,7 +10,8 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import "./map.css";
 import { useEffect, useRef, useState } from "react";
 import type { Scene, SceneTrackPoint } from "@/lib/geo/scene";
-import { bounds, corridorRuns, formatKm, type LonLat } from "@/lib/geo/route";
+import { bounds, corridorRuns, formatKm, nearLon, type LonLat } from "@/lib/geo/route";
+import { circleRing } from "@/lib/places";
 import { loadLaneLines } from "@/lib/geo/searoute";
 import { compass, cumulativeKm, graticule, projectOnRoute, routeUntil, tempClass, type Band, type MilestoneMark } from "@/lib/geo/voyage";
 import { aisPopup, esc, milestonePopup, pausePopup, portPopup, trackPopup } from "./popup";
@@ -33,6 +34,21 @@ export type VoyageOverlay = {
   onOpenEpoch?: (epochId: string, index: number) => void;
 };
 
+/** A milestone's place (contracts v2): a geodesic circle with a label at its northern edge. */
+export type MapPlace = {
+  key: string;
+  lat: number;
+  lon: number;
+  radiusM: number;
+  /** the tag on the map, e.g. "M5 · 100 km" */
+  tag: string;
+  /** accessible name of the tag */
+  title: string;
+  state: "released" | "next" | "held" | "paused" | "pending" | "draft";
+  /** tooltip HTML (escaped by the caller); the tag is a button when set */
+  popup?: string;
+};
+
 export type MapViewProps = {
   scene: Scene;
   /** the policy's allowed deviation in metres; draws the corridor when above zero */
@@ -53,16 +69,20 @@ export type MapViewProps = {
   onFail?: (reason: string) => void;
   /** the element to show full screen (defaults to the map) */
   fullscreenTarget?: () => HTMLElement | null;
+  /** milestone places to draw as circles */
+  places?: MapPlace[];
+  /** called with the clicked point while picking a place (the cursor becomes a crosshair) */
+  onPick?: (at: LonLat) => void;
   className?: string;
 };
 
-type Geometry = { type: "LineString"; coordinates: LonLat[] } | { type: "MultiLineString"; coordinates: LonLat[][] } | { type: "Point"; coordinates: LonLat };
+type Geometry = { type: "LineString"; coordinates: LonLat[] } | { type: "MultiLineString"; coordinates: LonLat[][] } | { type: "Point"; coordinates: LonLat } | { type: "Polygon"; coordinates: LonLat[][] };
 type Feature = { type: "Feature"; properties: Record<string, unknown>; geometry: Geometry };
 const fc = (features: Feature[]) => ({ type: "FeatureCollection" as const, features });
 const line = (coordinates: LonLat[], properties: Record<string, unknown> = {}): Feature => ({ type: "Feature", properties, geometry: { type: "LineString", coordinates } });
 const point = (coordinates: LonLat, properties: Record<string, unknown> = {}): Feature => ({ type: "Feature", properties, geometry: { type: "Point", coordinates } });
 
-const SOURCES = ["graticule", "lanes", "corridor", "route", "route-done", "vessel-track", "track-lines", "track-points", "link"] as const;
+const SOURCES = ["graticule", "lanes", "corridor", "places", "route", "route-done", "vessel-track", "track-lines", "track-points", "link"] as const;
 type SourceId = (typeof SOURCES)[number];
 
 const reducedMotion = () => typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -164,6 +184,9 @@ function addArrowIcon(map: MlMap) {
 
 const tempColor = (p: Palette) => ["match", ["get", "cls"], "out", p.tempOut, "near", p.tempNear, p.tempIn] as unknown as string;
 
+const placeColor = (p: Palette, part: "fill" | "line") =>
+  ["match", ["get", "state"], "released", p.released, "paused", p.paused, "next", part === "fill" ? "#C6F432" : p.routeDone, "held", part === "fill" ? "#C6F432" : p.routeDone, p.route] as unknown as string;
+
 /** The shipment layers for a palette. Opacity that the replay controls is left out, so a theme switch keeps it. */
 function dataLayers(p: Palette): LayerSpecification[] {
   return [
@@ -177,6 +200,10 @@ function dataLayers(p: Palette): LayerSpecification[] {
       layout: { "line-cap": "butt", "line-join": "round" },
       paint: { "line-color": p.corridor, "line-opacity": 0.14, "line-width": ["interpolate", ["exponential", 2], ["zoom"], 0, ["get", "w0"], 24, ["*", ["get", "w0"], 16777216]] },
     },
+    // milestone places: a tinted disc with a solid edge (dashed while the milestone is still ahead)
+    { id: "places-fill", type: "fill", source: "places", paint: { "fill-color": placeColor(p, "fill"), "fill-opacity": ["match", ["get", "state"], "next", 0.22, "held", 0.22, 0.12] as unknown as number } },
+    { id: "places-line", type: "line", source: "places", filter: ["!", ["get", "dashed"]], paint: { "line-color": placeColor(p, "line"), "line-width": 1.8, "line-opacity": 0.9 } },
+    { id: "places-line-dash", type: "line", source: "places", filter: ["get", "dashed"], paint: { "line-color": placeColor(p, "line"), "line-width": 1.5, "line-opacity": 0.85, "line-dasharray": [2, 1.6] } },
     { id: "route-casing", type: "line", source: "route", layout: { "line-join": "round", "line-cap": "round" }, paint: { "line-color": p.routeCasing, "line-width": 4.5, "line-opacity": 0.85 } },
     { id: "route", type: "line", source: "route", layout: { "line-join": "round", "line-cap": "round" }, paint: { "line-color": p.route, "line-width": 1.8, "line-dasharray": [2.4, 1.8] } },
     { id: "route-done", type: "line", source: "route-done", layout: { "line-join": "round", "line-cap": "round" }, paint: { "line-color": p.routeDone, "line-width": 2.4, "line-opacity": 0.9 } },
@@ -232,7 +259,7 @@ function el(tag: "div" | "button", className: string, html = ""): HTMLElement {
 
 const kmLabel = (km: number) => `km ${Math.round(km).toLocaleString("en-US")}`;
 
-export default function MapView({ scene, corridorM = 0, replayIndex = null, paused, label, describedBy, variant = "full", theme = "light", voyage, showLanes, fitKey, onFail, fullscreenTarget, className }: MapViewProps) {
+export default function MapView({ scene, corridorM = 0, replayIndex = null, paused, label, describedBy, variant = "full", theme = "light", voyage, showLanes, fitKey, onFail, fullscreenTarget, places, onPick, className }: MapViewProps) {
   const box = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MlMap | null>(null);
   const markers = useRef<maplibregl.Marker[]>([]);
@@ -244,12 +271,14 @@ export default function MapView({ scene, corridorM = 0, replayIndex = null, paus
   const failRef = useRef(onFail);
   const fullscreenRef = useRef(fullscreenTarget);
   const themeAtStart = useRef(theme);
+  const pickRef = useRef(onPick);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     latest.current = { scene, variant, voyage };
     failRef.current = onFail;
     fullscreenRef.current = fullscreenTarget;
+    pickRef.current = onPick;
   });
 
   // create the map once
@@ -363,6 +392,7 @@ export default function MapView({ scene, corridorM = 0, replayIndex = null, paus
         e.preventDefault();
         onTrack(true)(e);
       });
+      map.on("click", (e) => pickRef.current?.([e.lngLat.lng, e.lngLat.lat]));
       map.on("mouseenter", "track-points", () => (map.getCanvas().style.cursor = "pointer"));
       map.on("mouseleave", "track-points", () => {
         map.getCanvas().style.cursor = "";
@@ -399,6 +429,13 @@ export default function MapView({ scene, corridorM = 0, replayIndex = null, paus
     const map = mapRef.current;
     if (map && ready) repaint(map, theme);
   }, [theme, ready]);
+
+  // picking a place: a crosshair over the map
+  const picking = !!onPick;
+  useEffect(() => {
+    const map = mapRef.current;
+    if (map && ready) map.getCanvas().style.cursor = picking ? "crosshair" : "";
+  }, [picking, ready]);
 
   // the lane network, once, in the background
   useEffect(() => {
@@ -444,6 +481,11 @@ export default function MapView({ scene, corridorM = 0, replayIndex = null, paus
     const cls = (p: SceneTrackPoint) => tempClass(p.minTempX100, p.maxTempX100, band);
     set("track-lines", fc(t.slice(1).map((p, i) => line([[t[i]!.lon, t[i]!.lat], [p.lon, p.lat]], { cls: cls(p), i: i + 1 }))));
     set("track-points", fc(t.map((p, i) => point([p.lon, p.lat], { cls: cls(p), committed: p.committed, pass: p.pass, i }))));
+    // milestone places on the same copy of the world as the route
+    const lons = route.map((c) => c[0]);
+    const ref = lons.length ? (Math.min(...lons) + Math.max(...lons)) / 2 : 0;
+    const rings = (places ?? []).map((pl) => ({ pl, ring: circleRing(pl.lat, nearLon(pl.lon, ref), pl.radiusM) }));
+    set("places", fc(rings.map(({ pl, ring }) => ({ type: "Feature", properties: { state: pl.state, dashed: pl.state === "pending" || pl.state === "draft" }, geometry: { type: "Polygon", coordinates: [ring] } }))));
     const v = scene.vessel, pos = scene.position;
     set("vessel-track", fc(v && v.track.length > 1 ? [line(v.track)] : []));
     const linkState = !v?.comparable ? "idle" : v.agrees === false ? "warn" : "ok";
@@ -476,6 +518,11 @@ export default function MapView({ scene, corridorM = 0, replayIndex = null, paus
       const node = el(full ? "button" : "div", `cf-port cf-port--${p.role}${below ? " cf-port--below" : ""}`, `<span class="cf-port__dot"></span><span class="cf-port__label">${esc(p.name)}${meta}</span>`);
       const role = p.role === "stop" ? "Transshipment stop" : p.role === "origin" ? "Origin" : "Destination";
       add(node, [p.lon, p.lat], `${role}: ${p.name}`, full ? portPopup(p.name, p.code, p.role, along, totalKm) : undefined);
+    }
+
+    for (const { pl, ring } of rings) {
+      const node = el(pl.popup ? "button" : "div", `cf-place cf-place--${pl.state}`, `<span class="cf-place__tag">${esc(pl.tag)}</span>`);
+      add(node, ring[0]!, pl.title, pl.popup, "bottom");
     }
 
     if (voyage) {
@@ -595,7 +642,7 @@ export default function MapView({ scene, corridorM = 0, replayIndex = null, paus
       cleanup.current?.();
       cleanup.current = null;
     };
-  }, [scene, corridorM, ready, paused, variant, voyage, theme]);
+  }, [scene, corridorM, ready, paused, variant, voyage, theme, places]);
 
   // replay: dim the track after the replayed point and ring it
   useEffect(() => {

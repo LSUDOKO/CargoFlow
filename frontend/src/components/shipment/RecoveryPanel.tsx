@@ -1,12 +1,15 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAccount } from "wagmi";
 import { signMessage } from "wagmi/actions";
 import { Button } from "@/components/ui/Button";
+import { WalletButton } from "@/components/wallet/WalletButton";
 import { ApiError, apiPost } from "@/lib/api/client";
 import { useGateways, useTelemetry } from "@/lib/api/hooks";
+import { nowSec } from "@/lib/api/extras";
+import { recoveryReady, useNotifications } from "@/lib/api/notifications";
 import { RecoveryProof, type ShipmentView } from "@/lib/api/schemas";
 import { controllerAbi } from "@/lib/chain/abis";
 import { wagmiConfig } from "@/lib/chain/config";
@@ -27,7 +30,7 @@ const words = (p: RecoveryProof) => ({
  * probe's fresh readings and proves they sit inside the band (bound to the exporter's wallet), and the exporter's
  * wallet submits the proof on chain. The readings themselves are never revealed.
  */
-export function RecoveryPanel({ view }: { view: ShipmentView }) {
+export function RecoveryPanel({ view, focus }: { view: ShipmentView; focus?: boolean }) {
   const hydrated = useHydrated();
   const { address } = useAccount();
   const { contracts } = useContracts();
@@ -44,21 +47,47 @@ export function RecoveryPanel({ view }: { view: ShipmentView }) {
   const proof = held && f && held.pausedAt === f.pausedAt && held.pauseCount === f.pauseCount ? held.proof : null;
 
   const isExporter = hydrated && !!address && address.toLowerCase() === view.shipment.exporter.toLowerCase();
-  if (!isExporter || f?.status !== "PAUSED" || !contracts) return null;
+  // the recovery worker proved this pause already (RECOVERY_READY): one signature and one transaction resume it
+  const notes = useNotifications(isExporter ? address : undefined);
+  const ready = f?.status === "PAUSED" ? recoveryReady(notes.data?.notifications, view.shipment.id, f.pausedAt) : null;
+  const readySensor = typeof ready?.data.sensorId === "string" ? ready.data.sensorId : "";
+  // ?recover=1 (the notification's link): bring the panel into view and move focus to it
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const paused = f?.status === "PAUSED";
+  useEffect(() => {
+    if (!focus || !paused || !hydrated) return;
+    const t = setTimeout(() => {
+      headingRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      headingRef.current?.focus({ preventScroll: true });
+    }, 150);
+    return () => clearTimeout(t);
+  }, [focus, paused, hydrated, isExporter]);
+
+  if (focus && paused && hydrated && !isExporter) {
+    return (
+      <div className="mt-4 border-t border-line pt-4">
+        <h3 ref={headingRef} tabIndex={-1} className="font-semibold outline-none">Resume with a proof</h3>
+        <p className="mt-1 text-sm text-slate">Connect the exporter&apos;s wallet ({view.shipment.exporter.slice(0, 8)}…) to review the recovery proof and sign.</p>
+        <div className="mt-3"><WalletButton compact /></div>
+      </div>
+    );
+  }
+  if (!isExporter || !paused || !contracts || !f) return null;
   const pause = { pausedAt: f.pausedAt, pauseCount: f.pauseCount };
 
   const sensors = [...new Set([...(gateways.data?.sources ?? []).flatMap((g) => g.sensorIds), ...(telemetry.data?.epochs ?? []).flatMap((e) => e.sensors.map((s) => s.sensorId))])].sort();
   const chosen = sensor || sensors[0] || "";
   const id = view.shipment.id as `0x${string}`;
 
-  async function prepare() {
-    if (!address || !chosen) return;
+  async function prepare(then?: "submit") {
+    const sensorId = then === "submit" && readySensor ? readySensor : chosen;
+    if (!address || !sensorId || !f) return;
     setError(null);
-    const issuedAt = Math.floor(Date.now() / 1000);
+    const issuedAt = nowSec();
     let signature: string;
     try {
       setStage("sign");
-      signature = await signMessage(wagmiConfig, { account: address, message: recoveryAuthorizationMessage(view.shipment.id, chosen, address, issuedAt) });
+      signature = await signMessage(wagmiConfig, { account: address, message: recoveryAuthorizationMessage(view.shipment.id, sensorId, address, issuedAt) });
     } catch (err) {
       setError(signatureError(err));
       setStage(null);
@@ -66,12 +95,14 @@ export function RecoveryPanel({ view }: { view: ShipmentView }) {
     }
     try {
       setStage("prove");
-      const p = await apiPost(`/v1/shipments/${view.shipment.id}/recovery`, { sensorId: chosen, submitter: address, issuedAt, signature }, RecoveryProof);
-      setHeld({ proof: p, sensor: chosen, ...pause });
+      const p = await apiPost(`/v1/shipments/${view.shipment.id}/recovery`, { sensorId, submitter: address, issuedAt, signature }, RecoveryProof);
+      setHeld({ proof: p, sensor: sensorId, ...pause });
       void qc.invalidateQueries(); // the recovery epoch is now committed
+      setStage(null);
+      if (then === "submit") await submit(p);
     } catch (err) {
       if (err instanceof ApiError && err.code === "not_recoverable") {
-        setError(`${err.message.replace(/^.*?: /, "")}. Upload at least 8 in-range readings from ${chosen} taken after the pause, then try again.`);
+        setError(`${err.message.replace(/^.*?: /, "")}. Upload at least 8 in-range readings from ${sensorId} taken after the pause, then try again.`);
       } else setError(err instanceof ApiError ? err.message : "The proof could not be prepared.");
     } finally {
       setStage(null);
@@ -94,7 +125,26 @@ export function RecoveryPanel({ view }: { view: ShipmentView }) {
 
   return (
     <div className="mt-4 border-t border-line pt-4">
-      <h3 className="font-semibold">Resume with a proof</h3>
+      <h3 ref={headingRef} tabIndex={-1} className="font-semibold outline-none">Resume with a proof</h3>
+      {/HUMIDITY_LIMIT|SHOCK_LIMIT/.test(f.pauseReason ?? "") && (
+        <p className="mt-1 rounded-2xl bg-alert/12 px-3 py-2 text-sm">
+          This pause is for a humidity or shock breach. The proof covers only the temperature band, so it cannot lift this pause on its own: ask the arbiter to review it.
+        </p>
+      )}
+      {ready && !proof && (
+        <div className="mt-2 rounded-2xl bg-verified/10 p-4 ring-1 ring-verified/30 ring-inset" role="status">
+          <p className="flex items-center gap-2 font-display text-base font-semibold text-[#00733e]">
+            <span aria-hidden="true" className="grid h-5 w-5 place-items-center rounded-full bg-verified text-xs text-white">✓</span>
+            Proof ready — sign to resume
+          </p>
+          <p className="mt-1 text-sm text-ink/80">
+            CargoFlow&apos;s recovery worker already proved that {readySensor || "a probe"} has 8 fresh readings back inside the band. Sign once to commit it, then confirm one transaction to resume the facility.
+          </p>
+          <Button className="mt-3" loading={stage !== null || pending} onClick={() => void prepare("submit")}>
+            {stage === "sign" ? "Waiting for your signature…" : stage === "prove" ? "Committing the proof…" : pending ? "Confirm in your wallet…" : "Sign and resume"}
+          </Button>
+        </div>
+      )}
       {proof ? (
         <>
           <p className="mt-1 text-sm text-slate">

@@ -119,7 +119,7 @@ function FacilityCard({ view, role }: { view: ShipmentView; role: Role }) {
         {role === "financier" && f.status === "CREATED" && (
           <PayAction shipmentId={id} amount={BigInt(f.committed)} action="depositCapital" label={`Deposit ${formatUSDG(f.committed)} USDG`} successTitle="Facility funded" />
         )}
-        {role === "financier" && f.status !== "CREATED" && <p className="text-sm text-slate">{f.status === "SETTLED" ? "Repaid with the fee." : "Funded. Releases follow the evidence automatically."}</p>}
+        {role === "financier" && f.status !== "CREATED" && <p className="text-sm text-slate">{f.status === "SETTLED" ? "Repaid with the fee." : f.status === "CANCELLED" ? "Cancelled before transit: any deposit came back in full." : "Funded. Releases follow the evidence automatically."}</p>}
         {role === "buyer" && f.status === "ACTIVE" && allReleased && contracts && (
           <Button loading={pending} onClick={() => send({ address: contracts.controller, abi: controllerAbi, functionName: "markDelivered", args: [id], label: "Confirm delivery", successTitle: "Delivery confirmed" })}>
             Confirm delivery
@@ -129,7 +129,7 @@ function FacilityCard({ view, role }: { view: ShipmentView; role: Role }) {
           <PayAction shipmentId={id} amount={BigInt(view.shipment.invoiceValue)} action="settle" label={`Pay the ${formatUSDG(view.shipment.invoiceValue)} USDG invoice`} successTitle="Invoice paid and settled" />
         )}
         {role === "buyer" && !(f.status === "DELIVERED" || (f.status === "ACTIVE" && allReleased)) && (
-          <p className="text-sm text-slate">{f.status === "SETTLED" ? "Paid and settled." : "Delivery can be confirmed once every milestone is released."}</p>
+          <p className="text-sm text-slate">{f.status === "SETTLED" ? "Paid and settled." : f.status === "CANCELLED" ? "Cancelled before transit: nothing to pay." : "Delivery can be confirmed once every milestone is released."}</p>
         )}
       </div>
     </Card>

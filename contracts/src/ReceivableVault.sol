@@ -132,6 +132,23 @@ contract ReceivableVault is Controlled, ReentrancyGuard, IReceivableVault {
     }
 
     /// @inheritdoc IReceivableVault
+    function closeCancelled(bytes32 shipmentId)
+        external
+        onlyRole(Roles.CONTROLLER_ROLE)
+        nonReentrant
+    {
+        Facility storage f = _load(shipmentId);
+        if (f.closed) revert FacilityClosed();
+        if (f.drawn != 0) revert CannotCancel();
+
+        f.closed = true;
+        uint256 refund = f.funded ? f.committed : 0;
+        if (refund > 0) USDG.safeTransfer(f.financier, refund);
+
+        emit CapitalReturned(shipmentId, f.financier, refund);
+    }
+
+    /// @inheritdoc IReceivableVault
     function setPaused(bytes32 shipmentId, bool paused) external onlyRole(Roles.CONTROLLER_ROLE) {
         _load(shipmentId).paused = paused;
         emit FacilityPauseSet(shipmentId, paused);

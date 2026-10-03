@@ -89,6 +89,6 @@ func (s *Server) gas(w http.ResponseWriter, r *http.Request) error {
 	if err := s.c.Store.RecordGasDrip(r.Context(), who, hash, g.AmountWei.String()); err != nil {
 		s.c.Log.Error("record gas drip", "tx", hash, "err", err)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"txHash": hash, "amountWei": g.AmountWei.String(), "address": who})
+	writeJSON(w, http.StatusOK, gasResponse{TxHash: hash, AmountWei: g.AmountWei.String(), Address: who})
 	return nil
 }

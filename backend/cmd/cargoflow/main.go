@@ -28,6 +28,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -38,8 +39,11 @@ import (
 	"github.com/LSUDOKO/CargoFlow/backend/internal/auth"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/chain"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/config"
+	"github.com/LSUDOKO/CargoFlow/backend/internal/devicetrust"
+	"github.com/LSUDOKO/CargoFlow/backend/internal/dune"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/proof"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/service"
+	"github.com/LSUDOKO/CargoFlow/backend/internal/sponsor"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/store"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/ws"
 )
@@ -146,7 +150,7 @@ func serve(ctx context.Context, getenv func(string) string, out io.Writer) error
 	if manifest.ChainID != cfg.ChainID {
 		return fmt.Errorf("CHAIN_ID is %d but the deployment manifest is for chain %d", cfg.ChainID, manifest.ChainID)
 	}
-	client, err := chain.Dial(ctx, cfg.RPCURL, manifest)
+	client, err := chain.DialFailover(ctx, cfg.RPCURL, cfg.RPCFallbacks(), manifest)
 	if err != nil {
 		return err
 	}
@@ -177,12 +181,26 @@ func serve(ctx context.Context, getenv func(string) string, out io.Writer) error
 	svc := service.New(service.Options{
 		Store: st, Chain: client, Hub: hub, Prover: prover(cfg, log), AI: aiMonitor(cfg, log), Wording: wording(cfg), WordingTimeout: cfg.AITimeout,
 		Worker: worker, Monitor: monitor, Manager: manager, SaltSecret: []byte(cfg.SaltSecret.Reveal()), Log: log,
-		Alerts: dispatcher,
+		Alerts: dispatcher, AppURL: cfg.AppURL,
 	})
 
 	idx := &chain.Indexer{
 		C: client, Store: st, Name: "main", StartBlock: cfg.StartBlock, Confirmations: cfg.Confirmations,
 		Poll: cfg.IndexerPoll, Sink: svc.OnChainEvents, Log: log,
+	}
+	if cfg.RecoveryScanInterval > 0 {
+		go svc.RunRecoveryWorker(ctx, cfg.RecoveryScanInterval)
+	}
+	roots, err := devicetrust.LoadRoots(cfg.DeviceRootsDir)
+	if err != nil {
+		return err
+	}
+	if !roots.Empty() {
+		log.Info("device attestation roots loaded", "roots", roots.Names)
+	}
+	origins := devicetrust.Origins(cfg.WebAuthnOrigins)
+	if len(origins) == 0 {
+		origins = cfg.CORSOrigins
 	}
 	if cfg.ReconcileInterval > 0 {
 		go svc.RunReconciler(ctx, cfg.ReconcileInterval)
@@ -192,10 +210,22 @@ func serve(ctx context.Context, getenv func(string) string, out io.Writer) error
 	indexerDone := make(chan error, 1)
 	go func() { indexerDone <- idx.Run(ctx) }()
 
+	if cfg.DuneEnabled() {
+		go duneUploader(cfg, st, client, log).Run(ctx, cfg.DuneUploadInterval)
+		log.Info("Dune upload enabled", "namespace", cfg.DuneNamespace, "interval", cfg.DuneUploadInterval.String())
+	}
+	var signingKeys []string
+	for _, k := range cfg.AlchemyWebhookSigningKeys {
+		signingKeys = append(signingKeys, k.Reveal())
+	}
+	if len(signingKeys) > 0 {
+		log.Info("Alchemy webhook enabled", "keys", len(signingKeys))
+	}
 	server := api.NewServer(api.Config{
 		Service: svc, Store: st, Chain: client, Hub: hub, AdminKey: cfg.AdminAPIKey.Reveal(), CORSOrigins: cfg.CORSOrigins, Log: log,
-		Verifier: &auth.Verifier{Lookup: st.GetSource, Now: time.Now, MaxSkew: 5 * time.Minute},
-		Alerts:   channels, AIS: tracker, Gas: drip,
+		Verifier: &auth.Verifier{Lookup: st.GetSource, Now: time.Now, MaxSkew: 5 * time.Minute, Origins: origins, SignCount: st.AdvanceSignCount},
+		Alerts:   channels, AIS: tracker, Gas: drip, DeviceRoots: roots, WebAuthnOrigins: origins,
+		AlchemySigningKeys: signingKeys, Indexer: idx, ZeroDev: zerodevSponsor(cfg, manifest, log),
 	})
 	ln, err := net.Listen("tcp", cfg.HTTPAddr)
 	if err != nil {
@@ -230,6 +260,41 @@ func serve(ctx context.Context, getenv func(string) string, out io.Writer) error
 	return nil
 }
 
+// duneUploader pushes the indexed data to Dune's uploads API (DUNE_API_KEY and DUNE_NAMESPACE set).
+func duneUploader(cfg config.Config, st *store.Store, client *chain.Client, log *slog.Logger) *dune.Uploader {
+	return &dune.Uploader{
+		Client: &dune.Client{APIKey: cfg.DuneAPIKey.Reveal(), Namespace: cfg.DuneNamespace},
+		Source: st, Confirmations: cfg.Confirmations, Log: log,
+		Head: client.Eth.BlockNumber,
+		BlockTime: func(ctx context.Context, block uint64) (time.Time, error) {
+			hdr, err := client.Eth.HeaderByNumber(ctx, new(big.Int).SetUint64(block))
+			if err != nil {
+				return time.Time{}, err
+			}
+			return time.Unix(int64(hdr.Time), 0).UTC(), nil
+		},
+	}
+}
+
+// zerodevSponsor configures the ZeroDev gas policy webhook, or nil (404) when ZERODEV_WEBHOOK_SECRET or
+// ZERODEV_PROJECT_ID is unset. Sponsored calls may target the deployment's contracts, and USDG only for approvals
+// to them.
+func zerodevSponsor(cfg config.Config, m chain.Manifest, log *slog.Logger) *api.ZeroDevSponsor {
+	if !cfg.ZeroDevWebhookEnabled() {
+		return nil
+	}
+	contracts := map[common.Address]bool{}
+	for addr := range m.Indexed() {
+		contracts[addr] = true
+	}
+	log.Info("ZeroDev gas policy webhook enabled", "perSender", cfg.SponsorPerDay, "global", cfg.SponsorGlobalDay, "maxWei", cfg.SponsorMaxWei)
+	return &api.ZeroDevSponsor{
+		Secret: cfg.ZeroDevWebhookSecret.Reveal(), ProjectID: cfg.ZeroDevProjectID, ChainID: cfg.ChainID,
+		PerSender: cfg.SponsorPerDay, Global: cfg.SponsorGlobalDay,
+		Policy: sponsor.Policy{Contracts: contracts, USDG: m.USDG, MaxWei: new(big.Int).SetUint64(cfg.SponsorMaxWei)},
+	}
+}
+
 // devChainID is anvil's chain: there, webhooks may target local addresses.
 const devChainID = 31337
 
@@ -237,7 +302,8 @@ const devChainID = 31337
 // username for its links, so a token the Bot API refuses leaves Telegram off instead of failing the start; once on,
 // a long poll links chats to subscriptions. Email needs a Resend key and a sender.
 func alerting(ctx context.Context, cfg config.Config, st *store.Store, log *slog.Logger) (*alerts.Dispatcher, api.AlertChannels) {
-	d := &alerts.Dispatcher{Store: st, Log: log, Senders: map[string]alerts.Sender{"webhook": alerts.NewWebhook(cfg.ChainID == devChainID)}}
+	d := &alerts.Dispatcher{Store: st, Log: log, Senders: map[string]alerts.Sender{
+		"webhook": alerts.NewWebhook(cfg.ChainID == devChainID), "slack": alerts.NewSlack(cfg.ChainID == devChainID)}}
 	ch := api.AlertChannels{AllowPrivateWebhooks: cfg.ChainID == devChainID}
 	if cfg.TelegramEnabled() {
 		tg := alerts.NewTelegram(cfg.TelegramBotToken, "")
@@ -339,7 +405,8 @@ func verifyRoles(ctx context.Context, c *chain.Client, worker, monitor, manager 
 			return fmt.Errorf("%s (%s) does not hold %s on this deployment", m.label, m.who.Address().Hex(), m.role)
 		}
 	}
-	for _, forbidden := range []string{"CONTROLLER_ROLE", "DISPUTE_ROLE", "EVIDENCE_VERIFIER_ROLE", "FACILITY_MANAGER_ROLE", "DEFAULT_ADMIN_ROLE"} {
+	for _, forbidden := range []string{"CONTROLLER_ROLE", "DISPUTE_ROLE", "EVIDENCE_VERIFIER_ROLE", "FACILITY_MANAGER_ROLE", "DEFAULT_ADMIN_ROLE",
+		"ATTESTOR_ROLE", "CARRIER_ROLE", "PAUSER_ROLE"} {
 		role := forbidden
 		ok, err := c.HasRole(ctx, role, monitor.Address())
 		if err != nil {
@@ -347,6 +414,11 @@ func verifyRoles(ctx context.Context, c *chain.Client, worker, monitor, manager 
 		}
 		if ok {
 			return fmt.Errorf("MONITOR_KEY (%s) holds %s: the monitor must be able to request a pause and nothing else", monitor.Address().Hex(), role)
+		}
+	}
+	if c.HasDeviceRegistry() {
+		if ok, err := c.HasRole(ctx, "ATTESTOR_ROLE", worker.Address()); err == nil && !ok {
+			slog.Default().Warn("WORKER_KEY does not hold ATTESTOR_ROLE: devices will not be recorded in the DeviceRegistry", "worker", worker.Address().Hex())
 		}
 	}
 	return nil

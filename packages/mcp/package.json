@@ -1,0 +1,71 @@
+{
+  "name": "@cargoflow/mcp",
+  "version": "0.1.0",
+  "description": "Model Context Protocol server for CargoFlow: read shipments, evidence and cover, verify documents, and prepare unsigned transactions for your own wallet to sign.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "bin": {
+    "cargoflow-mcp": "./dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./hosted": {
+      "types": "./dist/hosted.d.ts",
+      "default": "./dist/hosted.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "cargoflow",
+    "trade-finance",
+    "claude"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LSUDOKO/CargoFlow",
+    "directory": "packages/mcp"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "start": "node dist/cli.js",
+    "dev:worker": "wrangler dev",
+    "deploy:worker": "wrangler deploy"
+  },
+  "dependencies": {
+    "@cargoflow/sdk": "file:../sdk",
+    "@cfworker/json-schema": "^4.1.1",
+    "@modelcontextprotocol/sdk": "^1.32.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsup": "^8.5.1",
+    "typescript": "~5.9.3",
+    "viem": "^2.57.2",
+    "vitest": "^3.2.4",
+    "wrangler": "^4.147.0"
+  },
+  "packageManager": "pnpm@10.19.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "workerd"
+    ]
+  }
+}

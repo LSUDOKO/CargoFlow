@@ -20,7 +20,9 @@ function sinceLabel(since: Party["since"]): string | null {
 
 export function PartyView({ address }: { address: string }) {
   const { data: party, isPending, error, refetch, isFetching } = useParty(address);
-  const { chainId } = useContracts();
+  const { chainId, contracts } = useContracts();
+  // the insurer column appears on a deployment with default cover, or for anyone who has written cover
+  const insurer = !!party && (!!contracts?.coverPool || party.insurer.offered > 0);
   const explorer = explorerAddress(chainId, address);
   const since = party ? sinceLabel(party.since) : null;
 
@@ -61,7 +63,7 @@ export function PartyView({ address }: { address: string }) {
           {!isUnavailable(error) && <Button className="mt-5" variant="secondary" onClick={() => refetch()} loading={isFetching}>Try again</Button>}
         </Card>
       ) : party ? (
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className={`grid gap-4 ${insurer ? "md:grid-cols-2 xl:grid-cols-4" : "md:grid-cols-3"}`}>
           <StatBlock
             title="As exporter"
             empty={party.exporter.shipments === 0}
@@ -73,6 +75,7 @@ export function PartyView({ address }: { address: string }) {
               ["Paused", party.exporter.paused],
               ["Disputed", party.exporter.disputed],
               ["Defaulted", party.exporter.defaulted],
+              ...(party.exporter.cancelled ? ([["Cancelled before transit", party.exporter.cancelled]] as [string, number][]) : []),
               ["ZK recoveries", party.exporter.recoveries],
               ["Average evidence score", party.exporter.avgEvidenceScore === null ? "–" : party.exporter.avgEvidenceScore.toFixed(1)],
             ]}
@@ -88,6 +91,7 @@ export function PartyView({ address }: { address: string }) {
               ["Fees earned", `${formatUSDG(party.financier.feesEarned, { compact: true })} USDG`],
               ["Settled", party.financier.settled],
               ["Defaulted", party.financier.defaulted],
+              ...(party.financier.cancelled ? ([["Cancelled before transit", party.financier.cancelled]] as [string, number][]) : []),
             ]}
           />
           <StatBlock
@@ -99,6 +103,22 @@ export function PartyView({ address }: { address: string }) {
               ["Settled", party.buyer.settled],
             ]}
           />
+          {insurer && (
+            <StatBlock
+              title="As insurer"
+              empty={party.insurer.offered === 0}
+              headline={[formatUSDG(party.insurer.coverWritten, { compact: true }), "USDG of default cover written"]}
+              rows={[
+                ["Facilities offered cover", party.insurer.offered],
+                ["Active covers", party.insurer.active],
+                ["Returned after settlement", party.insurer.released],
+                ["Paid out after default", party.insurer.claimed],
+                ...(party.insurer.triggered ? ([["Parametric payouts", party.insurer.triggered]] as [string, number][]) : []),
+                ["Premiums earned", `${formatUSDG(party.insurer.premiumsEarned, { compact: true })} USDG`],
+                ["Paid to financiers", `${formatUSDG(party.insurer.paidOut, { compact: true })} USDG`],
+              ]}
+            />
+          )}
         </div>
       ) : null}
 

@@ -58,7 +58,19 @@ type Milestone struct {
 	ReleasedAt           time.Time `json:"releasedAt,omitzero"` // zero until released
 }
 
-// Source is an authenticated evidence provider. Only its Ed25519 public key is stored.
+// Key types and device classes of evidence sources.
+const (
+	KeyEd25519  = "ed25519"
+	KeyP256     = "p256"
+	KeyWebAuthn = "webauthn"
+
+	ClassSoftware      = "software"       // a key in ordinary storage
+	ClassPasskey       = "passkey"        // a WebAuthn authenticator's key, which never leaves the device
+	ClassSecureElement = "secure_element" // a P-256 key vouched for by a manufacturer's X.509 chain
+)
+
+// Source is an authenticated evidence provider. Only its public key is stored: a raw 32-byte Ed25519 key, or for p256
+// and webauthn the 65-byte uncompressed P-256 point.
 type Source struct {
 	ID             string
 	PublicKey      []byte
@@ -68,4 +80,13 @@ type Source struct {
 	ShipmentID     string // set for exporter-registered sources: they may only report for this shipment
 	Label          string
 	CreatedAt      time.Time
+
+	KeyType     string         // ed25519 (default), p256 or webauthn
+	DeviceClass string         // software (default), passkey or secure_element
+	KeyHash     string         // 0x + keccak256(PublicKey)
+	Attestation map[string]any // what registration verified (format, chain subjects, aaguid, ...); empty when none
+
+	CredentialID []byte // webauthn: the credential id
+	RPIDHash     []byte // webauthn: sha256 of the relying party id the credential is scoped to
+	SignCount    uint32 // webauthn: the authenticator's signature counter as last seen
 }

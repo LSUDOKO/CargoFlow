@@ -31,6 +31,11 @@
         "name": "verifier",
         "type": "address",
         "internalType": "address"
+      },
+      {
+        "name": "ebl",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "stateMutability": "nonpayable"
@@ -44,6 +49,32 @@
         "name": "",
         "type": "address",
         "internalType": "contract IAccessControl"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "CANCEL_TIMEOUT",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint64",
+        "internalType": "uint64"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "EBL",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IEBLRegistry"
       }
     ],
     "stateMutability": "view"
@@ -154,6 +185,37 @@
   },
   {
     "type": "function",
+    "name": "bindTitle",
+    "inputs": [
+      {
+        "name": "shipmentId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "eblTokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "cancelFacility",
+    "inputs": [
+      {
+        "name": "shipmentId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "createFacility",
     "inputs": [
       {
@@ -247,6 +309,25 @@
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "financedAt",
+    "inputs": [
+      {
+        "name": "shipmentId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint64",
+        "internalType": "uint64"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -431,6 +512,13 @@
   },
   {
     "type": "function",
+    "name": "pause",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "pauseFinancing",
     "inputs": [
       {
@@ -446,6 +534,19 @@
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "paused",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -621,6 +722,37 @@
     "stateMutability": "nonpayable"
   },
   {
+    "type": "function",
+    "name": "titleOf",
+    "inputs": [
+      {
+        "name": "shipmentId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "bound",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "unpause",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
     "type": "event",
     "name": "DefaultDeclared",
     "inputs": [
@@ -716,6 +848,31 @@
         "type": "bytes32",
         "indexed": false,
         "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "FacilityCancelled",
+    "inputs": [
+      {
+        "name": "shipmentId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "cancelledBy",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "refund",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
       }
     ],
     "anonymous": false
@@ -852,6 +1009,19 @@
   },
   {
     "type": "event",
+    "name": "Paused",
+    "inputs": [
+      {
+        "name": "account",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "StatusChanged",
     "inputs": [
       {
@@ -874,6 +1044,79 @@
       }
     ],
     "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TitleBound",
+    "inputs": [
+      {
+        "name": "shipmentId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "exporter",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TitleReleased",
+    "inputs": [
+      {
+        "name": "shipmentId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "to",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Unpaused",
+    "inputs": [
+      {
+        "name": "account",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "CancelNotAllowed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "EnforcedPause",
+    "inputs": []
   },
   {
     "type": "error",
@@ -903,6 +1146,11 @@
   {
     "type": "error",
     "name": "EvidenceStale",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ExpectedPause",
     "inputs": []
   },
   {
@@ -963,6 +1211,11 @@
   },
   {
     "type": "error",
+    "name": "InvalidTitle",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "MilestoneAlreadyReleased",
     "inputs": []
   },
@@ -1019,6 +1272,16 @@
   {
     "type": "error",
     "name": "StaleRecoveryEvidence",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "TitleAlreadyBound",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "TitleBindingDisabled",
     "inputs": []
   },
   {

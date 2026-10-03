@@ -89,7 +89,7 @@ func (s *Server) track(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"points": points})
+	writeJSON(w, http.StatusOK, trackResponse{Points: points})
 	return nil
 }
 
@@ -103,10 +103,7 @@ func (s *Server) party(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	writeJSON(w, http.StatusOK, struct {
-		store.PartyStats
-		Grade string `json:"grade"`
-	}{p, p.Grade()})
+	writeJSON(w, http.StatusOK, partyResponse{p, p.Grade()})
 	return nil
 }
 

@@ -47,6 +47,7 @@ type documentDTO struct {
 	Role               string    `json:"role"`
 	CreatedAt          time.Time `json:"createdAt"`
 	MatchesInvoiceHash bool      `json:"matchesInvoiceHash"`
+	MatchesBill        *string   `json:"matchesBill" doc:"for a bill_of_lading: the token id of the issued v3 eBL whose documentHash equals this keccak256, else null"`
 }
 
 func toDocumentDTO(d store.Document, sh store.Shipment) documentDTO {
@@ -126,7 +127,7 @@ func (s *Server) attestDocument(w http.ResponseWriter, r *http.Request) error {
 	if created {
 		status = http.StatusCreated
 	}
-	writeJSON(w, status, toDocumentDTO(doc, sh))
+	writeJSON(w, status, s.withBill(r, toDocumentDTO(doc, sh)))
 	return nil
 }
 
@@ -141,8 +142,19 @@ func (s *Server) listDocuments(w http.ResponseWriter, r *http.Request) error {
 	}
 	out := make([]documentDTO, len(docs))
 	for i, d := range docs {
-		out[i] = toDocumentDTO(d, sh)
+		out[i] = s.withBill(r, toDocumentDTO(d, sh))
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"documents": out})
+	writeJSON(w, http.StatusOK, documentList{Documents: out})
 	return nil
+}
+
+// withBill fills matchesBill for a bill of lading whose keccak256 is an issued eBL's document hash.
+func (s *Server) withBill(r *http.Request, d documentDTO) documentDTO {
+	if d.Kind != "bill_of_lading" || s.c.Chain == nil || !s.c.Chain.HasEBL() {
+		return d
+	}
+	if id, ok, err := s.c.Store.BillByDocument(r.Context(), d.Keccak256); err == nil && ok {
+		d.MatchesBill = &id
+	}
+	return d
 }

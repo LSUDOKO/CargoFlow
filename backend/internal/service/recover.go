@@ -44,6 +44,7 @@ type RecoveryProof struct {
 	A         [2]string    `json:"a"`
 	B         [2][2]string `json:"b"`
 	C         [2]string    `json:"c"`
+	Cached    bool         `json:"cached,omitempty" doc:"the proof was built ahead of time by the automatic recovery worker; only the commit ran now"`
 }
 
 // Calldata converts the proof's hex words into the big integers the contract call takes.
@@ -183,8 +184,13 @@ func (s *Service) prepareRecovery(ctx context.Context, id [32]byte, canon, senso
 		Score: e.Result.Score, Submitter: strings.ToLower(submitter.Hex())}
 
 	// Prove first: the proof context depends only on the epoch id and the submitter, so a prover failure costs
-	// no gas and leaves the readings available for another attempt.
-	if err := s.proveRecovery(ctx, &out, id, epochID, e, sh, submitter); err != nil {
+	// no gas and leaves the readings available for another attempt. When the automatic recovery worker already
+	// proved exactly this recovery (same readings, pause, epoch id and submitter), its proof is used as it is.
+	if c, ok := s.cachedProof(ctx, canon, sensorID, out.Root, f.PausedAt, out.EpochID, submitter); ok {
+		out.A, out.B, out.C = c.Proof.A, c.Proof.B, c.Proof.C
+		out.Cached = true
+		_ = s.o.Store.MarkRecoveryProofUsed(ctx, canon, sensorID, out.Root, f.PausedAt, time.Now())
+	} else if err := s.proveRecovery(ctx, &out, id, epochID, e, sh, submitter); err != nil {
 		return out, err
 	}
 
@@ -217,6 +223,7 @@ func (s *Service) prepareRecovery(ctx context.Context, id [32]byte, canon, senso
 	}
 	out.CommitTx = commit.Hash.Hex()
 	_ = s.o.Store.SetEpochCommitted(ctx, out.EpochID, out.CommitTx)
+	s.recordSourcesByID(ctx, canon, out.EpochID)
 	return out, nil
 }
 

@@ -1,0 +1,15 @@
+{
+  "name": "@cargoflow/hedge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CargoFlow optional financier hedge through GMX v2 (Arbitrum Sepolia)",
+  "license": "MIT",
+  "scripts": {
+    "build": "forge build",
+    "test": "forge test -vv"
+  },
+  "devDependencies": {
+    "@openzeppelin/contracts": "5.4.0",
+    "forge-std": "github:foundry-rs/forge-std#v1.9.7"
+  }
+}

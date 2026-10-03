@@ -1,0 +1,18 @@
+{
+  "name": "@cargoflow/confidential",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CargoFlow confidential invoice terms on Fhenix CoFHE (Arbitrum Sepolia)",
+  "license": "MIT",
+  "scripts": {
+    "build": "forge build",
+    "test": "forge test -vv"
+  },
+  "devDependencies": {
+    "@cofhe/foundry-plugin": "0.7.1",
+    "@cofhe/mock-contracts": "0.7.1",
+    "@fhenixprotocol/cofhe-contracts": "0.2.0",
+    "@openzeppelin/contracts": "5.4.0",
+    "forge-std": "github:foundry-rs/forge-std#v1.9.7"
+  }
+}

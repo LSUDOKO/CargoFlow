@@ -5,7 +5,7 @@ import { ROBINHOOD_EXPLORER } from "@/lib/explorer";
 export function Footer() {
   return (
     <footer className="surface-ink mt-24 bg-ink text-paper">
-      <div className="container-page grid gap-12 py-16 md:grid-cols-[1.3fr_1fr_1fr_1fr]">
+      <div className="container-page grid gap-12 py-16 sm:grid-cols-2 md:grid-cols-[1.3fr_1fr_1fr_1fr_1fr]">
         <div>
           <Logo tone="dark" />
           <p className="mt-4 max-w-sm text-paper/70">
@@ -14,9 +14,11 @@ export function Footer() {
         </div>
         <FooterCol title="Product" links={[["/shipments", "Fleet"], ["/market", "Financing market"], ["/exporter", "For exporters"], ["/financier", "For financiers"], ["/buyer", "For buyers"]]} />
         <FooterCol title="Get started" links={[["/exporter", "Start a shipment"], ["/market/new", "Request financing"], ["/arbiter", "For arbiters"], ["/#how-it-works", "How it works"], ["/#faq", "Questions"]]} />
+        <FooterCol title="Developers" links={[["/docs", "API reference"], ["/developers", "SDKs, MCP and gateway"], ["/developers#mcp", "Use with Claude (MCP)"], ["/developers#python", "Python analytics"]]} />
         <FooterCol
           title="Verify"
           links={[
+            ["/deployments", "Contracts and services"],
             [ROBINHOOD_EXPLORER, "Robinhood testnet explorer"],
             ["https://github.com/LSUDOKO/CargoFlow", "Source code"],
             ["https://github.com/LSUDOKO/CargoFlow/blob/main/docs/runbooks/testnet.md", "Testnet run, transaction by transaction"],

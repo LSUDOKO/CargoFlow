@@ -10,6 +10,8 @@ import { EMBEDDED_CONNECTOR_ID } from "@/lib/chain/config";
 import { useContracts } from "@/lib/chain/contracts";
 import { chainName } from "@/lib/explorer";
 import { formatUSDG, shortHash } from "@/lib/format";
+import { PASSKEY_CONNECTOR_ID } from "@/lib/passkey/env";
+import { usePasskeyState } from "@/lib/passkey/store";
 import { logoutEmail } from "./embedded";
 import { GasHelper, useGasDrip } from "./GasHelper";
 import { WalletModal } from "./WalletModal";
@@ -21,6 +23,8 @@ import { WalletModal } from "./WalletModal";
 export function WalletButton({ compact, onDark }: { compact?: boolean; onDark?: boolean }) {
   const { address, isConnected, chainId, connector } = useAccount();
   const isEmail = connector?.id === EMBEDDED_CONNECTOR_ID;
+  const isPasskey = connector?.id === PASSKEY_CONNECTOR_ID;
+  const passkey = usePasskeyState();
   const { disconnect } = useDisconnect();
   const { contracts, chainId: appChain } = useContracts();
   const [open, setOpen] = useState(false);
@@ -43,9 +47,11 @@ export function WalletButton({ compact, onDark }: { compact?: boolean; onDark?: 
   });
 
   // a brand-new email wallet has no gas: open the menu once on its own so "Get testnet gas" is one click away
-  const gas = useGasDrip(isConnected ? address : undefined);
+  const drip = useGasDrip(isConnected ? address : undefined);
+  // a sponsored passkey account never needs its own gas
+  const gas = isPasskey && passkey.sponsorship === "on" ? { ...drip, low: false } : drip;
   const wrongNetwork = appChain !== undefined && chainId !== appChain;
-  const autoKey = onDark && isEmail && gas.low && !wrongNetwork ? address : null;
+  const autoKey = onDark && (isEmail || (isPasskey && passkey.sponsorship === "off")) && gas.low && !wrongNetwork ? address : null;
   const [autoShown, setAutoShown] = useState<string | null>(null);
   if (autoKey && autoShown !== autoKey) {
     setAutoShown(autoKey);
@@ -78,17 +84,19 @@ export function WalletButton({ compact, onDark }: { compact?: boolean; onDark?: 
           {gas.low && !wrongChain && <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-alert ring-2 ring-ink" />}
         </span>
         {gas.low && !wrongChain && <span className="sr-only">Low on gas.</span>}
+        {isPasskey && <span className="hidden rounded-full bg-current/10 px-2 py-0.5 text-xs font-semibold md:inline">Passkey account</span>}
         <span className="font-mono">{shortHash(address, 4, 4)}</span>
         {!compact && balance !== undefined && <span className="hidden opacity-70 lg:inline">{formatUSDG(balance as bigint)} USDG</span>}
       </button>
       {menu && (
         <div role="menu" className="surface-light absolute right-0 z-40 mt-2 w-72 rounded-2xl border border-line bg-white p-2 text-ink shadow-[var(--shadow-lift)]">
           <div className="px-3 py-2 text-sm">
-            <p className="font-semibold">{wrongChain ? "Wrong network" : chainName(chainId)}{isEmail && <span className="ml-2 rounded-full bg-mist px-2 py-0.5 text-xs font-semibold text-slate">Email wallet</span>}</p>
+            <p className="font-semibold">{wrongChain ? "Wrong network" : chainName(chainId)}{isEmail && <span className="ml-2 rounded-full bg-mist px-2 py-0.5 text-xs font-semibold text-slate">Email wallet</span>}{isPasskey && <span className="ml-2 rounded-full bg-mist px-2 py-0.5 text-xs font-semibold text-slate">Passkey account</span>}</p>
             <p className="font-mono text-xs break-all text-slate">{address}</p>
             {balance !== undefined && <p className="mt-1 text-slate">{formatUSDG(balance as bigint)} USDG</p>}
           </div>
-          {!wrongChain && <GasHelper address={address} />}
+          {isPasskey && <PasskeyGasNote sponsorship={passkey.sponsorship} />}
+          {!wrongChain && !(isPasskey && passkey.sponsorship === "on") && <GasHelper address={address} />}
           <Link href={`/parties/${address.toLowerCase()}`} role="menuitem" onClick={() => setMenu(false)} className="block w-full rounded-xl px-3 py-2 text-left text-sm font-semibold hover:bg-ink/5">
             Your track record
           </Link>
@@ -102,4 +110,25 @@ export function WalletButton({ compact, onDark }: { compact?: boolean; onDark?: 
       )}
     </div>
   );
+}
+
+/** Whether CargoFlow's paymaster pays this passkey account's gas. */
+export function PasskeyGasNote({ sponsorship }: { sponsorship: ReturnType<typeof usePasskeyState>["sponsorship"] }) {
+  if (sponsorship === "on") {
+    return (
+      <p className="mx-1 my-1 flex items-center gap-2 rounded-xl bg-verified/12 px-3 py-2 text-sm font-semibold text-[#00733e]" role="status">
+        <span className="grid h-4 w-4 place-items-center rounded-full bg-verified text-[0.625rem] text-white" aria-hidden="true">✓</span>
+        Gas paid by CargoFlow
+      </p>
+    );
+  }
+  if (sponsorship === "off") {
+    return (
+      <p className="mx-1 my-1 rounded-xl bg-alert/12 px-3 py-2 text-sm" role="status">
+        <span className="font-semibold">Gas sponsorship isn&apos;t on; this account needs a little testnet ETH.</span>{" "}
+        <span className="text-ink/75">Send some to the address above, or use “Get testnet gas” once the account is set up.</span>
+      </p>
+    );
+  }
+  return <p className="mx-1 my-1 px-3 py-1 text-xs text-slate" role="status">{sponsorship === "checking" ? "Checking gas sponsorship…" : "Gas sponsorship is checked before your first transaction."}</p>;
 }

@@ -93,7 +93,7 @@ func TestOptionalIntegrationsAreWiredOnlyWhenConfigured(t *testing.T) {
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
 	bare := config.Config{ChainID: 1, GasDripWei: 1000, GasDripDaily: 5}
 	d, ch := alerting(context.Background(), bare, nil, log)
-	if len(d.Senders) != 1 || d.Senders["webhook"] == nil || ch.TelegramBot != "" || ch.Email || ch.AllowPrivateWebhooks {
+	if len(d.Senders) != 2 || d.Senders["webhook"] == nil || d.Senders["slack"] == nil || ch.TelegramBot != "" || ch.Email || ch.AllowPrivateWebhooks {
 		t.Fatalf("bare alerting = %+v %+v", d.Senders, ch)
 	}
 	if aisTracker(bare, nil, log).Enabled() {

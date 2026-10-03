@@ -18,6 +18,7 @@ type ChainEvent struct {
 	Name        string
 	ShipmentID  string // empty for events that are not tied to a shipment
 	Args        map[string]any
+	BlockTime   time.Time // the block's timestamp; zero when unknown (stored as NULL)
 	CreatedAt   time.Time
 }
 
@@ -40,10 +41,10 @@ func (s *Store) SaveChainEvents(ctx context.Context, events []ChainEvent) (int, 
 			args = []byte("{}")
 		}
 		tag, err := tx.Exec(ctx, `
-			INSERT INTO chain_events (tx_hash, log_index, block_number, block_hash, contract, event_name, shipment_id, args)
-			VALUES ($1,$2,$3,$4,$5,$6,NULLIF($7,''),$8::jsonb)
+			INSERT INTO chain_events (tx_hash, log_index, block_number, block_hash, contract, event_name, shipment_id, args, block_time)
+			VALUES ($1,$2,$3,$4,$5,$6,NULLIF($7,''),$8::jsonb,$9)
 			ON CONFLICT (tx_hash, log_index) DO NOTHING`,
-			e.TxHash, e.LogIndex, int64(e.BlockNumber), e.BlockHash, e.Contract, e.Name, e.ShipmentID, string(args))
+			e.TxHash, e.LogIndex, int64(e.BlockNumber), e.BlockHash, e.Contract, e.Name, e.ShipmentID, string(args), nullTime(e.BlockTime))
 		if err != nil {
 			return 0, mapErr(err)
 		}
@@ -294,4 +295,12 @@ func (s *Store) Actions(ctx context.Context, shipmentID string) ([]Action, error
 		out = append(out, a)
 	}
 	return out, rows.Err()
+}
+
+func nullTime(t time.Time) *time.Time {
+	if t.IsZero() {
+		return nil
+	}
+	u := t.UTC()
+	return &u
 }

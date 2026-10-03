@@ -32,6 +32,7 @@ var anvilKeys = map[string]string{
 	"monitor":   "8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba",
 	"arbiter":   "92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b2b4ec1564e",
 	"insurer":   "4bbbf85ce3377467afe5d46f804f221813b2bb87f24d81f60f1fcdbf7cbf4356", // no role: CoverPool needs none
+	"carrier":   "dbda1821b80551c9d65939329250298aa3472ba22feea921c0cf5d620ea67b97", // v3 CARRIER_ROLE locally (anvil account 8)
 }
 
 // Env describes the running chain.
@@ -101,6 +102,12 @@ func launch() (*Env, error) {
 	if err != nil {
 		return nil, err
 	}
+	contractsDir := filepath.Join(root, "contracts")
+	// CHAINTEST_CONTRACTS_DIR deploys a different checkout of contracts/ (for example a pinned snapshot while the
+	// working tree's contracts are mid-change).
+	if dir := os.Getenv("CHAINTEST_CONTRACTS_DIR"); dir != "" {
+		contractsDir = dir
+	}
 
 	port, err := freePort()
 	if err != nil {
@@ -125,7 +132,7 @@ func launch() (*Env, error) {
 	// gitignored), then move the manifest into a private temp directory.
 	scriptOut := filepath.Join("deployments", fmt.Sprintf("test-chaintest-%d.json", os.Getpid()))
 	deploy := exec.Command(forge, "script", "script/Deploy.s.sol", "--rpc-url", url, "--broadcast")
-	deploy.Dir = filepath.Join(root, "contracts")
+	deploy.Dir = contractsDir
 	deploy.Env = append(os.Environ(), "DEPLOYMENT_FILE="+scriptOut)
 	var out bytes.Buffer
 	deploy.Stdout, deploy.Stderr = &out, &out
@@ -134,7 +141,7 @@ func launch() (*Env, error) {
 		return nil, fmt.Errorf("deploy contracts: %w\n%s", err, tail(out.String(), 1500))
 	}
 
-	written := filepath.Join(root, "contracts", scriptOut)
+	written := filepath.Join(contractsDir, scriptOut)
 	body, err := os.ReadFile(written)
 	if err != nil {
 		_ = cmd.Process.Kill()

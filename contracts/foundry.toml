@@ -25,6 +25,8 @@ line_length = 100
 tab_width = 4
 bracket_spacing = false
 int_types = "long"
+# separate Foundry projects (other chains) live beside this one; never format them from here
+ignore = ["confidential/**", "hedge/**"]
 
 [fuzz]
 runs = 512

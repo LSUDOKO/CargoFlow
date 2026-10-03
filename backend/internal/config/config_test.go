@@ -256,3 +256,93 @@ func TestOptionalIntegrationsAreValidated(t *testing.T) {
 		}
 	}
 }
+
+func TestRPCFallbackAndRedaction(t *testing.T) {
+	e := valid()
+	e["RPC_URL"] = "https://example.quiknode.pro/0123456789abcdef/"
+	e["RPC_FALLBACK_URL"] = "https://rpc.testnet.chain.robinhood.com"
+	c, err := config.Load(func(k string) string { return e[k] })
+	if err != nil {
+		t.Fatal(err)
+	}
+	if fb := c.RPCFallbacks(); len(fb) != 1 || fb[0] != "https://rpc.testnet.chain.robinhood.com" {
+		t.Fatalf("fallback = %q", fb)
+	}
+	if s := c.String(); strings.Contains(s, "0123456789abcdef") || !strings.Contains(s, "example.quiknode.pro") {
+		t.Fatalf("the RPC token must never be printed: %s", s)
+	}
+	e["RPC_FALLBACK_URL"] = "wss://example.org/ws"
+	if _, err := config.Load(func(k string) string { return e[k] }); err == nil || !strings.Contains(err.Error(), "RPC_FALLBACK_URL") {
+		t.Fatalf("failover over websockets must be refused, got %v", err)
+	}
+}
+
+func TestRPCTiersWithAlchemy(t *testing.T) {
+	e := valid()
+	e["RPC_URL"] = "https://example.quiknode.pro/0123456789abcdef/"
+	e["RPC_FALLBACK_URL"] = "https://a.example.org, https://b.example.org"
+	e["ALCHEMY_API_KEY"] = "alchemysecretkey123"
+	c, err := config.Load(func(k string) string { return e[k] })
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"https://a.example.org", "https://b.example.org", "https://robinhood-testnet.g.alchemy.com/v2/alchemysecretkey123"}
+	if got := c.RPCFallbacks(); strings.Join(got, " ") != strings.Join(want, " ") {
+		t.Fatalf("tiers = %q", got)
+	}
+	if s := c.String(); strings.Contains(s, "alchemysecretkey123") || !strings.Contains(s, "robinhood-testnet.g.alchemy.com") {
+		t.Fatalf("the Alchemy key must never be printed: %s", s)
+	}
+	e["ALCHEMY_RPC_URL"] = "https://custom.g.alchemy.com/v2/x"
+	c, err = config.Load(func(k string) string { return e[k] })
+	if err != nil || c.AlchemyRPCURL != "https://custom.g.alchemy.com/v2/x" {
+		t.Fatalf("ALCHEMY_RPC_URL wins over the key: %q %v", c.AlchemyRPCURL, err)
+	}
+}
+
+func TestWebhookAndDuneSettings(t *testing.T) {
+	e := valid()
+	c, err := config.Load(func(k string) string { return e[k] })
+	if err != nil || c.AlchemyWebhookEnabled() || c.DuneEnabled() || c.DuneUploadInterval != 15*time.Minute {
+		t.Fatalf("both off by default: %+v %v", c, err)
+	}
+	e["ALCHEMY_WEBHOOK_SIGNING_KEYS"] = "whsec_aaaaaaaaaaaaaaaa, whsec_bbbbbbbbbbbbbbbb"
+	e["DUNE_API_KEY"] = "dunekey"
+	e["DUNE_NAMESPACE"] = "cargoflow_team"
+	e["DUNE_UPLOAD_INTERVAL"] = "5m"
+	c, err = config.Load(func(k string) string { return e[k] })
+	if err != nil || len(c.AlchemyWebhookSigningKeys) != 2 || !c.DuneEnabled() || c.DuneUploadInterval != 5*time.Minute {
+		t.Fatalf("%+v %v", c, err)
+	}
+	if s := fmt.Sprintf("%v %+v", c.AlchemyWebhookSigningKeys, c); strings.Contains(s, "whsec_aaaa") || strings.Contains(s, "dunekey") {
+		t.Fatal("signing keys and the Dune key must be unprintable")
+	}
+	e["DUNE_NAMESPACE"] = "bad namespace"
+	e["DUNE_UPLOAD_INTERVAL"] = "10s"
+	e["ALCHEMY_WEBHOOK_SIGNING_KEYS"] = "short"
+	_, err = config.Load(func(k string) string { return e[k] })
+	for _, name := range []string{"DUNE_NAMESPACE", "DUNE_UPLOAD_INTERVAL", "ALCHEMY_WEBHOOK_SIGNING_KEYS"} {
+		if err == nil || !strings.Contains(err.Error(), name) {
+			t.Fatalf("%s must be validated, got %v", name, err)
+		}
+	}
+}
+
+func TestPlatformSettings(t *testing.T) {
+	e := valid()
+	e["APP_URL"] = "https://app.example.com/"
+	e["RECOVERY_SCAN_INTERVAL"] = "0s"
+	e["DEVICE_ROOTS_DIR"] = "/etc/cargoflow/roots"
+	e["WEBAUTHN_ORIGINS"] = "https://app.example.com, http://localhost:3000"
+	c, err := config.Load(func(k string) string { return e[k] })
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c.AppURL != "https://app.example.com" || c.RecoveryScanInterval != 0 || c.DeviceRootsDir != "/etc/cargoflow/roots" || len(c.WebAuthnOrigins) != 2 {
+		t.Fatalf("%+v", c)
+	}
+	e["APP_URL"] = "javascript:alert(1)"
+	if _, err := config.Load(func(k string) string { return e[k] }); err == nil {
+		t.Fatal("a non-http APP_URL must be refused")
+	}
+}

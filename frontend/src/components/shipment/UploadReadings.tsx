@@ -11,7 +11,9 @@ import type { EpochOutcome, Shipment } from "@/lib/api/schemas";
 import { batches, CSV_COLUMNS, detectColumns, OPTIONAL_FIELDS, parseReadingsCsv, readHeader, templateCsv, type ColumnMap, type DateOrder, type Field, type ParsedCsv } from "@/lib/csv";
 import { downloadText } from "@/lib/download";
 import { decodeKeyFile, type KeyFile } from "@/lib/gateway";
+import { chainRejectedText } from "@/lib/chain/errors";
 import { shortHash } from "@/lib/format";
+import { distanceText, isHeld } from "@/lib/places";
 
 const REASONS: Record<string, string> = {
   TIMESTAMP_OUT_OF_ORDER: "older than a reading already accepted from that sensor",
@@ -28,6 +30,7 @@ const ACTIONS: Record<string, string> = {
   APPROVE_ADVANCE: "Passed: the milestone can be released",
   REQUEST_SECONDARY_PROOF: "Held: more evidence needed",
   PAUSE_FACILITY: "Failed: the facility pauses",
+  HELD_NOT_AT_PLACE: "Held: not at the place yet",
 };
 
 type Totals = { accepted: number; rejected: Record<string, number>; epochs: EpochOutcome[] };
@@ -255,9 +258,12 @@ export function UploadReadings({ open, onClose, shipment, initialKey, chainId }:
                         <td className="py-2 pr-3 font-mono">#{e.sequence}{e.milestoneIndex !== 255 && ` (milestone ${e.milestoneIndex + 1})`}</td>
                         <td className="py-2 pr-3 font-mono">{e.score}</td>
                         <td className="py-2 pr-3">
-                          {e.skipped ? `Recorded, not evaluated (${e.skipped.toLowerCase().replace(/_/g, " ")})` : e.releaseTx ? "Passed: milestone released" : e.pauseTx ? "Failed: facility paused" : (ACTIONS[e.action] ?? e.action)}
+                          {e.skipped ? `Recorded, not evaluated (${e.skipped.toLowerCase().replace(/_/g, " ")})` : e.releaseTx ? "Passed: milestone released" : e.pauseTx ? "Failed: facility paused" : isHeld(e) ? <span className="font-semibold">Held: not at the place yet</span> : (ACTIONS[e.action] ?? e.action)}
+                          {isHeld(e) && !e.releaseTx && !e.skipped && (
+                            <span className="block text-xs text-slate">Passed the policy, but taken {e.distanceM ? `${distanceText(e.distanceM)} from` : "outside"} the milestone&apos;s place: it waits, nothing failed.</span>
+                          )}
                           {!e.pass && e.reasons.length > 0 && <span className="block text-xs text-slate">{e.reasons.join(", ").toLowerCase().replace(/_/g, " ")}</span>}
-                          {e.error && <span className="block text-xs text-danger">{e.error}</span>}
+                          {e.error && <span className="block text-xs text-danger">{chainRejectedText(e.error)}</span>}
                         </td>
                         <td className="py-2">{tx ? <HashBadge value={tx} chainId={chainId} compact /> : "–"}</td>
                       </tr>

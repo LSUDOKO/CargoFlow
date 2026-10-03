@@ -15,9 +15,13 @@ const list = <T extends z.ZodTypeAny>(item: T) => z.array(item).nullish().transf
 export const DOCUMENT_KINDS = ["invoice", "bill_of_lading", "packing_list", "certificate", "other"] as const;
 export type DocumentKind = (typeof DOCUMENT_KINDS)[number];
 
-export const ALERT_EVENTS = ["PAUSED", "RELEASED", "RESUMED", "DISPUTED", "DELIVERED", "SETTLED", "DEFAULTED"] as const;
+export const ALERT_EVENTS = ["PAUSED", "RELEASED", "RESUMED", "DISPUTED", "DELIVERED", "SETTLED", "DEFAULTED", "CANCELLED", "COVER_OFFERED", "COVER_ACCEPTED", "COVER_CLAIMED", "COVER_TRIGGERED"] as const;
+/** The default-cover events (contracts v2): offered only when the deployment has a CoverPool. */
+export const COVER_ALERT_EVENTS: readonly AlertEvent[] = ["COVER_OFFERED", "COVER_ACCEPTED", "COVER_CLAIMED", "COVER_TRIGGERED"];
+/** The contracts v3 events (cancellation, parametric trigger): offered only on a v3 deployment. */
+export const V3_ALERT_EVENTS: readonly AlertEvent[] = ["CANCELLED", "COVER_TRIGGERED"];
 export type AlertEvent = (typeof ALERT_EVENTS)[number];
-export type AlertChannel = "webhook" | "telegram" | "email";
+export type AlertChannel = "webhook" | "telegram" | "email" | "slack";
 
 export const documentMessage = (shipmentId: string, kind: DocumentKind, sha256: string, issued: number) =>
   `CargoFlow document\nshipment: ${shipmentId.toLowerCase()}\nkind: ${kind}\nsha256: ${sha256.toLowerCase()}\nissued: ${issued}`;
@@ -54,6 +58,8 @@ export const ConfigExtras = z.object({
       webhook: z.boolean().optional().default(true),
       telegram: z.boolean().optional().default(false),
       email: z.boolean().optional().default(false),
+      // Slack incoming webhooks need no credentials on the backend, so they are on unless it says otherwise
+      slack: z.boolean().optional().default(true),
       telegramBot: z.string().nullish().transform((v) => v ?? ""),
     })
     .nullish()
@@ -84,6 +90,17 @@ export const SubscriptionCreated = z.object({
 });
 export type SubscriptionCreated = z.infer<typeof SubscriptionCreated>;
 
+export const PlaceHold = z.object({
+  milestoneIndex: z.number(),
+  placeLabel: z.string().nullish().transform((v) => v ?? ""),
+  latE6: z.number(),
+  lonE6: z.number(),
+  radiusM: z.number(),
+  distanceM: z.number(),
+  message: z.string().nullish().transform((v) => v ?? ""),
+});
+export type PlaceHold = z.infer<typeof PlaceHold>;
+
 export const Explanation = z.object({
   status: z.string(),
   headline: z.string(),
@@ -93,6 +110,8 @@ export const Explanation = z.object({
     .object({ sensorId: z.string(), trend: z.string(), minutesToLimit: z.number().nullable().optional().default(null) })
     .nullish()
     .transform((v) => v ?? null),
+  /** set while the next milestone waits for evidence from its place (contracts v2) */
+  hold: PlaceHold.nullish().transform((v) => v ?? null),
   source: z.string().optional().default("rules"),
 });
 export type Explanation = z.infer<typeof Explanation>;
@@ -237,13 +256,22 @@ export const ALERT_EVENT_LABEL: Record<AlertEvent, string> = {
   DELIVERED: "Delivered",
   SETTLED: "Settled",
   DEFAULTED: "Defaulted",
+  CANCELLED: "Cancelled",
+  COVER_OFFERED: "Cover offered",
+  COVER_ACCEPTED: "Cover accepted",
+  COVER_CLAIMED: "Cover paid out",
+  COVER_TRIGGERED: "Parametric cover triggered",
 };
+
+/** The only Slack targets the backend accepts: incoming-webhook URLs. */
+export const SLACK_WEBHOOK = /^https:\/\/hooks\.slack\.com\/services\/[A-Za-z0-9/_-]+$/;
 
 /** Validates an alert target before asking for a signature (plain http only on a local chain, as the backend allows). */
 export function targetError(channel: AlertChannel, target: string, allowHttp = false): string | null {
   const t = target.trim();
   if (channel === "telegram") return null;
-  if (!t) return channel === "email" ? "Enter an email address." : "Enter the URL to receive POST requests.";
+  if (!t) return channel === "email" ? "Enter an email address." : channel === "slack" ? "Paste the Slack incoming-webhook URL." : "Enter the URL to receive POST requests.";
+  if (channel === "slack") return SLACK_WEBHOOK.test(t) ? null : "Slack webhooks start with https://hooks.slack.com/services/.";
   if (channel === "email") return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(t) ? null : "That doesn't look like an email address.";
   try {
     const u = new URL(t);

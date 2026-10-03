@@ -96,6 +96,17 @@ describe("settlement certificate", () => {
     expect(await contentText(out.bytes)).toContain(hexOf("Projected with the current drawdown"));
   });
 
+  it("records the v2 limits, milestone places, held evidence and the default cover", async () => {
+    const { view, epochs, audit, documents } = fixture("SETTLED");
+    view.shipment.policy = { ...view.shipment.policy, maxHumidityX100: 8500, maxShockX100: 300 };
+    view.milestones[4] = { ...view.milestones[4]!, latE6: -23_960_000, lonE6: -46_330_000, radiusM: 100_000, placeLabel: "Santos" };
+    epochs[5] = { ...epochs[5]!, decisionAction: "HELD_NOT_AT_PLACE", heldDistanceM: 412_000 };
+    view.cover = { insurer: "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65", financier: view.facility!.financier, amount: "20000000000", premium: "400000000", status: "RELEASED", financierPayout: "0", insurerReturn: "20000000000", parametric: null };
+    const out = await buildCertificate({ view, epochs, audit, documents, chainId: 46630, generatedAt: new Date("2026-10-03T12:00:00Z") });
+    const text = await contentText(out.bytes);
+    for (const s of ["85% relative humidity", "3 g", "Milestone 5 place", "Held: not at", "(412 km", "Default cover", "Returned to the insurer: 20,000 USDG", "400 USDG"]) expect(text, s).toContain(hexOf(s));
+  });
+
   it("never throws on characters the standard fonts cannot encode", () => {
     expect(pdfSafe("2–8 °C → ok ≥ 75 ✓ 漢")).toBe("2–8 °C -> ok >= 75 ? ?");
   });

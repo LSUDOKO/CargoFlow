@@ -58,6 +58,9 @@ type Options struct {
 	Monitor *chain.Signer // requests pauses (MONITOR_ROLE); no other authority
 	Manager *chain.Signer // releases milestones and submits recovery proofs (FACILITY_MANAGER_ROLE)
 
+	// AppURL is the web app's origin for links in notifications and alerts ("" gives relative links).
+	AppURL string
+
 	SaltSecret  []byte
 	RiskContext risk.Context // defaults to 10% counterparty and corridor risk
 	Log         *slog.Logger

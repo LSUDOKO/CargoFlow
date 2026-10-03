@@ -9,7 +9,7 @@ import { statusLabel } from "@/lib/status";
 import { waterfall } from "@/lib/waterfall";
 
 // one colour per facility state, ordered along the facility's life
-const ORDER = ["CREATED", "FINANCED", "ACTIVE", "PAUSED", "DISPUTED", "DELIVERED", "SETTLED", "DEFAULTED"] as const;
+const ORDER = ["CREATED", "FINANCED", "ACTIVE", "PAUSED", "DISPUTED", "DELIVERED", "SETTLED", "DEFAULTED", "CANCELLED"] as const;
 const SWATCH: Record<string, string> = {
   CREATED: "bg-ink/15",
   FINANCED: "bg-signal",
@@ -19,6 +19,7 @@ const SWATCH: Record<string, string> = {
   DELIVERED: "bg-ink-3",
   SETTLED: "bg-ink",
   DEFAULTED: "bg-danger",
+  CANCELLED: "bg-slate/40",
 };
 
 /** Portfolio figures from the facilities this wallet funds, computed with bigint only. */

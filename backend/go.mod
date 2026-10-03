@@ -7,6 +7,7 @@ require (
 	github.com/ethereum/go-ethereum v1.17.7
 	github.com/iden3/go-iden3-crypto v0.0.17
 	github.com/jackc/pgx/v5 v5.11.0
+	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2
 	golang.org/x/crypto v0.57.0
 )
 

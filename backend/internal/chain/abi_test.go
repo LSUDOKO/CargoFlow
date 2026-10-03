@@ -84,7 +84,7 @@ func TestEmbeddedABIsExposeEverythingTheBackendUses(t *testing.T) {
 // When the contracts have been built locally, the embedded ABIs must equal the compiler's output, so a
 // contract change that forgets `make abi` fails here instead of breaking the backend at runtime.
 func TestEmbeddedABIsMatchTheBuiltArtifactsWhenPresent(t *testing.T) {
-	for _, name := range []string{"FinancingController", "EvidenceRegistry", "ShipmentRegistry", "PolicyEngine", "ReceivableVault", "CoverPool"} {
+	for _, name := range []string{"FinancingController", "EvidenceRegistry", "ShipmentRegistry", "PolicyEngine", "ReceivableVault", "CoverPool", "DeviceRegistry", "EBLRegistry"} {
 		artifact := filepath.Join("..", "..", "..", "contracts", "out", name+".sol", name+".json")
 		raw, err := os.ReadFile(artifact)
 		if err != nil {

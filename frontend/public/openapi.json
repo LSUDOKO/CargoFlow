@@ -1,0 +1,5855 @@
+{
+  "components": {
+    "schemas": {
+      "AcceptOfferInput": {
+        "properties": {
+          "issuedAt": {
+            "type": "integer"
+          },
+          "offerId": {
+            "type": "string"
+          },
+          "signature": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "issuedAt",
+          "offerId",
+          "signature"
+        ],
+        "type": "object"
+      },
+      "AlchemyWebhookDoc": {
+        "properties": {
+          "createdAt": {
+            "type": "string"
+          },
+          "event": {
+            "properties": {
+              "activity": {
+                "description": "Address Activity payload",
+                "items": {
+                  "properties": {
+                    "blockNum": {
+                      "description": "hex block number",
+                      "type": "string"
+                    },
+                    "fromAddress": {
+                      "type": "string"
+                    },
+                    "hash": {
+                      "type": "string"
+                    },
+                    "rawContract": {
+                      "properties": {
+                        "address": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "address"
+                      ],
+                      "type": "object"
+                    },
+                    "toAddress": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "blockNum",
+                    "fromAddress",
+                    "hash",
+                    "rawContract",
+                    "toAddress"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "data": {
+                "anyOf": [
+                  {
+                    "properties": {
+                      "block": {
+                        "properties": {
+                          "logs": {
+                            "items": {
+                              "properties": {
+                                "account": {
+                                  "properties": {
+                                    "address": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "address"
+                                  ],
+                                  "type": "object"
+                                },
+                                "topics": {
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "type": "array"
+                                },
+                                "transaction": {
+                                  "properties": {
+                                    "hash": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "hash"
+                                  ],
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "account",
+                                "topics",
+                                "transaction"
+                              ],
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "number": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "logs",
+                          "number"
+                        ],
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "block"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Custom Webhook (GRAPHQL) payload"
+              }
+            },
+            "type": "object"
+          },
+          "id": {
+            "description": "the delivery id, e.g. whevt_...; a repeat within 24 hours is ignored",
+            "type": "string"
+          },
+          "type": {
+            "description": "GRAPHQL or ADDRESS_ACTIVITY",
+            "enum": [
+              "GRAPHQL",
+              "ADDRESS_ACTIVITY"
+            ],
+            "type": "string"
+          },
+          "webhookId": {
+            "description": "the webhook's id, e.g. wh_...",
+            "type": "string"
+          }
+        },
+        "required": [
+          "event",
+          "id",
+          "type",
+          "webhookId"
+        ],
+        "type": "object"
+      },
+      "AlertChannels": {
+        "properties": {
+          "email": {
+            "type": "boolean"
+          },
+          "slack": {
+            "type": "boolean"
+          },
+          "telegram": {
+            "type": "boolean"
+          },
+          "telegramBot": {
+            "type": "string"
+          },
+          "webhook": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "email",
+          "slack",
+          "telegram",
+          "telegramBot",
+          "webhook"
+        ],
+        "type": "object"
+      },
+      "AttestationInput": {
+        "properties": {
+          "attestationObject": {
+            "description": "webauthn: base64url attestationObject from navigator.credentials.create (fmt packed or none)",
+            "type": "string"
+          },
+          "chain": {
+            "description": "x509: PEM certificates, the device's own first; must verify to a root in DEVICE_ROOTS_DIR",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "clientDataJSON": {
+            "description": "webauthn: base64url clientDataJSON; type webauthn.create, challenge sha256(\"CARGOFLOW-V1-REGISTER\\n\" + shipment id)",
+            "type": "string"
+          },
+          "format": {
+            "enum": [
+              "x509",
+              "webauthn"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "format"
+        ],
+        "type": "object"
+      },
+      "AuditEntry": {
+        "properties": {
+          "detail": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "time": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "txHash": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "time",
+          "title"
+        ],
+        "type": "object"
+      },
+      "AuditList": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/AuditEntry"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "entries"
+        ],
+        "type": "object"
+      },
+      "Bill": {
+        "properties": {
+          "boundShipmentId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "closedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "consignee": {
+            "description": "0x0000… for a bill made out to order",
+            "type": "string"
+          },
+          "documentHash": {
+            "type": "string"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/BillTransfer"
+            },
+            "type": "array"
+          },
+          "holder": {
+            "type": "string"
+          },
+          "issuedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "issuer": {
+            "type": "string"
+          },
+          "shipper": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ISSUED",
+              "SURRENDERED",
+              "VOID"
+            ],
+            "type": "string"
+          },
+          "tokenId": {
+            "type": "string"
+          },
+          "transfers": {
+            "description": "endorsements after issue",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "boundShipmentId",
+          "closedAt",
+          "consignee",
+          "documentHash",
+          "history",
+          "holder",
+          "issuedAt",
+          "issuer",
+          "shipper",
+          "status",
+          "tokenId",
+          "transfers"
+        ],
+        "type": "object"
+      },
+      "BillList": {
+        "properties": {
+          "bills": {
+            "items": {
+              "$ref": "#/components/schemas/Bill"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "bills"
+        ],
+        "type": "object"
+      },
+      "BillTransfer": {
+        "properties": {
+          "at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "txHash": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "at",
+          "from",
+          "to",
+          "txHash"
+        ],
+        "type": "object"
+      },
+      "BuyerStats": {
+        "properties": {
+          "paidVolume": {
+            "type": "string"
+          },
+          "settled": {
+            "type": "integer"
+          },
+          "shipments": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "paidVolume",
+          "settled",
+          "shipments"
+        ],
+        "type": "object"
+      },
+      "Check": {
+        "properties": {
+          "ageSec": {
+            "type": "integer"
+          },
+          "agrees": {
+            "type": "boolean"
+          },
+          "comparable": {
+            "type": "boolean"
+          },
+          "distanceM": {
+            "type": "integer"
+          },
+          "loggerLatE6": {
+            "type": "integer"
+          },
+          "loggerLonE6": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ageSec",
+          "agrees",
+          "comparable",
+          "distanceM",
+          "loggerLatE6",
+          "loggerLonE6"
+        ],
+        "type": "object"
+      },
+      "ConfigResponse": {
+        "properties": {
+          "ais": {
+            "type": "boolean"
+          },
+          "alerts": {
+            "$ref": "#/components/schemas/AlertChannels"
+          },
+          "chainId": {
+            "type": "integer"
+          },
+          "contracts": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "usdg, access, shipmentRegistry, policyEngine, evidenceRegistry, receivableVault, financingController, groth16Verifier, (v2) coverPool, (v3) deviceRegistry and eblRegistry",
+            "type": "object"
+          },
+          "gasDrip": {
+            "type": "boolean"
+          },
+          "paused": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Paused"
+              }
+            ],
+            "description": "the controller's and the CoverPool's emergency pause (v3 circuit breaker), read from the chain and cached for 30 s"
+          },
+          "usdgDecimals": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ais",
+          "alerts",
+          "chainId",
+          "contracts",
+          "gasDrip",
+          "paused",
+          "usdgDecimals"
+        ],
+        "type": "object"
+      },
+      "Cover": {
+        "properties": {
+          "amount": {
+            "type": "string"
+          },
+          "financier": {
+            "type": "string"
+          },
+          "financierPayout": {
+            "type": "string"
+          },
+          "insurer": {
+            "type": "string"
+          },
+          "insurerReturn": {
+            "type": "string"
+          },
+          "parametric": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Parametric"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "premium": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount",
+          "financier",
+          "financierPayout",
+          "insurer",
+          "insurerReturn",
+          "premium",
+          "status"
+        ],
+        "type": "object"
+      },
+      "CoverOffer": {
+        "properties": {
+          "amount": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "insurer": {
+            "type": "string"
+          },
+          "parametric": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Parametric"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "premiumBps": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "amount",
+          "createdAt",
+          "insurer",
+          "premiumBps"
+        ],
+        "type": "object"
+      },
+      "DeletedResponse": {
+        "properties": {
+          "deleted": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "deleted",
+          "id"
+        ],
+        "type": "object"
+      },
+      "Device": {
+        "properties": {
+          "attestation": {
+            "additionalProperties": {},
+            "description": "what registration verified: format, certificate subjects, aaguid, origin",
+            "type": "object"
+          },
+          "attested": {
+            "type": "boolean"
+          },
+          "deviceClass": {
+            "enum": [
+              "software",
+              "passkey",
+              "secure_element"
+            ],
+            "type": "string"
+          },
+          "disabled": {
+            "type": "boolean"
+          },
+          "keyHash": {
+            "type": "string"
+          },
+          "keyType": {
+            "enum": [
+              "ed25519",
+              "p256",
+              "webauthn"
+            ],
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "onChain": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OnChainDevice"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "the v3 DeviceRegistry record; null on a deployment without it"
+          },
+          "registeredAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "reliabilityBps": {
+            "type": "integer"
+          },
+          "sensorIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "shipmentId": {
+            "description": "empty for an operator-registered source",
+            "type": "string"
+          },
+          "sourceId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "attestation",
+          "attested",
+          "deviceClass",
+          "disabled",
+          "keyHash",
+          "keyType",
+          "label",
+          "onChain",
+          "registeredAt",
+          "reliabilityBps",
+          "sensorIds",
+          "shipmentId",
+          "sourceId"
+        ],
+        "type": "object"
+      },
+      "Document": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "keccak256": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "matchesBill": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "for a bill_of_lading: the token id of the issued v3 eBL whose documentHash equals this keccak256, else null"
+          },
+          "matchesInvoiceHash": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "signer": {
+            "type": "string"
+          },
+          "sizeBytes": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "createdAt",
+          "id",
+          "keccak256",
+          "kind",
+          "matchesBill",
+          "matchesInvoiceHash",
+          "name",
+          "role",
+          "sha256",
+          "signer",
+          "sizeBytes"
+        ],
+        "type": "object"
+      },
+      "DocumentList": {
+        "properties": {
+          "documents": {
+            "items": {
+              "$ref": "#/components/schemas/Document"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "documents"
+        ],
+        "type": "object"
+      },
+      "DocumentRequest": {
+        "properties": {
+          "issuedAt": {
+            "type": "integer"
+          },
+          "keccak256": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "signature": {
+            "type": "string"
+          },
+          "sizeBytes": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "issuedAt",
+          "keccak256",
+          "kind",
+          "name",
+          "sha256",
+          "signature",
+          "sizeBytes"
+        ],
+        "type": "object"
+      },
+      "EPCISDocument": {
+        "properties": {
+          "@context": {
+            "items": {},
+            "type": "array"
+          },
+          "creationDate": {
+            "type": "string"
+          },
+          "epcisBody": {
+            "additionalProperties": {},
+            "description": "{eventList: [ObjectEvent...]}; see the GS1 EPCIS 2.0 JSON schema",
+            "type": "object"
+          },
+          "schemaVersion": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "EPCISDocument"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "@context",
+          "creationDate",
+          "epcisBody",
+          "schemaVersion",
+          "type"
+        ],
+        "type": "object"
+      },
+      "EpochList": {
+        "properties": {
+          "epochs": {
+            "items": {
+              "$ref": "#/components/schemas/EpochSummary"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "epochs"
+        ],
+        "type": "object"
+      },
+      "EpochOutcome": {
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "commitTx": {
+            "type": "string"
+          },
+          "compliant": {
+            "type": "boolean"
+          },
+          "conflictBps": {
+            "type": "integer"
+          },
+          "distanceM": {
+            "type": "integer"
+          },
+          "epochId": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          },
+          "held": {
+            "type": "boolean"
+          },
+          "milestoneIndex": {
+            "type": "integer"
+          },
+          "pass": {
+            "type": "boolean"
+          },
+          "pauseTx": {
+            "type": "string"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "releaseTx": {
+            "type": "string"
+          },
+          "riskBps": {
+            "type": "integer"
+          },
+          "root": {
+            "type": "string"
+          },
+          "score": {
+            "type": "integer"
+          },
+          "sequence": {
+            "type": "integer"
+          },
+          "skipped": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "compliant",
+          "conflictBps",
+          "epochId",
+          "milestoneIndex",
+          "pass",
+          "riskBps",
+          "root",
+          "score",
+          "sequence"
+        ],
+        "type": "object"
+      },
+      "EpochSource": {
+        "properties": {
+          "deviceClass": {
+            "enum": [
+              "software",
+              "passkey",
+              "secure_element"
+            ],
+            "type": "string"
+          },
+          "keyHash": {
+            "type": "string"
+          },
+          "onChain": {
+            "description": "the device is registered (and not revoked) in the v3 DeviceRegistry",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "deviceClass",
+          "keyHash",
+          "onChain"
+        ],
+        "type": "object"
+      },
+      "EpochSummary": {
+        "properties": {
+          "commitTx": {
+            "type": "string"
+          },
+          "compliant": {
+            "type": "boolean"
+          },
+          "conflictBps": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "decisionAction": {
+            "type": "string"
+          },
+          "decisionPass": {
+            "type": "boolean"
+          },
+          "endTime": {
+            "type": "integer"
+          },
+          "epochId": {
+            "type": "string"
+          },
+          "heldDistanceM": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "latE6": {
+            "type": "integer"
+          },
+          "lonE6": {
+            "type": "integer"
+          },
+          "maxHumidityX100": {
+            "type": "integer"
+          },
+          "maxShockX100": {
+            "type": "integer"
+          },
+          "milestoneIndex": {
+            "type": "integer"
+          },
+          "penalties": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object"
+          },
+          "proofVerified": {
+            "type": "boolean"
+          },
+          "readingCount": {
+            "type": "integer"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "riskBps": {
+            "type": "integer"
+          },
+          "root": {
+            "type": "string"
+          },
+          "score": {
+            "type": "integer"
+          },
+          "sequence": {
+            "type": "integer"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/EpochSource"
+            },
+            "type": "array"
+          },
+          "sourcesTx": {
+            "type": "string"
+          },
+          "startTime": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "compliant",
+          "conflictBps",
+          "createdAt",
+          "decisionAction",
+          "decisionPass",
+          "endTime",
+          "epochId",
+          "heldDistanceM",
+          "latE6",
+          "lonE6",
+          "maxHumidityX100",
+          "maxShockX100",
+          "milestoneIndex",
+          "penalties",
+          "proofVerified",
+          "readingCount",
+          "reasons",
+          "riskBps",
+          "root",
+          "score",
+          "sequence",
+          "sources",
+          "startTime"
+        ],
+        "type": "object"
+      },
+      "EpochTelemetry": {
+        "properties": {
+          "endTime": {
+            "type": "integer"
+          },
+          "epochId": {
+            "type": "string"
+          },
+          "milestoneIndex": {
+            "type": "integer"
+          },
+          "sensors": {
+            "items": {
+              "$ref": "#/components/schemas/SensorSummary"
+            },
+            "type": "array"
+          },
+          "startTime": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "endTime",
+          "epochId",
+          "milestoneIndex",
+          "sensors",
+          "startTime"
+        ],
+        "type": "object"
+      },
+      "Error": {
+        "properties": {
+          "error": {
+            "properties": {
+              "code": {
+                "description": "stable machine-readable code, e.g. invalid_request, unauthorized, replayed, chain_rejected",
+                "type": "string"
+              },
+              "message": {
+                "description": "human-readable explanation; never contains internal detail",
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "type": "object"
+      },
+      "Explanation": {
+        "properties": {
+          "causes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "forecast": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Forecast"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "headline": {
+            "type": "string"
+          },
+          "hold": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlaceHold"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "nextSteps": {
+            "items": {
+              "$ref": "#/components/schemas/NextStep"
+            },
+            "type": "array"
+          },
+          "source": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "causes",
+          "forecast",
+          "headline",
+          "hold",
+          "nextSteps",
+          "source",
+          "status"
+        ],
+        "type": "object"
+      },
+      "ExporterStats": {
+        "properties": {
+          "active": {
+            "type": "integer"
+          },
+          "avgEvidenceScore": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "defaulted": {
+            "type": "integer"
+          },
+          "disputed": {
+            "type": "integer"
+          },
+          "paused": {
+            "type": "integer"
+          },
+          "recoveries": {
+            "type": "integer"
+          },
+          "settled": {
+            "type": "integer"
+          },
+          "shipments": {
+            "type": "integer"
+          },
+          "volume": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "active",
+          "avgEvidenceScore",
+          "defaulted",
+          "disputed",
+          "paused",
+          "recoveries",
+          "settled",
+          "shipments",
+          "volume"
+        ],
+        "type": "object"
+      },
+      "FacilityView": {
+        "properties": {
+          "buyer": {
+            "type": "string"
+          },
+          "closed": {
+            "type": "boolean"
+          },
+          "committed": {
+            "type": "string"
+          },
+          "drawn": {
+            "type": "string"
+          },
+          "exporter": {
+            "type": "string"
+          },
+          "feeBps": {
+            "type": "integer"
+          },
+          "financier": {
+            "type": "string"
+          },
+          "funded": {
+            "type": "boolean"
+          },
+          "milestoneCount": {
+            "type": "integer"
+          },
+          "nextMilestone": {
+            "type": "integer"
+          },
+          "pauseCount": {
+            "type": "integer"
+          },
+          "pauseReason": {
+            "type": "string"
+          },
+          "pausedAt": {
+            "type": "integer"
+          },
+          "remaining": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "vaultPaused": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "buyer",
+          "closed",
+          "committed",
+          "drawn",
+          "exporter",
+          "feeBps",
+          "financier",
+          "funded",
+          "milestoneCount",
+          "nextMilestone",
+          "pauseCount",
+          "pausedAt",
+          "remaining",
+          "status",
+          "vaultPaused"
+        ],
+        "type": "object"
+      },
+      "FinancierStats": {
+        "properties": {
+          "committed": {
+            "type": "string"
+          },
+          "defaulted": {
+            "type": "integer"
+          },
+          "drawn": {
+            "type": "string"
+          },
+          "facilities": {
+            "type": "integer"
+          },
+          "feesEarned": {
+            "type": "string"
+          },
+          "inEscrow": {
+            "type": "string"
+          },
+          "settled": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "committed",
+          "defaulted",
+          "drawn",
+          "facilities",
+          "feesEarned",
+          "inEscrow",
+          "settled"
+        ],
+        "type": "object"
+      },
+      "FinancingOffer": {
+        "properties": {
+          "accepted": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "feeBps": {
+            "type": "integer"
+          },
+          "financier": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "accepted",
+          "createdAt",
+          "feeBps",
+          "financier",
+          "id"
+        ],
+        "type": "object"
+      },
+      "FinancingRequest": {
+        "properties": {
+          "amount": {
+            "type": "string"
+          },
+          "buyer": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "exporter": {
+            "type": "string"
+          },
+          "externalRef": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "invoiceValue": {
+            "type": "string"
+          },
+          "maxFeeBps": {
+            "type": "integer"
+          },
+          "milestoneCount": {
+            "type": "integer"
+          },
+          "note": {
+            "type": "string"
+          },
+          "offers": {
+            "items": {
+              "$ref": "#/components/schemas/FinancingOffer"
+            },
+            "type": "array"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/Policy"
+          },
+          "pricing": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Suggestion"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "route": {
+            "items": {
+              "$ref": "#/components/schemas/RoutePoint"
+            },
+            "type": "array"
+          },
+          "shipmentId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount",
+          "buyer",
+          "createdAt",
+          "exporter",
+          "externalRef",
+          "id",
+          "invoiceValue",
+          "maxFeeBps",
+          "milestoneCount",
+          "note",
+          "offers",
+          "policy",
+          "route",
+          "shipmentId",
+          "status"
+        ],
+        "type": "object"
+      },
+      "FinancingRequestInput": {
+        "properties": {
+          "amount": {
+            "type": "string"
+          },
+          "issuedAt": {
+            "type": "integer"
+          },
+          "maxFeeBps": {
+            "type": "integer"
+          },
+          "milestoneCount": {
+            "type": "integer"
+          },
+          "note": {
+            "type": "string"
+          },
+          "shipmentId": {
+            "type": "string"
+          },
+          "signature": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount",
+          "issuedAt",
+          "maxFeeBps",
+          "milestoneCount",
+          "shipmentId",
+          "signature"
+        ],
+        "type": "object"
+      },
+      "Forecast": {
+        "properties": {
+          "minutesToLimit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sensorId": {
+            "type": "string"
+          },
+          "trend": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "minutesToLimit",
+          "sensorId",
+          "trend"
+        ],
+        "type": "object"
+      },
+      "GasRequest": {
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "issuedAt": {
+            "type": "integer"
+          },
+          "signature": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "address",
+          "issuedAt",
+          "signature"
+        ],
+        "type": "object"
+      },
+      "GasResponse": {
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "amountWei": {
+            "type": "string"
+          },
+          "txHash": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "address",
+          "amountWei",
+          "txHash"
+        ],
+        "type": "object"
+      },
+      "GatewayRequest": {
+        "properties": {
+          "attestation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AttestationInput"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "x509 for a secure element's P-256 key; webauthn (required) for a passkey"
+          },
+          "issuedAt": {
+            "type": "integer"
+          },
+          "keyType": {
+            "description": "default ed25519",
+            "enum": [
+              "ed25519",
+              "p256",
+              "webauthn"
+            ],
+            "type": "string"
+          },
+          "label": {
+            "description": "display name, at most 80 characters",
+            "type": "string"
+          },
+          "publicKey": {
+            "description": "base64url: a 32-byte Ed25519 key; for p256 and webauthn a SEC1 P-256 point (33 or 65 bytes) or a DER SubjectPublicKeyInfo",
+            "type": "string"
+          },
+          "sensorIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "signature": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "issuedAt",
+          "publicKey",
+          "sensorIds",
+          "signature"
+        ],
+        "type": "object"
+      },
+      "HealthResponse": {
+        "properties": {
+          "chain": {
+            "description": "\"unavailable\" when the RPC cannot be reached",
+            "type": "string"
+          },
+          "chainId": {
+            "type": "integer"
+          },
+          "database": {
+            "enum": [
+              "ok",
+              "unavailable"
+            ],
+            "type": "string"
+          },
+          "headBlock": {
+            "type": "integer"
+          },
+          "rpc": {
+            "description": "which RPC endpoint serves requests: primary or fallback",
+            "enum": [
+              "primary",
+              "fallback"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "degraded"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "chainId",
+          "database",
+          "status"
+        ],
+        "type": "object"
+      },
+      "IngestResult": {
+        "properties": {
+          "accepted": {
+            "type": "integer"
+          },
+          "epochs": {
+            "items": {
+              "$ref": "#/components/schemas/EpochOutcome"
+            },
+            "type": "array"
+          },
+          "rejected": {
+            "items": {
+              "$ref": "#/components/schemas/RejectedPoint"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "accepted",
+          "epochs",
+          "rejected"
+        ],
+        "type": "object"
+      },
+      "Inputs": {
+        "properties": {
+          "cargoTemplate": {
+            "enum": [
+              "frozen",
+              "chilled",
+              "controlled_ambient",
+              "ambient",
+              "custom"
+            ],
+            "type": "string"
+          },
+          "corridorEpochs": {
+            "description": "their evaluated epochs, the sample behind both rates",
+            "type": "integer"
+          },
+          "corridorShipments": {
+            "description": "other shipments on the same corridor",
+            "type": "integer"
+          },
+          "coverStatus": {
+            "enum": [
+              "none",
+              "offered",
+              "active"
+            ],
+            "type": "string"
+          },
+          "exporterGrade": {
+            "enum": [
+              "A",
+              "B",
+              "C",
+              "new"
+            ],
+            "type": "string"
+          },
+          "routeConflictRate": {
+            "description": "bps of the corridor's evaluated epochs whose sensor conflict exceeded the policy",
+            "type": "integer"
+          },
+          "routeExcursionRate": {
+            "description": "bps of the corridor's evaluated epochs that were out of the temperature band",
+            "type": "integer"
+          },
+          "tenorDays": {
+            "description": "estimated from the planned route at 16 knots plus 2 days in port",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "cargoTemplate",
+          "corridorEpochs",
+          "corridorShipments",
+          "coverStatus",
+          "exporterGrade",
+          "routeConflictRate",
+          "routeExcursionRate",
+          "tenorDays"
+        ],
+        "type": "object"
+      },
+      "InsurerStats": {
+        "properties": {
+          "active": {
+            "type": "integer"
+          },
+          "claimed": {
+            "type": "integer"
+          },
+          "coverWritten": {
+            "type": "string"
+          },
+          "offered": {
+            "type": "integer"
+          },
+          "paidOut": {
+            "type": "string"
+          },
+          "premiumsEarned": {
+            "type": "string"
+          },
+          "released": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "active",
+          "claimed",
+          "coverWritten",
+          "offered",
+          "paidOut",
+          "premiumsEarned",
+          "released"
+        ],
+        "type": "object"
+      },
+      "LatestPosition": {
+        "properties": {
+          "latE6": {
+            "type": "integer"
+          },
+          "lonE6": {
+            "type": "integer"
+          },
+          "timestamp": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "latE6",
+          "lonE6",
+          "timestamp"
+        ],
+        "type": "object"
+      },
+      "Milestone": {
+        "properties": {
+          "allocatedUsdg": {
+            "type": "string"
+          },
+          "checkpointCommitment": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "evidenceThreshold": {
+            "type": "integer"
+          },
+          "index": {
+            "type": "integer"
+          },
+          "latE6": {
+            "type": "integer"
+          },
+          "lonE6": {
+            "type": "integer"
+          },
+          "placeLabel": {
+            "type": "string"
+          },
+          "radiusM": {
+            "type": "integer"
+          },
+          "releaseTxHash": {
+            "type": "string"
+          },
+          "released": {
+            "type": "boolean"
+          },
+          "releasedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "allocatedUsdg",
+          "checkpointCommitment",
+          "description",
+          "evidenceThreshold",
+          "index",
+          "latE6",
+          "lonE6",
+          "placeLabel",
+          "radiusM",
+          "released"
+        ],
+        "type": "object"
+      },
+      "NextStep": {
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "role"
+        ],
+        "type": "object"
+      },
+      "Notification": {
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "data": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "description": "PAUSED, RELEASED, RESUMED, HELD, RECOVERY_READY, DISPUTED, DELIVERED, SETTLED, DEFAULTED, COVER_OFFERED, COVER_ACCEPTED, COVER_RELEASED, COVER_CLAIMED, OFFER_RECEIVED, OFFER_ACCEPTED",
+            "type": "string"
+          },
+          "link": {
+            "description": "where to act, e.g. https://app/track/<id>?recover=1",
+            "type": "string"
+          },
+          "readAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "shipmentId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "address",
+          "body",
+          "createdAt",
+          "data",
+          "id",
+          "kind",
+          "link",
+          "readAt",
+          "shipmentId",
+          "title"
+        ],
+        "type": "object"
+      },
+      "NotificationList": {
+        "properties": {
+          "notifications": {
+            "items": {
+              "$ref": "#/components/schemas/Notification"
+            },
+            "type": "array"
+          },
+          "unread": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "notifications",
+          "unread"
+        ],
+        "type": "object"
+      },
+      "NotificationsRead": {
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "ids": {
+            "description": "notification ids to mark read; omit (or empty) to mark all read. At most 100.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "issuedAt": {
+            "type": "integer"
+          },
+          "signature": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "address",
+          "issuedAt",
+          "signature"
+        ],
+        "type": "object"
+      },
+      "NotificationsReadResult": {
+        "properties": {
+          "marked": {
+            "type": "integer"
+          },
+          "unread": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "marked",
+          "unread"
+        ],
+        "type": "object"
+      },
+      "OfferInput": {
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "feeBps": {
+            "type": "integer"
+          },
+          "issuedAt": {
+            "type": "integer"
+          },
+          "signature": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "feeBps",
+          "issuedAt",
+          "signature"
+        ],
+        "type": "object"
+      },
+      "OnChainDevice": {
+        "properties": {
+          "deviceClass": {
+            "enum": [
+              "software",
+              "passkey",
+              "secure_element"
+            ],
+            "type": "string"
+          },
+          "registered": {
+            "type": "boolean"
+          },
+          "revoked": {
+            "type": "boolean"
+          },
+          "txHash": {
+            "description": "the DeviceRegistered transaction",
+            "type": "string"
+          }
+        },
+        "required": [
+          "deviceClass",
+          "registered",
+          "revoked",
+          "txHash"
+        ],
+        "type": "object"
+      },
+      "Parametric": {
+        "properties": {
+          "consecutiveFailedEpochs": {
+            "type": "integer"
+          },
+          "epochFloor": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "exporterSalvage": {
+            "type": "string"
+          },
+          "salvageToExporter": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "consecutiveFailedEpochs",
+          "epochFloor",
+          "exporterSalvage",
+          "salvageToExporter"
+        ],
+        "type": "object"
+      },
+      "PartyResponse": {
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "buyer": {
+            "$ref": "#/components/schemas/BuyerStats"
+          },
+          "exporter": {
+            "$ref": "#/components/schemas/ExporterStats"
+          },
+          "financier": {
+            "$ref": "#/components/schemas/FinancierStats"
+          },
+          "grade": {
+            "enum": [
+              "A",
+              "B",
+              "C",
+              "new"
+            ],
+            "type": "string"
+          },
+          "insurer": {
+            "$ref": "#/components/schemas/InsurerStats"
+          },
+          "since": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "address",
+          "buyer",
+          "exporter",
+          "financier",
+          "grade",
+          "insurer",
+          "since"
+        ],
+        "type": "object"
+      },
+      "Paused": {
+        "properties": {
+          "controller": {
+            "type": "boolean"
+          },
+          "coverPool": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "controller",
+          "coverPool"
+        ],
+        "type": "object"
+      },
+      "PlaceHold": {
+        "properties": {
+          "distanceM": {
+            "type": "integer"
+          },
+          "latE6": {
+            "type": "integer"
+          },
+          "lonE6": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "milestoneIndex": {
+            "type": "integer"
+          },
+          "placeLabel": {
+            "type": "string"
+          },
+          "radiusM": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "distanceM",
+          "latE6",
+          "lonE6",
+          "message",
+          "milestoneIndex",
+          "placeLabel",
+          "radiusM"
+        ],
+        "type": "object"
+      },
+      "Policy": {
+        "properties": {
+          "maxConflictBps": {
+            "type": "integer"
+          },
+          "maxGapSec": {
+            "type": "integer"
+          },
+          "maxHumidityX100": {
+            "type": "integer"
+          },
+          "maxRiskBps": {
+            "type": "integer"
+          },
+          "maxRouteDeviationM": {
+            "type": "integer"
+          },
+          "maxShockX100": {
+            "type": "integer"
+          },
+          "maxTempX100": {
+            "type": "integer"
+          },
+          "minEvidenceScore": {
+            "type": "integer"
+          },
+          "minSensors": {
+            "type": "integer"
+          },
+          "minTempX100": {
+            "type": "integer"
+          },
+          "requiresZk": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "maxConflictBps",
+          "maxGapSec",
+          "maxHumidityX100",
+          "maxRiskBps",
+          "maxRouteDeviationM",
+          "maxShockX100",
+          "maxTempX100",
+          "minEvidenceScore",
+          "minSensors",
+          "minTempX100",
+          "requiresZk"
+        ],
+        "type": "object"
+      },
+      "ProofRequest": {
+        "properties": {
+          "sensorId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "sensorId"
+        ],
+        "type": "object"
+      },
+      "Reading": {
+        "properties": {
+          "humidityX100": {
+            "type": "integer"
+          },
+          "latitudeE6": {
+            "type": "integer"
+          },
+          "longitudeE6": {
+            "type": "integer"
+          },
+          "sensorId": {
+            "type": "string"
+          },
+          "shockX100": {
+            "type": "integer"
+          },
+          "temperatureX100": {
+            "type": "integer"
+          },
+          "timestamp": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "humidityX100",
+          "latitudeE6",
+          "longitudeE6",
+          "sensorId",
+          "shockX100",
+          "temperatureX100",
+          "timestamp"
+        ],
+        "type": "object"
+      },
+      "Reason": {
+        "properties": {
+          "bps": {
+            "description": "what this factor added to the mid (negative lowers it); for history, the extra half-width",
+            "type": "integer"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "factor": {
+            "enum": [
+              "base",
+              "grade",
+              "excursion",
+              "conflict",
+              "cargo",
+              "cover",
+              "tenor",
+              "history"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "bps",
+          "detail",
+          "factor"
+        ],
+        "type": "object"
+      },
+      "ReconcileReport": {
+        "properties": {
+          "deferred": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "gaveUp": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "retried": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "shipments": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "deferred",
+          "errors",
+          "gaveUp",
+          "retried",
+          "shipments"
+        ],
+        "type": "object"
+      },
+      "RecoveryProof": {
+        "properties": {
+          "a": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "b": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "c": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "cached": {
+            "description": "the proof was built ahead of time by the automatic recovery worker; only the commit ran now",
+            "type": "boolean"
+          },
+          "commitTx": {
+            "type": "string"
+          },
+          "epochId": {
+            "type": "string"
+          },
+          "milestoneIndex": {
+            "type": "integer"
+          },
+          "root": {
+            "type": "string"
+          },
+          "score": {
+            "type": "integer"
+          },
+          "sequence": {
+            "type": "integer"
+          },
+          "submitter": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "a",
+          "b",
+          "c",
+          "commitTx",
+          "epochId",
+          "milestoneIndex",
+          "root",
+          "score",
+          "sequence",
+          "submitter"
+        ],
+        "type": "object"
+      },
+      "RecoveryRequest": {
+        "properties": {
+          "issuedAt": {
+            "type": "integer"
+          },
+          "sensorId": {
+            "type": "string"
+          },
+          "signature": {
+            "type": "string"
+          },
+          "submitter": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "issuedAt",
+          "sensorId",
+          "signature",
+          "submitter"
+        ],
+        "type": "object"
+      },
+      "RecoveryResult": {
+        "properties": {
+          "commitTx": {
+            "type": "string"
+          },
+          "epochId": {
+            "type": "string"
+          },
+          "milestoneIndex": {
+            "type": "integer"
+          },
+          "releaseTx": {
+            "type": "string"
+          },
+          "resumeTx": {
+            "type": "string"
+          },
+          "root": {
+            "type": "string"
+          },
+          "score": {
+            "type": "integer"
+          },
+          "sequence": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "commitTx",
+          "epochId",
+          "milestoneIndex",
+          "releaseTx",
+          "resumeTx",
+          "root",
+          "score",
+          "sequence"
+        ],
+        "type": "object"
+      },
+      "RejectedPoint": {
+        "properties": {
+          "reason": {
+            "type": "string"
+          },
+          "sensorId": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "reason",
+          "sensorId",
+          "timestamp"
+        ],
+        "type": "object"
+      },
+      "RequestList": {
+        "properties": {
+          "requests": {
+            "items": {
+              "$ref": "#/components/schemas/FinancingRequest"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "requests"
+        ],
+        "type": "object"
+      },
+      "RoutePoint": {
+        "properties": {
+          "latE6": {
+            "type": "integer"
+          },
+          "lonE6": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "latE6",
+          "lonE6"
+        ],
+        "type": "object"
+      },
+      "SensorSummary": {
+        "properties": {
+          "maxTempX100": {
+            "type": "integer"
+          },
+          "meanTempX100": {
+            "type": "integer"
+          },
+          "minTempX100": {
+            "type": "integer"
+          },
+          "readings": {
+            "type": "integer"
+          },
+          "sensorId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "maxTempX100",
+          "meanTempX100",
+          "minTempX100",
+          "readings",
+          "sensorId"
+        ],
+        "type": "object"
+      },
+      "Shipment": {
+        "properties": {
+          "buyer": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "exporter": {
+            "type": "string"
+          },
+          "externalRef": {
+            "type": "string"
+          },
+          "financier": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "invoiceHash": {
+            "type": "string"
+          },
+          "invoiceValue": {
+            "type": "string"
+          },
+          "placeLabels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/Policy"
+          },
+          "policyCommitment": {
+            "type": "string"
+          },
+          "route": {
+            "items": {
+              "$ref": "#/components/schemas/RoutePoint"
+            },
+            "type": "array"
+          },
+          "routeCommitment": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "buyer",
+          "createdAt",
+          "exporter",
+          "externalRef",
+          "id",
+          "invoiceHash",
+          "invoiceValue",
+          "placeLabels",
+          "policy",
+          "policyCommitment",
+          "route",
+          "routeCommitment",
+          "status",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "ShipmentCover": {
+        "properties": {
+          "cover": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Cover"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "offers": {
+            "items": {
+              "$ref": "#/components/schemas/CoverOffer"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "cover",
+          "offers"
+        ],
+        "type": "object"
+      },
+      "ShipmentList": {
+        "properties": {
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "integer"
+          },
+          "shipments": {
+            "items": {
+              "$ref": "#/components/schemas/Shipment"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "limit",
+          "offset",
+          "shipments"
+        ],
+        "type": "object"
+      },
+      "ShipmentRequest": {
+        "properties": {
+          "externalRef": {
+            "type": "string"
+          },
+          "maxGapSec": {
+            "type": "integer"
+          },
+          "minSensors": {
+            "type": "integer"
+          },
+          "placeLabels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "route": {
+            "items": {
+              "$ref": "#/components/schemas/RoutePoint"
+            },
+            "type": "array"
+          },
+          "shipmentId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "externalRef",
+          "shipmentId"
+        ],
+        "type": "object"
+      },
+      "ShipmentView": {
+        "properties": {
+          "cover": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Cover"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "facility": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FacilityView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "latestEvidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EpochSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "milestones": {
+            "items": {
+              "$ref": "#/components/schemas/Milestone"
+            },
+            "type": "array"
+          },
+          "openCoverOffers": {
+            "type": "integer"
+          },
+          "quarantinedReadings": {
+            "type": "integer"
+          },
+          "shipment": {
+            "$ref": "#/components/schemas/Shipment"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TitleView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "usdgDecimals": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "cover",
+          "facility",
+          "latestEvidence",
+          "milestones",
+          "openCoverOffers",
+          "quarantinedReadings",
+          "shipment",
+          "title",
+          "usdgDecimals"
+        ],
+        "type": "object"
+      },
+      "SignedAuthorization": {
+        "properties": {
+          "issuedAt": {
+            "type": "integer"
+          },
+          "signature": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "issuedAt",
+          "signature"
+        ],
+        "type": "object"
+      },
+      "Source": {
+        "properties": {
+          "attestation": {
+            "additionalProperties": {},
+            "description": "what registration verified",
+            "type": "object"
+          },
+          "attested": {
+            "description": "an attestation chain verified to a trusted root",
+            "type": "boolean"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "deviceClass": {
+            "enum": [
+              "software",
+              "passkey",
+              "secure_element"
+            ],
+            "type": "string"
+          },
+          "deviceTx": {
+            "description": "v3: the DeviceRegistry.registerDevice transaction (registration responses only)",
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "keyHash": {
+            "description": "0x + keccak256(public key bytes); see GET /v1/devices/{keyHash}",
+            "type": "string"
+          },
+          "keyType": {
+            "enum": [
+              "ed25519",
+              "p256",
+              "webauthn"
+            ],
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "publicKey": {
+            "description": "base64url of the stored key: 32-byte Ed25519 or 65-byte uncompressed P-256 point",
+            "type": "string"
+          },
+          "reliabilityBps": {
+            "description": "the weight the evidence engine gives this source's sensors",
+            "type": "integer"
+          },
+          "sensorIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "shipmentId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "attested",
+          "createdAt",
+          "deviceClass",
+          "id",
+          "keyHash",
+          "keyType",
+          "label",
+          "publicKey",
+          "reliabilityBps",
+          "sensorIds",
+          "shipmentId"
+        ],
+        "type": "object"
+      },
+      "SourceCreated": {
+        "properties": {
+          "deviceClass": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "keyHash": {
+            "type": "string"
+          },
+          "keyType": {
+            "type": "string"
+          },
+          "reliabilityBps": {
+            "type": "integer"
+          },
+          "sensorIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "deviceClass",
+          "id",
+          "keyHash",
+          "keyType",
+          "reliabilityBps",
+          "sensorIds"
+        ],
+        "type": "object"
+      },
+      "SourceList": {
+        "properties": {
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "sources"
+        ],
+        "type": "object"
+      },
+      "SourceRequest": {
+        "properties": {
+          "attestation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AttestationInput"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "p256 only: an x509 chain to a manufacturer root makes the source a secure_element"
+          },
+          "id": {
+            "type": "string"
+          },
+          "keyType": {
+            "enum": [
+              "ed25519",
+              "p256"
+            ],
+            "type": "string"
+          },
+          "publicKey": {
+            "description": "Ed25519 (base64url or hex), or for p256 a SEC1 point / DER SubjectPublicKeyInfo in base64url",
+            "type": "string"
+          },
+          "reliabilityBps": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "default: by device class (software 9500, passkey 9700, secure_element 9900)"
+          },
+          "sensorIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "publicKey",
+          "sensorIds"
+        ],
+        "type": "object"
+      },
+      "Stats": {
+        "properties": {
+          "epochsCommitted": {
+            "type": "integer"
+          },
+          "proofsVerified": {
+            "type": "integer"
+          },
+          "shipments": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object"
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "epochsCommitted",
+          "proofsVerified",
+          "shipments",
+          "total"
+        ],
+        "type": "object"
+      },
+      "Subscription": {
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "events": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "id": {
+            "type": "string"
+          },
+          "targetMasked": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "active",
+          "channel",
+          "events",
+          "id",
+          "targetMasked"
+        ],
+        "type": "object"
+      },
+      "SubscriptionCreated": {
+        "properties": {
+          "channel": {
+            "type": "string"
+          },
+          "createdAt": {
+            "description": "RFC 3339",
+            "type": "string"
+          },
+          "events": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "id": {
+            "type": "string"
+          },
+          "linkUrl": {
+            "description": "telegram only: open it and press Start to link the chat",
+            "type": "string"
+          },
+          "secret": {
+            "description": "webhook only: the HMAC key for X-CargoFlow-Signature, shown once",
+            "type": "string"
+          },
+          "targetMasked": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "channel",
+          "createdAt",
+          "events",
+          "id",
+          "targetMasked"
+        ],
+        "type": "object"
+      },
+      "SubscriptionList": {
+        "properties": {
+          "subscriptions": {
+            "items": {
+              "$ref": "#/components/schemas/Subscription"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "subscriptions"
+        ],
+        "type": "object"
+      },
+      "SubscriptionRequest": {
+        "properties": {
+          "channel": {
+            "enum": [
+              "webhook",
+              "telegram",
+              "email",
+              "slack"
+            ],
+            "type": "string"
+          },
+          "events": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "issuedAt": {
+            "type": "integer"
+          },
+          "signature": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "channel",
+          "events",
+          "issuedAt",
+          "signature",
+          "target"
+        ],
+        "type": "object"
+      },
+      "Suggestion": {
+        "properties": {
+          "highBps": {
+            "type": "integer"
+          },
+          "inputs": {
+            "$ref": "#/components/schemas/Inputs"
+          },
+          "lowBps": {
+            "type": "integer"
+          },
+          "midBps": {
+            "type": "integer"
+          },
+          "model": {
+            "description": "model identifier; the formula is documented in the API reference and README",
+            "type": "string"
+          },
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/Reason"
+            },
+            "type": "array"
+          },
+          "shipmentId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "highBps",
+          "inputs",
+          "lowBps",
+          "midBps",
+          "model",
+          "reasons",
+          "shipmentId"
+        ],
+        "type": "object"
+      },
+      "TelemetryRequest": {
+        "properties": {
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/Reading"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "points"
+        ],
+        "type": "object"
+      },
+      "TelemetrySummary": {
+        "properties": {
+          "epochs": {
+            "items": {
+              "$ref": "#/components/schemas/EpochTelemetry"
+            },
+            "type": "array"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LatestPosition"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "epochs",
+          "position"
+        ],
+        "type": "object"
+      },
+      "TitleView": {
+        "properties": {
+          "holder": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ISSUED",
+              "SURRENDERED",
+              "VOID"
+            ],
+            "type": "string"
+          },
+          "tokenId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "holder",
+          "status",
+          "tokenId"
+        ],
+        "type": "object"
+      },
+      "TrackPoint": {
+        "properties": {
+          "committed": {
+            "type": "boolean"
+          },
+          "endTime": {
+            "type": "integer"
+          },
+          "epochId": {
+            "type": "string"
+          },
+          "latE6": {
+            "type": "integer"
+          },
+          "lonE6": {
+            "type": "integer"
+          },
+          "maxHumidityX100": {
+            "type": "integer"
+          },
+          "maxShockX100": {
+            "type": "integer"
+          },
+          "maxTempX100": {
+            "type": "integer"
+          },
+          "milestoneIndex": {
+            "type": "integer"
+          },
+          "minTempX100": {
+            "type": "integer"
+          },
+          "pass": {
+            "type": "boolean"
+          },
+          "sequence": {
+            "type": "integer"
+          },
+          "startTime": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "committed",
+          "endTime",
+          "epochId",
+          "latE6",
+          "lonE6",
+          "maxHumidityX100",
+          "maxShockX100",
+          "maxTempX100",
+          "milestoneIndex",
+          "minTempX100",
+          "pass",
+          "sequence",
+          "startTime"
+        ],
+        "type": "object"
+      },
+      "TrackResponse": {
+        "properties": {
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/TrackPoint"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "points"
+        ],
+        "type": "object"
+      },
+      "Vessel": {
+        "properties": {
+          "crossCheck": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Check"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "last": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VesselLast"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "live": {
+            "type": "boolean"
+          },
+          "mmsi": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "track": {
+            "items": {
+              "$ref": "#/components/schemas/VesselFix"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "crossCheck",
+          "last",
+          "live",
+          "mmsi",
+          "name",
+          "track"
+        ],
+        "type": "object"
+      },
+      "VesselFix": {
+        "properties": {
+          "latE6": {
+            "type": "integer"
+          },
+          "lonE6": {
+            "type": "integer"
+          },
+          "timestamp": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "latE6",
+          "lonE6",
+          "timestamp"
+        ],
+        "type": "object"
+      },
+      "VesselLast": {
+        "properties": {
+          "cogDegX10": {
+            "type": "integer"
+          },
+          "latE6": {
+            "type": "integer"
+          },
+          "lonE6": {
+            "type": "integer"
+          },
+          "sogKnotsX10": {
+            "type": "integer"
+          },
+          "timestamp": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "cogDegX10",
+          "latE6",
+          "lonE6",
+          "sogKnotsX10",
+          "timestamp"
+        ],
+        "type": "object"
+      },
+      "VesselRequest": {
+        "properties": {
+          "issuedAt": {
+            "type": "integer"
+          },
+          "mmsi": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "signature": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "issuedAt",
+          "mmsi",
+          "signature"
+        ],
+        "type": "object"
+      },
+      "WebhookResult": {
+        "properties": {
+          "accepted": {
+            "type": "boolean"
+          },
+          "block": {
+            "description": "the highest block among them",
+            "type": "integer"
+          },
+          "duplicate": {
+            "description": "the delivery id was seen in the last 24 hours; nothing was done",
+            "type": "boolean"
+          },
+          "matched": {
+            "description": "logs or activities from CargoFlow contracts",
+            "type": "integer"
+          },
+          "woken": {
+            "description": "the indexer was asked to sync now (it re-reads the logs from the RPC; the payload itself is never applied)",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "accepted",
+          "matched",
+          "woken"
+        ],
+        "type": "object"
+      },
+      "ZerodevRequestDoc": {
+        "properties": {
+          "chainId": {
+            "description": "must equal CHAIN_ID",
+            "type": "integer"
+          },
+          "projectId": {
+            "description": "must equal ZERODEV_PROJECT_ID",
+            "type": "string"
+          },
+          "userOp": {
+            "properties": {
+              "callData": {
+                "description": "Kernel v3 execute(bytes32 mode, bytes executionCalldata) single or batch, or Kernel v2 execute/executeBatch",
+                "type": "string"
+              },
+              "callGasLimit": {
+                "type": "string"
+              },
+              "factory": {
+                "description": "v0.7",
+                "type": "string"
+              },
+              "factoryData": {
+                "description": "v0.7",
+                "type": "string"
+              },
+              "initCode": {
+                "description": "v0.6",
+                "type": "string"
+              },
+              "maxFeePerGas": {
+                "type": "string"
+              },
+              "maxPriorityFeePerGas": {
+                "type": "string"
+              },
+              "nonce": {
+                "type": "string"
+              },
+              "paymasterAndData": {
+                "description": "v0.6",
+                "type": "string"
+              },
+              "preVerificationGas": {
+                "type": "string"
+              },
+              "sender": {
+                "type": "string"
+              },
+              "signature": {
+                "type": "string"
+              },
+              "verificationGasLimit": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "callData",
+              "callGasLimit",
+              "maxFeePerGas",
+              "maxPriorityFeePerGas",
+              "nonce",
+              "preVerificationGas",
+              "sender",
+              "signature",
+              "verificationGasLimit"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "chainId",
+          "projectId",
+          "userOp"
+        ],
+        "type": "object"
+      },
+      "ZerodevResponse": {
+        "properties": {
+          "proceed": {
+            "description": "true: CargoFlow sponsors this user operation",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "proceed"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "adminKey": {
+        "description": "the operator's ADMIN_API_KEY",
+        "in": "header",
+        "name": "X-API-Key",
+        "type": "apiKey"
+      },
+      "alchemySignature": {
+        "description": "Alchemy Notify: hex HMAC-SHA256 of the raw request body with the webhook's signing key (ALCHEMY_WEBHOOK_SIGNING_KEYS)",
+        "in": "header",
+        "name": "X-Alchemy-Signature",
+        "type": "apiKey"
+      },
+      "sourceSignature": {
+        "description": "Signed by a registered evidence source. The signing string is\n\n```\nCARGOFLOW-V1\\n<METHOD>\\n<PATH>\\n<TIMESTAMP>\\n<hex sha256(body)>\n```\n\n`ed25519` sources sign it with Ed25519. `p256` sources sign it with ECDSA P-256 over SHA-256 (X-Signature is the DER or raw 64-byte r||s signature). `webauthn` sources run navigator.credentials.get with challenge = sha256(signing string) (32 raw bytes) and send the assertion: X-Signature = signature, X-WebAuthn-Authenticator-Data = authenticatorData, X-WebAuthn-Client-Data = clientDataJSON (all base64url); the backend checks type `webauthn.get`, the challenge, the registered RP id hash, the user-present flag and the signature over authenticatorData || sha256(clientDataJSON).",
+        "in": "header",
+        "name": "X-Signature",
+        "type": "apiKey"
+      },
+      "walletSignature": {
+        "description": "Not a header: the body carries `issuedAt` and `signature` (hex EIP-191 personal_sign) over the operation's `x-cargoflow-signed-message`. Declared as a scheme so clients can see which operations need a wallet.",
+        "in": "header",
+        "name": "X-Wallet-Signature",
+        "type": "apiKey"
+      }
+    }
+  },
+  "info": {
+    "description": "CargoFlow turns signed shipment telemetry into on-chain financing decisions. Public reads need no credentials. Writes are authenticated in one of three ways: the operator's admin key, a party's wallet signature over a fixed message (see each operation's `x-cargoflow-signed-message`), or an evidence source's request signature (Ed25519, P-256 or WebAuthn). Errors are `{\"error\": {\"code\", \"message\"}}` with stable codes. Amounts are USDG base units (6 decimals) as decimal strings.",
+    "license": {
+      "identifier": "Apache-2.0",
+      "name": "Apache-2.0"
+    },
+    "title": "CargoFlow API",
+    "version": "1.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/v1/admin/reconcile": {
+      "post": {
+        "operationId": "reconcile",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReconcileReport"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [
+          {
+            "adminKey": []
+          }
+        ],
+        "summary": "Run one reconciliation pass now",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/v1/config": {
+      "get": {
+        "operationId": "getConfig",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [],
+        "summary": "Chain id, contract addresses and enabled integrations",
+        "tags": [
+          "System"
+        ]
+      }
+    },
+    "/v1/devices/{keyHash}": {
+      "get": {
+        "description": "`onChain` is the contracts v3 DeviceRegistry record when that contract is deployed, else null.",
+        "operationId": "getDevice",
+        "parameters": [
+          {
+            "description": "device key hash: 0x + hex keccak256 of the device's public key bytes (raw 32-byte Ed25519 key, or the 65-byte uncompressed P-256 point)",
+            "in": "path",
+            "name": "keyHash",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Device"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [],
+        "summary": "A device key: class, attestation and the source it feeds",
+        "tags": [
+          "Devices"
+        ]
+      }
+    },
+    "/v1/ebl": {
+      "get": {
+        "description": "404 on a deployment without the EBLRegistry. Designed around MLETR concepts (exclusive control, singularity, integrity); not a legal compliance claim.",
+        "operationId": "listBills",
+        "parameters": [
+          {
+            "description": "only bills this 0x address holds",
+            "in": "query",
+            "name": "holder",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillList"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [],
+        "summary": "Electronic bills of lading (v3 EBLRegistry)",
+        "tags": [
+          "Standards"
+        ]
+      }
+    },
+    "/v1/ebl/{tokenId}": {
+      "get": {
+        "operationId": "getBill",
+        "parameters": [
+          {
+            "description": "the bill's ERC-721 token id (decimal)",
+            "in": "path",
+            "name": "tokenId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bill"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [],
+        "summary": "One bill of lading: parties, holder, status, transfer history and bound shipment",
+        "tags": [
+          "Standards"
+        ]
+      }
+    },
+    "/v1/gas": {
+      "post": {
+        "description": "Signed by a wallet (EIP-191 personal_sign, or EIP-1271 for contract wallets) over this exact text, lines joined by \\n with no trailing newline, ids and addresses lower case; `issued` is unix seconds within 10 minutes of the server clock, and each authorization is single-use (409 `replayed`):\n\n```\nCargoFlow gas\naddress: <address>\nissued: <t>\n```",
+        "operationId": "requestGas",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GasRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GasResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [
+          {
+            "walletSignature": []
+          }
+        ],
+        "summary": "Gas drip for a wallet with none (10/min per client)",
+        "tags": [
+          "Parties"
+        ],
+        "x-cargoflow-signed-message": "CargoFlow gas\naddress: <address>\nissued: <t>"
+      }
+    },
+    "/v1/health": {
+      "get": {
+        "description": "503 with status `degraded` when the database or the RPC cannot be reached. `rpc` says whether the primary or the fallback RPC is serving.",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [],
+        "summary": "Database and chain reachability",
+        "tags": [
+          "System"
+        ]
+      }
+    },
+    "/v1/notifications": {
+      "get": {
+        "description": "Pauses, releases, holds, recovery ready (with a `?recover=1` link), disputes, delivery, settlement, default, cover events and marketplace offers, for every shipment the wallet is a party to.",
+        "operationId": "listNotifications",
+        "parameters": [
+          {
+            "description": "a 0x address",
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "true for unread only",
+            "in": "query",
+            "name": "unread",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "1 to 200 (default 50)",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationList"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [],
+        "summary": "A wallet's in-app notifications, newest first",
+        "tags": [
+          "Alerts"
+        ]
+      }
+    },
+    "/v1/notifications/read": {
+      "post": {
+        "description": "Signed by a wallet (EIP-191 personal_sign, or EIP-1271 for contract wallets) over this exact text, lines joined by \\n with no trailing newline, ids and addresses lower case; `issued` is unix seconds within 10 minutes of the server clock, and each authorization is single-use (409 `replayed`):\n\n```\nCargoFlow notifications read\naddress: <address>\nids: <comma-separated ids, or all>\nissued: <t>\n```",
+        "operationId": "readNotifications",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotificationsRead"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationsReadResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [
+          {
+            "walletSignature": []
+          }
+        ],
+        "summary": "Mark notifications read (the notified wallet)",
+        "tags": [
+          "Alerts"
+        ],
+        "x-cargoflow-signed-message": "CargoFlow notifications read\naddress: <address>\nids: <comma-separated ids, or all>\nissued: <t>"
+      }
+    },
+    "/v1/openapi.json": {
+      "get": {
+        "operationId": "getOpenAPI",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {},
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [],
+        "summary": "This OpenAPI 3.1 document",
+        "tags": [
+          "System"
+        ]
+      }
+    },
+    "/v1/parties/{address}": {
+      "get": {
+        "operationId": "getParty",
+        "parameters": [
+          {
+            "description": "a 0x address",
+            "in": "path",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartyResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [],
+        "summary": "Track record as exporter, financier, buyer and insurer, with a grade",
+        "tags": [
+          "Parties"
+        ]
+      }
+    },
+    "/v1/pricing/suggest": {
+      "get": {
+        "description": "A transparent, deterministic model over the store's history (financiers still choose the fee):\n\n```\nmid    = clamp(300 + grade + excursion + conflict + cargo + cover + tenor, 50, 2000)\nspread = 50 (+100 when the corridor has < 20 evaluated epochs) (+50 for a new exporter)\nlow    = clamp(mid - spread, 0, 2000); high = clamp(mid + spread, 0, 2000)\n\ngrade      A -75, B 0, C +150, new +50\nexcursion  +routeExcursionRate/5 (max +400)   conflict +routeConflictRate/10 (max +200)\ncargo      frozen +75, chilled +50, controlled_ambient +25, ambient 0, custom +50\ncover      active -100, offered -25, none 0\ntenor      +5 per day beyond 14 (max +150)\n```\n\nRates are bps of the evaluated epochs of other shipments on the same corridor (first and last waypoints in the same 1-degree cells).",
+        "operationId": "suggestFee",
+        "parameters": [
+          {
+            "description": "shipment id",
+            "in": "query",
+            "name": "shipment",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Suggestion"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [],
+        "summary": "Fee guidance for a shipment: a band with its reasons",
+        "tags": [
+          "Marketplace"
+        ]
+      }
+    },
+    "/v1/requests": {
+      "get": {
+        "description": "Each request carries `pricing`, the fee guidance of GET /v1/pricing/suggest.",
+        "operationId": "listRequests",
+        "parameters": [
+          {
+            "description": "open, accepted, funded or closed",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "a 0x address",
+            "in": "query",
+            "name": "exporter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestList"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [],
+        "summary": "Financing requests, newest first, with offers cheapest first",
+        "tags": [
+          "Marketplace"
+        ]
+      },
+      "post": {
+        "description": "Signed by a wallet (EIP-191 personal_sign, or EIP-1271 for contract wallets) over this exact text, lines joined by \\n with no trailing newline, ids and addresses lower case; `issued` is unix seconds within 10 minutes of the server clock, and each authorization is single-use (409 `replayed`):\n\n```\nCargoFlow financing request\nshipment: <id>\namount: <base units>\nmax fee bps: <n>\nmilestones: <n>\nissued: <t>\n```",
+        "operationId": "createRequest",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinancingRequestInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancingRequest"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [
+          {
+            "walletSignature": []
+          }
+        ],
+        "summary": "Post a financing request (exporter)",
+        "tags": [
+          "Marketplace"
+        ],
+        "x-cargoflow-signed-message": "CargoFlow financing request\nshipment: <id>\namount: <base units>\nmax fee bps: <n>\nmilestones: <n>\nissued: <t>"
+      }
+    },
+    "/v1/requests/{rid}/accept": {
+      "post": {
+        "description": "Signed by a wallet (EIP-191 personal_sign, or EIP-1271 for contract wallets) over this exact text, lines joined by \\n with no trailing newline, ids and addresses lower case; `issued` is unix seconds within 10 minutes of the server clock, and each authorization is single-use (409 `replayed`):\n\n```\nCargoFlow accept\nrequest: <rid>\noffer: <offer id>\nissued: <t>\n```",
+        "operationId": "acceptOffer",
+        "parameters": [
+          {
+            "description": "financing request id (uuid)",
+            "in": "path",
+            "name": "rid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptOfferInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancingRequest"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [
+          {
+            "walletSignature": []
+          }
+        ],
+        "summary": "Accept an offer (exporter)",
+        "tags": [
+          "Marketplace"
+        ],
+        "x-cargoflow-signed-message": "CargoFlow accept\nrequest: <rid>\noffer: <offer id>\nissued: <t>"
+      }
+    },
+    "/v1/requests/{rid}/close": {
+      "post": {
+        "description": "Signed by a wallet (EIP-191 personal_sign, or EIP-1271 for contract wallets) over this exact text, lines joined by \\n with no trailing newline, ids and addresses lower case; `issued` is unix seconds within 10 minutes of the server clock, and each authorization is single-use (409 `replayed`):\n\n```\nCargoFlow close request\nrequest: <rid>\nissued: <t>\n```",
+        "operationId": "closeRequest",
+        "parameters": [
+          {
+            "description": "financing request id (uuid)",
+            "in": "path",
+            "name": "rid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignedAuthorization"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancingRequest"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [
+          {
+            "walletSignature": []
+          }
+        ],
+        "summary": "Withdraw a request (exporter)",
+        "tags": [
+          "Marketplace"
+        ],
+        "x-cargoflow-signed-message": "CargoFlow close request\nrequest: <rid>\nissued: <t>"
+      }
+    },
+    "/v1/requests/{rid}/offers": {
+      "post": {
+        "description": "Signed by a wallet (EIP-191 personal_sign, or EIP-1271 for contract wallets) over this exact text, lines joined by \\n with no trailing newline, ids and addresses lower case; `issued` is unix seconds within 10 minutes of the server clock, and each authorization is single-use (409 `replayed`):\n\n```\nCargoFlow offer\nrequest: <rid>\nfee bps: <n>\nissued: <t>\n```",
+        "operationId": "placeOffer",
+        "parameters": [
+          {
+            "description": "financing request id (uuid)",
+            "in": "path",
+            "name": "rid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OfferInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "replaced your earlier fee"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancingOffer"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [
+          {
+            "walletSignature": []
+          }
+        ],
+        "summary": "Offer a fee (a financier)",
+        "tags": [
+          "Marketplace"
+        ],
+        "x-cargoflow-signed-message": "CargoFlow offer\nrequest: <rid>\nfee bps: <n>\nissued: <t>"
+      }
+    },
+    "/v1/shipments": {
+      "get": {
+        "operationId": "listShipments",
+        "parameters": [
+          {
+            "description": "only shipments where this 0x address is exporter, buyer or financier",
+            "in": "query",
+            "name": "party",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "external reference (exact)",
+            "in": "query",
+            "name": "ref",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "comma-separated statuses, e.g. PAUSED,DISPUTED",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "1 to 200 (default 50)",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "rows to skip",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShipmentList"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [],
+        "summary": "List mirrored shipments",
+        "tags": [
+          "Shipments"
+        ]
+      },
+      "post": {
+        "description": "Parties, invoice, commitments, policy and milestone places are read from the chain; the request is refused unless the reference, route and policy match their on-chain commitments.",
+        "operationId": "createShipment",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShipmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Shipment"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [
+          {
+            "adminKey": []
+          }
+        ],
+        "summary": "Mirror an on-chain shipment (operator)",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/v1/shipments/mirror": {
+      "post": {
+        "description": "Safe without credentials: nothing the chain does not confirm is stored. A repeat answers 200 with the existing record; `placeLabels` fill in once.",
+        "operationId": "mirrorShipment",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShipmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "already mirrored"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Shipment"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [],
+        "summary": "Mirror an on-chain shipment (public, 30/min per client)",
+        "tags": [
+          "Shipments"
+        ]
+      }
+    },
+    "/v1/shipments/{id}": {
+      "get": {
+        "operationId": "getShipment",
+        "parameters": [
+          {
+            "description": "shipment id: 0x followed by 64 lowercase hex characters (keccak256(exporter, keccak256(externalRef)))",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShipmentView"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [],
+        "summary": "Combined store and live chain view of a shipment",
+        "tags": [
+          "Shipments"
+        ]
+      }
+    },
+    "/v1/shipments/{id}/audit": {
+      "get": {
+        "operationId": "getAudit",
+        "parameters": [
+          {
+            "description": "shipment id: 0x followed by 64 lowercase hex characters (keccak256(exporter, keccak256(externalRef)))",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "1 to 2000 (default 500)",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditList"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [],
+        "summary": "Time-ordered trail of chain events, decisions, epochs and transactions",
+        "tags": [
+          "Shipments"
+        ]
+      }
+    },
+    "/v1/shipments/{id}/cover": {
+      "get": {
+        "operationId": "getCover",
+        "parameters": [
+          {
+            "description": "shipment id: 0x followed by 64 lowercase hex characters (keccak256(exporter, keccak256(externalRef)))",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShipmentCover"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [],
+        "summary": "Default cover: open offers and the accepted cover",
+        "tags": [
+          "Shipments"
+        ]
+      }
+    },
+    "/v1/shipments/{id}/documents": {
+      "get": {
+        "operationId": "listDocuments",
+        "parameters": [
+          {
+            "description": "shipment id: 0x followed by 64 lowercase hex characters (keccak256(exporter, keccak256(externalRef)))",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentList"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [],
+        "summary": "Document attestations",
+        "tags": [
+          "Documents"
+        ]
+      },
+      "post": {
+        "description": "Signed by a wallet (EIP-191 personal_sign, or EIP-1271 for contract wallets) over this exact text, lines joined by \\n with no trailing newline, ids and addresses lower case; `issued` is unix seconds within 10 minutes of the server clock, and each authorization is single-use (409 `replayed`):\n\n```\nCargoFlow document\nshipment: <id>\nkind: <kind>\nsha256: <0x..>\nissued: <t>\n```",
+        "operationId": "attestDocument",
+        "parameters": [
+          {
+            "description": "shipment id: 0x followed by 64 lowercase hex characters (keccak256(exporter, keccak256(externalRef)))",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "the signer attested this file before"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Document"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [
+          {
+            "walletSignature": []
+          }
+        ],
+        "summary": "Attest a file by its hashes (a party)",
+        "tags": [
+          "Documents"
+        ],
+        "x-cargoflow-signed-message": "CargoFlow document\nshipment: <id>\nkind: <kind>\nsha256: <0x..>\nissued: <t>"
+      }
+    },
+    "/v1/shipments/{id}/epcis": {
+      "get": {
+        "description": "ObjectEvents: commissioning, shipping, one sensor_reporting event per evidence epoch (sensorElementList with per-sensor min/max/mean temperature in CEL, max/mean relative humidity in P1 and peak acceleration in MSK; readPoint = the epoch centroid as a geo: URI), receiving, and financing events with bizSteps and fields in the CargoFlow namespace (https://cargoflow.app/epcis/). Validates against the official EPCIS 2.0 JSON schema.",
+        "operationId": "exportEPCIS",
+        "parameters": [
+          {
+            "description": "shipment id: 0x followed by 64 lowercase hex characters (keccak256(exporter, keccak256(externalRef)))",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/ld+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EPCISDocument"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [],
+        "summary": "The shipment as a GS1 EPCIS 2.0 JSON-LD document",
+        "tags": [
+          "Standards"
+        ]
+      },
+      "post": {
+        "description": "An EPCISDocument (or one ObjectEvent). Every ObjectEvent with a sensorElementList gives one reading per element: time from the report, the metadata or eventTime; sensor = last segment of deviceID; position = readPoint geo: URI (required); Temperature (CEL/FAH/KEL) required, RelativeHumidity (P1) and Acceleration (MSK, or K40 for g) optional. Same limits and sensor binding as telemetry.\n\nSigned by a registered evidence source. The signing string is\n\n```\nCARGOFLOW-V1\\n<METHOD>\\n<PATH>\\n<TIMESTAMP>\\n<hex sha256(body)>\n```\n\n`ed25519` sources sign it with Ed25519. `p256` sources sign it with ECDSA P-256 over SHA-256 (X-Signature is the DER or raw 64-byte r||s signature). `webauthn` sources run navigator.credentials.get with challenge = sha256(signing string) (32 raw bytes) and send the assertion: X-Signature = signature, X-WebAuthn-Authenticator-Data = authenticatorData, X-WebAuthn-Client-Data = clientDataJSON (all base64url); the backend checks type `webauthn.get`, the challenge, the registered RP id hash, the user-present flag and the signature over authenticatorData || sha256(clientDataJSON).",
+        "operationId": "captureEPCIS",
+        "parameters": [
+          {
+            "description": "shipment id: 0x followed by 64 lowercase hex characters (keccak256(exporter, keccak256(externalRef)))",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "the evidence source id returned at registration",
+            "in": "header",
+            "name": "X-Source-Id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "unix seconds, within 5 minutes of the server clock",
+            "in": "header",
+            "name": "X-Timestamp",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "base64url (unpadded) signature: Ed25519 (64 bytes), P-256 ECDSA (ASN.1 DER or raw r||s), or for WebAuthn the authenticator's DER signature",
+            "in": "header",
+            "name": "X-Signature",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "WebAuthn sources only: base64url authenticatorData from the assertion",
+            "in": "header",
+            "name": "X-WebAuthn-Authenticator-Data",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "WebAuthn sources only: base64url clientDataJSON from the assertion",
+            "in": "header",
+            "name": "X-WebAuthn-Client-Data",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EPCISDocument"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [
+          {
+            "sourceSignature": []
+          }
+        ],
+        "summary": "Import sensor ObjectEvents as readings",
+        "tags": [
+          "Standards"
+        ]
+      }
+    },
+    "/v1/shipments/{id}/epochs": {
+      "get": {
+        "operationId": "listEpochs",
+        "parameters": [
+          {
+            "description": "shipment id: 0x followed by 64 lowercase hex characters (keccak256(exporter, keccak256(externalRef)))",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EpochList"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [],
+        "summary": "Evidence epochs: scores, roots and committed aggregates",
+        "tags": [
+          "Evidence"
+        ]
+      }
+    },
+    "/v1/shipments/{id}/explanation": {
+      "get": {
+        "operationId": "explainShipment",
+        "parameters": [
+          {
+            "description": "shipment id: 0x followed by 64 lowercase hex characters (keccak256(exporter, keccak256(externalRef)))",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Explanation"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [],
+        "summary": "Why the shipment is where it is, and who can move it on",
+        "tags": [
+          "Shipments"
+        ]
+      }
+    },
+    "/v1/shipments/{id}/proof": {
+      "post": {
+        "operationId": "recoverWithProof",
+        "parameters": [
+          {
+            "description": "shipment id: 0x followed by 64 lowercase hex characters (keccak256(exporter, keccak256(externalRef)))",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProofRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [
+          {
+            "adminKey": []
+          }
+        ],
+        "summary": "Recover a paused facility end to end (operator)",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/v1/shipments/{id}/recovery": {
+      "post": {
+        "description": "Commits the recovery evidence and returns the proof for `resumeWithProof`, which the exporter sends from their own wallet. When the automatic recovery worker already proved this recovery (a RECOVERY_READY notification), the cached proof is reused and only the commit runs.\n\nSigned by a wallet (EIP-191 personal_sign, or EIP-1271 for contract wallets) over this exact text, lines joined by \\n with no trailing newline, ids and addresses lower case; `issued` is unix seconds within 10 minutes of the server clock, and each authorization is single-use (409 `replayed`):\n\n```\nCargoFlow recovery\nshipment: <id>\nsensor: <sensor>\nsubmitter: <address>\nissued: <t>\n```",
+        "operationId": "prepareRecovery",
+        "parameters": [
+          {
+            "description": "shipment id: 0x followed by 64 lowercase hex characters (keccak256(exporter, keccak256(externalRef)))",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoveryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryProof"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [
+          {
+            "walletSignature": []
+          }
+        ],
+        "summary": "Prepare a ZK recovery bound to the exporter (3/min)",
+        "tags": [
+          "Recovery"
+        ],
+        "x-cargoflow-signed-message": "CargoFlow recovery\nshipment: <id>\nsensor: <sensor>\nsubmitter: <address>\nissued: <t>"
+      }
+    },
+    "/v1/shipments/{id}/sources": {
+      "get": {
+        "operationId": "listGateways",
+        "parameters": [
+          {
+            "description": "shipment id: 0x followed by 64 lowercase hex characters (keccak256(exporter, keccak256(externalRef)))",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceList"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [],
+        "summary": "The shipment's evidence gateways with their device class",
+        "tags": [
+          "Devices"
+        ]
+      },
+      "post": {
+        "description": "Binds a device key to this shipment. `keyType` is `ed25519` (default), `p256` or `webauthn`. A `p256` key with an X.509 `attestation` chain that verifies to a manufacturer root (DEVICE_ROOTS_DIR) is class `secure_element`; a `webauthn` key needs its attestation object (`packed` or `none`) and clientDataJSON (type `webauthn.create`, challenge = sha256(\"CARGOFLOW-V1-REGISTER\\n\" + shipment id)) and is class `passkey`; anything else is `software`. A repeat with the same sensors answers 200; the same key with other sensors is 409; at most 8 per shipment.\n\nSigned by a wallet (EIP-191 personal_sign, or EIP-1271 for contract wallets) over this exact text, lines joined by \\n with no trailing newline, ids and addresses lower case; `issued` is unix seconds within 10 minutes of the server clock, and each authorization is single-use (409 `replayed`):\n\n```\nCargoFlow evidence source\nshipment: <id>\npublic key: <publicKey as sent>\nsensors: <a,b>\n[key type: <p256|webauthn>  (only for non-ed25519 keys)]\nissued: <t>\n```",
+        "operationId": "registerGateway",
+        "parameters": [
+          {
+            "description": "shipment id: 0x followed by 64 lowercase hex characters (keccak256(exporter, keccak256(externalRef)))",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GatewayRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "already registered"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Source"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [
+          {
+            "walletSignature": []
+          }
+        ],
+        "summary": "Register an evidence gateway (exporter)",
+        "tags": [
+          "Devices"
+        ],
+        "x-cargoflow-signed-message": "CargoFlow evidence source\nshipment: <id>\npublic key: <publicKey as sent>\nsensors: <a,b>\n[key type: <p256|webauthn>  (only for non-ed25519 keys)]\nissued: <t>"
+      }
+    },
+    "/v1/shipments/{id}/subscriptions": {
+      "get": {
+        "operationId": "listSubscriptions",
+        "parameters": [
+          {
+            "description": "shipment id: 0x followed by 64 lowercase hex characters (keccak256(exporter, keccak256(externalRef)))",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "a 0x address",
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionList"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [],
+        "summary": "An address's subscriptions, targets masked",
+        "tags": [
+          "Alerts"
+        ]
+      },
+      "post": {
+        "description": "Channels: `webhook` (HMAC-signed JSON), `telegram`, `email`, `slack` (an https://hooks.slack.com/ incoming webhook). 503 `channel_unavailable` without credentials.\n\nSigned by a wallet (EIP-191 personal_sign, or EIP-1271 for contract wallets) over this exact text, lines joined by \\n with no trailing newline, ids and addresses lower case; `issued` is unix seconds within 10 minutes of the server clock, and each authorization is single-use (409 `replayed`):\n\n```\nCargoFlow alerts\nshipment: <id>\nchannel: <channel>\ntarget: <target as sent>\nissued: <t>\n```",
+        "operationId": "subscribe",
+        "parameters": [
+          {
+            "description": "shipment id: 0x followed by 64 lowercase hex characters (keccak256(exporter, keccak256(externalRef)))",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubscriptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionCreated"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [
+          {
+            "walletSignature": []
+          }
+        ],
+        "summary": "Subscribe to alerts (a party or insurer)",
+        "tags": [
+          "Alerts"
+        ],
+        "x-cargoflow-signed-message": "CargoFlow alerts\nshipment: <id>\nchannel: <channel>\ntarget: <target as sent>\nissued: <t>"
+      }
+    },
+    "/v1/shipments/{id}/subscriptions/{sid}": {
+      "delete": {
+        "description": "Signed by a wallet (EIP-191 personal_sign, or EIP-1271 for contract wallets) over this exact text, lines joined by \\n with no trailing newline, ids and addresses lower case; `issued` is unix seconds within 10 minutes of the server clock, and each authorization is single-use (409 `replayed`):\n\n```\nCargoFlow alerts off\nsubscription: <sid>\nissued: <t>\n```",
+        "operationId": "unsubscribe",
+        "parameters": [
+          {
+            "description": "shipment id: 0x followed by 64 lowercase hex characters (keccak256(exporter, keccak256(externalRef)))",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "alert subscription id (uuid)",
+            "in": "path",
+            "name": "sid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignedAuthorization"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [
+          {
+            "walletSignature": []
+          }
+        ],
+        "summary": "Remove a subscription (the subscriber)",
+        "tags": [
+          "Alerts"
+        ],
+        "x-cargoflow-signed-message": "CargoFlow alerts off\nsubscription: <sid>\nissued: <t>"
+      }
+    },
+    "/v1/shipments/{id}/telemetry": {
+      "get": {
+        "operationId": "getTelemetrySummary",
+        "parameters": [
+          {
+            "description": "shipment id: 0x followed by 64 lowercase hex characters (keccak256(exporter, keccak256(externalRef)))",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TelemetrySummary"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [],
+        "summary": "Per-epoch, per-sensor temperature aggregates (never raw readings)",
+        "tags": [
+          "Evidence"
+        ]
+      },
+      "post": {
+        "description": "Up to 500 readings per request, none dated more than 5 minutes ahead; at most 20,000 readings an hour per shipment. Readings are idempotent on (shipment, sensor, timestamp).\n\nSigned by a registered evidence source. The signing string is\n\n```\nCARGOFLOW-V1\\n<METHOD>\\n<PATH>\\n<TIMESTAMP>\\n<hex sha256(body)>\n```\n\n`ed25519` sources sign it with Ed25519. `p256` sources sign it with ECDSA P-256 over SHA-256 (X-Signature is the DER or raw 64-byte r||s signature). `webauthn` sources run navigator.credentials.get with challenge = sha256(signing string) (32 raw bytes) and send the assertion: X-Signature = signature, X-WebAuthn-Authenticator-Data = authenticatorData, X-WebAuthn-Client-Data = clientDataJSON (all base64url); the backend checks type `webauthn.get`, the challenge, the registered RP id hash, the user-present flag and the signature over authenticatorData || sha256(clientDataJSON).",
+        "operationId": "submitTelemetry",
+        "parameters": [
+          {
+            "description": "shipment id: 0x followed by 64 lowercase hex characters (keccak256(exporter, keccak256(externalRef)))",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "the evidence source id returned at registration",
+            "in": "header",
+            "name": "X-Source-Id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "unix seconds, within 5 minutes of the server clock",
+            "in": "header",
+            "name": "X-Timestamp",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "base64url (unpadded) signature: Ed25519 (64 bytes), P-256 ECDSA (ASN.1 DER or raw r||s), or for WebAuthn the authenticator's DER signature",
+            "in": "header",
+            "name": "X-Signature",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "WebAuthn sources only: base64url authenticatorData from the assertion",
+            "in": "header",
+            "name": "X-WebAuthn-Authenticator-Data",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "WebAuthn sources only: base64url clientDataJSON from the assertion",
+            "in": "header",
+            "name": "X-WebAuthn-Client-Data",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TelemetryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [
+          {
+            "sourceSignature": []
+          }
+        ],
+        "summary": "Submit signed readings",
+        "tags": [
+          "Evidence"
+        ]
+      }
+    },
+    "/v1/shipments/{id}/track": {
+      "get": {
+        "operationId": "getTrack",
+        "parameters": [
+          {
+            "description": "shipment id: 0x followed by 64 lowercase hex characters (keccak256(exporter, keccak256(externalRef)))",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrackResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [],
+        "summary": "One centroid per epoch, oldest first",
+        "tags": [
+          "Evidence"
+        ]
+      }
+    },
+    "/v1/shipments/{id}/vessel": {
+      "get": {
+        "operationId": "getVessel",
+        "parameters": [
+          {
+            "description": "shipment id: 0x followed by 64 lowercase hex characters (keccak256(exporter, keccak256(externalRef)))",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Vessel"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [],
+        "summary": "The vessel, its AIS track and the logger cross-check",
+        "tags": [
+          "Shipments"
+        ]
+      },
+      "post": {
+        "description": "Signed by a wallet (EIP-191 personal_sign, or EIP-1271 for contract wallets) over this exact text, lines joined by \\n with no trailing newline, ids and addresses lower case; `issued` is unix seconds within 10 minutes of the server clock, and each authorization is single-use (409 `replayed`):\n\n```\nCargoFlow vessel\nshipment: <id>\nmmsi: <mmsi>\nissued: <t>\n```",
+        "operationId": "setVessel",
+        "parameters": [
+          {
+            "description": "shipment id: 0x followed by 64 lowercase hex characters (keccak256(exporter, keccak256(externalRef)))",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VesselRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "replaced the named vessel"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Vessel"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [
+          {
+            "walletSignature": []
+          }
+        ],
+        "summary": "Name the vessel (exporter)",
+        "tags": [
+          "Shipments"
+        ],
+        "x-cargoflow-signed-message": "CargoFlow vessel\nshipment: <id>\nmmsi: <mmsi>\nissued: <t>"
+      }
+    },
+    "/v1/sources": {
+      "post": {
+        "operationId": "createSource",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceCreated"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [
+          {
+            "adminKey": []
+          }
+        ],
+        "summary": "Register an unbound evidence source (operator)",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/v1/stats": {
+      "get": {
+        "operationId": "getStats",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Stats"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [],
+        "summary": "Shipments by status, committed epochs and verified proofs",
+        "tags": [
+          "System"
+        ]
+      }
+    },
+    "/v1/webhooks/alchemy": {
+      "post": {
+        "description": "Accepts Custom Webhook (GraphQL log filter) and Address Activity deliveries, at most 1 MB. The raw body must carry a valid `X-Alchemy-Signature` (hex HMAC-SHA256 with one of ALCHEMY_WEBHOOK_SIGNING_KEYS; 401 otherwise; 503 `webhook_unavailable` when none are set). A delivery id seen in the last 24 hours answers 200 with `duplicate: true` and does nothing. When a log or activity comes from a CargoFlow contract the indexer is woken to sync now (up to that block, once CONFIRMATIONS deep); the payload itself is never applied: the indexer re-reads the logs from the RPC, so a forged or replayed delivery cannot change state. Other addresses are ignored.",
+        "operationId": "alchemyWebhook",
+        "parameters": [
+          {
+            "description": "hex HMAC-SHA256 of the raw body with the webhook's signing key",
+            "in": "header",
+            "name": "X-Alchemy-Signature",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlchemyWebhookDoc"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [
+          {
+            "alchemySignature": []
+          }
+        ],
+        "summary": "Alchemy Notify deliveries: wake the indexer",
+        "tags": [
+          "System"
+        ]
+      }
+    },
+    "/v1/webhooks/zerodev/{secret}": {
+      "post": {
+        "description": "Called by ZeroDev before its paymaster sponsors a user operation. Always answers 200 `{proceed}` (a policy \"no\" is never an error status). `proceed` is true only when `projectId` is ZERODEV_PROJECT_ID, `chainId` is CHAIN_ID, the callData is a Kernel v3 `execute` (ERC-7579 single or batch call type; never delegatecall) or Kernel v2 `execute` (call) / `executeBatch` whose every call has value 0 and targets a CargoFlow contract (controller, vault, cover pool, evidence, shipment and policy registries, eBL and device registries) or is USDG `approve(spender, amount)` with a CargoFlow contract as spender; (callGasLimit + verificationGasLimit + preVerificationGas + paymaster limits) x maxFeePerGas is at most ZERODEV_SPONSOR_MAX_WEI; and the sender has had fewer than ZERODEV_SPONSOR_PER_DAY and everyone fewer than ZERODEV_SPONSOR_GLOBAL_DAY sponsorships in the last 24 hours (counted only when proceeding). Account deployment (initCode / factory) is sponsored only together with such calls.",
+        "operationId": "zerodevGasPolicy",
+        "parameters": [
+          {
+            "description": "the ZERODEV_WEBHOOK_SECRET path secret (the only credential ZeroDev sends); a wrong or unset secret answers 404",
+            "in": "path",
+            "name": "secret",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ZerodevRequestDoc"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ZerodevResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "404": {
+            "description": "unknown path (wrong or unset secret)"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [],
+        "summary": "ZeroDev custom gas policy: sponsor this user operation?",
+        "tags": [
+          "System"
+        ]
+      }
+    },
+    "/v1/ws": {
+      "get": {
+        "description": "Upgrade to a WebSocket. `?shipment=0x..` filters to one shipment. Events: TELEMETRY_EPOCH_ADDED, EVIDENCE_UPDATED, RISK_UPDATED, SHIPMENT_UPDATED, MILESTONE_RELEASED, FINANCING_PAUSED, PROOF_VERIFIED, FINANCING_RESUMED, DELIVERY_CONFIRMED, FACILITY_SETTLED, COVER_UPDATED, MILESTONE_HELD, RECOVERY_READY, each with a hub-assigned `seq`. A slow client is closed with 1013.",
+        "operationId": "streamEvents",
+        "parameters": [
+          {
+            "description": "only this shipment's events",
+            "in": "query",
+            "name": "shipment",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "101": {
+            "description": "Switching Protocols"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "error"
+          }
+        },
+        "security": [],
+        "summary": "WebSocket event stream",
+        "tags": [
+          "System"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "description": "this backend",
+      "url": "/"
+    }
+  ]
+}

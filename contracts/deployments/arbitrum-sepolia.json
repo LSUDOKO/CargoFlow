@@ -1,0 +1,15 @@
+{
+  "chainId": 421614,
+  "network": "arbitrum-sepolia",
+  "deployer": "0xA6C05ec62A222b0fb65BD30B2d2f9B2fd378911b",
+  "contracts": {
+    "confidentialInvoiceTerms": "0x5c1C12448D27c2E8519c1E471078Bf42E685D207",
+    "gmxHedgeVault": "0xE0E90F3E57e3a040AD99FE4384bE96Dd97002f74"
+  },
+  "roles": {
+    "fhenixReporter": "0x598aaEb4c56bCD5ac792a7C2799b583904Ce004b",
+    "gmxVaultOwner": "0x2198AB4E7755510A6A94EE298cf70f44e0f86414"
+  },
+  "explorer": "https://sepolia.arbiscan.io",
+  "verification": "sourcify"
+}

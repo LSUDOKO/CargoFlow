@@ -1,4 +1,4 @@
 {
-  "filter_paths": "lib|test|script|generated|mocks",
+  "filter_paths": "lib|test|script|generated|mocks|confidential|hedge",
   "exclude_informational": true
 }

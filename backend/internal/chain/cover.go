@@ -13,10 +13,11 @@ var ErrNoCoverPool = errors.New("chain: this deployment has no CoverPool")
 
 // Cover status values, matching ICoverPool.CoverStatus.
 const (
-	CoverNone     uint8 = 0
-	CoverActive   uint8 = 1
-	CoverReleased uint8 = 2
-	CoverClaimed  uint8 = 3
+	CoverNone      uint8 = 0
+	CoverActive    uint8 = 1
+	CoverReleased  uint8 = 2
+	CoverClaimed   uint8 = 3
+	CoverTriggered uint8 = 4 // v3: a parametric trigger paid out
 )
 
 // MaxPremiumBps is the CoverPool's premium cap (20%).
@@ -33,6 +34,8 @@ func CoverStatusName(s uint8) string {
 		return "RELEASED"
 	case CoverClaimed:
 		return "CLAIMED"
+	case CoverTriggered:
+		return "TRIGGERED"
 	}
 	return "UNKNOWN"
 }

@@ -44,7 +44,8 @@ contract RealProofTest is ControllerBase {
             address(policies),
             address(evidence),
             address(vault),
-            VERIFIER_ADDR
+            VERIFIER_ADDR,
+            address(ebl)
         );
         vm.etch(CONTROLLER_ADDR, address(tmp).code);
         vm.store(CONTROLLER_ADDR, bytes32(0), vm.load(address(tmp), bytes32(0))); // reentrancy guard slot

@@ -19,12 +19,16 @@ import { controllerAbi, policiesAbi, registryAbi } from "@/lib/chain/abis";
 import { wagmiConfig, type SupportedChainId } from "@/lib/chain/config";
 import { useContracts } from "@/lib/chain/contracts";
 import { useTx } from "@/lib/chain/useTx";
-import { buildMilestones, buildPolicy, defaultPolicyForm, fileKeccak, routeCommitment, textInvoiceHash, validatePolicy, type PolicyForm } from "@/lib/exporter";
+import { usePaused } from "@/lib/chain/v3";
+import { PausedBanner } from "@/components/shipment/PausedBanner";
+import { buildMilestones, buildPolicy, defaultPolicyForm, fileKeccak, NO_LIMIT, routeCommitment, textInvoiceHash, validatePolicy, type PolicyForm } from "@/lib/exporter";
 import { formatUSDG } from "@/lib/format";
 import { LANES, routeFromLane, type PlannedRoute } from "@/lib/geo/lanes";
 import { findPort } from "@/lib/geo/ports";
 import { formatKm } from "@/lib/geo/route";
-import { matchTemplate, TEMPLATES } from "@/lib/templates";
+import { placeErrors, placeLabelsFor, placePhrase, toPlaceSpec, type PlaceDraft } from "@/lib/places";
+import { limitsText, matchTemplate, TEMPLATES } from "@/lib/templates";
+import { MilestonePlaces } from "./MilestonePlaces";
 
 const steps = [
   { id: "details", label: "Shipment" },
@@ -50,12 +54,15 @@ export function ExporterWizard() {
   const { address } = useAccount();
   const { contracts, chainId } = useContracts();
   const { send, pending } = useTx();
+  const paused = usePaused();
   const { toast } = useToast();
   const qc = useQueryClient();
   const [step, setStep] = useState(0);
   const [d, setD] = useState<Details>({ ref: "", buyer: "", invoice: "", route: routeFromLane(LANES[0]!), file: null });
   const [p, setP] = useState<PolicyForm>(defaultPolicyForm);
   const [f, setF] = useState<FacilityForm>({ mode: "facility", financier: "", total: "", count: "5", feePct: "3" });
+  // milestone places by index (contracts v2); none by default, so every milestone may release anywhere
+  const [places, setPlaces] = useState<(PlaceDraft | null)[]>([]);
   const [fileState, setFileState] = useState<{ busy: boolean; error: string | null }>({ busy: false, error: null });
   const fileInput = useId();
   const [prog, setProg] = useState<Progress>({});
@@ -82,6 +89,7 @@ export function ExporterWizard() {
     file: fileState.busy ? "Wait for the invoice document to finish hashing." : null,
   };
   const policyErr = validatePolicy(p);
+  const activePlaces = Number.isInteger(count) && count > 0 ? Array.from({ length: Math.min(count, 8) }, (_, i) => places[i] ?? null) : [];
   const fee = total !== undefined ? (total * BigInt(Math.max(feeBps, 0))) / 10_000n : 0n;
   const market = f.mode === "market";
   const facilityErr = market ? {} : {
@@ -93,8 +101,9 @@ export function ExporterWizard() {
     total: !total || total <= 0n ? "Enter how much capital to raise." : invoice !== undefined && total + fee > invoice ? `The invoice (${formatUSDG(invoice)} USDG) must cover the facility plus its fee.` : null,
     count: !Number.isInteger(count) || count < 1 || count > 8 ? "Use 1 to 8 milestones." : null,
     feePct: f.feePct.trim() === "" || !Number.isFinite(feeBps) || feeBps < 0 || feeBps > 1000 ? "Use a fee from 0% to 10%." : null,
+    places: activePlaces.some((pl) => pl && Object.keys(placeErrors(pl)).length) ? "Check the milestone places: each needs a radius from 1 to 1,000 km and a plain name." : null,
   };
-  const fe = facilityErr as Partial<Record<"financier" | "total" | "count" | "feePct", string | null>>;
+  const fe = facilityErr as Partial<Record<"financier" | "total" | "count" | "feePct" | "places", string | null>>;
   const valid = [Object.values(detailErr).every((e) => !e), Object.keys(policyErr).length === 0, Object.values(fe).every((e) => !e)];
   const next = () => {
     setTouched(true);
@@ -168,10 +177,13 @@ export function ExporterWizard() {
       if (exists) setProg((x) => ({ ...x, facility: "done" }));
       else if (market) {
         // no facility yet: financiers make offers on the market, and the facility is opened with the chosen one
+      } else if (total && paused.controller) {
+        // the guardian has paused new facilities: register and set the policy now, open the facility later
+        toast({ tone: "alert", title: "Shipment registered; the facility waits", body: "New facilities are paused by the protocol guardian. Open the facility once the pause is lifted." });
       } else if (total) {
         const h = await send({
           address: contracts.controller, abi: controllerAbi, functionName: "createFacility",
-          args: [id, f.financier as Address, feeBps, buildMilestones(total, count, Number(p.minScore), ref)],
+          args: [id, f.financier as Address, feeBps, buildMilestones(total, count, Number(p.minScore), ref, activePlaces)],
           label: "Open facility", successTitle: "Financing facility opened",
         });
         if (!h) return;
@@ -179,7 +191,9 @@ export function ExporterWizard() {
       }
 
       try {
-        await apiPost("/v1/shipments/mirror", { shipmentId: id, externalRef: ref, route, maxGapSec: 1800, minSensors: 2 }, MirrorResult);
+        // place names are display-only and posted with the mirror (the places themselves are read from the chain)
+        const placeLabels = market ? [] : placeLabelsFor(activePlaces, count);
+        await apiPost("/v1/shipments/mirror", { shipmentId: id, externalRef: ref, route, maxGapSec: 1800, minSensors: 2, ...(placeLabels.length ? { placeLabels } : {}) }, MirrorResult);
         setProg((x) => ({ ...x, mirrored: true }));
         await qc.invalidateQueries({ queryKey: ["shipments"] });
       } catch (e) {
@@ -269,6 +283,7 @@ export function ExporterWizard() {
                     >
                       <span className="block leading-snug font-semibold">{t.label}</span>
                       <span className={`block font-mono text-sm ${on ? "text-signal" : "text-slate"}`}>{t.band}</span>
+                      <span className={`block text-xs ${on ? "text-paper/70" : "text-slate"}`}>{limitsText(t.form)}</span>
                     </button>
                   );
                 })}
@@ -283,7 +298,10 @@ export function ExporterWizard() {
               <Field label="Maximum sensor conflict" value={p.maxConflictPct} onChange={(e) => setP({ ...p, maxConflictPct: e.target.value })} inputMode="decimal" suffix="%" hint="How much the probes may disagree." error={err(policyErr.maxConflictPct)} />
               <Field label="Maximum risk" value={p.maxRiskPct} onChange={(e) => setP({ ...p, maxRiskPct: e.target.value })} inputMode="decimal" suffix="%" error={err(policyErr.maxRiskPct)} />
               <Field label="Allowed route deviation" value={p.maxDeviationKm} onChange={(e) => setP({ ...p, maxDeviationKm: e.target.value })} inputMode="decimal" suffix="km" hint="The corridor either side of the route." error={err(policyErr.maxDeviationKm)} />
+              <LimitField label="Maximum humidity" unit="%" value={p.maxHumidityPct} onChange={(v) => setP({ ...p, maxHumidityPct: v })} fallback={template?.form.maxHumidityPct || defaultPolicyForm.maxHumidityPct} hint="Highest relative humidity in any batch." error={err(policyErr.maxHumidityPct)} />
+              <LimitField label="Maximum shock" unit="g" value={p.maxShockG} onChange={(v) => setP({ ...p, maxShockG: v })} fallback={template?.form.maxShockG || defaultPolicyForm.maxShockG} hint="Hardest knock any logger may record." error={err(policyErr.maxShockG)} />
             </div>
+            <p className="mt-4 text-sm text-slate">A batch above the humidity or shock limit fails the policy and pauses releases, like a temperature excursion. Only the arbiter, or fresh evidence, lifts such a pause: the temperature proof cannot.</p>
           </div>
         )}
         {step === 2 && (
@@ -317,6 +335,8 @@ export function ExporterWizard() {
                 <Field label="Financing fee" value={f.feePct} onChange={(e) => setF({ ...f, feePct: e.target.value })} inputMode="decimal" suffix="%" hint={total ? `${formatUSDG(fee)} USDG if fully drawn` : undefined} error={err(fe.feePct)} />
               </div>
             )}
+            {!market && Number.isInteger(count) && count >= 1 && count <= 8 && <MilestonePlaces count={count} route={d.route} places={places} onChange={setPlaces} showErrors={touched} />}
+            {!market && err(fe.places) && <p className="mt-2 text-sm font-medium text-danger">{err(fe.places)}</p>}
           </div>
         )}
         {step === 3 && (
@@ -328,6 +348,17 @@ export function ExporterWizard() {
               <div><dt className="text-slate">Band</dt><dd className="font-semibold">{p.minTemp} to {p.maxTemp} °C{template ? ` (${template.label.toLowerCase()})` : ""}</dd></div>
               <div className="md:col-span-3"><dt className="text-slate">Route</dt><dd className="font-semibold">{routeNames} <span className="font-normal text-slate">· about {formatKm(d.route.distanceKm)}, {d.route.points.length} waypoints, ±{p.maxDeviationKm} km</span></dd></div>
               <div><dt className="text-slate">Invoice hash</dt><dd className="font-semibold">{d.file ? "From the attached file" : "From reference and amount"}</dd></div>
+              <div className="md:col-span-2"><dt className="text-slate">Humidity and shock</dt><dd className="font-semibold">{limitsText(p)}</dd></div>
+              {!market && (
+                <div className="md:col-span-2">
+                  <dt className="text-slate">Milestone places</dt>
+                  <dd className="font-semibold">
+                    {activePlaces.some(Boolean)
+                      ? activePlaces.map((pl, i) => (pl ? `M${i + 1} ${placePhrase({ ...toPlaceSpec(pl), placeLabel: pl.label })}` : null)).filter(Boolean).join("; ")
+                      : "None: each milestone releases wherever its evidence passes"}
+                  </dd>
+                </div>
+              )}
             </dl>
             <ol className="mt-6 flex flex-col gap-3">
               {([
@@ -372,6 +403,7 @@ export function ExporterWizard() {
           </div>
         )}
       </div>
+      {!done && step === 3 && !market && paused.controller && <PausedBanner className="mt-6" />}
       {!done && (
         <div className="mt-8 flex flex-wrap justify-between gap-3 border-t border-line pt-6">
           <Button variant="ghost" onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={step === 0 || running}>Back</Button>
@@ -379,6 +411,31 @@ export function ExporterWizard() {
         </div>
       )}
     </Card>
+  );
+}
+
+/** An optional limit: a number, or "No limit" (an empty value, 0 on chain). Turning the limit back on restores `fallback`. */
+function LimitField({ label, unit, value, onChange, fallback, hint, error }: { label: string; unit: string; value: string; onChange: (v: string) => void; fallback: string; hint: string; error?: string | null }) {
+  const off = value.trim() === NO_LIMIT;
+  const boxId = useId();
+  return (
+    <div>
+      {off ? (
+        <>
+          <p className="mb-1.5 text-sm font-semibold">{label}</p>
+          <div className="flex h-12 items-center rounded-2xl border-2 border-dashed border-line bg-white px-4 text-sm text-slate">No limit</div>
+        </>
+      ) : (
+        <Field label={label} value={value} onChange={(e) => onChange(e.target.value)} inputMode="decimal" suffix={unit} error={error} />
+      )}
+      <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 text-sm">
+        {!error || off ? <span className="text-slate">{hint}</span> : <span />}
+        <label htmlFor={boxId} className="inline-flex cursor-pointer items-center gap-1.5 font-semibold">
+          <input id={boxId} type="checkbox" className="h-4 w-4 accent-ink" checked={off} onChange={(e) => onChange(e.target.checked ? NO_LIMIT : fallback)} />
+          No limit
+        </label>
+      </div>
+    </div>
   );
 }
 

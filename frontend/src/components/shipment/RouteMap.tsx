@@ -3,13 +3,15 @@
 import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import type { VoyageOverlay } from "@/components/map/MapView";
-import { humanReason } from "@/components/map/popup";
+import type { MapPlace, VoyageOverlay } from "@/components/map/MapView";
+import { humanReason, placePopup } from "@/components/map/popup";
 import { ReplayBar } from "@/components/map/ReplayBar";
 import { RouteSketch } from "@/components/map/RouteSketch";
 import { MAP_COLORS, PALETTES, readTheme, saveTheme, type MapTheme } from "@/components/map/style";
 import type { TelemetrySummary } from "@/lib/api/schemas";
+import { useExplanation } from "@/lib/api/extras";
 import { useConfig, useEpochs, useShipment } from "@/lib/api/hooks";
+import { hasPlace, nextPlaceDistance, placePhrase, placeStatus, radiusText } from "@/lib/places";
 import { formatUSDG } from "@/lib/format";
 import { emitReplay, useTrack, useVessel } from "@/lib/geo/api";
 import { formatKm, formatLatLon, type LonLat } from "@/lib/geo/route";
@@ -61,7 +63,7 @@ const DONE = ["DELIVERED", "SETTLED"];
 type Facts = { progress: Progress | null; heading: number | null; speedKn: number | null; etaTs: number | null; classes: Record<TempClass, number> };
 
 /** A sentence-by-sentence description of what the map shows, for screen readers. */
-function describe(scene: Scene, corridorM: number, trackState: "loading" | "missing" | "error" | "ready", facts: Facts, voyage: VoyageOverlay, status?: string): string {
+function describe(scene: Scene, corridorM: number, trackState: "loading" | "missing" | "error" | "ready", facts: Facts, voyage: VoyageOverlay, status?: string, places: MapPlace[] = []): string {
   const s: string[] = [];
   const origin = scene.ports.find((p) => p.role === "origin")?.name;
   const dest = scene.ports.find((p) => p.role === "destination")?.name;
@@ -87,6 +89,7 @@ function describe(scene: Scene, corridorM: number, trackState: "loading" | "miss
     const st = { released: "released", paused: "blocked while the facility is paused", next: "awaiting evidence", pending: "pending" }[m.state];
     s.push(`Milestone ${m.index + 1} ${st}${m.planned ? "" : ` at km ${Math.round(m.alongKm).toLocaleString("en-US")}`}.`);
   }
+  for (const p of places) s.push(`${p.title}.`);
   if (voyage.pause) s.push(`The facility ${voyage.pause.resumed ? "was paused" : "is paused"} at ${formatLatLon(voyage.pause.at)}: ${voyage.pause.reason}${voyage.pause.resumed ? ", and has since resumed." : "."}`);
   if (scene.position) {
     const off = scene.offRouteM;
@@ -123,6 +126,7 @@ export function RouteMap({ route, position, status, shipmentId, maxRouteDeviatio
   const view = shipment.data;
   const corridorM = maxRouteDeviationM ?? view?.shipment.policy.maxRouteDeviationM ?? 0;
   const track = useTrack(id);
+  const explanation = useExplanation(id);
   const vessel = useVessel(id);
   const summaryId = useId();
   const legendId = useId();
@@ -222,8 +226,34 @@ export function RouteMap({ route, position, status, shipmentId, maxRouteDeviatio
     };
   }, [epochList, facility, milestones, scene, band, facts, chainId, onReplay]);
 
+  // milestone places (contracts v2): a circle per placed milestone, coloured by its state
+  const hold = explanation.data?.hold ?? null;
+  const latestEvidence = view?.latestEvidence ?? null;
+  const places: MapPlace[] = useMemo(() => {
+    const states = milestoneStatesFor(facility, milestones?.length || 0);
+    const out: MapPlace[] = [];
+    (milestones ?? []).forEach((m, i) => {
+      if (!hasPlace(m)) return;
+      const st = states[i] ?? "pending";
+      const dist = st === "next" ? nextPlaceDistance({ milestone: m, index: i, hold, latest: latestEvidence, position }) : null;
+      const line = placeStatus(m, st === "paused" ? "blocked" : st, dist);
+      const state: MapPlace["state"] = st === "next" ? (line?.tone === "held" ? "held" : "next") : st;
+      out.push({
+        key: `p${i}`,
+        lat: m.latE6 / 1e6,
+        lon: m.lonE6 / 1e6,
+        radiusM: m.radiusM,
+        tag: `M${i + 1} · ${radiusText(m.radiusM)}`,
+        title: `Milestone ${i + 1} place: ${line?.text ?? placePhrase(m)}`,
+        state,
+        popup: placePopup(i, state, placePhrase(m), line?.text ?? null, formatUSDG(m.allocatedUsdg)),
+      });
+    });
+    return out;
+  }, [milestones, facility, hold, latestEvidence, position]);
+
   const trackState = !id ? "missing" : track.isPending ? "loading" : track.isError ? "error" : track.data === null ? "missing" : "ready";
-  const summary = describe(scene, corridorM, trackState, facts, voyage, status);
+  const summary = describe(scene, corridorM, trackState, facts, voyage, status, places);
   const paused = status === "PAUSED";
   const off = scene.offRouteM;
   const origin = scene.ports.find((p) => p.role === "origin");
@@ -254,6 +284,7 @@ export function RouteMap({ route, position, status, shipmentId, maxRouteDeviatio
     if (ms.has("released")) legend.push({ key: "msr", swatch: badge(MAP_COLORS.released, "#fff", "✓"), text: "Milestone released" });
     if (ms.has("paused")) legend.push({ key: "msp", swatch: badge(MAP_COLORS.paused, "#0B1B2B", "!"), text: "Milestone blocked" });
     if (ms.has("next") || ms.has("pending")) legend.push({ key: "msn", swatch: badge("#fff", "#5B6B7B", "#", "#94A3B8"), text: "Milestone pending" });
+    if (places.length) legend.push({ key: "place", swatch: <span className="block h-3 w-3 rounded-full border-[1.5px]" style={{ borderColor: MAP_COLORS.routeDone, background: "rgb(198 244 50 / 0.4)" }} />, text: "Milestone place" });
     if (voyage.pause) legend.push({ key: "pause", swatch: <svg width="12" height="14" viewBox="0 0 16 20" aria-hidden="true"><path d="M3 19V2" stroke={voyage.pause.resumed ? MAP_COLORS.linkIdle : MAP_COLORS.paused} strokeWidth="2" /><path d="M3.6 2.6h9.2l-2.4 3.6 2.4 3.6H3.6z" fill={voyage.pause.resumed ? MAP_COLORS.linkIdle : MAP_COLORS.paused} /></svg>, text: voyage.pause.resumed ? "Paused, resumed" : "Paused" });
     if (scene.position) legend.push({ key: "pos", swatch: <span className="block h-3 w-3 rounded-full border-2 border-signal" style={{ background: paused ? MAP_COLORS.paused : "#0B1B2B" }} />, text: "Logger now" });
     if (scene.vessel) {
@@ -275,7 +306,7 @@ export function RouteMap({ route, position, status, shipmentId, maxRouteDeviatio
             <p className="border-t border-line bg-white px-3 py-1.5 text-[11px] text-slate">Map tiles are unavailable, so this is a sketch of the route.</p>
           </div>
         ) : (
-          <MapView scene={scene} corridorM={corridorM} replayIndex={replayIdx} paused={paused} label={label} describedBy={summaryId} onFail={setFailed} fullscreenTarget={fullscreenTarget} theme={theme} voyage={voyage} showLanes />
+          <MapView scene={scene} corridorM={corridorM} replayIndex={replayIdx} paused={paused} label={label} describedBy={summaryId} onFail={setFailed} fullscreenTarget={fullscreenTarget} theme={theme} voyage={voyage} places={places} showLanes />
         )}
 
         {/* voyage card: where the cargo is along the route */}

@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 import {CoverPool} from "../../src/CoverPool.sol";
+import {ICoverPool} from "../../src/interfaces/ICoverPool.sol";
 import {ShipmentRegistry} from "../../src/ShipmentRegistry.sol";
 import {PolicyEngine} from "../../src/PolicyEngine.sol";
 import {EvidenceRegistry} from "../../src/EvidenceRegistry.sol";
@@ -13,8 +14,10 @@ import {IPolicyEngine} from "../../src/interfaces/IPolicyEngine.sol";
 import {MockUSDG} from "../../src/mocks/MockUSDG.sol";
 
 /// @notice Drives several covered facilities through random offer / withdraw / accept sequences and
-///         random lifecycles that end in settlement or default, with release, claim and withdraw
-///         called by anyone at any time. Never reverts itself; ghost state feeds the invariants.
+///         random lifecycles that end in settlement, default or (v3) cancellation, with release, claim,
+///         parametric triggers and withdraw called by anyone at any time, plus (v3) USDG sent to the
+///         pool directly and rescued by the admin. Never reverts itself; ghost state feeds the
+///         invariants.
 contract CoverPoolHandler is Test {
     uint256 public constant N = 3;
     uint256 public constant INSURERS = 3;
@@ -39,8 +42,14 @@ contract CoverPoolHandler is Test {
 
     bytes32[3] public ids;
     bool[3] public created;
-    address[3] internal exporters;
+    address[3] public exporters;
     uint32[3] internal seqs;
+    /// v3: every epoch the handler committed per facility, in commit order (= the registry's ordinals).
+    bytes32[][3] internal epochs;
+    address internal admin;
+    address public constant RESCUE_SINK = address(0x5111C);
+    /// v3: USDG sent straight to the pool and not yet rescued.
+    uint256 public strayUsdg;
     address[3] public insurers;
 
     /// How many times a cover paid out (release or claim succeeded). Must never exceed 1.
@@ -54,6 +63,10 @@ contract CoverPoolHandler is Test {
     uint256 public coversReleased;
     uint256 public coversClaimed;
     uint256 public withdrawals;
+    uint256 public parametricOffers;
+    uint256 public coversTriggered;
+    uint256 public facilitiesCancelled;
+    uint256 public rescues;
 
     constructor(
         address[6] memory core, // pool, registry, policies, evidence, controller, usdg
@@ -92,6 +105,10 @@ contract CoverPoolHandler is Test {
             maxHumidityX100: 8500,
             maxShockX100: 500
         });
+    }
+
+    function setAdmin(address a) external {
+        admin = a;
     }
 
     // ------------------------------------------------------------------ facility lifecycle
@@ -185,8 +202,11 @@ contract CoverPoolHandler is Test {
             IEvidenceRegistry.EpochTelemetry({
                 latE6: 18_950_000, lonE6: 72_950_000, maxHumidityX100: 6500, maxShockX100: 30
             })
-        ) {}
-        catch {
+        ) returns (
+            bytes32 e
+        ) {
+            epochs[s].push(e);
+        } catch {
             return;
         }
         vm.prank(exporters[s]);
@@ -214,6 +234,123 @@ contract CoverPoolHandler is Test {
         vm.prank(ins);
         try pool.offerCover(ids[s], amount, uint16(bound(bps, 0, 2_100))) {
             offersMade++;
+        } catch {}
+    }
+
+    /// v3: an offer with a parametric trigger (N in 0..4, 0 invalid on purpose; any salvage up to
+    /// slightly above the cover, sometimes invalid on purpose).
+    function offerParametric(uint256 s, uint256 who, uint256 amount, uint256 n, uint256 salvage)
+        external
+    {
+        s = bound(s, 0, N - 1);
+        _create(s);
+        address ins = insurers[bound(who, 0, INSURERS - 1)];
+        amount = bound(amount, 1, COMMITTED);
+        salvage = bound(salvage, 0, amount + 1);
+        usdg.mint(ins, amount);
+        vm.prank(ins);
+        // forge-lint: disable-next-line(unsafe-typecast)
+        try pool.offerParametricCover(ids[s], amount, 250, uint8(bound(n, 0, 4)), salvage) {
+            offersMade++;
+            parametricOffers++;
+        } catch {}
+    }
+
+    /// v3: a non-compliant epoch for a facility in transit.
+    function failEpoch(uint256 s) external {
+        s = bound(s, 0, N - 1);
+        _failEpoch(s);
+    }
+
+    function _failEpoch(uint256 s) internal {
+        if (!created[s]) return;
+        IFinancingController.Status st = controller.getFacility(ids[s]).status;
+        if (st != IFinancingController.Status.ACTIVE && st != IFinancingController.Status.PAUSED) {
+            return;
+        }
+        uint32 seq = ++seqs[s];
+        uint8 milestone = controller.getFacility(ids[s]).nextMilestone;
+        vm.prank(worker);
+        try evidence.commitEpoch(
+            ids[s],
+            milestone,
+            seq,
+            keccak256(abi.encode(ids[s], seq)),
+            uint64(block.timestamp - 600),
+            uint64(block.timestamp - 60),
+            40,
+            7000,
+            1200,
+            false,
+            IEvidenceRegistry.EpochTelemetry({
+                latE6: 18_950_000, lonE6: 72_950_000, maxHumidityX100: 6500, maxShockX100: 30
+            })
+        ) returns (
+            bytes32 e
+        ) {
+            epochs[s].push(e);
+        } catch {}
+    }
+
+    /// v3: anyone tries the parametric trigger with the last N committed epochs.
+    function trigger(uint256 s, bool guided) external {
+        s = bound(s, 0, N - 1);
+        uint256 n = pool.getParametricCover(ids[s]).consecutiveFailedEpochs;
+        // guided: first make the trigger true (if the facility is in transit), so payouts are reached
+        if (guided && n != 0) {
+            for (uint256 i; i < n; ++i) {
+                _failEpoch(s);
+            }
+        }
+        if (n == 0 || epochs[s].length < n) n = 1;
+        uint256 len = epochs[s].length;
+        bytes32[] memory proof = new bytes32[](len < n ? len : n);
+        for (uint256 i; i < proof.length; ++i) {
+            proof[i] = epochs[s][len - proof.length + i];
+        }
+        vm.prank(stranger);
+        try pool.triggerParametric(ids[s], proof) {
+            payouts[s]++;
+            coversTriggered++;
+            if (pool.getCover(ids[s]).status != ICoverPool.CoverStatus.TRIGGERED) violations++;
+        } catch {}
+    }
+
+    /// v3: the exporter or the financier cancels, sometimes after the timeout.
+    function cancel(uint256 s, uint256 seed) external {
+        s = bound(s, 0, N - 1);
+        if (!created[s] || seed % 4 != 0) return; // rare, so other lifecycles stay reachable
+        if (seed % 8 == 0) vm.warp(block.timestamp + 14 days);
+        vm.prank(seed % 3 == 0 ? financier : exporters[s]);
+        try controller.cancelFacility(ids[s]) {
+            facilitiesCancelled++;
+        } catch {}
+    }
+
+    /// v3: USDG sent to the pool by mistake.
+    function stray(uint256 amount) external {
+        amount = bound(amount, 1, 1_000e6);
+        usdg.mint(address(pool), amount);
+        strayUsdg += amount;
+    }
+
+    /// v3: the admin rescues; must take exactly the stray amount and never tracked funds.
+    function rescue() external {
+        uint256 before = usdg.balanceOf(RESCUE_SINK);
+        vm.prank(admin);
+        try pool.rescue(address(usdg), RESCUE_SINK) {
+            rescues++;
+            if (usdg.balanceOf(RESCUE_SINK) - before != strayUsdg) violations++;
+            strayUsdg = 0;
+        } catch {
+            if (strayUsdg != 0) violations++; // a rescue with stray funds present must succeed
+        }
+        // a non-admin can never rescue
+        usdg.mint(address(pool), 1);
+        strayUsdg += 1;
+        vm.prank(stranger);
+        try pool.rescue(address(usdg), stranger) {
+            violations++;
         } catch {}
     }
 

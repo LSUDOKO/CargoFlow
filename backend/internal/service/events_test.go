@@ -186,3 +186,40 @@ func TestPauseAndProofRecoveryEventsAreBroadcastAndMirrored(t *testing.T) {
 		t.Fatalf("the delayed M3 release was not mirrored: %+v", ms[2])
 	}
 }
+
+func TestChainEventsNotifyThePartiesInApp(t *testing.T) {
+	e := newEnv(t, nil)
+	ctx := context.Background()
+	ix := indexerFor(t, e, "svc-notify")
+	hex, _ := activeShipment(t, e, "svc-notify")
+	tl := newTimeline(t, e)
+	// two healthy milestones, then the excursion that pauses the facility
+	if _, err := e.svc.IngestTelemetry(ctx, hex, "", tl.segment(t, simulator.ConflictingSensors, 0, 24)); err != nil {
+		t.Fatal(err)
+	}
+	for range 2 { // a redelivery must not notify twice
+		if _, err := ix.Sync(ctx); err != nil {
+			t.Fatal(err)
+		}
+	}
+	kinds := func(addr string) map[string]int {
+		list, _, err := e.store.Notifications(ctx, addr, 100, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		out := map[string]int{}
+		for _, n := range list {
+			out[n.Kind]++
+			if n.Link != "/track/"+hex {
+				t.Errorf("link = %q", n.Link)
+			}
+		}
+		return out
+	}
+	for _, who := range []string{e.exporter.Address().Hex(), e.financier.Address().Hex(), e.buyer.Address().Hex()} {
+		k := kinds(who)
+		if k[service.NoteReleased] != 2 || k[service.NotePaused] != 1 {
+			t.Fatalf("%s notifications = %v, want 2 releases and 1 pause", who, k)
+		}
+	}
+}

@@ -6,7 +6,9 @@ import (
 	"errors"
 	"sort"
 	"testing"
+	"time"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/LSUDOKO/CargoFlow/backend/internal/chain"
@@ -308,4 +310,51 @@ func countEpochs(evs []store.ChainEvent, seq float64) int {
 		}
 	}
 	return n
+}
+
+func TestIndexerWakeSyncsBeforeThePollInterval(t *testing.T) {
+	a := setup(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	got := make(chan store.ChainEvent, 64)
+	ix, _ := newIndexer(t, a, "wake", 1, func(_ context.Context, evs []store.ChainEvent) error {
+		for _, e := range evs {
+			got <- e
+		}
+		return nil
+	})
+	ix.Poll = time.Hour // only a wake can make it sync again after the first pass
+	if !ix.Watches(a.c.M.Controller) || ix.Watches(common.HexToAddress("0x000000000000000000000000000000000000dEaD")) {
+		t.Fatal("Watches must cover exactly the indexed contracts")
+	}
+	done := make(chan error, 1)
+	go func() { done <- ix.Run(ctx) }()
+	time.Sleep(300 * time.Millisecond) // first pass: nothing yet
+
+	newFacility(t, a, "indexer-wake-1")
+	head, err := a.c.Eth.BlockNumber(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ix.Wake(head)
+	select {
+	case e := <-got:
+		if e.Contract == "" {
+			t.Fatalf("decoded event expected, got %+v", e)
+		}
+	case <-time.After(10 * time.Second):
+		t.Fatal("a wake must make the loop sync without waiting for the poll interval")
+	}
+	cancel()
+	<-done
+}
+
+func TestIndexerWakeNeverBlocksAndCoalesces(t *testing.T) {
+	var ix chain.Indexer
+	if !ix.Wake(10) {
+		t.Fatal("the first wake is queued")
+	}
+	if ix.Wake(12) {
+		t.Fatal("a second wake while one is pending coalesces into it")
+	}
 }

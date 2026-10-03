@@ -9,6 +9,8 @@ import (
 	"math/big"
 	"reflect"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/ethereum/go-ethereum"
@@ -38,6 +40,59 @@ type Indexer struct {
 	Log           *slog.Logger
 
 	contracts map[common.Address]contractInfo
+
+	wakeOnce   sync.Once
+	wake       chan struct{} // buffered (1): Wake never blocks and wakes coalesce
+	wantBlock  atomic.Uint64 // the highest block a wake asked for
+	syncedTo   atomic.Uint64 // the last block the cursor reached (0 before the first pass)
+	wokenUntil atomic.Int64  // unix nanos until which the loop polls fast to reach wantBlock
+}
+
+// wakeFastPoll is how often the loop re-syncs after a wake while the woken block is not yet indexed (the RPC may be a
+// little behind the webhook, or the block is not yet CONFIRMATIONS deep); wakeWindow bounds how long it keeps trying.
+const (
+	wakeFastPoll = 250 * time.Millisecond
+	wakeWindow   = 15 * time.Second
+)
+
+func (ix *Indexer) wakeCh() chan struct{} {
+	ix.wakeOnce.Do(func() { ix.wake = make(chan struct{}, 1) })
+	return ix.wake
+}
+
+// Wake asks the running loop to sync now instead of waiting for the next poll, up to at least block (0: just sync).
+// It never blocks and carries no data into the index: the loop re-reads logs from the RPC as usual, so a forged or
+// replayed wake costs one extra pass and changes nothing. It reports whether a wake was queued (false when one was
+// already pending, which covers this one too).
+func (ix *Indexer) Wake(block uint64) bool {
+	for {
+		cur := ix.wantBlock.Load()
+		if block <= cur || ix.wantBlock.CompareAndSwap(cur, block) {
+			break
+		}
+	}
+	ix.wokenUntil.Store(time.Now().Add(wakeWindow).UnixNano())
+	select {
+	case ix.wakeCh() <- struct{}{}:
+		return true
+	default:
+		return false
+	}
+}
+
+// Watches reports whether the indexer follows logs emitted by addr.
+func (ix *Indexer) Watches(addr common.Address) bool {
+	_, ok := ix.C.M.Indexed()[addr]
+	return ok
+}
+
+// nextDelay is the wait before the next pass: the regular delay, or a short one while a recent wake's block is not
+// yet indexed.
+func (ix *Indexer) nextDelay(regular time.Duration) time.Duration {
+	if want := ix.wantBlock.Load(); want > ix.syncedTo.Load() && time.Now().UnixNano() < ix.wokenUntil.Load() && regular > wakeFastPoll {
+		return wakeFastPoll
+	}
+	return regular
 }
 
 type contractInfo struct {
@@ -50,15 +105,9 @@ func (ix *Indexer) init() {
 		return
 	}
 	a := ABIs()
-	ix.contracts = map[common.Address]contractInfo{
-		ix.C.M.Controller: {"FinancingController", a["FinancingController"]},
-		ix.C.M.Evidence:   {"EvidenceRegistry", a["EvidenceRegistry"]},
-		ix.C.M.Registry:   {"ShipmentRegistry", a["ShipmentRegistry"]},
-		ix.C.M.Policies:   {"PolicyEngine", a["PolicyEngine"]},
-		ix.C.M.Vault:      {"ReceivableVault", a["ReceivableVault"]},
-	}
-	if ix.C.HasCoverPool() {
-		ix.contracts[ix.C.M.CoverPool] = contractInfo{"CoverPool", a["CoverPool"]}
+	ix.contracts = map[common.Address]contractInfo{}
+	for addr, name := range ix.C.M.Indexed() {
+		ix.contracts[addr] = contractInfo{name, a[name]}
 	}
 	if ix.MaxRange == 0 {
 		ix.MaxRange = 1000
@@ -102,10 +151,14 @@ func (ix *Indexer) Run(ctx context.Context) error {
 			}
 			backoff = ix.Poll
 		}
+		timer := time.NewTimer(ix.nextDelay(backoff))
 		select {
 		case <-ctx.Done():
+			timer.Stop()
 			return ctx.Err()
-		case <-time.After(backoff):
+		case <-ix.wakeCh():
+			timer.Stop()
+		case <-timer.C:
 		}
 	}
 }
@@ -181,7 +234,11 @@ func (ix *Indexer) Sync(ctx context.Context) (int, error) {
 		if err := ix.Store.SetLastBlock(ctx, ix.Name, to, hdr.Hash().Hex()); err != nil {
 			return delivered, err
 		}
+		ix.syncedTo.Store(to)
 		from = to + 1
+	}
+	if from > 0 {
+		ix.syncedTo.Store(from - 1)
 	}
 	return delivered, nil
 }
@@ -211,6 +268,7 @@ func (ix *Indexer) readRange(ctx context.Context, from, to uint64) ([]store.Chai
 		return nil, fmt.Errorf("filter logs %d-%d: %w", from, to, err)
 	}
 	var out []store.ChainEvent
+	times := map[uint64]time.Time{}
 	for _, l := range logs {
 		if l.Removed {
 			continue
@@ -219,9 +277,23 @@ func (ix *Indexer) readRange(ctx context.Context, from, to uint64) ([]store.Chai
 		if err != nil {
 			return nil, fmt.Errorf("decode log %s#%d: %w", l.TxHash.Hex(), l.Index, err)
 		}
-		if ok {
-			out = append(out, ev)
+		if !ok {
+			continue
 		}
+		// Nodes that return blockTimestamp on logs save a header read; others are asked once per block.
+		if l.BlockTimestamp != 0 {
+			ev.BlockTime = time.Unix(int64(l.BlockTimestamp), 0).UTC()
+		} else if t, seen := times[l.BlockNumber]; seen {
+			ev.BlockTime = t
+		} else {
+			hdr, err := ix.C.Eth.HeaderByNumber(ctx, new(big.Int).SetUint64(l.BlockNumber))
+			if err != nil {
+				return nil, fmt.Errorf("read header %d: %w", l.BlockNumber, err)
+			}
+			ev.BlockTime = time.Unix(int64(hdr.Time), 0).UTC()
+			times[l.BlockNumber] = ev.BlockTime
+		}
+		out = append(out, ev)
 	}
 	return out, nil
 }

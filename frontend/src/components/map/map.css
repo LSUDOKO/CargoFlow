@@ -526,3 +526,54 @@ div.cf-ais {
     transform: scale(0.9);
   }
 }
+
+/* milestone places (contracts v2): the tag sits on the circle's northern edge */
+.cf-place {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+button.cf-place {
+  cursor: pointer;
+}
+.cf-place__tag {
+  display: block;
+  margin-bottom: 3px;
+  white-space: nowrap;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  background: var(--m-surface);
+  color: var(--m-text);
+  border: 1px solid var(--m-border);
+  box-shadow: var(--m-shadow);
+  font: 700 10px/1.4 var(--font-sans), system-ui, sans-serif;
+}
+.cf-place--released .cf-place__tag {
+  background: var(--m-released);
+  border-color: var(--m-released);
+  color: #fff;
+}
+.cf-place--next .cf-place__tag,
+.cf-place--held .cf-place__tag {
+  background: #c6f432;
+  border-color: #0b1b2b;
+  color: #0b1b2b;
+}
+.cf-place--paused .cf-place__tag {
+  background: var(--m-paused);
+  border-color: var(--m-paused);
+  color: #0b1b2b;
+}
+.cf-place--draft .cf-place__tag,
+.cf-place--pending .cf-place__tag {
+  border-style: dashed;
+}
+button.cf-place:focus-visible {
+  outline: none;
+}
+button.cf-place:focus-visible .cf-place__tag {
+  outline: 2px solid var(--m-focus);
+  outline-offset: 2px;
+}
+.cf-chip--held { background: rgb(198 244 50 / 0.45); color: #0b1b2b; }
+.cf-map[data-theme="dark"] .cf-chip--held { color: #c6f432; background: rgb(198 244 50 / 0.14); }

@@ -27,7 +27,7 @@ contract CargoFlowInvariants is StdInvariant, ControllerBase {
         );
         // Duplicated selectors weight the fuzzer: mostly guided happy-path steps (so runs reach
         // DELIVERED/SETTLED/DEFAULTED), with hostile and out-of-order actions mixed in.
-        bytes4[] memory selectors = new bytes4[](16);
+        bytes4[] memory selectors = new bytes4[](17);
         for (uint256 i; i < 8; ++i) {
             selectors[i] = CargoFlowHandler.advance.selector;
         }
@@ -39,6 +39,7 @@ contract CargoFlowInvariants is StdInvariant, ControllerBase {
         selectors[13] = CargoFlowHandler.release.selector;
         selectors[14] = CargoFlowHandler.warp.selector;
         selectors[15] = CargoFlowHandler.settle.selector;
+        selectors[16] = CargoFlowHandler.cancel.selector; // v3
         targetSelector(FuzzSelector({addr: address(handler), selectors: selectors}));
         targetContract(address(handler));
     }
@@ -58,6 +59,7 @@ contract CargoFlowInvariants is StdInvariant, ControllerBase {
             handler.entered(7),
             handler.entered(8)
         );
+        console2.log("entered CANCELLED (v3):", handler.entered(9));
     }
 
     function _each(function(uint256, bytes32) internal view fn) internal view {

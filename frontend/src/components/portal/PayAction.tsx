@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/Button";
 import { controllerAbi, usdgAbi } from "@/lib/chain/abis";
 import { useContracts } from "@/lib/chain/contracts";
 import { useTx } from "@/lib/chain/useTx";
+import { usePaused } from "@/lib/chain/v3";
+import { PausedBanner } from "@/components/shipment/PausedBanner";
 import { formatUSDG } from "@/lib/format";
 import { fundingNeeds } from "@/lib/portal";
 
@@ -37,7 +39,17 @@ export function PayAction({ shipmentId, amount, action, label, successTitle }: P
   const balance = reads.data?.[0]?.result as bigint | undefined;
   const allowance = reads.data?.[1]?.result as bigint | undefined;
   const needs = fundingNeeds(balance, allowance, amount);
+  const paused = usePaused();
   if (!contracts) return null;
+  // the guardian's pause stops new deposits only; paying the invoice (settle) always works
+  if (action === "depositCapital" && paused.controller) {
+    return (
+      <div className="flex flex-col items-start gap-2">
+        <PausedBanner />
+        <Button disabled>{label}</Button>
+      </div>
+    );
+  }
 
   if (balance !== undefined && needs.shortfall > 0n) {
     return (

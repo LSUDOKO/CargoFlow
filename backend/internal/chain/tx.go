@@ -61,6 +61,16 @@ func (c *Client) contract(name string) (common.Address, string, error) {
 			return common.Address{}, "", ErrNoCoverPool
 		}
 		return c.M.CoverPool, "CoverPool", nil
+	case "devices":
+		if !c.HasDeviceRegistry() {
+			return common.Address{}, "", ErrNoDeviceRegistry
+		}
+		return c.M.DeviceRegistry, "DeviceRegistry", nil
+	case "ebl":
+		if !c.HasEBL() {
+			return common.Address{}, "", ErrNoEBL
+		}
+		return c.M.EBLRegistry, "EBLRegistry", nil
 	}
 	return common.Address{}, "", fmt.Errorf("chain: unknown contract %q", name)
 }

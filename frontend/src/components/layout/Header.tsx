@@ -9,11 +9,20 @@ import { cx } from "@/components/ui/cx";
 import { WalletButton } from "@/components/wallet/WalletButton";
 import { CommandSearch } from "./CommandSearch";
 import { HealthPill } from "./HealthPill";
+import { NotificationBell } from "./NotificationBell";
 
 /** Top-level destinations, always visible. */
 export const primaryNav = [
   { href: "/shipments", label: "Fleet" },
   { href: "/market", label: "Market" },
+];
+
+/** The developer surfaces, grouped under "Developers". */
+export const developerLinks = [
+  { href: "/docs", label: "API reference", blurb: "Interactive OpenAPI reference and signing recipes" },
+  { href: "/developers", label: "SDKs and tools", blurb: "TypeScript, Python, the gateway agent" },
+  { href: "/developers#claude", label: "Use with Claude", blurb: "Add CargoFlow as a connector (MCP)" },
+  { href: "/deployments", label: "Deployments", blurb: "Contracts with verified source, live services" },
 ];
 
 /** One portal per role, grouped under "Portals" so the bar stays calm from 1024 px up. */
@@ -22,11 +31,15 @@ export const portals = [
   { href: "/financier", label: "Financiers", blurb: "Fund facilities, track your portfolio" },
   { href: "/buyer", label: "Buyers", blurb: "Confirm delivery and pay once" },
   { href: "/arbiter", label: "Arbiters", blurb: "Resolve disputes and defaults" },
+  { href: "/ebl", label: "Carriers", blurb: "Issue and endorse bills of lading" },
 ];
 
-export const nav = [...primaryNav, ...portals.map(({ href, label }) => ({ href, label }))];
+export const nav = [...primaryNav, ...portals.map(({ href, label }) => ({ href, label })), { href: "/developers", label: "Developers" }];
 
-const isActive = (path: string, href: string) => path === href || path.startsWith(`${href}/`);
+const isActive = (path: string, href: string) => {
+  const h = href.split("#")[0]!;
+  return path === h || path.startsWith(`${h}/`);
+};
 const pill = (active: boolean) =>
   cx("inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-[0.9375rem] font-semibold whitespace-nowrap transition-colors", active ? "bg-paper/12 text-paper" : "text-paper/70 hover:bg-paper/8 hover:text-paper");
 
@@ -59,13 +72,15 @@ export function Header() {
                 </Link>
               );
             })}
-            <PortalsMenu path={path} />
+            <NavMenu path={path} title="Portals" items={portals} />
+            <NavMenu path={path} title="Developers" items={developerLinks} keepTitle />
           </nav>
           <div className="ml-auto flex items-center gap-2.5">
             <div className="hidden sm:block">
               <HealthPill />
             </div>
             <CommandSearch />
+            <NotificationBell />
             <div className="hidden sm:block">
               <WalletButton compact onDark />
             </div>
@@ -100,6 +115,13 @@ export function Header() {
               <span className="block text-sm text-slate">{n.blurb}</span>
             </Link>
           ))}
+          <p className="mt-4 px-4 pb-1 text-xs font-semibold tracking-wide text-slate uppercase">Developers</p>
+          {developerLinks.map((n) => (
+            <Link key={n.href} href={n.href} onClick={() => setMenu(false)} className="rounded-2xl px-4 py-2.5 hover:bg-ink/5">
+              <span className="block font-display text-lg font-semibold">{n.label}</span>
+              <span className="block text-sm text-slate">{n.blurb}</span>
+            </Link>
+          ))}
         </nav>
         <div className="mt-6 flex flex-col items-start gap-3 border-t border-line pt-6">
           <HealthPill />
@@ -110,14 +132,14 @@ export function Header() {
   );
 }
 
-/** A disclosure (not an ARIA menu): a button that shows the four role portals as ordinary links. */
-function PortalsMenu({ path }: { path: string }) {
+/** A disclosure (not an ARIA menu): a button that shows a group of destinations as ordinary links. */
+function NavMenu({ path, title, items, keepTitle }: { path: string; title: string; items: { href: string; label: string; blurb: string }[]; keepTitle?: boolean }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const btn = useRef<HTMLButtonElement>(null);
   const id = useId();
-  const active = portals.some((p) => isActive(path, p.href));
-  const current = portals.find((p) => isActive(path, p.href));
+  const active = items.some((p) => isActive(path, p.href));
+  const current = keepTitle ? undefined : items.find((p) => isActive(path, p.href));
   // close when the route changes (a link was followed) without an effect-driven state cascade
   const [seenPath, setSeenPath] = useState(path);
   if (seenPath !== path) {
@@ -143,7 +165,7 @@ function PortalsMenu({ path }: { path: string }) {
   return (
     <div className="relative" ref={ref}>
       <button ref={btn} type="button" aria-expanded={open} aria-controls={id} onClick={() => setOpen((o) => !o)} className={pill(active || open)}>
-        {current ? current.label : "Portals"}
+        {current ? current.label : title}
         <svg viewBox="0 0 12 12" className={cx("h-3 w-3 transition-transform duration-150", open && "rotate-180")} aria-hidden="true">
           <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -153,10 +175,10 @@ function PortalsMenu({ path }: { path: string }) {
         hidden={!open}
         className="surface-light absolute top-[calc(100%+0.5rem)] left-0 z-50 w-80 animate-fade rounded-2xl border border-line bg-white p-2 text-ink shadow-[var(--shadow-lift)]"
       >
-        <p className="px-3 pt-2 pb-1 text-xs font-semibold tracking-wide text-slate uppercase">Portals</p>
+        <p className="px-3 pt-2 pb-1 text-xs font-semibold tracking-wide text-slate uppercase">{title}</p>
         <ul>
-          {portals.map((p) => {
-            const on = isActive(path, p.href);
+          {items.map((p) => {
+            const on = isActive(path, p.href) && !p.href.includes("#");
             return (
               <li key={p.href}>
                 <Link href={p.href} aria-current={on ? "page" : undefined} onClick={() => setOpen(false)} className={cx("flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors", on ? "bg-ink/6" : "hover:bg-ink/5")}>

@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Controlled} from "./access/Controlled.sol";
 import {IEvidenceRegistry} from "./interfaces/IEvidenceRegistry.sol";
+import {IEBLRegistry} from "./interfaces/IEBLRegistry.sol";
 import {IFinancingController} from "./interfaces/IFinancingController.sol";
+import {IFinancingControllerV3} from "./interfaces/IFinancingControllerV3.sol";
 import {IPolicyEngine} from "./interfaces/IPolicyEngine.sol";
 import {IReceivableVault} from "./interfaces/IReceivableVault.sol";
 import {IGroth16Verifier} from "./interfaces/IGroth16Verifier.sol";
@@ -17,20 +21,27 @@ import {Roles} from "./libraries/Roles.sol";
 /// @notice The facility state machine. It is the only caller the vault obeys, and every transition
 ///         is gated by explicit actors and on-chain evidence. Nothing off-chain (backend, AI monitor)
 ///         can move USDG: they can only commit evidence or request a pause.
-contract FinancingController is Controlled, ReentrancyGuard, IFinancingController {
+///         v3 adds, without changing any v2 path: cancellation of a facility that never started, and
+///         an optional electronic bill of lading escrowed under documents-against-payment.
+contract FinancingController is Controlled, ReentrancyGuard, Pausable, IFinancingControllerV3 {
     uint8 public constant MAX_MILESTONES = 16;
     uint16 private constant MAX_SCORE = 100;
     uint32 public constant MIN_RADIUS_M = 1_000;
     uint32 public constant MAX_RADIUS_M = 1_000_000;
+    uint64 public constant CANCEL_TIMEOUT = 14 days;
 
     IShipmentRegistry public immutable REGISTRY;
     IPolicyEngine public immutable POLICIES;
     IEvidenceRegistry public immutable EVIDENCE;
     IReceivableVault public immutable VAULT;
     IGroth16Verifier public immutable VERIFIER;
+    /// v3: the bill of lading registry; address(0) disables title binding.
+    IEBLRegistry public immutable EBL;
 
     mapping(bytes32 shipmentId => FacilityState) private _facilities;
     mapping(bytes32 shipmentId => MilestoneSpec[]) private _milestones;
+    mapping(bytes32 shipmentId => uint64) public financedAt;
+    mapping(bytes32 shipmentId => uint256 tokenId) private _titles;
 
     constructor(
         address access,
@@ -38,7 +49,8 @@ contract FinancingController is Controlled, ReentrancyGuard, IFinancingControlle
         address policies,
         address evidence,
         address vault,
-        address verifier
+        address verifier,
+        address ebl
     ) Controlled(access) {
         if (
             registry == address(0) || policies == address(0) || evidence == address(0)
@@ -49,6 +61,7 @@ contract FinancingController is Controlled, ReentrancyGuard, IFinancingControlle
         EVIDENCE = IEvidenceRegistry(evidence);
         VAULT = IReceivableVault(vault);
         VERIFIER = IGroth16Verifier(verifier);
+        EBL = IEBLRegistry(ebl);
     }
 
     // ------------------------------------------------------------------ setup
@@ -59,7 +72,7 @@ contract FinancingController is Controlled, ReentrancyGuard, IFinancingControlle
         address financier,
         uint16 feeBps,
         MilestoneSpec[] calldata milestones
-    ) external nonReentrant {
+    ) external nonReentrant whenNotPaused {
         IShipmentRegistry.Shipment memory s = REGISTRY.getShipment(shipmentId);
         if (msg.sender != s.exporter) revert NotExporter();
         if (_facilities[shipmentId].status != Status.NONE) revert FacilityAlreadyCreated();
@@ -108,11 +121,12 @@ contract FinancingController is Controlled, ReentrancyGuard, IFinancingControlle
     }
 
     /// @inheritdoc IFinancingController
-    function depositCapital(bytes32 shipmentId) external nonReentrant {
+    function depositCapital(bytes32 shipmentId) external nonReentrant whenNotPaused {
         FacilityState storage f = _load(shipmentId);
         if (msg.sender != f.financier) revert NotFinancier();
         _requireStatus(f, Status.CREATED);
 
+        financedAt[shipmentId] = uint64(block.timestamp);
         VAULT.deposit(shipmentId);
         _setStatus(shipmentId, f, Status.FINANCED);
     }
@@ -298,6 +312,75 @@ contract FinancingController is Controlled, ReentrancyGuard, IFinancingControlle
 
         _setStatus(shipmentId, f, Status.SETTLED);
         VAULT.settle(shipmentId);
+        // documents against payment: the title passes to the buyer in the paying transaction
+        _releaseTitle(shipmentId, f.buyer);
+    }
+
+    // ------------------------------------------------------------------ v3: cancellation
+
+    /// @inheritdoc IFinancingControllerV3
+    function cancelFacility(bytes32 shipmentId) external nonReentrant {
+        FacilityState storage f = _load(shipmentId);
+        if (msg.sender != f.exporter && msg.sender != f.financier) {
+            revert NotAuthorizedForShipment();
+        }
+        if (f.status == Status.FINANCED) {
+            if (block.timestamp < uint256(financedAt[shipmentId]) + CANCEL_TIMEOUT) {
+                revert CancelNotAllowed();
+            }
+        } else if (f.status != Status.CREATED) {
+            revert InvalidState(f.status);
+        }
+
+        uint256 refund = f.status == Status.FINANCED ? f.committed : 0;
+        _setStatus(shipmentId, f, Status.CANCELLED);
+        VAULT.closeCancelled(shipmentId);
+        _releaseTitle(shipmentId, f.exporter);
+        emit FacilityCancelled(shipmentId, msg.sender, refund);
+    }
+
+    // ------------------------------------------------------------------ v3: bill of lading
+
+    /// @inheritdoc IFinancingControllerV3
+    function bindTitle(bytes32 shipmentId, uint256 eblTokenId) external nonReentrant whenNotPaused {
+        if (address(EBL) == address(0)) revert TitleBindingDisabled();
+        FacilityState storage f = _load(shipmentId);
+        if (msg.sender != f.exporter) revert NotExporter();
+        if (f.status != Status.CREATED && f.status != Status.FINANCED) {
+            revert InvalidState(f.status);
+        }
+        if (_titles[shipmentId] != 0) revert TitleAlreadyBound();
+        IEBLRegistry.BillOfLading memory b = EBL.getBill(eblTokenId);
+        if (
+            b.status != IEBLRegistry.TitleStatus.ISSUED || _titleHolder(eblTokenId) != f.exporter
+                || (b.consignee != address(0) && b.consignee != f.buyer)
+        ) revert InvalidTitle();
+
+        _titles[shipmentId] = eblTokenId;
+        // plain transferFrom into escrow: no receiver callback, nothing for anyone to re-enter
+        IERC721(address(EBL)).transferFrom(f.exporter, address(this), eblTokenId);
+        emit TitleBound(shipmentId, eblTokenId, f.exporter);
+    }
+
+    /// @inheritdoc IFinancingControllerV3
+    function titleOf(bytes32 shipmentId) external view returns (bool bound, uint256 tokenId) {
+        tokenId = _titles[shipmentId];
+        return (tokenId != 0, tokenId);
+    }
+
+    function _titleHolder(uint256 tokenId) private view returns (address) {
+        return IERC721(address(EBL)).ownerOf(tokenId);
+    }
+
+    /// @dev Moves an escrowed title out (to the buyer on settle, the financier on default, the
+    ///      exporter on cancel). transferFrom never calls the recipient, so a contract recipient can
+    ///      neither block nor re-enter the transition. No-op when no title is bound.
+    function _releaseTitle(bytes32 shipmentId, address to) internal {
+        uint256 tokenId = _titles[shipmentId];
+        if (tokenId == 0) return;
+        delete _titles[shipmentId];
+        IERC721(address(EBL)).transferFrom(address(this), to, tokenId);
+        emit TitleReleased(shipmentId, tokenId, to);
     }
 
     // ------------------------------------------------------------------ pause / dispute / default
@@ -394,6 +477,20 @@ contract FinancingController is Controlled, ReentrancyGuard, IFinancingControlle
     function _default(bytes32 shipmentId, FacilityState storage f) internal {
         VAULT.closeDefaulted(shipmentId);
         _setStatus(shipmentId, f, Status.DEFAULTED);
+        // the financier realises its security: the escrowed title, if any
+        _releaseTitle(shipmentId, f.financier);
+    }
+
+    // ------------------------------------------------------------------ v3: circuit breaker
+
+    /// @notice Guardian (PAUSER_ROLE) stops new risk from entering. Exits stay open.
+    function pause() external onlyRole(Roles.PAUSER_ROLE) {
+        _pause();
+    }
+
+    /// @notice Guardian (PAUSER_ROLE) lifts the circuit breaker.
+    function unpause() external onlyRole(Roles.PAUSER_ROLE) {
+        _unpause();
     }
 
     // ------------------------------------------------------------------ views

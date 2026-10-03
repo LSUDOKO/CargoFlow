@@ -28,10 +28,16 @@ const (
 	CoverOffered  = "COVER_OFFERED"
 	CoverAccepted = "COVER_ACCEPTED"
 	CoverClaimed  = "COVER_CLAIMED"
+	// RecoveryReady: the automatic recovery worker has proven a paused facility's recovery for the exporter, who can
+	// now sign and resume. It goes only to the exporter's subscriptions, and to those that asked for PAUSED as well.
+	RecoveryReady = "RECOVERY_READY"
+	// contracts v3
+	Cancelled      = "CANCELLED"
+	CoverTriggered = "COVER_TRIGGERED"
 )
 
 // Events lists every alertable event.
-var Events = []string{Paused, Released, Resumed, Disputed, Delivered, Settled, Defaulted, CoverOffered, CoverAccepted, CoverClaimed}
+var Events = []string{Paused, Released, Resumed, Disputed, Delivered, Settled, Defaulted, CoverOffered, CoverAccepted, CoverClaimed, RecoveryReady, Cancelled, CoverTriggered}
 
 // Alert is one notable chain event on a shipment. It marshals to exactly the webhook payload.
 type Alert struct {
@@ -41,7 +47,9 @@ type Alert struct {
 	Status      string    `json:"status"`
 	TxHash      string    `json:"txHash"`
 	At          time.Time `json:"at"`
-	Key         string    `json:"-"` // identifies the chain event (transaction hash and log index) for idempotency
+	Link        string    `json:"link,omitempty"` // where to act, e.g. the recovery page
+	Key         string    `json:"-"`              // identifies the event (chain: transaction hash and log index) for idempotency
+	Recipient   string    `json:"-"`              // when set, only this address's subscriptions receive the alert
 }
 
 // Sender delivers one alert to one subscription, in one attempt.
@@ -104,7 +112,11 @@ func (d *Dispatcher) Run(ctx context.Context) error {
 // every delivery has ended. A delivery already claimed (a redelivered chain event) is skipped.
 func (d *Dispatcher) Deliver(ctx context.Context, a Alert) {
 	d.init()
-	subs, err := d.Store.SubscribersFor(ctx, a.ShipmentID, a.Event)
+	events := []string{a.Event}
+	if a.Event == RecoveryReady {
+		events = append(events, Paused)
+	}
+	subs, err := d.Store.SubscribersForAny(ctx, a.ShipmentID, events, a.Recipient)
 	if err != nil {
 		d.Log.Error("load alert subscriptions", "shipment", a.ShipmentID, "err", err)
 		return
@@ -161,16 +173,19 @@ func (d *Dispatcher) deliver(ctx context.Context, sender Sender, sub store.Subsc
 
 // headlines describes each event for people.
 var headlines = map[string]string{
-	Paused:        "financing was paused",
-	Released:      "a milestone advance was released",
-	Resumed:       "financing resumed",
-	Disputed:      "a dispute was opened",
-	Delivered:     "delivery was confirmed",
-	Settled:       "the facility was settled",
-	Defaulted:     "the facility defaulted",
-	CoverOffered:  "an insurer offered default cover",
-	CoverAccepted: "the financier accepted default cover",
-	CoverClaimed:  "the default cover paid out to the financier",
+	Paused:         "financing was paused",
+	Released:       "a milestone advance was released",
+	Resumed:        "financing resumed",
+	Disputed:       "a dispute was opened",
+	Delivered:      "delivery was confirmed",
+	Settled:        "the facility was settled",
+	Defaulted:      "the facility defaulted",
+	CoverOffered:   "an insurer offered default cover",
+	CoverAccepted:  "the financier accepted default cover",
+	CoverClaimed:   "the default cover paid out to the financier",
+	RecoveryReady:  "a zero-knowledge recovery is ready: review and sign to resume financing",
+	Cancelled:      "the facility was cancelled before transit and the financier's deposit returned",
+	CoverTriggered: "the parametric cover triggered and paid out",
 }
 
 // Subject is a one-line summary of an alert, for an email subject.
@@ -184,8 +199,15 @@ func Text(a Alert) string {
 	if what == "" {
 		what = strings.ToLower(a.Event)
 	}
-	return fmt.Sprintf("CargoFlow alert: %s\nShipment %s: %s.\nStatus: %s\nTransaction: %s\nShipment id: %s",
-		a.Event, reference(a), what, a.Status, a.TxHash, a.ShipmentID)
+	out := fmt.Sprintf("CargoFlow alert: %s\nShipment %s: %s.\nStatus: %s", a.Event, reference(a), what, a.Status)
+	if a.TxHash != "" {
+		out += "\nTransaction: " + a.TxHash
+	}
+	out += "\nShipment id: " + a.ShipmentID
+	if a.Link != "" {
+		out += "\nOpen: " + a.Link
+	}
+	return out
 }
 
 // reference names the shipment by its external reference, made safe for a single line.

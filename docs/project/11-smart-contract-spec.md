@@ -14,6 +14,8 @@ Groth16Verifier.sol   (generated / audited verifier)
 AccessManager.sol     (or OpenZeppelin AccessControl/AccessManager)
 CoverPool.sol         (v2: default cover; reads the controller and vault, holds no role)
 libraries/GeoDistance.sol (v2: integer distance for place-based milestones)
+DeviceRegistry.sol    (v3: evidence device keys and their trust class)
+EBLRegistry.sol       (v3: ERC-721 electronic bills of lading)
 ```
 
 Optional later:
@@ -238,6 +240,120 @@ equals open offers + active covers + credited-but-unwithdrawn payouts; a cover p
 return equals the cover and the financier's share never exceeds its loss (`drawn`). USDG is assumed to be a plain
 ERC-20; an offer that does not arrive in full reverts `UnsupportedToken`.
 
+## 6b. Contracts v3 (additive)
+
+Design: `docs/superpowers/plans/2026-10-03-platform.md` (Phase 3 and "Contracts v3"). Every v2 external
+function, struct, event and error keeps its exact signature. Changes visible to v2 callers: `IFinancingController.Status`
+gains `CANCELLED` (= 9) and `ICoverPool.CoverStatus` gains `TRIGGERED` (= 4), both appended; the
+`FinancingController` constructor gains a 7th argument `ebl` (address(0) disables title binding);
+`CoverPool.release` also accepts a CANCELLED facility; `createFacility`, `depositCapital`, `offerCover` and
+`acceptCover` revert `EnforcedPause()` while the guardian has paused that contract. New interfaces:
+`IFinancingControllerV3`, `ICoverPoolV3`, `IEvidenceRegistryV3`, `IDeviceRegistry`, `IEBLRegistry`.
+
+### FinancingController (v3 additions)
+
+```solidity
+uint64 constant CANCEL_TIMEOUT = 14 days;
+IEBLRegistry immutable EBL;
+function cancelFacility(bytes32 shipmentId);        // exporter|financier; CREATED any time, FINANCED after CANCEL_TIMEOUT
+function bindTitle(bytes32 shipmentId, uint256 eblTokenId); // exporter; CREATED|FINANCED; live bill held by the exporter,
+                                                    // consignee == buyer or 0; escrowed in the controller (approve first)
+function titleOf(bytes32 shipmentId) view returns (bool bound, uint256 tokenId);
+function financedAt(bytes32 shipmentId) view returns (uint64);
+function pause(); function unpause();               // PAUSER_ROLE
+event FacilityCancelled(bytes32 indexed shipmentId, address indexed cancelledBy, uint256 refund);
+event TitleBound(bytes32 indexed shipmentId, uint256 indexed tokenId, address indexed exporter);
+event TitleReleased(bytes32 indexed shipmentId, uint256 indexed tokenId, address indexed to);
+error CancelNotAllowed(); error TitleBindingDisabled(); error TitleAlreadyBound(); error InvalidTitle();
+```
+
+Title rule (documents against payment): `settle` -> buyer, `markDefaulted` / `resolveDispute(false)` ->
+financier, `cancelFacility` -> exporter. All by `transferFrom` (no receiver callback).
+
+### ReceivableVault (v3 addition)
+
+```solidity
+function closeCancelled(bytes32 shipmentId);        // controller only; reverts CannotCancel if anything was drawn
+event CapitalReturned(bytes32 indexed shipmentId, address indexed financier, uint256 amount);
+error CannotCancel();
+```
+
+### EvidenceRegistry (v3 additions)
+
+```solidity
+function recordEpochSources(bytes32 epochId, bytes32[] deviceKeyHashes); // worker; once; 1..32 distinct non-zero
+function getEpochSources(bytes32 epochId) view returns (bytes32[]);
+function epochOrdinal(bytes32 epochId) view returns (uint32);  // 1-based commit order within the shipment
+function epochCount(bytes32 shipmentId) view returns (uint32);
+event EpochSourcesRecorded(bytes32 indexed epochId, bytes32 indexed shipmentId, bytes32[] deviceKeyHashes);
+error SourcesAlreadyRecorded(); error InvalidSources();
+```
+
+### DeviceRegistry (new)
+
+```solidity
+struct Device { address owner; uint8 deviceClass; bool revoked; uint64 registeredAt; uint64 revokedAt;
+                address registeredBy; bytes32 attestationHash; }
+function registerDevice(bytes32 deviceKeyHash, uint8 deviceClass, bytes32 attestationHash, address owner);
+    // ATTESTOR_ROLE: any class (1, 2 need attestationHash != 0); anyone: class 0 with owner == msg.sender; write-once
+function revokeDevice(bytes32 deviceKeyHash, bytes32 reason); // owner or ATTESTOR_ROLE
+function getDevice(bytes32) view returns (Device); function isActive(bytes32) view returns (bool);
+function deviceClassOf(bytes32) view returns (uint8 deviceClass, bool active); function deviceCount() view returns (uint256);
+function pause(); function unpause();               // PAUSER_ROLE (registration only)
+event DeviceRegistered(bytes32 indexed deviceKeyHash, address indexed owner, uint8 indexed deviceClass,
+                       bytes32 attestationHash, address registeredBy);
+event DeviceRevoked(bytes32 indexed deviceKeyHash, address indexed revokedBy, bytes32 reason);
+error InvalidDevice(); error DeviceAlreadyRegistered(); error DeviceNotFound(); error DeviceAlreadyRevoked();
+error NotDeviceOwnerOrAttestor(); error AttestationRequired();
+```
+
+### EBLRegistry (new, OpenZeppelin ERC721 "CargoFlow Electronic Bill of Lading" / CFEBL)
+
+```solidity
+enum TitleStatus { NONE, ISSUED, SURRENDERED, VOID }
+struct BillOfLading { bytes32 documentHash; address issuer; address shipper; address consignee;
+                      TitleStatus status; uint64 issuedAt; uint64 closedAt; uint32 transfers; }
+function issue(bytes32 documentHash, address shipper, address consignee) returns (uint256 tokenId); // CARRIER_ROLE
+function surrender(uint256 tokenId);                // holder -> issuer, frozen SURRENDERED
+function voidBill(uint256 tokenId, bytes32 reason); // issuer, while it holds a live bill
+function getBill(uint256) view returns (BillOfLading); function tokenIdForDocument(bytes32) view returns (uint256);
+event BillIssued(uint256 indexed tokenId, address indexed issuer, address indexed shipper, address consignee, bytes32 documentHash);
+event BillSurrendered(uint256 indexed tokenId, address indexed holder, address indexed issuer);
+event BillVoided(uint256 indexed tokenId, address indexed issuer, bytes32 reason);
+error InvalidBill(); error DocumentAlreadyIssued(); error BillNotFound(); error NotHolder(); error NotIssuer();
+error TitleNotTransferable(TitleStatus status);
+```
+
+Only an ISSUED bill moves; titles are never burnt. Designed around MLETR concepts; not a legal compliance claim.
+
+### CoverPool (v3 additions)
+
+```solidity
+struct ParametricTrigger { uint8 consecutiveFailedEpochs; uint256 salvageToExporter; }
+struct ParametricCover { uint8 consecutiveFailedEpochs; uint256 salvageToExporter; uint32 epochFloor;
+                         address exporter; uint256 exporterSalvage; }
+uint8 constant MAX_TRIGGER_EPOCHS = 32;
+function offerParametricCover(bytes32 shipmentId, uint256 coverAmount, uint16 premiumBps,
+                              uint8 consecutiveFailedEpochs, uint256 salvageToExporter);
+function triggerParametric(bytes32 shipmentId, bytes32[] epochIds); // anyone; ACTIVE|PAUSED|DISPUTED; once
+function rescue(address token, address to);         // DEFAULT_ADMIN_ROLE; untracked excess only
+function getOfferTrigger(bytes32, address) view returns (ParametricTrigger);
+function getParametricCover(bytes32) view returns (ParametricCover);
+function untrackedUsdg() view returns (uint256);
+function pause(); function unpause();               // PAUSER_ROLE (offers and acceptance only)
+event ParametricTermsOffered(bytes32 indexed shipmentId, address indexed insurer, uint8 consecutiveFailedEpochs, uint256 salvageToExporter);
+event ParametricTriggered(bytes32 indexed shipmentId, address indexed triggeredBy, bytes32 lastEpochId,
+                          uint256 financierPayout, uint256 exporterSalvage, uint256 insurerReturn);
+event Rescued(address indexed token, address indexed to, uint256 amount);
+error InvalidTrigger(); error NotParametric(); error TriggerNotMet(); error NothingToRescue();
+```
+
+Trigger proof: exactly N epoch ids, all of this shipment, all `compliant == false`, ordinals consecutive and
+greater than the shipment's epoch count at acceptance. Split: financier `min(cover, drawn)`, exporter
+`min(salvage, rest)`, insurer the remainder. Invariants extended: balance = offers + active + credits +
+untracked stray; a TRIGGERED cover splits exactly into the three shares; payout <= drawn; rescue never takes
+tracked funds.
+
 ## 7. Roles
 
 Recommended:
@@ -249,6 +365,10 @@ CONTROLLER_ROLE
 EVIDENCE_VERIFIER_ROLE
 MONITOR_ROLE
 DISPUTE_ROLE
+PROOF_VERIFIER_ROLE
+ATTESTOR_ROLE   (v3: records attested devices)
+CARRIER_ROLE    (v3: issues bills of lading)
+PAUSER_ROLE     (v3: circuit breaker for new risk only)
 ```
 
 The AI monitor should not have a generic token-transfer role.

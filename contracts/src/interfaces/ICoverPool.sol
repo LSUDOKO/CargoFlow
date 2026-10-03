@@ -13,7 +13,9 @@ interface ICoverPool {
         NONE,
         ACTIVE, // accepted; the escrowed amount backs the facility
         RELEASED, // facility settled; the whole amount was credited back to the insurer
-        CLAIMED // facility defaulted; min(amount, loss) credited to the financier, the rest to the insurer
+        CLAIMED, // facility defaulted; min(amount, loss) credited to the financier, the rest to the insurer
+        TRIGGERED // v3 parametric trigger met: outstanding principal to the financier, salvage to the
+        // exporter, the rest to the insurer
     }
 
     struct Offer {

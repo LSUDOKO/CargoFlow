@@ -39,6 +39,16 @@ type EpochSummary struct {
 	MaxHumidityX100 int    `json:"maxHumidityX100"`
 	MaxShockX100    int    `json:"maxShockX100"`
 	HeldDistanceM   *int64 `json:"heldDistanceM"` // metres from the milestone's place when the decision is HELD_NOT_AT_PLACE, else null
+	// v3: the devices whose readings fed the epoch, and the recordEpochSources transaction ("" until recorded)
+	Sources   []EpochSource `json:"sources"`
+	SourcesTx string        `json:"sourcesTx,omitempty"`
+}
+
+// EpochSource is one device behind an epoch.
+type EpochSource struct {
+	KeyHash     string `json:"keyHash"`
+	DeviceClass string `json:"deviceClass" enum:"software,passkey,secure_element"`
+	OnChain     bool   `json:"onChain" doc:"the device is registered (and not revoked) in the v3 DeviceRegistry"`
 }
 
 func summarize(e store.EpochRecord) EpochSummary {
@@ -49,6 +59,7 @@ func summarize(e store.EpochRecord) EpochSummary {
 		DecisionPass: e.DecisionPass, DecisionAction: e.DecisionAction, Reasons: e.DecisionReasons,
 		CommitTx: e.CommitTxHash, ProofVerified: e.ProofVerified, CreatedAt: e.CreatedAt,
 		LatE6: e.LatE6, LonE6: e.LonE6, MaxHumidityX100: e.MaxHumidityX100, MaxShockX100: e.MaxShockX100, HeldDistanceM: e.HeldDistanceM,
+		Sources: []EpochSource{}, SourcesTx: e.SourcesTxHash,
 	}
 }
 
@@ -82,6 +93,15 @@ type ShipmentView struct {
 	USDGDecimals   int               `json:"usdgDecimals"`
 	Cover          *store.Cover      `json:"cover"`           // the accepted default cover, null when there is none
 	OpenOffers     int               `json:"openCoverOffers"` // cover offers waiting for the financier
+	// Title is the v3 electronic bill of lading bound to the facility, null when none is.
+	Title *TitleView `json:"title"`
+}
+
+// TitleView summarises the bill of lading bound to a shipment.
+type TitleView struct {
+	TokenID string `json:"tokenId"`
+	Status  string `json:"status" enum:"ISSUED,SURRENDERED,VOID"`
+	Holder  string `json:"holder"`
 }
 
 // View assembles a shipment's store record and its live chain state. The chain decides milestone state:
@@ -145,6 +165,17 @@ func (s *Service) View(ctx context.Context, shipmentID string) (ShipmentView, er
 		return ShipmentView{}, err
 	}
 	v.Cover, v.OpenOffers = cv.Cover, len(cv.Offers)
+	if s.o.Chain.HasEBL() {
+		bills, err := s.o.Store.Bills(ctx, "")
+		if err != nil {
+			return ShipmentView{}, err
+		}
+		for _, b := range bills {
+			if b.BoundShipmentID != nil && *b.BoundShipmentID == canon {
+				v.Title = &TitleView{TokenID: b.TokenID, Status: b.Status, Holder: b.Holder}
+			}
+		}
+	}
 	return v, nil
 }
 
@@ -173,9 +204,21 @@ func (s *Service) Epochs(ctx context.Context, shipmentID string) ([]EpochSummary
 	if err != nil {
 		return nil, err
 	}
+	refs, err := s.o.Store.ReadingSources(ctx, canon)
+	if err != nil {
+		return nil, err
+	}
+	devices, err := s.o.Store.DevicesOnChain(ctx)
+	if err != nil {
+		return nil, err
+	}
 	out := make([]EpochSummary, len(recs))
 	for i, r := range recs {
 		out[i] = summarize(r)
+		for _, ref := range store.EpochSourceRefs(r, refs) {
+			d := devices[ref.KeyHash]
+			out[i].Sources = append(out[i].Sources, EpochSource{KeyHash: ref.KeyHash, DeviceClass: ref.DeviceClass, OnChain: d.Registered && !d.Revoked})
+		}
 	}
 	return out, nil
 }

@@ -69,3 +69,18 @@ export function AnnouncedIcon({ src }: { src: string }) {
     </span>
   );
 }
+
+/** A passkey (fingerprint) on the navy tile. */
+export function PasskeyIcon() {
+  return (
+    <span className={`${tile} bg-ink text-signal`} aria-hidden="true">
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 11v3.5c0 2-.6 3.8-1.6 5.3" />
+        <path d="M8.6 9.4A4 4 0 0 1 16 11v2.2c0 1.6-.2 3.1-.7 4.6" />
+        <path d="M5.5 15.5c.3-1.1.5-2.3.5-3.5v-1a6 6 0 0 1 9.6-4.8" />
+        <path d="M18 9.2c.3.6.5 1.2.6 1.9" />
+        <path d="M18.8 14.5c-.1 1.4-.4 2.8-.8 4.1" />
+      </svg>
+    </span>
+  );
+}

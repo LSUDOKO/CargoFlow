@@ -21,6 +21,8 @@ import {
 import { controllerAbi } from "@/lib/chain/abis";
 import { useContracts } from "@/lib/chain/contracts";
 import { useTx } from "@/lib/chain/useTx";
+import { usePaused } from "@/lib/chain/v3";
+import { PausedBanner } from "@/components/shipment/PausedBanner";
 import { buildMilestones } from "@/lib/exporter";
 import { formatTempX100, formatUSDG } from "@/lib/format";
 import { useHydrated } from "@/lib/useHydrated";
@@ -249,6 +251,7 @@ function CloseRequest({ request: r }: { request: MarketRequest }) {
 function CreateFacility({ request: r, offer, view }: { request: MarketRequest; offer: Offer; view: ShipmentView | undefined }) {
   const { contracts } = useContracts();
   const { send, pending, hash } = useTx();
+  const paused = usePaused();
   const threshold = view?.shipment.policy.minEvidenceScore ?? r.policy.minEvidenceScore;
   let plan: ReturnType<typeof buildMilestones> | null = null;
   let planError: string | null = null;
@@ -269,10 +272,11 @@ function CreateFacility({ request: r, offer, view }: { request: MarketRequest; o
       </dl>
       <div className="mt-5 text-ink">
         <NetworkGuard purpose="Opening the facility is a transaction from your exporter wallet.">
+          {paused.controller && <PausedBanner className="mb-3" />}
           <div className="flex flex-wrap items-center gap-3">
             <Button
               loading={pending}
-              disabled={!contracts || !plan}
+              disabled={!contracts || !plan || paused.controller}
               onClick={() =>
                 contracts && plan &&
                 send({

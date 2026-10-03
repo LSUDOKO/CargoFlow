@@ -4,6 +4,9 @@
 import type { Explanation } from "@/lib/api/extras";
 import type { EpochSummary, ShipmentView } from "@/lib/api/schemas";
 import { formatBps, formatTempX100, formatUSDG } from "@/lib/format";
+import { coordText, distanceText, hasPlace, haversineM, HELD, placeName, radiusText } from "@/lib/places";
+
+export { coordText, haversineM };
 
 const reasonWords: Record<string, string> = {
   out_of_band: "readings left the agreed temperature band",
@@ -13,6 +16,8 @@ const reasonWords: Record<string, string> = {
   CONFLICT_TOO_HIGH: "the probes contradicted each other",
   RISK_TOO_HIGH: "the risk was above the agreed limit",
   FRAUD_SIGNALS: "the telemetry showed signs of manipulation",
+  HUMIDITY_LIMIT: "the humidity went above the agreed limit",
+  SHOCK_LIMIT: "the cargo took a shock above the agreed limit",
   gap: "readings stopped for too long",
   route_deviation: "the cargo left the agreed route",
 };
@@ -24,7 +29,7 @@ export function fallbackBrief(view: ShipmentView, latest?: EpochSummary | null):
   const p = s.policy;
   const band = `${formatTempX100(p.minTempX100)} to ${formatTempX100(p.maxTempX100)}`;
   const status = f?.status ?? s.status;
-  const base = { status, forecast: null, source: "rules" };
+  const base = { status, forecast: null, hold: null, source: "rules" };
   if (!f) {
     return { ...base, headline: "Registered and waiting for financing", causes: [`The cargo must stay between ${band}.`], nextSteps: [{ role: "exporter", action: "Open a financing facility from the exporter portal, or ask financiers for offers on the market." }] };
   }
@@ -38,6 +43,25 @@ export function fallbackBrief(view: ShipmentView, latest?: EpochSummary | null):
     case "ACTIVE":
       if (next >= f.milestoneCount) {
         return { ...base, headline: "Every milestone is paid out; waiting for the goods to arrive", causes: [`${formatUSDG(f.drawn)} USDG has been released to the exporter.`], nextSteps: [{ role: "buyer", action: "Confirm delivery when the goods arrive." }] };
+      }
+      {
+        // the latest evidence passed but came from outside the milestone's place: the milestone waits (not a failure)
+        const m = view.milestones[next];
+        if (latest && latest.milestoneIndex === next && latest.decisionAction === HELD && hasPlace(m)) {
+          const where = `${radiusText(m.radiusM)} of ${placeName(m)}`;
+          const away = latest.heldDistanceM !== null ? `; it is ${distanceText(latest.heldDistanceM)} away` : "";
+          const message = `Milestone ${next + 1} waits until the cargo is within ${where}${away}.`;
+          return {
+            ...base,
+            headline: `In transit: milestone ${next + 1} waits until the cargo is within ${where}`,
+            causes: [`The latest evidence scored ${latest.score} of 100 and passed the policy, but it was taken outside the milestone's place.`, "This is not a failure: the first passing evidence from inside the place releases the milestone."],
+            nextSteps: [
+              { role: "exporter", action: `Keep the data logger reporting. Milestone ${next + 1}${nextAmount ? ` pays ${formatUSDG(nextAmount)} USDG` : ""} once evidence from within ${where} passes.` },
+              { role: "financier", action: "Nothing to do: releases follow the evidence." },
+            ],
+            hold: { milestoneIndex: next, placeLabel: m.placeLabel, latE6: m.latE6, lonE6: m.lonE6, radiusM: m.radiusM, distanceM: latest.heldDistanceM ?? 0, message },
+          };
+        }
       }
       return {
         ...base,
@@ -53,6 +77,8 @@ export function fallbackBrief(view: ShipmentView, latest?: EpochSummary | null):
       };
     case "PAUSED": {
       const why = (latest?.reasons ?? []).map((r) => reasonWords[r] ?? r.replace(/_/g, " ").toLowerCase());
+      // the temperature proof cannot clear a humidity or shock pause: the arbiter (or fresh evidence) does
+      const physical = [...(latest?.reasons ?? []), f.pauseReason ?? ""].some((r) => /HUMIDITY_LIMIT|SHOCK_LIMIT/.test(r));
       return {
         ...base,
         headline: "Releases are paused because the last evidence failed the policy",
@@ -62,7 +88,9 @@ export function fallbackBrief(view: ShipmentView, latest?: EpochSummary | null):
           `${formatUSDG(f.remaining)} USDG stays in escrow until the pause is lifted.`,
         ],
         nextSteps: [
-          { role: "exporter", action: "Upload in-range readings from a probe that stayed healthy, then resume with a zero-knowledge proof." },
+          physical
+            ? { role: "arbiter", action: "Review the humidity or shock breach and resume the facility, or declare a default. The temperature proof cannot clear this pause." }
+            : { role: "exporter", action: "Upload in-range readings from a probe that stayed healthy, then resume with a zero-knowledge proof." },
           { role: "financier", action: "Nothing to do: your capital stays in escrow." },
           { role: "buyer", action: "Nothing yet. You can open a dispute if the goods arrive damaged." },
         ],
@@ -76,6 +104,16 @@ export function fallbackBrief(view: ShipmentView, latest?: EpochSummary | null):
       return { ...base, headline: "Settled: the invoice is paid and the financing is closed", causes: [`${formatUSDG(f.drawn)} USDG was released against evidence before delivery.`], nextSteps: [{ role: "exporter", action: "Download the settlement certificate for your records." }] };
     case "DEFAULTED":
       return { ...base, headline: "Defaulted: the facility is closed", causes: ["The undrawn capital went back to the financier and nothing more is released."], nextSteps: [] };
+    case "CANCELLED":
+      return {
+        ...base,
+        headline: "Cancelled before transit: the facility is closed",
+        causes: [
+          f.funded ? `The ${formatUSDG(f.committed)} USDG deposit went back to the financier in full.` : "Nothing had been deposited, so no money moved.",
+          "Nothing was released to the exporter. A bound bill of lading went back to the exporter.",
+        ],
+        nextSteps: [],
+      };
     default:
       return { ...base, headline: status.charAt(0) + status.slice(1).toLowerCase(), causes: [], nextSteps: [] };
   }
@@ -84,15 +122,7 @@ export function fallbackBrief(view: ShipmentView, latest?: EpochSummary | null):
 /* ---------- where the cargo is ---------- */
 
 type LatLon = { latE6: number; lonE6: number };
-const R = 6_371_000;
 const rad = (d: number) => (d * Math.PI) / 180;
-
-export function haversineM(a: LatLon, b: LatLon): number {
-  const la1 = rad(a.latE6 / 1e6), la2 = rad(b.latE6 / 1e6);
-  const dLa = la2 - la1, dLo = rad((b.lonE6 - a.lonE6) / 1e6);
-  const h = Math.sin(dLa / 2) ** 2 + Math.cos(la1) * Math.cos(la2) * Math.sin(dLo / 2) ** 2;
-  return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
-}
 
 /** How far along the planned route a position is: the closest point on the route, measured from the origin. */
 export function voyageProgress(route: LatLon[], pos: LatLon | null): { doneM: number; totalM: number; offRouteM: number } | null {
@@ -117,11 +147,6 @@ export function voyageProgress(route: LatLon[], pos: LatLon | null): { doneM: nu
 }
 
 export const kmText = (m: number) => `${Math.round(m / 1000).toLocaleString("en-GB")} km`;
-
-export function coordText(p: LatLon): string {
-  const lat = p.latE6 / 1e6, lon = p.lonE6 / 1e6;
-  return `${Math.abs(lat).toFixed(1)}° ${lat >= 0 ? "N" : "S"}, ${Math.abs(lon).toFixed(1)}° ${lon >= 0 ? "E" : "W"}`;
-}
 
 /* ---------- money ---------- */
 

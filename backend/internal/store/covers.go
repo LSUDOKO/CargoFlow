@@ -14,6 +14,18 @@ type CoverOffer struct {
 	Amount     string    `json:"amount"`
 	PremiumBps int       `json:"premiumBps"`
 	CreatedAt  time.Time `json:"createdAt"` // when the offer was indexed
+	// Parametric is set for a v3 parametric offer: the trigger terms.
+	Parametric *Parametric `json:"parametric,omitempty"`
+}
+
+// Parametric is a v3 parametric trigger: when ConsecutiveFailedEpochs committed epochs after acceptance (epoch
+// ordinal > EpochFloor) fail the temperature band in a row, the pool pays the financier and ExporterSalvage (up to
+// SalvageToExporter) to the exporter without waiting for a default. Amounts are USDG base units.
+type Parametric struct {
+	ConsecutiveFailedEpochs int    `json:"consecutiveFailedEpochs"`
+	SalvageToExporter       string `json:"salvageToExporter"`
+	EpochFloor              *int   `json:"epochFloor"`      // null until read from the chain after acceptance
+	ExporterSalvage         string `json:"exporterSalvage"` // "0" until triggered
 }
 
 // Cover is a facility's accepted default cover. Status is ACTIVE, RELEASED (settled: returned to the insurer)
@@ -26,6 +38,8 @@ type Cover struct {
 	Status          string `json:"status"`
 	FinancierPayout string `json:"financierPayout"`
 	InsurerReturn   string `json:"insurerReturn"`
+	// Parametric is set for a v3 parametric cover; Status TRIGGERED means its trigger paid out.
+	Parametric *Parametric `json:"parametric,omitempty"`
 }
 
 // ShipmentCover is everything known about a shipment's default cover.
@@ -49,6 +63,7 @@ func (s *Store) RebuildCover(ctx context.Context, shipmentID string) error {
 		premiumBps int
 		status, tx string
 		at         time.Time
+		parametric *Parametric
 	}
 	offers := map[string]*offer{}
 	var order []string
@@ -71,17 +86,42 @@ func (s *Store) RebuildCover(ctx context.Context, shipmentID string) error {
 				order = append(order, ins)
 			}
 			bps, _ := args["premiumBps"].(float64)
-			offers[ins] = &offer{amount: str("amount"), premiumBps: int(bps), status: "OPEN", tx: tx, at: at}
+			o := &offer{amount: str("amount"), premiumBps: int(bps), status: "OPEN", tx: tx, at: at}
+			if prev := offers[ins]; prev != nil && prev.tx == tx {
+				o.parametric = prev.parametric // the terms logged just before, in the same transaction
+			}
+			offers[ins] = o
+		case "ParametricTermsOffered":
+			ins := str("insurer")
+			n, _ := args["consecutiveFailedEpochs"].(float64)
+			p := &Parametric{ConsecutiveFailedEpochs: int(n), SalvageToExporter: numOrZero(str("salvageToExporter")), ExporterSalvage: "0"}
+			if o := offers[ins]; o != nil {
+				o.parametric = p
+			} else {
+				order = append(order, ins)
+				offers[ins] = &offer{status: "OPEN", tx: tx, at: at, parametric: p}
+			}
+		case "ParametricTriggered":
+			if cover != nil {
+				cover.Status, cover.FinancierPayout, cover.InsurerReturn = "TRIGGERED", str("financierPayout"), str("insurerReturn")
+				if cover.Parametric != nil {
+					cover.Parametric.ExporterSalvage = numOrZero(str("exporterSalvage"))
+				}
+			}
 		case "OfferWithdrawn":
 			if o := offers[str("insurer")]; o != nil {
 				o.status = "WITHDRAWN"
 			}
 		case "CoverAccepted":
-			if o := offers[str("insurer")]; o != nil {
-				o.status = "ACCEPTED"
-			}
 			cover = &Cover{Insurer: str("insurer"), Financier: str("financier"), Amount: str("amount"), Premium: str("premium"),
 				Status: "ACTIVE", FinancierPayout: "0", InsurerReturn: "0"}
+			if o := offers[str("insurer")]; o != nil {
+				o.status = "ACCEPTED"
+				if o.parametric != nil {
+					p := *o.parametric
+					cover.Parametric = &p
+				}
+			}
 			loss, acceptedTx, acceptedAt = "0", tx, at
 		case "CoverReleased":
 			if cover != nil {
@@ -99,6 +139,11 @@ func (s *Store) RebuildCover(ctx context.Context, shipmentID string) error {
 		return err
 	}
 
+	if cover != nil && cover.Parametric != nil {
+		var floor *int
+		_ = s.pool.QueryRow(ctx, `SELECT (parametric->>'epochFloor')::int FROM covers WHERE shipment_id = $1`, shipmentID).Scan(&floor)
+		cover.Parametric.EpochFloor = floor
+	}
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return err
@@ -112,17 +157,17 @@ func (s *Store) RebuildCover(ctx context.Context, shipmentID string) error {
 	}
 	for _, ins := range order {
 		o := offers[ins]
-		if _, err := tx.Exec(ctx, `INSERT INTO cover_offers (shipment_id, insurer, amount, premium_bps, status, tx_hash, created_at)
-			VALUES ($1,$2,$3::numeric,$4,$5,$6,$7)`, shipmentID, ins, numOrZero(o.amount), o.premiumBps, o.status, o.tx, o.at); err != nil {
+		if _, err := tx.Exec(ctx, `INSERT INTO cover_offers (shipment_id, insurer, amount, premium_bps, status, tx_hash, created_at, parametric)
+			VALUES ($1,$2,$3::numeric,$4,$5,$6,$7,$8)`, shipmentID, ins, numOrZero(o.amount), o.premiumBps, o.status, o.tx, o.at, o.parametric); err != nil {
 			return fmt.Errorf("store: cover offer: %w", mapErr(err))
 		}
 	}
 	if cover != nil {
 		if _, err := tx.Exec(ctx, `INSERT INTO covers (shipment_id, insurer, financier, amount, premium, status,
-				financier_payout, insurer_return, loss, accepted_tx, accepted_at)
-			VALUES ($1,$2,$3,$4::numeric,$5::numeric,$6,$7::numeric,$8::numeric,$9::numeric,$10,$11)`,
+				financier_payout, insurer_return, loss, accepted_tx, accepted_at, parametric)
+			VALUES ($1,$2,$3,$4::numeric,$5::numeric,$6,$7::numeric,$8::numeric,$9::numeric,$10,$11,$12)`,
 			shipmentID, cover.Insurer, cover.Financier, numOrZero(cover.Amount), numOrZero(cover.Premium), cover.Status,
-			numOrZero(cover.FinancierPayout), numOrZero(cover.InsurerReturn), numOrZero(loss), acceptedTx, acceptedAt); err != nil {
+			numOrZero(cover.FinancierPayout), numOrZero(cover.InsurerReturn), numOrZero(loss), acceptedTx, acceptedAt, cover.Parametric); err != nil {
 			return fmt.Errorf("store: cover: %w", mapErr(err))
 		}
 	}
@@ -139,14 +184,14 @@ func numOrZero(s string) string {
 // CoverOf returns a shipment's open offers (oldest first) and its accepted cover, nil when there is none.
 func (s *Store) CoverOf(ctx context.Context, shipmentID string) (ShipmentCover, error) {
 	out := ShipmentCover{Offers: []CoverOffer{}}
-	rows, err := s.pool.Query(ctx, `SELECT insurer, amount::text, premium_bps, created_at FROM cover_offers
+	rows, err := s.pool.Query(ctx, `SELECT insurer, amount::text, premium_bps, created_at, parametric FROM cover_offers
 		WHERE shipment_id = $1 AND status = 'OPEN' ORDER BY created_at, insurer`, shipmentID)
 	if err != nil {
 		return out, err
 	}
 	for rows.Next() {
 		var o CoverOffer
-		if err := rows.Scan(&o.Insurer, &o.Amount, &o.PremiumBps, &o.CreatedAt); err != nil {
+		if err := rows.Scan(&o.Insurer, &o.Amount, &o.PremiumBps, &o.CreatedAt, &o.Parametric); err != nil {
 			rows.Close()
 			return out, err
 		}
@@ -158,8 +203,8 @@ func (s *Store) CoverOf(ctx context.Context, shipmentID string) (ShipmentCover, 
 	}
 	var c Cover
 	err = s.pool.QueryRow(ctx, `SELECT insurer, financier, amount::text, premium::text, status, financier_payout::text,
-		insurer_return::text FROM covers WHERE shipment_id = $1`, shipmentID).
-		Scan(&c.Insurer, &c.Financier, &c.Amount, &c.Premium, &c.Status, &c.FinancierPayout, &c.InsurerReturn)
+		insurer_return::text, parametric FROM covers WHERE shipment_id = $1`, shipmentID).
+		Scan(&c.Insurer, &c.Financier, &c.Amount, &c.Premium, &c.Status, &c.FinancierPayout, &c.InsurerReturn, &c.Parametric)
 	switch err = mapErr(err); {
 	case err == nil:
 		out.Cover = &c
@@ -167,4 +212,11 @@ func (s *Store) CoverOf(ctx context.Context, shipmentID string) (ShipmentCover, 
 		return out, err
 	}
 	return out, nil
+}
+
+// SetCoverEpochFloor records a parametric cover's epoch floor as read from the chain.
+func (s *Store) SetCoverEpochFloor(ctx context.Context, shipmentID string, floor int) error {
+	_, err := s.pool.Exec(ctx, `UPDATE covers SET parametric = jsonb_set(parametric, '{epochFloor}', to_jsonb($2::int))
+		WHERE shipment_id = $1 AND parametric IS NOT NULL`, shipmentID, floor)
+	return mapErr(err)
 }

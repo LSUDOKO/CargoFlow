@@ -42,3 +42,28 @@ describe("voyage and money", () => {
     expect(moneyReleased(view(null))).toBeNull();
   });
 });
+
+describe("fallbackBrief, contracts v2", () => {
+  const held = (heldDistanceM: number | null) => {
+    const v = view("ACTIVE");
+    v.milestones[2] = { ...v.milestones[2]!, latE6: 1_264_000, lonE6: 103_820_000, radiusM: 100_000, placeLabel: "Singapore" };
+    return { v, latest: { ...epoch, milestoneIndex: 2, decisionPass: true, decisionAction: "HELD_NOT_AT_PLACE", heldDistanceM } };
+  };
+  const epoch = { sequence: 4, milestoneIndex: 2, epochId: "0x", root: "0x", readingCount: 16, startTime: 0, endTime: 0, score: 92, conflictBps: 100, riskBps: 200, compliant: true, penalties: {}, decisionPass: true, decisionAction: "APPROVE_ADVANCE", reasons: [], proofVerified: false, createdAt: "t", latE6: 0, lonE6: 0, maxHumidityX100: 6500, maxShockX100: 10, heldDistanceM: null, sources: [] };
+  it("explains a held milestone as waiting, not failing, with the distance", () => {
+    const { v, latest } = held(412_000);
+    const b = fallbackBrief(v, latest);
+    expect(b.headline).toBe("In transit: milestone 3 waits until the cargo is within 100 km of Singapore");
+    expect(b.hold).toMatchObject({ milestoneIndex: 2, radiusM: 100_000, distanceM: 412_000 });
+    expect(b.hold?.message).toBe("Milestone 3 waits until the cargo is within 100 km of Singapore; it is 412 km away.");
+    expect(b.causes.join(" ")).toMatch(/not a failure/);
+    for (const text of [b.headline, ...b.causes, ...b.nextSteps.map((s) => s.action)]) for (const r of reserved) expect(text).not.toMatch(r);
+    expect(fallbackBrief(view("ACTIVE"), latest).hold).toBeNull(); // no place on the milestone: an ordinary brief
+  });
+  it("sends a humidity or shock pause to the arbiter", () => {
+    const b = fallbackBrief(view("PAUSED"), { ...epoch, decisionPass: false, decisionAction: "PAUSE_FACILITY", reasons: ["HUMIDITY_LIMIT"] });
+    expect(b.nextSteps[0]?.role).toBe("arbiter");
+    expect(b.causes[0]).toMatch(/humidity went above the agreed limit/);
+    expect(fallbackBrief(view("PAUSED")).nextSteps[0]?.role).toBe("exporter");
+  });
+});

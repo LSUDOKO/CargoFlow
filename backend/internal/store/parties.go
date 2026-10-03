@@ -135,7 +135,7 @@ func (s *Store) PartyStats(ctx context.Context, addr string) (PartyStats, error)
 	err = s.pool.QueryRow(ctx, `
 		SELECT (SELECT count(*) FROM cover_offers WHERE insurer = $1),
 		       count(*) FILTER (WHERE status = 'ACTIVE'), count(*) FILTER (WHERE status = 'RELEASED'),
-		       count(*) FILTER (WHERE status = 'CLAIMED'), COALESCE(sum(amount), 0)::text, COALESCE(sum(premium), 0)::text,
+		       count(*) FILTER (WHERE status IN ('CLAIMED', 'TRIGGERED')), COALESCE(sum(amount), 0)::text, COALESCE(sum(premium), 0)::text,
 		       COALESCE(sum(financier_payout), 0)::text
 		FROM covers WHERE insurer = $1`, addr).
 		Scan(&in.Offered, &in.Active, &in.Released, &in.Claimed, &in.CoverWritten, &in.PremiumsEarned, &in.PaidOut)

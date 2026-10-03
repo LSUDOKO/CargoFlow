@@ -41,7 +41,11 @@ export function EscrowPanel({ facility }: { facility: Facility | null }) {
       {facility.status === "PAUSED" && (
         <div className="mt-4 rounded-2xl bg-alert/15 px-4 py-3 text-sm">
           <p className="font-semibold">Releases are paused</p>
-          <p className="mt-1 text-ink/75">The last evidence failed the policy. The money stays in escrow until a zero-knowledge proof of in-range readings resumes the facility.</p>
+          <p className="mt-1 text-ink/75">
+            {/HUMIDITY_LIMIT|SHOCK_LIMIT/.test(facility.pauseReason ?? "")
+              ? "The last evidence broke the agreed humidity or shock limit. The money stays in escrow until the arbiter resumes the facility (the temperature proof cannot clear this pause)."
+              : "The last evidence failed the policy. The money stays in escrow until a zero-knowledge proof of in-range readings resumes the facility."}
+          </p>
         </div>
       )}
     </div>

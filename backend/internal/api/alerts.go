@@ -33,7 +33,7 @@ var emailPattern = regexp.MustCompile(`^[^@\s"<>,;]{1,64}@[A-Za-z0-9.-]{1,253}\.
 var errChannelUnavailable = &Error{http.StatusServiceUnavailable, "channel_unavailable", "this alert channel is not configured on this backend"}
 
 type subscriptionRequest struct {
-	Channel   string   `json:"channel"`
+	Channel   string   `json:"channel" enum:"webhook,telegram,email,slack"`
 	Target    string   `json:"target"`
 	Events    []string `json:"events"`
 	IssuedAt  int64    `json:"issuedAt"`
@@ -73,6 +73,8 @@ func maskTarget(sub store.Subscription) string {
 			return "Telegram: press Start in the bot to link"
 		}
 		return "Telegram chat ••" + sub.Target[max(0, len(sub.Target)-4):]
+	case "slack":
+		return "https://hooks.slack.com/services/…"
 	}
 	return ""
 }
@@ -132,8 +134,12 @@ func (s *Server) subscribe(w http.ResponseWriter, r *http.Request) error {
 		if req.Target != "" {
 			return ErrBadRequest("a Telegram target is empty: the chat is linked when you press Start in the bot")
 		}
+	case "slack":
+		if err := alerts.CheckSlackURL(req.Target); err != nil {
+			return ErrBadRequest(err.Error())
+		}
 	default:
-		return ErrBadRequest("channel is webhook, telegram or email")
+		return ErrBadRequest("channel is webhook, telegram, email or slack")
 	}
 	sh, err := s.shipmentFor(r)
 	if err != nil {
@@ -174,13 +180,13 @@ func (s *Server) subscribe(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	out := map[string]any{"id": created.ID, "channel": created.Channel, "targetMasked": maskTarget(created), "events": created.Events,
-		"createdAt": created.CreatedAt.UTC().Format(time.RFC3339)}
+	out := subscriptionCreated{ID: created.ID, Channel: created.Channel, TargetMasked: maskTarget(created), Events: created.Events,
+		CreatedAt: created.CreatedAt.UTC().Format(time.RFC3339)}
 	switch created.Channel {
 	case "webhook":
-		out["secret"] = created.Secret
+		out.Secret = created.Secret
 	case "telegram":
-		out["linkUrl"] = "https://t.me/" + s.c.Alerts.TelegramBot + "?start=" + created.LinkCode
+		out.LinkURL = "https://t.me/" + s.c.Alerts.TelegramBot + "?start=" + created.LinkCode
 	}
 	writeJSON(w, http.StatusCreated, out)
 	return nil
@@ -204,7 +210,7 @@ func (s *Server) listSubscriptions(w http.ResponseWriter, r *http.Request) error
 	for i, sub := range subs {
 		out[i] = subscriptionDTO{ID: sub.ID, Channel: sub.Channel, TargetMasked: maskTarget(sub), Events: sub.Events, Active: sub.Active}
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"subscriptions": out})
+	writeJSON(w, http.StatusOK, subscriptionList{Subscriptions: out})
 	return nil
 }
 
@@ -239,6 +245,6 @@ func (s *Server) unsubscribe(w http.ResponseWriter, r *http.Request) error {
 		}
 		return err
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"id": sub.ID, "deleted": true})
+	writeJSON(w, http.StatusOK, deletedResponse{ID: sub.ID, Deleted: true})
 	return nil
 }

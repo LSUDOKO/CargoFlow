@@ -4,12 +4,14 @@ import { useAccount } from "wagmi";
 import { PayAction } from "@/components/portal/PayAction";
 import { Button } from "@/components/ui/Button";
 import { WalletButton } from "@/components/wallet/WalletButton";
+import { CancelAction } from "./CancelAction";
 import { DisputeAction } from "./DisputeAction";
 import type { EpochSummary, ShipmentView } from "@/lib/api/schemas";
 import { controllerAbi } from "@/lib/chain/abis";
 import { useContracts } from "@/lib/chain/contracts";
 import { useTx } from "@/lib/chain/useTx";
 import { formatUSDG } from "@/lib/format";
+import { isHeld } from "@/lib/places";
 import { useHydrated } from "@/lib/useHydrated";
 
 const same = (a?: string, b?: string) => !!a && !!b && a.toLowerCase() === b.toLowerCase();
@@ -53,7 +55,8 @@ export function RoleActions({ view, epochs }: { view: ShipmentView; epochs: Epoc
     );
   }
   // releasing is only possible while ACTIVE (a paused facility reverts with FacilityPaused before evaluating)
-  if ((roles.includes("exporter") || roles.includes("financier")) && f.status === "ACTIVE" && next < f.milestoneCount && evidence && evidence.decisionPass) {
+  // a held epoch (passed, but outside the milestone's place) would revert OutsideMilestonePlace: no button for it
+  if ((roles.includes("exporter") || roles.includes("financier")) && f.status === "ACTIVE" && next < f.milestoneCount && evidence && evidence.decisionPass && !isHeld(evidence)) {
     actions.push(
       <Button
         key="release"
@@ -79,10 +82,14 @@ export function RoleActions({ view, epochs }: { view: ShipmentView; epochs: Epoc
   if ((roles.includes("exporter") || roles.includes("financier")) && (f.status === "ACTIVE" || f.status === "PAUSED")) {
     actions.push(<DisputeAction key="dispute" shipmentId={id} controller={contracts.controller} />);
   }
+  // contracts v3: close a facility that never started transit (CREATED any time, FINANCED after the timeout)
+  if ((roles.includes("exporter") || roles.includes("financier")) && (f.status === "CREATED" || f.status === "FINANCED")) {
+    actions.push(<CancelAction key="cancel" view={view} />);
+  }
   return (
     <div className="flex flex-col gap-2">
       <p className="text-sm text-slate">You are the {roles.join(" and ")} on this shipment.</p>
-      {actions.length ? <div className="flex flex-wrap gap-2">{actions}</div> : <p className="text-sm text-slate">Nothing for you to do right now. This page updates as the shipment moves.</p>}
+      {actions.length ? <div className="flex flex-wrap items-start gap-2">{actions}</div> : <p className="text-sm text-slate">Nothing for you to do right now. This page updates as the shipment moves.</p>}
     </div>
   );
 }

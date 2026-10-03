@@ -27,6 +27,16 @@ export const Offer = z.object({
 });
 export type Offer = z.infer<typeof Offer>;
 
+/** Fee guidance (GET /v1/pricing/suggest and each request's `pricing`): a band in basis points with its reasons. */
+export const Pricing = z.object({
+  lowBps: z.number(),
+  midBps: z.number(),
+  highBps: z.number(),
+  reasons: list(z.object({ factor: z.string(), bps: z.number(), detail: z.string().nullish().transform((v) => v ?? "") })),
+  model: z.string().optional(),
+});
+export type Pricing = z.infer<typeof Pricing>;
+
 export const REQUEST_STATUSES = ["open", "accepted", "funded", "closed"] as const;
 export type RequestStatus = (typeof REQUEST_STATUSES)[number];
 
@@ -47,6 +57,7 @@ export const MarketRequest = z.object({
   status: z.string().transform((s) => s.toLowerCase()),
   offers: list(Offer),
   createdAt: z.string(),
+  pricing: Pricing.nullish().catch(null).transform((v) => v ?? null),
 });
 export type MarketRequest = z.infer<typeof MarketRequest>;
 export const RequestList = z.object({ requests: list(MarketRequest) });
@@ -55,6 +66,7 @@ export const Party = z.object({
   address: z.string(),
   exporter: z.object({
     shipments: count, settled: count, active: count, paused: count, disputed: count, defaulted: count, recoveries: count,
+    cancelled: count, // contracts v3
     avgEvidenceScore: z.number().nullish().transform((v) => v ?? null),
     volume: amount.nullish().transform((v) => v ?? "0"),
   }),
@@ -66,8 +78,23 @@ export const Party = z.object({
     feesEarned: amount.nullish().transform((v) => v ?? "0"),
     settled: count,
     defaulted: count,
+    cancelled: count, // contracts v3
   }),
   buyer: z.object({ shipments: count, settled: count, paidVolume: amount.nullish().transform((v) => v ?? "0") }),
+  // default cover written (contracts v2); absent on older backends
+  insurer: z
+    .object({
+      offered: count,
+      active: count,
+      released: count,
+      claimed: count,
+      triggered: count, // contracts v3 parametric payouts
+      coverWritten: amount.nullish().transform((v) => v ?? "0"),
+      premiumsEarned: amount.nullish().transform((v) => v ?? "0"),
+      paidOut: amount.nullish().transform((v) => v ?? "0"),
+    })
+    .nullish()
+    .transform((v) => v ?? { offered: 0, active: 0, released: 0, claimed: 0, triggered: 0, coverWritten: "0", premiumsEarned: "0", paidOut: "0" }),
   grade: z.enum(["A", "B", "C", "new"]).catch("new"),
   since: z.union([z.string(), z.number()]).nullish().transform((v) => (v === undefined || v === null || v === "" ? null : v)),
 });
@@ -276,6 +303,35 @@ export const useParty = (address: string | undefined) =>
     staleTime: 60_000,
     retry: (n, e) => !isUnavailable(e) && n < 1,
   });
+
+/** Live fee guidance for a shipment; null when this backend has no pricing endpoint. */
+export const usePricing = (shipmentId: string | undefined) =>
+  useQuery({
+    queryKey: ["pricing", shipmentId?.toLowerCase()],
+    queryFn: async () => {
+      try {
+        return await apiGet(`/v1/pricing/suggest?shipment=${shipmentId!.toLowerCase()}`, Pricing);
+      } catch (e) {
+        if (isUnavailable(e)) return null;
+        throw e;
+      }
+    },
+    enabled: !!shipmentId && /^0x[0-9a-fA-F]{64}$/.test(shipmentId),
+    staleTime: 60_000,
+    retry: (n, e) => !isUnavailable(e) && n < 1,
+  });
+
+/** Plain words for a pricing factor id. */
+export const PRICING_FACTOR: Record<string, string> = {
+  base: "Base rate",
+  grade: "Exporter track record",
+  excursion: "Route temperature excursions",
+  conflict: "Sensor disagreement on the route",
+  cargo: "Cargo band",
+  cover: "Default cover",
+  tenor: "Voyage length",
+  spread: "Uncertainty",
+};
 
 export const useConfigExtras = () =>
   useQuery({ queryKey: ["config", "extras"], queryFn: () => apiGet("/v1/config", ConfigExtras), staleTime: 5 * 60_000 });

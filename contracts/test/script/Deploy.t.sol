@@ -6,6 +6,8 @@ import {Deploy} from "../../script/Deploy.s.sol";
 import {CargoFlowAccess} from "../../src/access/CargoFlowAccess.sol";
 import {FinancingController} from "../../src/FinancingController.sol";
 import {CoverPool} from "../../src/CoverPool.sol";
+import {DeviceRegistry} from "../../src/DeviceRegistry.sol";
+import {EBLRegistry} from "../../src/EBLRegistry.sol";
 import {ReceivableVault} from "../../src/ReceivableVault.sol";
 import {MockUSDG} from "../../src/mocks/MockUSDG.sol";
 import {Groth16Verifier} from "../../generated/Groth16Verifier.sol";
@@ -119,5 +121,38 @@ contract DeployScriptTest is Test {
             assertTrue(vm.parseJsonAddress(json, keys[i]) != address(0), keys[i]);
         }
         assertEq(vm.parseJsonString(json, ".network"), "local");
+    }
+
+    // ------------------------------------------------------------------ v3
+
+    function test_v3ManifestKeys() public view {
+        string memory json = vm.readFile(FILE);
+        assertEq(vm.parseJsonAddress(json, ".contracts.deviceRegistry"), d.deviceRegistry);
+        assertEq(vm.parseJsonAddress(json, ".contracts.eblRegistry"), d.eblRegistry);
+        assertEq(vm.parseJsonAddress(json, ".contracts.coverPool"), d.coverPool);
+        assertFalse(vm.keyExistsJson(json, ".contracts.paymaster"));
+        assertFalse(vm.keyExistsJson(json, ".contracts.accountFactory"));
+    }
+
+    function test_v3ContractsAreWired() public view {
+        assertEq(address(FinancingController(d.controller).EBL()), d.eblRegistry);
+        assertEq(address(EBLRegistry(d.eblRegistry).ACCESS()), d.access);
+        assertEq(address(DeviceRegistry(d.deviceRegistry).ACCESS()), d.access);
+        assertEq(address(CoverPool(d.coverPool).EVIDENCE()), d.evidence);
+    }
+
+    function test_v3RolesAreGrantedAndHoldNoCustody() public view {
+        CargoFlowAccess access = CargoFlowAccess(d.access);
+        address attestor = deployScript.attestorFor(deployer);
+        address carrier = deployScript.carrierFor(deployer);
+        address pauser = deployScript.pauserFor(deployer);
+        assertTrue(access.hasRole(Roles.ATTESTOR_ROLE, attestor));
+        assertTrue(access.hasRole(Roles.CARRIER_ROLE, carrier));
+        assertTrue(access.hasRole(Roles.PAUSER_ROLE, pauser));
+        assertEq(attestor, deployScript.workerFor(deployer));
+        address[5] memory noCustody = [attestor, carrier, pauser, d.deviceRegistry, d.eblRegistry];
+        for (uint256 i; i < noCustody.length; ++i) {
+            assertFalse(access.hasRole(Roles.CONTROLLER_ROLE, noCustody[i]));
+        }
     }
 }

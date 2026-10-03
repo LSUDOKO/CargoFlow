@@ -38,10 +38,27 @@ func VerifyWalletSignature(message string, sig []byte) (common.Address, error) {
 	return crypto.PubkeyToAddress(*pub), nil
 }
 
-// SourceAuthorization is the exact message a shipment's exporter signs to authorize an evidence source.
+// SourceAuthorization is the exact message a shipment's exporter signs to authorize an Ed25519 evidence source.
 func SourceAuthorization(shipmentID, publicKeyB64 string, sensors []string, issued int64) string {
-	return fmt.Sprintf("CargoFlow evidence source\nshipment: %s\npublic key: %s\nsensors: %s\nissued: %d",
-		strings.ToLower(shipmentID), publicKeyB64, strings.Join(sensors, ","), issued)
+	return DeviceAuthorization(shipmentID, publicKeyB64, "ed25519", sensors, issued)
+}
+
+// DeviceAuthorization is the exact message a shipment's exporter signs to authorize an evidence source of any key
+// type. For Ed25519 it is SourceAuthorization's message unchanged; other key types add a "key type" line before
+// "issued", so a signature for one key type can never register the key as another.
+func DeviceAuthorization(shipmentID, publicKeyB64, keyType string, sensors []string, issued int64) string {
+	keyLine := ""
+	if keyType != "" && keyType != "ed25519" {
+		keyLine = "key type: " + keyType + "\n"
+	}
+	return fmt.Sprintf("CargoFlow evidence source\nshipment: %s\npublic key: %s\nsensors: %s\n%sissued: %d",
+		strings.ToLower(shipmentID), publicKeyB64, strings.Join(sensors, ","), keyLine, issued)
+}
+
+// NotificationsReadAuthorization is the exact message a wallet signs to mark its notifications read; ids is the
+// comma-joined notification ids, or "all".
+func NotificationsReadAuthorization(address, ids string, issued int64) string {
+	return fmt.Sprintf("CargoFlow notifications read\naddress: %s\nids: %s\nissued: %d", strings.ToLower(address), strings.ToLower(ids), issued)
 }
 
 // RecoveryAuthorization is the exact message a shipment's exporter signs to request a recovery proof bound to

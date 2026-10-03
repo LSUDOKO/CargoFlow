@@ -16,6 +16,8 @@ import (
 
 	"github.com/LSUDOKO/CargoFlow/backend/internal/auth"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/chain"
+	"github.com/LSUDOKO/CargoFlow/backend/internal/pricing"
+	"github.com/LSUDOKO/CargoFlow/backend/internal/service"
 	"github.com/LSUDOKO/CargoFlow/backend/internal/store"
 )
 
@@ -54,14 +56,14 @@ type marketRequestBody struct {
 	Amount         baseUnits `json:"amount"`
 	MaxFeeBps      int       `json:"maxFeeBps"`
 	MilestoneCount int       `json:"milestoneCount"`
-	Note           string    `json:"note"`
+	Note           string    `json:"note" optional:"true"`
 	IssuedAt       int64     `json:"issuedAt"`
 	Signature      string    `json:"signature"`
 }
 
 type offerBody struct {
 	FeeBps    int    `json:"feeBps"`
-	Address   string `json:"address"` // optional: names a contract wallet whose signature verifies through EIP-1271
+	Address   string `json:"address" optional:"true"` // optional: names a contract wallet whose signature verifies through EIP-1271
 	IssuedAt  int64  `json:"issuedAt"`
 	Signature string `json:"signature"`
 }
@@ -101,6 +103,8 @@ type requestDTO struct {
 	Status         string             `json:"status"`
 	Offers         []offerDTO         `json:"offers"`
 	CreatedAt      time.Time          `json:"createdAt"`
+	// Pricing is the fee guidance for the shipment (GET /v1/pricing/suggest), included in listings.
+	Pricing *pricing.Suggestion `json:"pricing,omitempty"`
 }
 
 func toOfferDTO(o store.Offer) offerDTO {
@@ -229,6 +233,12 @@ func (s *Server) listRequests(w http.ResponseWriter, r *http.Request) error {
 	}
 	shipments := map[string]store.Shipment{}
 	out := make([]requestDTO, 0, len(list))
+	var pc *service.PricingContext
+	if len(list) > 0 && s.c.Service != nil {
+		if pc, err = s.c.Service.NewPricingContext(r.Context()); err != nil {
+			return err
+		}
+	}
 	for _, req := range list {
 		sh, ok := shipments[req.ShipmentID]
 		if !ok {
@@ -237,9 +247,17 @@ func (s *Server) listRequests(w http.ResponseWriter, r *http.Request) error {
 			}
 			shipments[req.ShipmentID] = sh
 		}
-		out = append(out, toRequestDTO(req, sh))
+		dto := toRequestDTO(req, sh)
+		if pc != nil {
+			if sug, err := s.c.Service.SuggestFeeFor(r.Context(), pc, sh); err == nil {
+				dto.Pricing = &sug
+			} else {
+				s.c.Log.Warn("fee guidance", "shipment", sh.ID, "err", err)
+			}
+		}
+		out = append(out, dto)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"requests": out})
+	writeJSON(w, http.StatusOK, requestList{Requests: out})
 	return nil
 }
 
@@ -275,6 +293,12 @@ func (s *Server) placeOffer(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return marketConflict(err, "this request is no longer open for offers")
 	}
+	if s.c.Service != nil {
+		s.c.Service.Notify(r.Context(), service.Note{ShipmentID: sh.ID, Kind: service.NoteOfferReceived,
+			Title: fmt.Sprintf("New financing offer at %d bps for %s", body.FeeBps, refOrID(sh)), Link: s.c.Service.AppLink("/market"),
+			Data:      map[string]any{"requestId": req.ID, "offerId": offer.ID, "financier": signer, "feeBps": body.FeeBps},
+			DedupeKey: fmt.Sprintf("offer:%s:%d:%d", offer.ID, body.FeeBps, body.IssuedAt), To: []string{req.Exporter}})
+	}
 	status := http.StatusOK
 	if created {
 		status = http.StatusCreated
@@ -307,6 +331,18 @@ func (s *Server) acceptOffer(w http.ResponseWriter, r *http.Request) error {
 		}
 		return marketConflict(err, "this request is no longer open")
 	}
+	if s.c.Service != nil {
+		if accepted, err := s.c.Store.GetRequest(r.Context(), req.ID); err == nil {
+			for _, o := range accepted.Offers {
+				if o.ID == body.OfferID {
+					s.c.Service.Notify(r.Context(), service.Note{ShipmentID: sh.ID, Kind: service.NoteOfferAccepted,
+						Title: fmt.Sprintf("Your %d bps offer for %s was accepted", o.FeeBps, refOrID(sh)),
+						Body:  "The exporter will now create the facility naming you; deposit the capital when it appears.", Link: s.c.Service.TrackLink(sh.ID),
+						Data: map[string]any{"requestId": req.ID, "offerId": o.ID, "feeBps": o.FeeBps}, DedupeKey: "accepted:" + o.ID, To: []string{o.Financier}})
+				}
+			}
+		}
+	}
 	return s.writeRequest(w, r, http.StatusOK, req.ID, sh)
 }
 
@@ -328,4 +364,18 @@ func (s *Server) closeRequest(w http.ResponseWriter, r *http.Request) error {
 		return marketConflict(err, "this request is already funded or closed")
 	}
 	return s.writeRequest(w, r, http.StatusOK, req.ID, sh)
+}
+
+// refOrID names a shipment by its external reference, or a short id.
+func refOrID(sh store.Shipment) string {
+	if ref := strings.TrimSpace(sh.ExternalRef); ref != "" {
+		if r := []rune(ref); len(r) > 60 {
+			return string(r[:60]) + "…"
+		}
+		return ref
+	}
+	if len(sh.ID) > 10 {
+		return sh.ID[:10] + "…"
+	}
+	return sh.ID
 }

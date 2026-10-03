@@ -24,6 +24,28 @@ type Manifest struct {
 	Controller common.Address
 	Verifier   common.Address
 	CoverPool  common.Address // v2; zero for a v1 deployment, which has no default cover
+	// v3, optional: zero when absent, which turns the feature off
+	DeviceRegistry common.Address
+	EBLRegistry    common.Address
+}
+
+// Indexed maps every contract whose logs the indexer follows to its ABI name. Optional contracts (CoverPool, the v3
+// DeviceRegistry and EBLRegistry) appear only when the manifest names them.
+func (m Manifest) Indexed() map[common.Address]string {
+	out := map[common.Address]string{
+		m.Controller: "FinancingController",
+		m.Evidence:   "EvidenceRegistry",
+		m.Registry:   "ShipmentRegistry",
+		m.Policies:   "PolicyEngine",
+		m.Vault:      "ReceivableVault",
+	}
+	for addr, name := range map[common.Address]string{m.CoverPool: "CoverPool", m.DeviceRegistry: "DeviceRegistry", m.EBLRegistry: "EBLRegistry"} {
+		if addr != (common.Address{}) {
+			out[addr] = name
+		}
+	}
+	delete(out, common.Address{})
+	return out
 }
 
 // LoadManifest reads and validates a deployment manifest, naming any missing or malformed field.
@@ -43,7 +65,9 @@ func LoadManifest(path string) (Manifest, error) {
 			ReceivableVault     string `json:"receivableVault"`
 			Groth16Verifier     string `json:"groth16Verifier"`
 			FinancingController string `json:"financingController"`
-			CoverPool           string `json:"coverPool"` // v2, optional
+			CoverPool           string `json:"coverPool"`      // v2, optional
+			DeviceRegistry      string `json:"deviceRegistry"` // v3, optional
+			EBLRegistry         string `json:"eblRegistry"`    // v3, optional
 		} `json:"contracts"`
 	}
 	if err := json.Unmarshal(raw, &f); err != nil {
@@ -81,6 +105,18 @@ func LoadManifest(path string) (Manifest, error) {
 		}
 		m.CoverPool = common.HexToAddress(raw)
 	}
+	for _, opt := range []struct {
+		name, raw string
+		dst       *common.Address
+	}{{"deviceRegistry", f.Contracts.DeviceRegistry, &m.DeviceRegistry}, {"eblRegistry", f.Contracts.EBLRegistry, &m.EBLRegistry}} {
+		if opt.raw == "" {
+			continue
+		}
+		if !common.IsHexAddress(opt.raw) {
+			return Manifest{}, fmt.Errorf("chain: manifest %s is not an address: %q", opt.name, opt.raw)
+		}
+		*opt.dst = common.HexToAddress(opt.raw)
+	}
 	return m, nil
 }
 
@@ -89,6 +125,8 @@ type Client struct {
 	Eth           *ethclient.Client
 	M             Manifest
 	Confirmations uint64 // blocks to wait after a transaction is mined; 0 or 1 means just mined
+
+	failover *Failover // nil without a fallback RPC
 }
 
 // Dial connects and refuses to continue if the RPC reports a different chain than the manifest, so a
@@ -96,7 +134,7 @@ type Client struct {
 func Dial(ctx context.Context, rpcURL string, m Manifest) (*Client, error) {
 	eth, err := ethclient.DialContext(ctx, rpcURL)
 	if err != nil {
-		return nil, fmt.Errorf("chain: dial %s: %w", rpcURL, err)
+		return nil, fmt.Errorf("chain: dial %s: %w", Redact(rpcURL), err)
 	}
 	id, err := eth.ChainID(ctx)
 	if err != nil {
@@ -112,6 +150,12 @@ func Dial(ctx context.Context, rpcURL string, m Manifest) (*Client, error) {
 
 // HasCoverPool reports whether the deployment includes the v2 CoverPool.
 func (c *Client) HasCoverPool() bool { return c.M.CoverPool != (common.Address{}) }
+
+// HasDeviceRegistry reports whether the deployment includes the v3 DeviceRegistry.
+func (c *Client) HasDeviceRegistry() bool { return c.M.DeviceRegistry != (common.Address{}) }
+
+// HasEBL reports whether the deployment includes the v3 EBLRegistry.
+func (c *Client) HasEBL() bool { return c.M.EBLRegistry != (common.Address{}) }
 
 // Close releases the connection.
 func (c *Client) Close() { c.Eth.Close() }
@@ -129,6 +173,12 @@ func (c *Client) CheckDeployed(ctx context.Context) error {
 	}
 	if c.HasCoverPool() {
 		all = append(all, named{"coverPool", c.M.CoverPool})
+	}
+	if c.HasDeviceRegistry() {
+		all = append(all, named{"deviceRegistry", c.M.DeviceRegistry})
+	}
+	if c.HasEBL() {
+		all = append(all, named{"eblRegistry", c.M.EBLRegistry})
 	}
 	for _, a := range all {
 		code, err := c.Eth.CodeAt(ctx, a.addr, nil)
