@@ -8,8 +8,11 @@ import { PayAction } from "@/components/portal/PayAction";
 import { PortalHeader } from "@/components/portal/PortalHeader";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusPill } from "@/components/ui/Pill";
+import { Section } from "@/components/ui/Section";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { Stat } from "@/components/ui/Stat";
 import { NetworkGuard } from "@/components/wallet/NetworkGuard";
 import { useShipmentsFor, useShipmentViews } from "@/lib/api/hooks";
 import type { ShipmentView } from "@/lib/api/schemas";
@@ -23,19 +26,29 @@ type Role = "financier" | "buyer";
 
 const copy = {
   financier: {
-    title: "Fund trade that",
-    mark: "proves itself",
-    lede: "Your capital sits in a shipment-specific escrow and leaves it only when the cargo's evidence passes the policy you agreed to.",
-    art: "vault" as const,
+    eyebrow: "For financiers",
+    title: "Fund trade that proves itself",
+    lede: "Your capital sits in a shipment-specific escrow and leaves it only when the cargo's evidence passes the agreed policy.",
     guard: "Funding a facility is a transaction from your financier wallet.",
+    points: [
+      "Deposit into escrow for facilities that name your wallet",
+      "Watch each tranche release only on passing evidence",
+      "Track committed capital, escrow and fees earned in one place",
+    ],
+    list: "Facilities you fund",
     empty: "No facility names this wallet as its financier yet. Offer on an open request in the market, or ask an exporter to open one with your address.",
   },
   buyer: {
-    title: "Pay for cargo that",
-    mark: "arrived right",
-    lede: "Confirm delivery and pay the invoice once. The vault returns the financier's capital and pays the exporter the rest, in one transaction.",
-    art: "settle" as const,
+    eyebrow: "For buyers",
+    title: "Pay for cargo that arrived right",
+    lede: "Confirm delivery and pay the invoice once. The vault repays the financier and pays the exporter the rest in one transaction.",
     guard: "Confirming delivery and paying the invoice are transactions from your buyer wallet.",
+    points: [
+      "Confirm delivery once every tranche has been released",
+      "Pay the invoice into the vault in one transaction",
+      "See exactly who receives what before you pay",
+    ],
+    list: "Shipments you buy",
     empty: "No shipment names this wallet as its buyer yet.",
   },
 };
@@ -49,37 +62,61 @@ export function RolePortal({ role }: { role: Role }) {
   const mine = views
     .map((q) => q.data)
     .filter((v): v is ShipmentView => !!v && !!address && !!v.facility && v.facility[role].toLowerCase() === address.toLowerCase());
+  const loading = (isPending && !!address) || views.some((v) => v.isPending);
   return (
-    <div className="container-page flex flex-col gap-6 py-10">
-      <PortalHeader title={c.title} mark={c.mark} lede={c.lede} art={c.art} />
-      <NetworkGuard purpose={c.guard}>
-        {role === "financier" && mine.length > 0 && <Portfolio views={mine} address={address} />}
-        {isPending && !!address ? (
-          <Skeleton className="h-40" />
-        ) : mine.length === 0 ? (
-          <Card className="text-center">
-            <p className="font-display text-2xl font-semibold">Nothing here yet</p>
-            <p className="mx-auto mt-2 max-w-md text-slate">{c.empty}</p>
-            <div className="mt-6 flex flex-wrap justify-center gap-2">
-              <LinkButton href="/shipments" variant="secondary">Browse the fleet</LinkButton>
-              {role === "financier" ? <LinkButton href="/market">Find shipments to fund</LinkButton> : <LinkButton href="/exporter">Open the exporter portal</LinkButton>}
-            </div>
-          </Card>
-        ) : (
-          <ul className="grid gap-4 lg:grid-cols-2">
-            {mine.map((v) => (
-              <li key={v.shipment.id}>
-                <FacilityCard view={v} role={role} />
-              </li>
-            ))}
-          </ul>
-        )}
+    <div className="container-page py-(--space-page-y)">
+      <PortalHeader eyebrow={c.eyebrow} title={c.title} lede={c.lede} />
+      <NetworkGuard purpose={c.guard} points={c.points}>
+        <div className="flex flex-col gap-10">
+          {role === "financier" && mine.length > 0 && <Portfolio views={mine} address={address} />}
+          {role === "buyer" && mine.length > 0 && <BuyerStats views={mine} />}
+          <Section title={c.list} description={mine.length ? "Newest first. Act on a shipment from its row; open the dashboard for the full record." : undefined}>
+            {loading && mine.length === 0 ? (
+              <Skeleton className="h-40 rounded-card" />
+            ) : mine.length === 0 ? (
+              <EmptyState
+                title="Nothing here yet"
+                description={c.empty}
+                action={
+                  <>
+                    <LinkButton href="/shipments" variant="secondary">Browse the fleet</LinkButton>
+                    {role === "financier" ? <LinkButton href="/market" variant="secondary">Find shipments to fund</LinkButton> : <LinkButton href="/exporter" variant="secondary">Open the exporter portal</LinkButton>}
+                  </>
+                }
+              />
+            ) : (
+              <Card padded={false} as="div" className="overflow-hidden">
+                <ul className="divide-y divide-border" aria-label={c.list}>
+                  {mine.map((v) => (
+                    <FacilityRow key={v.shipment.id} view={v} role={role} />
+                  ))}
+                </ul>
+              </Card>
+            )}
+          </Section>
+        </div>
       </NetworkGuard>
     </div>
   );
 }
 
-function FacilityCard({ view, role }: { view: ShipmentView; role: Role }) {
+function BuyerStats({ views }: { views: ShipmentView[] }) {
+  const fs = views.map((v) => ({ f: v.facility!, invoice: BigInt(v.shipment.invoiceValue) }));
+  const due = fs.filter(({ f }) => f.status === "DELIVERED");
+  const toConfirm = fs.filter(({ f }) => f.status === "ACTIVE" && f.nextMilestone >= f.milestoneCount).length;
+  const paid = fs.filter(({ f }) => f.status === "SETTLED");
+  const sum = (xs: { invoice: bigint }[]) => xs.reduce((s, x) => s + x.invoice, 0n);
+  return (
+    <section aria-label="Your purchases at a glance" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <Stat label="Shipments" value={fs.length} hint="Naming this wallet as buyer" />
+      <Stat label="Ready to confirm" value={toConfirm} hint="Every tranche released" />
+      <Stat label="Invoices due" value={formatUSDG(sum(due), { compact: true })} unit="USDG" hint={`${due.length} delivered, unpaid`} />
+      <Stat label="Paid" value={formatUSDG(sum(paid), { compact: true })} unit="USDG" hint={`${paid.length} settled`} />
+    </section>
+  );
+}
+
+function FacilityRow({ view, role }: { view: ShipmentView; role: Role }) {
   const f = view.facility!;
   const id = view.shipment.id as `0x${string}`;
   const unfunded = f.status === "CREATED" || f.status === "FINANCED";
@@ -90,36 +127,35 @@ function FacilityCard({ view, role }: { view: ShipmentView; role: Role }) {
   const { contracts } = useContracts();
   const { send, pending } = useTx();
   const allReleased = f.nextMilestone >= f.milestoneCount;
+  const note =
+    role === "financier"
+      ? f.status === "CREATED" ? null : f.status === "SETTLED" ? "Repaid with the fee." : f.status === "CANCELLED" ? "Cancelled before transit: any deposit came back in full." : "Funded. Releases follow the evidence automatically."
+      : f.status === "DELIVERED" || (f.status === "ACTIVE" && allReleased) ? null : f.status === "SETTLED" ? "Paid and settled." : f.status === "CANCELLED" ? "Cancelled before transit: nothing to pay." : "Delivery can be confirmed once every milestone is released.";
   return (
-    <Card className="flex h-full flex-col gap-5">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <Link href={`/track/${id}`} className="font-display text-xl font-semibold hover:underline">{view.shipment.externalRef}</Link>
-          <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate">
-            <span>Milestone {Math.min(f.nextMilestone + 1, f.milestoneCount)} of {f.milestoneCount}</span>
-            <span aria-hidden="true" className="hidden sm:inline">·</span>
-            <span className="inline-flex items-center gap-1.5">Exporter <PartyLink address={f.exporter} /></span>
-          </p>
+    <li className="grid gap-4 p-4 md:p-5 lg:grid-cols-12 lg:items-center">
+      <div className="min-w-0 lg:col-span-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link href={`/track/${id}`} className="font-display text-h4 underline-offset-2 hover:underline">{view.shipment.externalRef}</Link>
+          <StatusPill status={f.status} />
         </div>
-        <StatusPill status={f.status} />
-      </div>
-      <dl className="grid grid-cols-3 gap-3 text-sm">
-        <div><dt className="text-slate">Committed</dt><dd className="font-mono font-semibold">{formatUSDG(f.committed)}</dd></div>
-        <div><dt className="text-slate">Drawn</dt><dd className="font-mono font-semibold">{formatUSDG(f.drawn)}</dd></div>
-        <div><dt className="text-slate">Latest score</dt><dd className="font-mono font-semibold">{view.latestEvidence ? `${view.latestEvidence.score} · ${formatBps(view.latestEvidence.riskBps)} risk` : "–"}</dd></div>
-      </dl>
-      <div className="rounded-2xl bg-ink/4 p-4 text-sm">
-        <p className="font-semibold">{heading}</p>
-        <p className="mt-1 text-slate">
-          Financier {verb} <b className="font-mono text-ink">{formatUSDG(preview.financier)}</b> USDG
-          {preview.undrawn > 0n && <> (including {formatUSDG(preview.undrawn)} never drawn)</>}; exporter {verb} <b className="font-mono text-ink">{formatUSDG(preview.residual)}</b> USDG at settlement.
+        <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-small text-text-muted">
+          <span className="num">Milestone {Math.min(f.nextMilestone + 1, f.milestoneCount)} of {f.milestoneCount}</span>
+          <span className="inline-flex items-center gap-1.5">Exporter <PartyLink address={f.exporter} /></span>
         </p>
       </div>
-      <div className="mt-auto">
+      <dl className="grid grid-cols-3 gap-3 text-sm lg:col-span-4">
+        <div className="min-w-0"><dt className="text-small text-text-muted">Committed</dt><dd className="num font-semibold">{formatUSDG(f.committed)}<span className="text-text-muted"> USDG</span></dd></div>
+        <div className="min-w-0"><dt className="text-small text-text-muted">Drawn</dt><dd className="num font-semibold">{formatUSDG(f.drawn)}<span className="text-text-muted"> USDG</span></dd></div>
+        <div className="min-w-0"><dt className="text-small text-text-muted">Latest score</dt><dd className="num font-semibold">{view.latestEvidence ? <>{view.latestEvidence.score}<span className="font-normal text-text-muted"> · {formatBps(view.latestEvidence.riskBps)} risk</span></> : "–"}</dd></div>
+      </dl>
+      <div className="flex flex-col gap-3 lg:col-span-4 lg:items-end">
+        <p className="text-small text-text-muted lg:text-right">
+          <span className="font-semibold text-ink">{heading}:</span> financier {verb} <span className="num font-semibold text-ink">{formatUSDG(preview.financier)}</span> USDG
+          {preview.undrawn > 0n && <> (incl. {formatUSDG(preview.undrawn)} never drawn)</>}, exporter {verb} <span className="num font-semibold text-ink">{formatUSDG(preview.residual)}</span> USDG.
+        </p>
         {role === "financier" && f.status === "CREATED" && (
           <PayAction shipmentId={id} amount={BigInt(f.committed)} action="depositCapital" label={`Deposit ${formatUSDG(f.committed)} USDG`} successTitle="Facility funded" />
         )}
-        {role === "financier" && f.status !== "CREATED" && <p className="text-sm text-slate">{f.status === "SETTLED" ? "Repaid with the fee." : f.status === "CANCELLED" ? "Cancelled before transit: any deposit came back in full." : "Funded. Releases follow the evidence automatically."}</p>}
         {role === "buyer" && f.status === "ACTIVE" && allReleased && contracts && (
           <Button loading={pending} onClick={() => send({ address: contracts.controller, abi: controllerAbi, functionName: "markDelivered", args: [id], label: "Confirm delivery", successTitle: "Delivery confirmed" })}>
             Confirm delivery
@@ -128,10 +164,8 @@ function FacilityCard({ view, role }: { view: ShipmentView; role: Role }) {
         {role === "buyer" && f.status === "DELIVERED" && (
           <PayAction shipmentId={id} amount={BigInt(view.shipment.invoiceValue)} action="settle" label={`Pay the ${formatUSDG(view.shipment.invoiceValue)} USDG invoice`} successTitle="Invoice paid and settled" />
         )}
-        {role === "buyer" && !(f.status === "DELIVERED" || (f.status === "ACTIVE" && allReleased)) && (
-          <p className="text-sm text-slate">{f.status === "SETTLED" ? "Paid and settled." : f.status === "CANCELLED" ? "Cancelled before transit: nothing to pay." : "Delivery can be confirmed once every milestone is released."}</p>
-        )}
+        {note && <p className="text-small font-medium text-ink/80 lg:text-right">{note}</p>}
       </div>
-    </Card>
+    </li>
   );
 }

@@ -5,12 +5,17 @@ import { useState } from "react";
 import { keccak256, toBytes } from "viem";
 import { useAccount, useReadContract } from "wagmi";
 import { PortalHeader } from "@/components/portal/PortalHeader";
+import { Callout } from "@/components/ui/Banner";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { HashBadge } from "@/components/ui/HashBadge";
+import { CopyField } from "@/components/ui/CopyField";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Textarea } from "@/components/ui/Field";
 import { Modal } from "@/components/ui/Modal";
 import { StatusPill } from "@/components/ui/Pill";
+import { Section } from "@/components/ui/Section";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { Stat } from "@/components/ui/Stat";
 import { NetworkGuard } from "@/components/wallet/NetworkGuard";
 import { useConfig, useShipmentsByStatus, useShipmentViews } from "@/lib/api/hooks";
 import type { ShipmentView } from "@/lib/api/schemas";
@@ -55,63 +60,70 @@ export function ArbiterConsole() {
   // a disabled query (no contracts or no wallet yet) stays "pending" forever in TanStack Query: that is "unknown", not loading
   const roleDisabled = !contracts || !address;
 
+  const count = (st: string) => items.filter((v) => v.facility!.status === st).length;
   return (
-    <div className="container-page flex flex-col gap-6 py-10">
+    <div className="container-page py-(--space-page-y)">
       <PortalHeader
-        title="Decide disputes"
-        mark="on the record"
-        lede="Holders of the on-chain dispute role resolve disputes, lift pauses on a verified basis and declare defaults. Every decision is a transaction with a hashed reference anyone can audit."
-        art="zk"
+        eyebrow="For arbiters"
+        title="Decide disputes on the record"
+        lede="Holders of the on-chain dispute role resolve disputes, lift pauses on a verified basis and declare defaults. Every decision carries a hashed reference anyone can audit."
       />
-      <NetworkGuard purpose="Arbitration happens from the wallet that holds the dispute role on chain.">
-        {config.isError ? (
-          <Card role="alert" className="border-danger/40">
-            <h2 className="font-display text-2xl font-semibold">The deployment&apos;s configuration could not be loaded</h2>
-            <p className="mt-2 max-w-2xl text-slate">Without it this page cannot find the access contract to check the dispute role. {config.error.message}</p>
-            <Button className="mt-4" variant="secondary" loading={config.isFetching} onClick={() => void config.refetch()}>Try again</Button>
-          </Card>
-        ) : roleDisabled ? (
-          config.isPending ? <Skeleton className="h-24" /> : null
-        ) : role.isPending ? (
-          <Skeleton className="h-24" />
-        ) : role.isError ? (
-          <Card role="alert" className="border-alert/50">
-            <h2 className="font-display text-2xl font-semibold">The dispute role could not be checked</h2>
-            <p className="mt-2 max-w-2xl text-slate">The network did not answer. You can follow the queue below and try again in a moment.</p>
-            <Button className="mt-4" variant="secondary" loading={role.isFetching} onClick={() => void role.refetch()}>Check again</Button>
-          </Card>
-        ) : !isArbiter ? (
-          <Card>
-            <h2 className="font-display text-2xl font-semibold">This wallet is not an arbiter</h2>
-            <p className="mt-2 max-w-2xl text-slate">
-              Only a wallet granted the dispute role in the CargoFlow access contract can decide disputes. The role is granted by the protocol admin, on chain, and every grant is public. You can still follow the queue below.
-            </p>
-            {address && <div className="mt-4"><HashBadge value={address} kind="address" chainId={chainId} label="connected" /></div>}
-          </Card>
-        ) : null}
+      <NetworkGuard
+        purpose="Arbitration happens from the wallet that holds the dispute role on chain."
+        points={["Resume a disputed facility with a recorded reference", "Lift an evidence pause on independent verification", "Declare a default that returns undrawn capital"]}
+      >
+        <div className="flex flex-col gap-10">
+          {config.isError ? (
+            <Callout variant="danger" live="assertive" title="The deployment's configuration could not be loaded" action={<Button variant="secondary" size="sm" loading={config.isFetching} onClick={() => void config.refetch()}>Try again</Button>}>
+              Without it this page cannot find the access contract to check the dispute role. {config.error.message}
+            </Callout>
+          ) : roleDisabled ? (
+            config.isPending ? <Skeleton className="h-24 rounded-card" /> : null
+          ) : role.isPending ? (
+            <Skeleton className="h-24 rounded-card" />
+          ) : role.isError ? (
+            <Callout variant="warning" live="assertive" title="The dispute role could not be checked" action={<Button variant="secondary" size="sm" loading={role.isFetching} onClick={() => void role.refetch()}>Check again</Button>}>
+              The network did not answer. You can follow the queue below and try again in a moment.
+            </Callout>
+          ) : !isArbiter ? (
+            <Card tone="paper" className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="min-w-0">
+                <h2 className="font-display text-h3">This wallet is not an arbiter</h2>
+                <p className="mt-1 max-w-reading text-sm text-text-muted">
+                  Only a wallet granted the dispute role in the CargoFlow access contract can decide disputes. The protocol admin grants it on chain, and every grant is public. You can still follow the queue below.
+                </p>
+              </div>
+              {address && <CopyField value={address} label="Connected" kind="address" chainId={chainId} className="shrink-0" />}
+            </Card>
+          ) : null}
 
-        {queue.isPending ? (
-          <Skeleton className="h-40" />
-        ) : queue.isError ? (
-          <Card role="alert" className="text-center">
-            <p className="font-display text-2xl font-semibold">The queue could not be loaded</p>
-            <p className="mx-auto mt-2 max-w-md text-slate">{queue.error.message}</p>
-            <Button className="mt-4" variant="secondary" loading={queue.isFetching} onClick={() => void queue.refetch()}>Try again</Button>
-          </Card>
-        ) : items.length === 0 ? (
-          <Card className="text-center">
-            <p className="font-display text-2xl font-semibold">Nothing to decide</p>
-            <p className="mx-auto mt-2 max-w-md text-slate">Disputed, paused and unpaid delivered facilities appear here as soon as they happen.</p>
-          </Card>
-        ) : (
-          <ul className="grid gap-4 lg:grid-cols-2">
-            {items.map((v) => (
-              <li key={v.shipment.id}>
-                <CaseCard view={v} canAct={isArbiter} chainId={chainId} />
-              </li>
-            ))}
-          </ul>
-        )}
+          <Section title="Queue" description="Disputed first, then paused, then delivered but unpaid.">
+            {queue.isPending ? (
+              <Skeleton className="h-40 rounded-card" />
+            ) : queue.isError ? (
+              <Callout variant="danger" title="The queue could not be loaded" action={<Button variant="secondary" size="sm" loading={queue.isFetching} onClick={() => void queue.refetch()}>Try again</Button>}>
+                {queue.error.message}
+              </Callout>
+            ) : items.length === 0 ? (
+              <EmptyState title="Nothing to decide" description="Disputed, paused and unpaid delivered facilities appear here as soon as they happen." />
+            ) : (
+              <div className="flex flex-col gap-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <Stat size="sm" label="Disputed" value={count("DISPUTED")} />
+                  <Stat size="sm" label="Paused" value={count("PAUSED")} />
+                  <Stat size="sm" label="Unpaid" value={count("DELIVERED")} />
+                </div>
+                <Card padded={false} className="overflow-hidden">
+                  <ul className="divide-y divide-border" aria-label="Cases to decide">
+                    {items.map((v) => (
+                      <CaseCard key={v.shipment.id} view={v} canAct={isArbiter} chainId={chainId} />
+                    ))}
+                  </ul>
+                </Card>
+              </div>
+            )}
+          </Section>
+        </div>
       </NetworkGuard>
     </div>
   );
@@ -136,26 +148,27 @@ function CaseCard({ view, canAct, chainId }: { view: ShipmentView; canAct: boole
         : "Every milestone was released and delivery was confirmed, but the invoice is unpaid.";
 
   return (
-    <Card className="flex h-full flex-col gap-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <Link href={`/track/${id}`} className="font-display text-xl font-semibold hover:underline">{view.shipment.externalRef}</Link>
-          <p className="mt-1 text-sm text-slate">Milestone {Math.min(f.nextMilestone + 1, f.milestoneCount)} of {f.milestoneCount}</p>
+    <li className="grid gap-4 p-4 md:p-5 lg:grid-cols-12">
+      <div className="flex min-w-0 flex-col gap-2 lg:col-span-7">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link href={`/track/${id}`} className="font-display text-h4 underline-offset-2 hover:underline">{view.shipment.externalRef}</Link>
+          <StatusPill status={f.status} />
+          <span className="num text-small text-text-muted">Milestone {Math.min(f.nextMilestone + 1, f.milestoneCount)} of {f.milestoneCount}</span>
         </div>
-        <StatusPill status={f.status} />
+        <p className="max-w-reading text-sm text-ink/80">{situation}</p>
+        <div className="flex flex-wrap gap-2">
+          <CopyField value={f.exporter} kind="address" chainId={chainId} label="Exporter" size="sm" />
+          <CopyField value={f.financier} kind="address" chainId={chainId} label="Financier" size="sm" />
+        </div>
       </div>
-      <p className="text-sm">{situation}</p>
-      <dl className="grid grid-cols-3 gap-3 text-sm">
-        <div><dt className="text-slate">Committed</dt><dd className="font-mono font-semibold">{formatUSDG(f.committed)}</dd></div>
-        <div><dt className="text-slate">Drawn</dt><dd className="font-mono font-semibold">{formatUSDG(f.drawn)}</dd></div>
-        <div><dt className="text-slate">Invoice</dt><dd className="font-mono font-semibold">{formatUSDG(view.shipment.invoiceValue)}</dd></div>
-      </dl>
-      <div className="flex flex-wrap gap-2 text-sm">
-        <HashBadge value={f.exporter} kind="address" chainId={chainId} label="exporter" compact />
-        <HashBadge value={f.financier} kind="address" chainId={chainId} label="financier" compact />
-      </div>
+      <div className="flex min-w-0 flex-col gap-3 lg:col-span-5 lg:items-end">
+        <dl className="grid w-full grid-cols-3 gap-3 text-sm lg:max-w-sm">
+          <div><dt className="text-small text-text-muted">Committed</dt><dd className="num font-semibold">{formatUSDG(f.committed)}</dd></div>
+          <div><dt className="text-small text-text-muted">Drawn</dt><dd className="num font-semibold">{formatUSDG(f.drawn)}</dd></div>
+          <div><dt className="text-small text-text-muted">Invoice</dt><dd className="num font-semibold">{formatUSDG(view.shipment.invoiceValue)}</dd></div>
+        </dl>
       {canAct && (
-        <div className="mt-auto flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 lg:justify-end">
           {f.status === "DISPUTED" && (
             <Button
               onClick={() =>
@@ -206,8 +219,9 @@ function CaseCard({ view, canAct, chainId }: { view: ShipmentView; canAct: boole
           </Button>
         </div>
       )}
+      </div>
       {decision && <DecisionModal decision={decision} onClose={() => setDecision(null)} />}
-    </Card>
+    </li>
   );
 }
 
@@ -229,18 +243,17 @@ function DecisionModal({ decision, onClose }: { decision: Decision; onClose: () 
           if (tx) onClose();
         }}
       >
-        <label htmlFor="decision-note" className="text-sm font-semibold">{decision.noteLabel}</label>
-        <textarea
-          id="decision-note"
+        <Textarea
+          label={decision.noteLabel}
           data-autofocus
           rows={3}
           maxLength={1000}
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="Case 2026-07: survey report SGS-118 confirms the cargo was within temperature on arrival."
-          className="rounded-2xl border-2 border-line bg-white p-3 outline-none focus:border-ink"
+          help="Only its keccak-256 hash goes on chain."
         />
-        {hash && <p className="text-sm text-slate">Recorded on chain as <code className="font-mono text-xs break-all text-ink">{hash}</code>.</p>}
+        {hash && <p className="text-small text-text-muted">Recorded on chain as <code className="font-mono text-caption break-all text-ink">{hash}</code>.</p>}
         <Button type="submit" variant={decision.danger ? "danger" : "primary"} loading={busy} disabled={!hash}>{decision.confirm}</Button>
       </form>
     </Modal>

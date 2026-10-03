@@ -11,7 +11,7 @@ import { cleanLabel, DESTINATION_RADIUS_KM, normLon, placeErrors, placePhrase, r
 
 const MapView = dynamic(() => import("@/components/map/MapView"), {
   ssr: false,
-  loading: () => <div className="grid h-full place-items-center bg-[#D5E3EC] text-xs text-slate">Loading map…</div>,
+  loading: () => <div className="grid h-full place-items-center bg-info-bg text-xs text-text-muted">Loading map…</div>,
 });
 
 type Props = {
@@ -80,10 +80,10 @@ export function MilestonePlaces({ count, route, places, onChange, showErrors }: 
 
   if (n === 0) return null;
   return (
-    <div className="mt-6 flex flex-col gap-4 rounded-2xl border-2 border-line bg-white p-4 md:p-5">
+    <div className="mt-6 flex flex-col gap-4 rounded-tile border border-border bg-neutral-25 p-4 md:p-5">
       <div>
-        <h3 className="font-semibold">Where milestones release <span className="font-normal text-slate">(optional)</span></h3>
-        <p className="text-sm text-slate">By default a milestone releases on passing evidence wherever the cargo is. A place makes it wait until the evidence comes from within a radius of a port or point; evidence from elsewhere holds it, and nothing fails.</p>
+        <h3 className="font-display text-h4">Where milestones release <span className="font-sans text-xs font-normal text-text-muted">Optional</span></h3>
+        <p className="text-sm text-text-muted">By default a milestone releases on passing evidence wherever the cargo is. A place makes it wait until the evidence comes from within a radius of a port or point; evidence from elsewhere holds it, and nothing fails.</p>
       </div>
 
       {dest && (
@@ -94,20 +94,20 @@ export function MilestonePlaces({ count, route, places, onChange, showErrors }: 
             role="switch"
             aria-checked={destOn}
             onClick={() => set(last, destOn ? null : dest)}
-            className={`relative mt-0.5 h-6 w-11 shrink-0 rounded-full border-2 transition-colors ${destOn ? "border-ink bg-ink" : "border-line bg-mist"}`}
+            className={`relative mt-0.5 h-6 w-11 shrink-0 rounded-full border-2 transition-colors ${destOn ? "border-ink bg-ink" : "border-border-strong bg-mist"}`}
           >
             <span aria-hidden="true" className={`absolute top-0.5 h-4 w-4 rounded-full transition-all ${destOn ? "left-[1.375rem] bg-signal" : "left-0.5 bg-white shadow"}`} />
           </button>
           <label htmlFor={switchId} className="cursor-pointer text-sm">
             <span className="block font-semibold">Release the last tranche only at the destination ({DESTINATION_RADIUS_KM} km)</span>
-            <span className="block text-slate">Milestone {n} waits for evidence from within {DESTINATION_RADIUS_KM} km of {dest.label}.</span>
+            <span className="block text-text-muted">Milestone {n} waits for evidence from within {DESTINATION_RADIUS_KM} km of {dest.label}.</span>
           </label>
         </div>
       )}
 
       <details open={open} onToggle={(e) => setOpen((e.target as HTMLDetailsElement).open)} className="group">
         <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-semibold [&::-webkit-details-marker]:hidden">
-          <span aria-hidden="true" className="text-slate transition-transform group-open:rotate-90">›</span>
+          <span aria-hidden="true" className="text-text-muted transition-transform group-open:rotate-90">›</span>
           Set a place for any milestone
         </summary>
         <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -117,7 +117,7 @@ export function MilestonePlaces({ count, route, places, onChange, showErrors }: 
               const errs = p ? placeErrors(p) : {};
               const choice = picking === i ? MAP : p ? p.source : "";
               return (
-                <li key={i} className="rounded-2xl bg-mist p-3">
+                <li key={i} className="rounded-tile bg-surface p-3 ring-1 ring-border ring-inset">
                   <div className="flex flex-wrap items-center gap-2">
                     <label htmlFor={`place-${switchId}-${i}`} className="w-24 shrink-0 text-sm font-semibold">Milestone {i + 1}</label>
                     <select
@@ -135,7 +135,7 @@ export function MilestonePlaces({ count, route, places, onChange, showErrors }: 
                           if (picking === i) setPicking(null);
                         }
                       }}
-                      className="h-10 min-w-0 flex-1 rounded-xl border-2 border-line bg-white px-3 text-sm font-medium focus:border-ink focus:outline-none"
+                      className="h-10 min-w-0 flex-1 rounded-control border border-border-strong bg-surface px-3 text-sm font-medium shadow-1 focus:border-ink focus:ring-1 focus:ring-ink focus:outline-none"
                     >
                       <option value="">Anywhere (no place)</option>
                       {ports.map((pt) => (
@@ -160,8 +160,8 @@ export function MilestonePlaces({ count, route, places, onChange, showErrors }: 
               );
             })}
           </ol>
-          <div className="flex min-h-[16rem] flex-col overflow-hidden rounded-2xl border border-line bg-white">
-            <div className="relative min-h-0 flex-1 bg-[#D5E3EC]">
+          <div className="flex min-h-[16rem] flex-col overflow-hidden rounded-tile border border-border bg-surface">
+            <div className="relative min-h-0 flex-1 bg-info-bg">
               {/* the map mounts once the section is open: created inside a closed <details> it would fit a 0 x 0 box */}
               {!open ? null : route.points.length > 1 ? (
                 <MapView
@@ -173,11 +173,11 @@ export function MilestonePlaces({ count, route, places, onChange, showErrors }: 
                   fitKey={route.points.map((q) => `${q.latE6},${q.lonE6}`).join(";")}
                 />
               ) : (
-                <p className="grid h-full place-items-center px-6 text-center text-sm text-slate">Choose the route first.</p>
+                <p className="grid h-full place-items-center px-6 text-center text-sm text-text-muted">Choose the route first.</p>
               )}
               {picking !== null && <p className="pointer-events-none absolute top-3 left-3 rounded-full bg-ink/90 px-3 py-1 text-xs font-semibold text-paper">Click to place milestone {picking + 1}</p>}
             </div>
-            <p className="border-t border-line px-3 py-2 text-xs text-slate" aria-live="polite">
+            <p className="border-t border-border px-3 py-2 text-caption text-text-muted" aria-live="polite">
               {circles.length ? circles.map((c) => c.title).join(" · ") : "No places: every milestone releases wherever its evidence passes."}
             </p>
           </div>

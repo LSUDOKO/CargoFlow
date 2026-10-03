@@ -1,7 +1,7 @@
 // Icons for the wallet picker. Installed wallets bring their own icon (EIP-6963 announces it as a data URI);
 // these cover the methods that have no announced icon.
 
-const tile = "grid h-10 w-10 shrink-0 place-items-center rounded-xl";
+const tile = "grid h-10 w-10 shrink-0 place-items-center rounded-control";
 
 /** The official WalletConnect mark on its blue tile. */
 export function WalletConnectIcon() {
@@ -51,7 +51,7 @@ export function TestAccountIcon() {
 
 export function PuzzleIcon() {
   return (
-    <span className={`${tile} border-2 border-dashed border-line bg-white text-slate`} aria-hidden="true">
+    <span className={`${tile} border-2 border-dashed border-border bg-white text-text-muted`} aria-hidden="true">
       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M10 4.5a2 2 0 1 1 4 0V6h3a1 1 0 0 1 1 1v3h-1.5a2 2 0 1 0 0 4H18v3a1 1 0 0 1-1 1h-3v-1.5a2 2 0 1 0-4 0V18H7a1 1 0 0 1-1-1v-3h1.5a2 2 0 1 0 0-4H6V7a1 1 0 0 1 1-1h3V4.5Z" />
       </svg>

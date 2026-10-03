@@ -72,7 +72,7 @@ export function GasHelper({ address }: { address: Address }) {
   const eth = balance.data ? Number(formatEther(balance.data.value)).toFixed(8).replace(/\.?0+$/, "") : null;
   const href = state.kind === "done" && state.tx ? explorerTx(appChain, state.tx) : null;
   return (
-    <div className="mx-1 my-1 rounded-xl bg-alert/12 p-3 text-sm">
+    <div className="mx-1 my-1 rounded-control bg-warning-bg p-3 text-sm">
       {state.kind === "done" ? (
         <div role="status">
           <p className="font-semibold">{state.wei ? `${formatEther(BigInt(state.wei))} ETH is on its way` : "Testnet gas is on its way"}</p>
@@ -97,7 +97,7 @@ export function GasHelper({ address }: { address: Address }) {
             {state.kind === "busy" && <Spinner />}
             {state.kind === "busy" ? (state.step === "sign" ? "Waiting for your signature…" : "Requesting…") : "Get testnet gas"}
           </button>
-          {state.kind === "error" && <p role="alert" className="mt-2 font-medium text-[#a1191e]">{state.message}</p>}
+          {state.kind === "error" && <p role="alert" className="mt-2 font-medium text-danger-fg">{state.message}</p>}
         </>
       )}
     </div>

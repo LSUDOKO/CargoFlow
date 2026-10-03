@@ -129,10 +129,10 @@ function DetailSkeleton() {
 // ------------------------------------------------------------------------------------------------ next step
 
 function StepCard({ eyebrow, title, children, tone = "white" }: { eyebrow: string; title: string; children: React.ReactNode; tone?: "white" | "ink" }) {
-  // "ink" marks the step that waits on this wallet: a lime rule on the card's edge, not a navy panel
+  // "ink" marks the step that waits on this wallet: the eyebrow turns lime-green, the card stays calm
   return (
-    <Card as="section" aria-labelledby="next-step" className={tone === "ink" ? "border-l-4 border-l-signal-fg" : undefined}>
-      <p className="eyebrow">{eyebrow}</p>
+    <Card as="section" aria-labelledby="next-step" elevation={tone === "ink" ? 2 : 1}>
+      <p className={tone === "ink" ? "eyebrow text-signal-fg" : "eyebrow"}>{eyebrow}</p>
       <h2 id="next-step" className="mt-1 font-display text-h2">{title}</h2>
       <div className="mt-2 max-w-reading text-body text-ink/80">{children}</div>
     </Card>

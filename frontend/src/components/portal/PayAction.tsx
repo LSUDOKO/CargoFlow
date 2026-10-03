@@ -2,6 +2,7 @@
 
 import type { Address } from "viem";
 import { useAccount, useReadContracts } from "wagmi";
+import { Callout } from "@/components/ui/Banner";
 import { Button } from "@/components/ui/Button";
 import { controllerAbi, usdgAbi } from "@/lib/chain/abis";
 import { useContracts } from "@/lib/chain/contracts";
@@ -53,31 +54,29 @@ export function PayAction({ shipmentId, amount, action, label, successTitle }: P
 
   if (balance !== undefined && needs.shortfall > 0n) {
     return (
-      <div className="rounded-2xl bg-alert/12 px-4 py-3 text-sm">
-        <p className="font-semibold">This wallet needs {formatUSDG(needs.shortfall)} more USDG.</p>
-        <p className="mt-1 text-ink/75">
-          It holds {formatUSDG(balance)} of the {formatUSDG(amount)} required.{" "}
-          {chainId === 46630 ? (
-            <a href="https://faucet.paxos.com" target="_blank" rel="noreferrer" className="font-semibold underline">Get testnet USDG from the Paxos faucet</a>
-          ) : (
-            "On the local chain the test token can be minted freely."
-          )}
-        </p>
-        {chainId === 31337 && address && (
-          <Button
-            size="sm"
-            className="mt-3"
-            loading={pending}
-            onClick={() => send({ address: contracts.usdg, abi: usdgAbi, functionName: "mint", args: [address, needs.shortfall], label: "Mint test USDG", successTitle: `${formatUSDG(needs.shortfall)} test USDG minted` })}
-          >
-            Mint {formatUSDG(needs.shortfall)} test USDG
-          </Button>
+      <Callout variant="warning" title={`This wallet needs ${formatUSDG(needs.shortfall)} more USDG.`} className="w-full text-left">
+        It holds {formatUSDG(balance)} of the {formatUSDG(amount)} required.{" "}
+        {chainId === 46630 ? (
+          <a href="https://faucet.paxos.com" target="_blank" rel="noreferrer" className="font-semibold underline">Get testnet USDG from the Paxos faucet</a>
+        ) : (
+          "On the local chain the test token can be minted freely."
         )}
-      </div>
+        {chainId === 31337 && address && (
+          <span className="mt-3 block">
+            <Button
+              size="sm"
+              loading={pending}
+              onClick={() => send({ address: contracts.usdg, abi: usdgAbi, functionName: "mint", args: [address, needs.shortfall], label: "Mint test USDG", successTitle: `${formatUSDG(needs.shortfall)} test USDG minted` })}
+            >
+              Mint {formatUSDG(needs.shortfall)} test USDG
+            </Button>
+          </span>
+        )}
+      </Callout>
     );
   }
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2 lg:justify-end">
       {needs.needsApproval && (
         <Button
           variant="secondary"

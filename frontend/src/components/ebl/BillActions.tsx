@@ -55,7 +55,7 @@ export function BillActions({ bill, size = "sm" }: { bill: Bill; size?: "sm" | "
           }}
         >
           <Field label="New holder address" value={to} onChange={(e) => setTo(e.target.value)} placeholder="0x…" error={touched || to ? toErr : undefined} data-autofocus spellCheck={false} autoComplete="off" />
-          <p className="text-sm text-slate">A safe transfer: a contract address must accept ERC-721 tokens, so a bill cannot be stranded.</p>
+          <p className="text-sm text-text-muted">A safe transfer: a contract address must accept ERC-721 tokens, so a bill cannot be stranded.</p>
           <Button type="submit" loading={pending}>Endorse bill {n}</Button>
         </form>
       </Modal>

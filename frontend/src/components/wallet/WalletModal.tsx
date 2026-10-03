@@ -134,8 +134,8 @@ export function WalletModal({ open, onClose }: { open: boolean; onClose: () => v
 
   return (
     <Portal>
-      <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-6">
-        <div className="absolute inset-0 animate-fade bg-ink/50 backdrop-blur-[3px]" onClick={close} aria-hidden="true" />
+      <div className="fixed inset-0 z-(--z-overlay) flex items-end justify-center sm:items-center sm:p-6">
+        <div className="absolute inset-0 animate-fade bg-ink/45 backdrop-blur-[2px]" onClick={close} aria-hidden="true" />
         <div
           ref={ref}
           role="dialog"
@@ -143,7 +143,7 @@ export function WalletModal({ open, onClose }: { open: boolean; onClose: () => v
           aria-labelledby={titleId}
           aria-describedby={descId}
           onKeyDown={onKeyDown}
-          className="relative flex max-h-[92dvh] w-full animate-rise flex-col overflow-hidden rounded-t-[28px] bg-paper shadow-[var(--shadow-lift)] sm:max-h-[min(88dvh,760px)] sm:max-w-[420px] sm:rounded-[28px]"
+          className="relative flex max-h-[92dvh] w-full animate-sheet-up flex-col overflow-hidden rounded-t-sheet bg-paper shadow-3 sm:max-h-[min(88dvh,760px)] sm:max-w-[26.25rem] sm:animate-enter sm:rounded-sheet"
         >
           <div className="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-ink/15 sm:hidden" aria-hidden="true" />
           <header className="flex shrink-0 items-start gap-3 px-5 pt-4 pb-1 sm:px-6 sm:pt-6">
@@ -161,10 +161,10 @@ export function WalletModal({ open, onClose }: { open: boolean; onClose: () => v
               </button>
             )}
             <div className="min-w-0 flex-1 pt-1">
-              <h2 id={titleId} className="font-display text-[1.375rem] leading-tight font-semibold">
+              <h2 id={titleId} className="font-display text-h2">
                 {view === "email" ? "Continue with email" : view === "passkey" ? "Continue with passkey" : "Connect a wallet"}
               </h2>
-              <p id={descId} className="mt-1 text-sm text-slate">
+              <p id={descId} className="mt-1 text-small text-text-muted">
                 {view === "email"
                   ? "A wallet is created for your email the first time you sign in."
                   : view === "passkey"
@@ -216,12 +216,12 @@ export function WalletModal({ open, onClose }: { open: boolean; onClose: () => v
                   </Section>
                 )}
 
-                <details className="group mt-5 rounded-2xl border border-line bg-white/60 px-4 py-3 text-sm open:bg-white">
+                <details className="group mt-5 rounded-tile border border-border bg-neutral-25 px-4 py-3 text-sm open:bg-surface">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-semibold [&::-webkit-details-marker]:hidden">
                     What is a wallet?
-                    <svg viewBox="0 0 20 20" className="h-4 w-4 shrink-0 text-slate transition-transform group-open:rotate-180" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 7.5 5 5 5-5" /></svg>
+                    <svg viewBox="0 0 20 20" className="h-4 w-4 shrink-0 text-text-muted transition-transform duration-(--duration-base) group-open:rotate-180" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 7.5 5 5 5-5" /></svg>
                   </summary>
-                  <div className="mt-2 space-y-2 text-slate">
+                  <div className="mt-2 space-y-2 text-text-muted">
                     <p>A wallet is an app that holds your account&apos;s keys and signs on your behalf. CargoFlow never sees those keys: every financing step is a transaction you review and approve.</p>
                     <p>New to this? <span className="font-semibold text-ink">Continue with email</span> and a wallet is created for you, no extension needed.</p>
                     {PASSKEYS_ENABLED && <p><span className="font-semibold text-ink">Passkey account:</span> {PASSKEY_EXPLAINER}</p>}
@@ -231,7 +231,7 @@ export function WalletModal({ open, onClose }: { open: boolean; onClose: () => v
             )}
           </div>
 
-          <footer className="shrink-0 border-t border-line px-5 pt-3 pb-[max(env(safe-area-inset-bottom),0.875rem)] text-xs leading-relaxed text-slate sm:px-6 sm:pb-4">
+          <footer className="shrink-0 border-t border-border bg-surface px-5 pt-3 pb-[max(env(safe-area-inset-bottom),0.875rem)] text-caption text-text-muted sm:px-6 sm:pb-4">
             By connecting you agree to use CargoFlow as a demo. It runs on a testnet only: no real funds, and test tokens have no value.
           </footer>
         </div>
@@ -243,22 +243,22 @@ export function WalletModal({ open, onClose }: { open: boolean; onClose: () => v
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mt-4 first:mt-0">
-      <h3 className="mb-2 font-sans text-[0.6875rem] font-semibold tracking-[0.09em] text-slate uppercase">{title}</h3>
+      <h3 className="eyebrow mb-2">{title}</h3>
       <ul className="flex flex-col gap-2">{children}</ul>
     </section>
   );
 }
 
 const rowClass =
-  "group flex w-full items-center gap-3.5 rounded-2xl border bg-white px-3.5 py-2.5 text-left transition-[border-color,box-shadow,background-color] duration-150 hover:border-ink/35 hover:shadow-[0_8px_20px_-12px_rgb(11_27_43/0.35)] focus-visible:border-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-60";
+  "group flex min-h-16 w-full items-center gap-3.5 rounded-tile border bg-surface px-3.5 py-2.5 text-left shadow-1 transition-[border-color,box-shadow,background-color,transform] duration-(--duration-fast) ease-standard hover:border-border-strong hover:shadow-2 active:translate-y-px focus-visible:border-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-60";
 
 function RecentBadge() {
-  return <span className="shrink-0 rounded-full bg-signal px-2 py-0.5 text-[0.6875rem] font-semibold text-ink">Recent</span>;
+  return <span className="shrink-0 rounded-full bg-signal-soft px-2 py-0.5 text-caption font-semibold text-signal-fg ring-1 ring-signal-2/60 ring-inset">Recent</span>;
 }
 
 function Chevron() {
   return (
-    <svg viewBox="0 0 20 20" className="h-4 w-4 shrink-0 text-slate/70 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m7.5 4.5 5.5 5.5-5.5 5.5" /></svg>
+    <svg viewBox="0 0 20 20" className="h-4 w-4 shrink-0 text-neutral-400 transition-transform duration-(--duration-fast) group-hover:translate-x-0.5 group-hover:text-ink" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m7.5 4.5 5.5 5.5-5.5 5.5" /></svg>
   );
 }
 
@@ -273,7 +273,7 @@ function Row({ option, state, recent, onClick, autoFocus }: { option: WalletOpti
         data-autofocus={autoFocus || undefined}
         onClick={onClick}
         aria-busy={connecting || undefined}
-        className={`${rowClass} ${failed ? "border-danger/45" : connecting ? "border-ink" : "border-line"}`}
+        className={`${rowClass} ${failed ? "border-danger-border" : connecting ? "border-ink" : "border-border"}`}
       >
         {option.icon}
         <span className="min-w-0 flex-1">
@@ -281,7 +281,7 @@ function Row({ option, state, recent, onClick, autoFocus }: { option: WalletOpti
             <span className="truncate text-[0.9375rem] font-semibold">{connecting ? option.verb : option.name}</span>
             {recent && !connecting && !failed && <RecentBadge />}
           </span>
-          <span className={`mt-0.5 block text-[0.8125rem] leading-snug ${failed ? "font-medium text-[#b4232a]" : "text-slate"}`} role={failed ? "alert" : undefined}>
+          <span className={`mt-0.5 block text-small ${failed ? "font-medium text-danger-fg" : "text-text-muted"}`} role={failed ? "alert" : undefined}>
             {failed ?? (connecting ? option.waiting : option.hint)}
           </span>
         </span>
@@ -296,14 +296,14 @@ function EmailRow({ availability, authenticated, recent, onClick, autoFocus }: {
   const loading = availability.status === "loading";
   return (
     <li>
-      <button type="button" data-wallet-row data-autofocus={autoFocus || undefined} onClick={onClick} className={`${rowClass} border-line`}>
+      <button type="button" data-wallet-row data-autofocus={autoFocus || undefined} onClick={onClick} className={`${rowClass} border-border`}>
         <MailIcon />
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-2">
             <span className="truncate text-[0.9375rem] font-semibold">Continue with email</span>
             {recent && !unavailable && <RecentBadge />}
           </span>
-          <span className={`mt-0.5 block text-[0.8125rem] leading-snug ${unavailable ? "font-medium text-[#8a5a00]" : "text-slate"}`}>
+          <span className={`mt-0.5 block text-small ${unavailable ? "font-medium text-warning-fg" : "text-text-muted"}`}>
             {unavailable
               ? "Email login unavailable right now"
               : loading
@@ -313,7 +313,7 @@ function EmailRow({ availability, authenticated, recent, onClick, autoFocus }: {
                   : "No extension needed. We set up a wallet for you."}
           </span>
         </span>
-        {loading ? <Spinner className="h-4 w-4 shrink-0 text-slate" /> : <Chevron />}
+        {loading ? <Spinner className="h-4 w-4 shrink-0 text-text-muted" /> : <Chevron />}
       </button>
     </li>
   );
@@ -324,14 +324,14 @@ function PasskeyRow({ recent, onClick, autoFocus }: { recent: boolean; onClick: 
   const known = typeof window !== "undefined" && !!loadPasskey();
   return (
     <li>
-      <button type="button" data-wallet-row data-autofocus={autoFocus || undefined} onClick={onClick} className={`${rowClass} border-line`}>
+      <button type="button" data-wallet-row data-autofocus={autoFocus || undefined} onClick={onClick} className={`${rowClass} border-border`}>
         <PasskeyIcon />
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-2">
             <span className="truncate text-[0.9375rem] font-semibold">Continue with passkey</span>
             {recent && <RecentBadge />}
           </span>
-          <span className="mt-0.5 block text-[0.8125rem] leading-snug text-slate">
+          <span className="mt-0.5 block text-small text-text-muted">
             {known ? "Use the passkey account on this device" : "Face ID, fingerprint or security key. Gas paid by CargoFlow."}
           </span>
         </span>
@@ -343,11 +343,11 @@ function PasskeyRow({ recent, onClick, autoFocus }: { recent: boolean; onClick: 
 
 function NoWalletRow() {
   return (
-    <li className="flex items-start gap-3.5 rounded-2xl border border-dashed border-line bg-white/70 px-3.5 py-3">
+    <li className="flex items-start gap-3.5 rounded-tile border border-dashed border-border-strong bg-neutral-25 px-3.5 py-3">
       <PuzzleIcon />
       <div className="min-w-0 flex-1">
         <p className="text-[0.9375rem] font-semibold">No browser wallet found</p>
-        <p className="mt-0.5 text-[0.8125rem] leading-snug text-slate">Install one, then reload this page. Or continue with email below.</p>
+        <p className="mt-0.5 text-small text-text-muted">Install one, then reload this page. Or continue with email below.</p>
         <div className="mt-2.5 flex flex-wrap gap-2">
           {[
             { name: "Get MetaMask", href: "https://metamask.io/download/" },
@@ -372,7 +372,7 @@ function NoWalletRow() {
 }
 
 const inputClass =
-  "h-12 w-full rounded-xl border-2 border-line bg-white px-4 text-base text-ink transition-colors placeholder:text-slate/60 hover:border-ink/30 focus:border-ink focus:outline-none disabled:opacity-60";
+  "h-12 w-full rounded-control border border-border-strong bg-surface px-4 text-base text-ink shadow-1 transition-[border-color,box-shadow] duration-(--duration-fast) placeholder:text-neutral-500 hover:border-neutral-400 focus:border-ink focus:ring-1 focus:ring-ink focus:outline-none disabled:opacity-60";
 
 function EmailStep({ onUseWallet }: { onUseWallet: () => void }) {
   const s = useEmbedded();
@@ -385,7 +385,7 @@ function EmailStep({ onUseWallet }: { onUseWallet: () => void }) {
 
   if (availability.status === "unavailable") {
     return (
-      <div className="rounded-2xl border border-alert/50 bg-alert/10 p-4" role="alert">
+      <div className="rounded-tile bg-warning-bg p-4 ring-1 ring-warning-border ring-inset" role="alert">
         <p className="font-semibold">Email login unavailable right now</p>
         <p className="mt-1 text-sm text-ink/75">{availability.reason}</p>
         <div className="mt-4 flex flex-wrap gap-2">
@@ -399,9 +399,9 @@ function EmailStep({ onUseWallet }: { onUseWallet: () => void }) {
   if (s.step === "connecting") {
     return (
       <div className="flex flex-col items-center px-4 py-8 text-center" role="status">
-        <span className="grid h-14 w-14 place-items-center rounded-2xl bg-signal"><Spinner className="h-6 w-6" /></span>
+        <span className="grid h-14 w-14 place-items-center rounded-tile bg-signal-soft text-signal-fg"><Spinner className="h-6 w-6" /></span>
         <p className="mt-4 font-semibold">Setting up your wallet…</p>
-        <p className="mt-1 text-sm text-slate">This takes a few seconds the first time.</p>
+        <p className="mt-1 text-small text-text-muted">This takes a few seconds the first time.</p>
       </div>
     );
   }
@@ -417,7 +417,7 @@ function EmailStep({ onUseWallet }: { onUseWallet: () => void }) {
           submit(code);
         }}
       >
-        <p className="text-sm text-slate">
+        <p className="text-sm text-text-muted">
           We sent a 6-digit code to <span className="font-semibold break-all text-ink">{s.email}</span>. It expires in a few minutes.
         </p>
         <label htmlFor={codeId} className="mt-4 mb-1.5 block text-sm font-semibold">Verification code</label>
@@ -437,14 +437,14 @@ function EmailStep({ onUseWallet }: { onUseWallet: () => void }) {
           aria-invalid={!!s.error || undefined}
           aria-describedby={s.error ? `${codeId}-err` : undefined}
           disabled={s.step === "verifying"}
-          className={`${inputClass} text-center font-mono text-2xl tracking-[0.5em] ${s.error ? "border-danger/60" : ""}`}
+          className={`${inputClass} text-center font-mono text-2xl tracking-[0.5em] ${s.error ? "border-danger ring-1 ring-danger" : ""}`}
         />
-        {s.error && <p id={`${codeId}-err`} className="mt-2 text-sm font-medium text-[#b4232a]">{s.error}</p>}
+        {s.error && <p id={`${codeId}-err`} className="mt-2 text-small font-medium text-danger-fg">{s.error}</p>}
         <Button type="submit" size="lg" className="mt-4 w-full" loading={s.step === "verifying"} disabled={code.length !== 6}>
           {s.step === "verifying" ? "Checking code…" : "Verify and continue"}
         </Button>
         <div className="mt-3 flex items-center justify-between text-sm">
-          <button type="button" className="rounded-md font-semibold text-slate underline-offset-4 hover:text-ink hover:underline" onClick={resetEmailFlow}>
+          <button type="button" className="rounded-md font-semibold text-text-muted underline-offset-4 hover:text-ink hover:underline" onClick={resetEmailFlow}>
             Use a different email
           </button>
           <button
@@ -482,13 +482,13 @@ function EmailStep({ onUseWallet }: { onUseWallet: () => void }) {
         aria-invalid={!!s.error || undefined}
         aria-describedby={s.error ? `${emailId}-err` : undefined}
         disabled={s.step === "sending"}
-        className={`${inputClass} ${s.error ? "border-danger/60" : ""}`}
+        className={`${inputClass} ${s.error ? "border-danger ring-1 ring-danger" : ""}`}
       />
-      {s.error && <p id={`${emailId}-err`} className="mt-2 text-sm font-medium text-[#b4232a]">{s.error}</p>}
+      {s.error && <p id={`${emailId}-err`} className="mt-2 text-small font-medium text-danger-fg">{s.error}</p>}
       <Button type="submit" size="lg" className="mt-4 w-full" loading={s.step === "sending" || !ready} disabled={!valid}>
         {!ready ? "Preparing secure sign-in…" : s.step === "sending" ? "Sending code…" : "Send code"}
       </Button>
-      <p className="mt-4 flex gap-2.5 rounded-xl bg-mist px-3.5 py-3 text-xs leading-relaxed text-slate">
+      <p className="mt-4 flex gap-2.5 rounded-tile bg-surface-sunken px-3.5 py-3 text-caption text-text-muted">
         <svg viewBox="0 0 20 20" className="mt-0.5 h-4 w-4 shrink-0 text-ink" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10 2.5 4 5v4.5c0 3.6 2.6 6.9 6 8 3.4-1.1 6-4.4 6-8V5l-6-2.5Z" /><path d="m7.5 10 1.8 1.8L12.8 8" /></svg>
         <span>Your wallet&apos;s keys are secured by Privy. CargoFlow never sees them and cannot move funds without your approval.</span>
       </p>

@@ -45,19 +45,19 @@ export function DocumentDrop({ label, hint, onHash, error }: { label: string; hi
           void take(e.dataTransfer.files[0]);
         }}
         className={cx(
-          "flex cursor-pointer flex-col peer-focus-visible:ring-2 peer-focus-visible:ring-ink peer-focus-visible:ring-offset-2 items-center justify-center gap-1 rounded-2xl border-2 border-dashed px-4 py-6 text-center text-sm transition-colors",
-          over ? "border-ink bg-ink/5" : error ? "border-danger" : "border-line bg-white hover:border-ink/50",
+          "flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-tile border border-dashed px-4 py-7 text-center text-sm transition-colors duration-(--duration-fast) peer-focus-visible:ring-2 peer-focus-visible:ring-ink peer-focus-visible:ring-offset-2",
+          over ? "border-ink bg-signal-soft" : error ? "border-danger bg-danger-bg" : name ? "border-success-border bg-success-bg" : "border-border-strong bg-neutral-25 hover:border-ink/40",
         )}
       >
-        <svg viewBox="0 0 24 24" className="h-6 w-6 text-slate" aria-hidden="true">
+        <svg viewBox="0 0 24 24" className="h-6 w-6 text-ink-500" aria-hidden="true">
           <path d="M7 3h7l5 5v13H7z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
           <path d="M14 3v5h5M10 14h6M10 17h4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
         </svg>
         <span className="font-semibold">{busy ? "Fingerprinting…" : name ?? "Drop the document here, or choose a file"}</span>
-        <span className="text-xs text-slate">Hashed in your browser; the file is never uploaded.</span>
+        <span className="text-caption text-text-muted">{name && !busy ? "Fingerprinted. Drop another file to replace it." : "Hashed in your browser; the file is never uploaded."}</span>
       </label>
-      {hint && !error && <p id={`${id}-hint`} className="mt-1.5 text-sm text-slate">{hint}</p>}
-      {error && <p className="mt-1.5 text-sm font-medium text-danger">{error}</p>}
+      {hint && !error && <p id={`${id}-hint`} className="mt-1.5 text-small text-text-muted">{hint}</p>}
+      {error && <p className="mt-1.5 text-small font-medium text-danger-fg">{error}</p>}
     </div>
   );
 }

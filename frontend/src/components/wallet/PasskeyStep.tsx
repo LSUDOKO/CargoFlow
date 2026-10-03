@@ -50,7 +50,7 @@ export function PasskeyStep({ onDone }: { onDone: () => void }) {
 
   if (!supported) {
     return (
-      <div className="rounded-2xl border border-alert/50 bg-alert/10 p-4" role="alert">
+      <div className="rounded-tile border bg-warning-bg ring-1 ring-warning-border ring-inset p-4" role="alert">
         <p className="font-semibold">Passkeys aren&apos;t available in this browser</p>
         <p className="mt-1 text-sm text-ink/75">Use a current Chrome, Safari, Edge or Firefox, or connect a wallet instead.</p>
       </div>
@@ -59,13 +59,13 @@ export function PasskeyStep({ onDone }: { onDone: () => void }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex gap-3 rounded-2xl bg-ink p-4 text-paper surface-ink">
+      <div className="flex gap-3 rounded-tile bg-ink p-4 text-paper surface-ink">
         <svg viewBox="0 0 24 24" className="mt-0.5 h-5 w-5 shrink-0 text-signal" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 2.5 5 5.5v5c0 4.4 3 8.3 7 9.5 4-1.2 7-5.1 7-9.5v-5l-7-3Z" /><path d="m9 12 2 2 4-4" /></svg>
         <p className="text-sm leading-relaxed text-paper/85">{PASSKEY_EXPLAINER}</p>
       </div>
 
       <div>
-        <label htmlFor={nameId} className="mb-1.5 block text-sm font-semibold">Account name <span className="font-normal text-slate">(optional)</span></label>
+        <label htmlFor={nameId} className="mb-1.5 block text-sm font-semibold">Account name <span className="font-normal text-text-muted">(optional)</span></label>
         <input
           id={nameId}
           value={name}
@@ -73,12 +73,12 @@ export function PasskeyStep({ onDone }: { onDone: () => void }) {
           placeholder="e.g. Warehouse receiving, Lagos"
           autoComplete="off"
           disabled={busy !== null}
-          className="h-12 w-full rounded-xl border-2 border-line bg-white px-4 text-base text-ink transition-colors placeholder:text-slate/60 hover:border-ink/30 focus:border-ink focus:outline-none disabled:opacity-60"
+          className="h-12 w-full rounded-control border-2 border-border bg-white px-4 text-base text-ink transition-colors placeholder:text-slate/60 hover:border-ink/30 focus:border-ink focus:outline-none disabled:opacity-60"
         />
-        <p className="mt-1.5 text-xs text-slate">Shown by your device when it asks for the passkey.</p>
+        <p className="mt-1.5 text-xs text-text-muted">Shown by your device when it asks for the passkey.</p>
       </div>
 
-      {error && <p role="alert" className="rounded-xl bg-danger/8 px-3.5 py-2.5 text-sm font-medium text-[#a1191e]">{error}</p>}
+      {error && <p role="alert" className="rounded-control bg-danger-bg px-3.5 py-2.5 text-sm font-medium text-danger-fg">{error}</p>}
 
       <div className="flex flex-col gap-2">
         <Button size="lg" loading={busy === "register"} disabled={busy !== null || !connector} onClick={() => void go("register")}>
@@ -89,7 +89,7 @@ export function PasskeyStep({ onDone }: { onDone: () => void }) {
         </Button>
       </div>
 
-      <ul className="space-y-1.5 text-xs leading-relaxed text-slate">
+      <ul className="space-y-1.5 text-xs leading-relaxed text-text-muted">
         <li>Your passkey never leaves your device. CargoFlow stores only its public key.</li>
         <li>The account is a ZeroDev Kernel smart account on Robinhood Chain Testnet; it is set up on chain with your first action.</li>
       </ul>

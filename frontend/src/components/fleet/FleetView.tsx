@@ -37,11 +37,6 @@ const boxIcon = (
   </svg>
 );
 
-const created = (iso: string) => {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? "–" : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-};
-
 export function FleetView() {
   const { data, isPending, isError, error, refetch, isFetching, fetchNextPage, hasNextPage, isFetchingNextPage } = useFleetPages();
   const shipments = useMemo(() => data?.pages.flatMap((p) => p.shipments) ?? [], [data]);
@@ -121,7 +116,6 @@ export function FleetView() {
         </span>
       ),
     },
-    { key: "created", header: "Registered", hideOnCard: true, cell: (r) => <span className="num whitespace-nowrap text-text-muted">{created(r.created)}</span> },
     {
       key: "go",
       header: <span className="sr-only">Dashboard</span>,
@@ -156,8 +150,8 @@ export function FleetView() {
 
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <Tabs label="Filter by status" tabs={tabs} value={tab} onChange={(t) => setTab(t as FleetTab)} controls={false} className="lg:w-auto" />
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:flex sm:flex-wrap sm:items-center">
-            <Field label="Search shipments" hideLabel value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search reference or id" prefix={searchIcon} type="search" className="col-span-2 sm:w-64" />
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+            <Field label="Search shipments" hideLabel value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search reference or id" prefix={searchIcon} type="search" className="sm:w-64" />
             <Select
               label="Sort by"
               hideLabel

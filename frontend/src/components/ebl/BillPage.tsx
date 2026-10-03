@@ -2,11 +2,16 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { Callout } from "@/components/ui/Banner";
 import { LinkButton } from "@/components/ui/Button";
 import { Card, CardHeader } from "@/components/ui/Card";
-import { HashBadge } from "@/components/ui/HashBadge";
-import { Pill } from "@/components/ui/Pill";
+import { CopyField } from "@/components/ui/CopyField";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { KeyValue } from "@/components/ui/KeyValue";
+import { Badge, Pill } from "@/components/ui/Pill";
+import { PageHeader } from "@/components/ui/Section";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { Timeline, type TimelineItem } from "@/components/ui/Timeline";
 import { useContracts } from "@/lib/chain/contracts";
 import { useBill } from "@/lib/chain/v3";
 import { documentMatches, EBL_STATUS_LABEL, eblStatusText, eblStatusTone, isToOrder, MLETR_NOTE, parseTokenId } from "@/lib/ebl";
@@ -31,110 +36,113 @@ export function BillPage({ raw }: { raw: string }) {
   if (!bill && !b.loading && (b.notFound || contracts)) return <NotFound text={`No bill #${tokenId} exists on this deployment.`} />;
 
   const escrowed = !!bill && same(bill.holder, contracts?.controller);
+  const addr = (v: string | undefined, label: string) => (v && !ZERO.test(v) ? <CopyField value={v} kind="address" chainId={chainId} size="sm" label={label} /> : "–");
   return (
-    <div className="container-page flex flex-col gap-4 py-8 md:py-10">
-      <div className="flex flex-col gap-5 rounded-[var(--radius-card)] bg-ink p-6 text-paper md:p-8 lg:flex-row lg:items-end lg:justify-between">
-        <div className="min-w-0">
-          <p className="text-xs font-semibold tracking-wide text-signal uppercase">Electronic bill of lading</p>
-          <h1 className="mt-2 font-display text-[clamp(2rem,4.5vw,3.2rem)] leading-tight font-bold tracking-tight">Bill #{String(tokenId)}</h1>
-          {bill ? (
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <Pill tone={eblStatusTone(bill.status)} dot onDark>{EBL_STATUS_LABEL[bill.status]}</Pill>
-              {escrowed && <Pill tone="ink" onDark>Bound to a facility</Pill>}
-              <span className="text-sm text-paper/70">{bill.transfers} {bill.transfers === 1 ? "endorsement" : "endorsements"}</span>
-            </div>
+    <div className="container-page py-(--space-page-y)">
+      <PageHeader
+        back={<BackLink />}
+        eyebrow="Electronic bill of lading"
+        title={<span className="num">Bill #{String(tokenId)}</span>}
+        description={bill ? (escrowed ? "Escrowed by the financing contract: it moves only by documents against payment (to the buyer on payment, the financier on default, the exporter on cancel)." : eblStatusText(bill.status)) : undefined}
+        meta={
+          bill ? (
+            <>
+              <Pill tone={eblStatusTone(bill.status)} dot>{EBL_STATUS_LABEL[bill.status]}</Pill>
+              {escrowed && <Badge variant="ink">Bound to a facility</Badge>}
+              <Badge shape="square"><span className="num">{bill.transfers}</span>&nbsp;{bill.transfers === 1 ? "endorsement" : "endorsements"}</Badge>
+            </>
           ) : (
-            <Skeleton className="mt-3 h-6 w-40 bg-paper/15" />
-          )}
-        </div>
-        {bill && <p className="max-w-md text-sm text-paper/80">{escrowed ? "Escrowed by the financing contract: it moves only by documents against payment (to the buyer on payment, the financier on default, the exporter on cancel)." : eblStatusText(bill.status)}</p>}
-      </div>
+            <Skeleton className="h-6 w-48" />
+          )
+        }
+        actions={hydrated && bill ? <BillActions bill={bill} size="md" /> : undefined}
+      />
 
-      {hydrated && bill && <BillActions bill={bill} size="md" />}
-
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
-        <div className="flex min-w-0 flex-col gap-4">
-          <Card>
-            <CardHeader title="Parties" />
-            {bill ? (
-              <dl className="grid gap-4 text-sm sm:grid-cols-2">
-                <Party label="Current holder" hint={escrowed ? "The financing contract (escrow)" : undefined} value={bill.holder} chainId={chainId} strong />
-                <Party label="Issued by (carrier)" value={bill.issuer} chainId={chainId} />
-                <Party label="Shipper" value={bill.shipper} chainId={chainId} />
-                {isToOrder(bill.consignee) ? (
-                  <div><dt className="text-slate">Consignee</dt><dd className="mt-1 font-semibold">To order</dd></div>
-                ) : (
-                  <Party label="Consignee" value={bill.consignee} chainId={chainId} />
-                )}
-                <div><dt className="text-slate">Issued</dt><dd className="mt-1 font-medium">{when(bill.issuedAt)}</dd></div>
-                <div><dt className="text-slate">{bill.status === "VOID" ? "Voided" : "Surrendered"}</dt><dd className="mt-1 font-medium">{bill.closedAt ? when(bill.closedAt) : "Not yet"}</dd></div>
-              </dl>
-            ) : (
-              <Skeleton className="h-32" />
-            )}
-          </Card>
-          <Card>
-            <CardHeader title="Possession history"><span className="text-sm text-slate">Each move is an on-chain transfer</span></CardHeader>
-            <History moves={b.history} loading={b.historyLoading} chainId={chainId} controller={contracts?.controller} issuer={bill?.issuer} />
-          </Card>
+      <div className="flex flex-col gap-6">
+        <div className="grid items-start gap-6 lg:grid-cols-12">
+          <div className="flex min-w-0 flex-col gap-6 lg:col-span-8">
+            <Card>
+              <CardHeader title="Title record" description="Who holds the bill, who issued it and to whom." />
+              {bill ? (
+                <KeyValue
+                  layout="grid"
+                  columns={2}
+                  items={[
+                    { label: "Current holder", value: addr(bill.holder, "Holder"), hint: escrowed ? "The financing contract (escrow)" : undefined },
+                    { label: "Issued by (carrier)", value: addr(bill.issuer, "Carrier") },
+                    { label: "Shipper", value: addr(bill.shipper, "Shipper") },
+                    { label: "Consignee", value: isToOrder(bill.consignee) ? "To order" : addr(bill.consignee, "Consignee") },
+                    { label: "Issued", value: when(bill.issuedAt), numeric: true },
+                    { label: bill.status === "VOID" ? "Voided" : "Surrendered", value: bill.closedAt ? when(bill.closedAt) : "Not yet", numeric: true },
+                  ]}
+                />
+              ) : (
+                <Skeleton className="h-32" />
+              )}
+            </Card>
+            <Card>
+              <CardHeader title="Possession history" description="Each move is an on-chain transfer, oldest first." />
+              <History moves={b.history} loading={b.historyLoading} chainId={chainId} controller={contracts?.controller} issuer={bill?.issuer} live={bill?.status === "ISSUED"} />
+            </Card>
+          </div>
+          <aside className="flex min-w-0 flex-col gap-6 lg:col-span-4">
+            <Card>
+              <CardHeader title="Financing" as="h2" />
+              {b.boundShipmentId ? (
+                <div className="flex flex-col gap-3 text-sm">
+                  <p>This bill {escrowed ? "is" : "was"} bound to a CargoFlow facility under documents against payment.</p>
+                  <LinkButton href={`/track/${b.boundShipmentId}`} variant="secondary" size="sm" className="self-start">Open the shipment</LinkButton>
+                </div>
+              ) : (
+                <p className="text-sm text-text-muted">{escrowed ? "Bound to a facility (its shipment is not indexed yet)." : "Not bound to any facility."}</p>
+              )}
+            </Card>
+            <Card>
+              <CardHeader title="Verify the document" />
+              {bill ? <Verify documentHash={bill.documentHash} /> : <Skeleton className="h-24" />}
+            </Card>
+          </aside>
         </div>
-        <div className="flex min-w-0 flex-col gap-4">
-          <Card>
-            <CardHeader title="Financing" />
-            {b.boundShipmentId ? (
-              <div className="flex flex-col gap-3 text-sm">
-                <p>This bill {escrowed ? "is" : "was"} bound to a CargoFlow facility under documents against payment.</p>
-                <LinkButton href={`/track/${b.boundShipmentId}`} variant="secondary" size="sm" className="self-start">Open the shipment</LinkButton>
-              </div>
-            ) : (
-              <p className="text-sm text-slate">{escrowed ? "Bound to a facility (its shipment is not indexed yet)." : "Not bound to any facility."}</p>
-            )}
-          </Card>
-          <Card>
-            <CardHeader title="Verify the document" />
-            {bill ? <Verify documentHash={bill.documentHash} /> : <Skeleton className="h-24" />}
-          </Card>
-          <p className="px-1 text-xs text-slate">{MLETR_NOTE}</p>
-        </div>
+        <Callout variant="info" title="Legal standing">{MLETR_NOTE}</Callout>
       </div>
     </div>
   );
 }
 
-function Party({ label, value, hint, chainId, strong }: { label: string; value: string; hint?: string; chainId?: number; strong?: boolean }) {
+function BackLink() {
   return (
-    <div>
-      <dt className="text-slate">{label}</dt>
-      <dd className={`mt-1 ${strong ? "font-semibold" : ""}`}>
-        {hint && <span className="mb-1 block">{hint}</span>}
-        {value && !ZERO.test(value) ? <HashBadge value={value} kind="address" chainId={chainId} compact /> : "–"}
-      </dd>
-    </div>
+    <Link href="/ebl" className="inline-flex w-fit items-center gap-1.5 font-semibold text-text-muted hover:text-ink">
+      <svg viewBox="0 0 16 16" className="h-4 w-4" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      Carrier portal
+    </Link>
   );
 }
 
-function History({ moves, loading, chainId, controller, issuer }: { moves: { from: string; to: string; txHash: string; at: number }[]; loading: boolean; chainId?: number; controller?: string; issuer?: string }) {
+function History({ moves, loading, chainId, controller, issuer, live }: { moves: { from: string; to: string; txHash: string; at: number }[]; loading: boolean; chainId?: number; controller?: string; issuer?: string; live?: boolean }) {
   if (loading) return <Skeleton className="h-24" />;
-  if (moves.length === 0) return <p className="text-sm text-slate">The history is not available from this node yet.</p>;
-  const word = (m: { from: string; to: string }) => (ZERO.test(m.from) ? "Issued to" : same(m.to, controller) ? "Bound into escrow" : same(m.from, controller) ? "Released from escrow to" : same(m.to, issuer) ? "Returned to the carrier" : "Endorsed to");
-  return (
-    <ol className="relative flex flex-col gap-4 border-l-2 border-line pl-5">
-      {moves.map((m, i) => (
-        <li key={`${m.txHash}-${i}`} className="relative text-sm">
-          <span aria-hidden="true" className={`absolute top-1 -left-[1.6rem] h-3 w-3 rounded-full border-2 border-white ${i === moves.length - 1 ? "bg-signal ring-2 ring-ink" : "bg-ink"}`} />
-          <p className="font-semibold">{word(m)}</p>
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-slate">
-            {!ZERO.test(m.from) && <><HashBadge value={m.from} kind="address" chainId={chainId} compact /><span aria-hidden="true">→</span></>}
-            <HashBadge value={m.to} kind="address" chainId={chainId} compact />
-          </div>
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate">
-            {m.at ? <span>{when(m.at)}</span> : null}
-            {m.txHash && <HashBadge value={m.txHash} kind="tx" chainId={chainId} compact />}
-          </div>
-        </li>
-      ))}
-    </ol>
-  );
+  if (moves.length === 0) return <p className="text-sm text-text-muted">The history is not available from this node yet.</p>;
+  const word = (m: { from: string; to: string }) => (ZERO.test(m.from) ? "Issued to the shipper" : same(m.to, controller) ? "Bound into escrow" : same(m.from, controller) ? "Released from escrow" : same(m.to, issuer) ? "Returned to the carrier" : "Endorsed");
+  const items: TimelineItem[] = moves.map((m, i) => ({
+    id: `${m.txHash}-${i}`,
+    title: word(m),
+    state: i === moves.length - 1 && live ? "active" : "done",
+    time: m.at ? <time dateTime={new Date(m.at * 1000).toISOString()}>{when(m.at)}</time> : undefined,
+    meta: (
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {!ZERO.test(m.from) && (
+            <>
+              <CopyField value={m.from} kind="address" chainId={chainId} size="sm" label="From" />
+              <span aria-hidden="true" className="text-text-muted">→</span>
+            </>
+          )}
+          <CopyField value={m.to} kind="address" chainId={chainId} size="sm" label="To" />
+        </div>
+        {m.txHash && <CopyField value={m.txHash} kind="tx" chainId={chainId} size="sm" label="Transaction" className="w-fit" />}
+      </div>
+    ),
+  }));
+  return <Timeline label="Possession history" items={items} />;
 }
 
 function Verify({ documentHash }: { documentHash: string }) {
@@ -142,27 +150,28 @@ function Verify({ documentHash }: { documentHash: string }) {
   const ok = hash ? documentMatches(hash, documentHash) : null;
   return (
     <div className="flex flex-col gap-3">
-      <DocumentDrop label="Check a copy of the document" hint="Drop the file you were given: it matches only if it is byte-for-byte the document this bill was issued for." onHash={(h) => setHash(h)} />
-      {ok === true && (
-        <p role="status" className="rounded-2xl bg-verified/12 px-4 py-3 text-sm"><span className="font-semibold text-[#00733e]">Matches.</span> This file is exactly the document this bill was issued for.</p>
-      )}
-      {ok === false && (
-        <p role="status" className="rounded-2xl bg-danger/10 px-4 py-3 text-sm"><span className="font-semibold text-[#a1191e]">Does not match.</span> This file differs from the document the bill was issued for, even if it looks the same.</p>
-      )}
-      <p className="flex flex-wrap items-center gap-2 text-xs text-slate">On chain <HashBadge value={documentHash} compact /></p>
+      <DocumentDrop label="Check a copy of the document" hint="It matches only if it is byte-for-byte the document this bill was issued for." onHash={(h) => setHash(h)} />
+      {ok === true && <Callout variant="success" live="polite" title="Matches">This file is exactly the document this bill was issued for.</Callout>}
+      {ok === false && <Callout variant="danger" live="polite" title="Does not match">This file differs from the document the bill was issued for, even if it looks the same.</Callout>}
+      <div className="flex flex-wrap items-center gap-2 text-small text-text-muted">On chain <CopyField value={documentHash} kind="hash" size="sm" /></div>
     </div>
   );
 }
 
 function NotFound({ text }: { text: string }) {
   return (
-    <div className="container-page py-20 text-center">
-      <h1 className="font-display text-4xl font-bold">We couldn&apos;t find that bill</h1>
-      <p className="mx-auto mt-4 max-w-md text-slate">{text}</p>
-      <div className="mt-8 flex justify-center gap-3">
-        <LinkButton href="/ebl">Open the carrier portal</LinkButton>
-        <Link href="/shipments" className="self-center font-semibold underline">Browse the fleet</Link>
-      </div>
+    <div className="container-page py-(--space-page-y)">
+      <PageHeader back={<BackLink />} title="We couldn't find that bill" />
+      <EmptyState
+        title="No bill to show"
+        description={text}
+        action={
+          <>
+            <LinkButton href="/ebl" variant="secondary">Open the carrier portal</LinkButton>
+            <LinkButton href="/shipments" variant="ghost">Browse the fleet</LinkButton>
+          </>
+        }
+      />
     </div>
   );
 }

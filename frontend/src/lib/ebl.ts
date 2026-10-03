@@ -35,7 +35,7 @@ export function eblStatusText(s: EblStatus): string {
 }
 
 export const MLETR_NOTE =
-  "Designed around MLETR concepts (exclusive control, singularity, integrity) — not a legal compliance claim. Legal recognition depends on the jurisdiction.";
+  "Designed around MLETR concepts (exclusive control, singularity, integrity). It is not a legal compliance claim: legal recognition depends on the jurisdiction.";
 
 export const DAP_RULE = "Documents against payment: the bill goes to the buyer when they pay, to the financier on default, back to the exporter on cancel.";
 
