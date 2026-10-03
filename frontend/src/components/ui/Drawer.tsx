@@ -1,6 +1,7 @@
 "use client";
 
 import { useId } from "react";
+import { Portal } from "./Portal";
 import { useDialog } from "./useDialog";
 
 type Props = { open: boolean; onClose: () => void; title: string; children: React.ReactNode; side?: "right" | "left" };
@@ -10,6 +11,7 @@ export function Drawer({ open, onClose, title, children, side = "right" }: Props
   const id = useId();
   if (!open) return null;
   return (
+    <Portal>
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-ink/40 backdrop-blur-[2px]" onClick={onClose} aria-hidden="true" />
       <div
@@ -28,5 +30,6 @@ export function Drawer({ open, onClose, title, children, side = "right" }: Props
         <div className="flex-1 overflow-y-auto px-5 py-5">{children}</div>
       </div>
     </div>
+    </Portal>
   );
 }

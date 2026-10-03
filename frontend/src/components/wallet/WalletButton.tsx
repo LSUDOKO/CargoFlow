@@ -52,6 +52,9 @@ export function WalletButton({ compact, onDark }: { compact?: boolean; onDark?: 
     setMenu(true);
   }
 
+  // a wallet connected (from any row, or the email flow finishing in the background): the picker is done
+  if (isConnected && open) setOpen(false);
+
   if (!mounted || !isConnected || !address) {
     return (
       <>

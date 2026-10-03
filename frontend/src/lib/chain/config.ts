@@ -55,8 +55,9 @@ if (projectId) {
       metadata: {
         name: "CargoFlow",
         description: "Evidence-gated working capital for physical trade",
-        url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-        icons: [],
+        // the page's own origin, so WalletConnect's origin check matches on every deployment and dev port
+        url: typeof window !== "undefined" ? window.location.origin : (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+        icons: [`${typeof window !== "undefined" ? window.location.origin : (process.env.NEXT_PUBLIC_SITE_URL ?? "")}/brand/mark.svg`],
       },
     }),
   );
@@ -81,12 +82,21 @@ if (PRIVY_APP_ID) {
   connectors.push(injected({ shimDisconnect: true, target: { id: EMBEDDED_CONNECTOR_ID, name: "Email wallet", provider: () => embeddedProvider } }));
 }
 
-export const wagmiConfig = createConfig({
-  chains: supportedChains,
-  connectors,
-  transports: { [robinhoodTestnet.id]: http(), [localChain.id]: http(localRpc) },
-  ssr: true,
-});
+const create = () =>
+  createConfig({
+    chains: supportedChains,
+    connectors,
+    transports: { [robinhoodTestnet.id]: http(), [localChain.id]: http(localRpc) },
+    ssr: true,
+  });
+
+/**
+ * One config per browser tab. Creating it sets up the WalletConnect connector, which initialises WalletConnect Core;
+ * a second config (a hot reload re-evaluating this module) would initialise Core again. Keeping the instance on
+ * globalThis makes the connector a true singleton. (After editing this file in dev, reload the page to apply it.)
+ */
+const g = globalThis as typeof globalThis & { __cargoflowWagmi?: ReturnType<typeof create> };
+export const wagmiConfig = typeof window === "undefined" ? create() : (g.__cargoflowWagmi ??= create());
 
 declare module "wagmi" {
   interface Register {

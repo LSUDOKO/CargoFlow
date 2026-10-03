@@ -1,6 +1,7 @@
 "use client";
 
 import { useId } from "react";
+import { Portal } from "./Portal";
 import { useDialog } from "./useDialog";
 
 type Props = { open: boolean; onClose: () => void; title: string; children: React.ReactNode; description?: string; wide?: boolean };
@@ -10,6 +11,7 @@ export function Modal({ open, onClose, title, children, description, wide }: Pro
   const id = useId();
   if (!open) return null;
   return (
+    <Portal>
     <div className="fixed inset-0 z-50 grid place-items-end p-0 sm:place-items-center sm:p-6">
       <div className="absolute inset-0 bg-ink/45 backdrop-blur-[2px]" onClick={onClose} aria-hidden="true" />
       <div ref={ref} role="dialog" aria-modal="true" aria-labelledby={id} className={`relative max-h-[92vh] w-full overflow-y-auto ${wide ? "max-w-2xl" : "max-w-md"} rounded-t-[var(--radius-card)] bg-paper p-6 shadow-[var(--shadow-lift)] sm:rounded-[var(--radius-card)]`}>
@@ -25,5 +27,6 @@ export function Modal({ open, onClose, title, children, description, wide }: Pro
         {children}
       </div>
     </div>
+    </Portal>
   );
 }

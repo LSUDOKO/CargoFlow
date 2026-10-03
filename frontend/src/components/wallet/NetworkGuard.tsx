@@ -17,6 +17,7 @@ export function NetworkGuard({ children, purpose }: { children: React.ReactNode;
   const { switchChain, isPending, error } = useSwitchChain();
   const [open, setOpen] = useState(false);
   const mounted = useHydrated();
+  if (isConnected && open) setOpen(false); // the picker closes once any wallet connects
 
   if (!mounted || !isConnected) {
     return (
