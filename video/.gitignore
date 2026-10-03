@@ -29,3 +29,8 @@ voiceover-v2/models/
 voiceover-pipeline/raw/
 voiceover-pipeline/auditions/
 voiceover-pipeline/music-src/
+voiceover-v2/cues/
+voiceover-v2/music-src/
+voiceover-v2/work/
+voiceover-v2/samples/
+voiceover-v2/__pycache__/

@@ -1,0 +1,56 @@
+{
+  "_doc": "pronunciations: display token(s) -> spoken text (case-sensitive, matched on whole words / word sequences, punctuation and possessive 's preserved). cues: per-cue full spoken-text replacement keyed by cue id (captions still show the original text). Patterns: regex on a single display token -> spoken text.",
+  "pronunciations": {
+    "USDG": "U S D G",
+    "USDC": "U S D C",
+    "EPCIS": "epp-sis",
+    "eBL": "e B L",
+    "eBLs": "e B Ls",
+    "Groth16": "Groth sixteen",
+    "ZK": "Z K",
+    "zk": "Z K",
+    "IoT": "I o T",
+    "ADB": "A D B",
+    "Nhava Sheva": "Nahva Shayva",
+    "JNPT": "J N P T",
+    "reefer": "reefer",
+    "$2.5": "two and a half",
+    "2.5": "two and a half",
+    "3\u00b0C": "three degrees",
+    "2-8\u00b0C": "two to eight degrees",
+    "\u00b0C": "degrees celsius",
+    "ERC-4337": "E R C four three three seven",
+    "ERC-20": "E R C twenty",
+    "x402": "x four oh two",
+    "MCP": "M C P",
+    "SDK": "S D K",
+    "API": "A P I",
+    "APIs": "A P Is",
+    "L2": "L two",
+    "KYC": "K Y C",
+    "FX": "F X",
+    "Chainlink": "Chain link",
+    "CargoFlow": "Cargo Flow",
+    "AI": "A I",
+    "B2B": "B to B",
+    "GMX": "G M X",
+    "GS1": "G S one",
+    "OpenAPI": "Open A P I",
+    "OpenZeppelin": "Open Zeppelin",
+    "QuickNode": "Quick Node",
+    "RPC": "R P C",
+    "ZeroDev": "Zero Dev",
+    "TypeScript": "Type Script",
+    "v3": "version three",
+    "Fhenix": "Fenix"
+  },
+  "patterns": [
+    {
+      "regex": "^0x[0-9a-fA-F]{6,}$",
+      "spoken": "the contract"
+    }
+  ],
+  "cues": {
+    "c095": "Ten contracts source verified."
+  }
+}
