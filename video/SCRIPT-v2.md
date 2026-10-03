@@ -739,7 +739,7 @@ board for the rest.
 |---|---|---|
 | 5:10.4-5:15.7 | R4a: the v3 run's dashboard `/track/0xc574…f9e5`, Settled pill, then a 1 s flash of the explorer page for the settle transaction (status Success) | `CF-LIVE-1791029236301 · settled` · tx badges `proof 0xadfe3b2f…1f503a9f52` and `paid 0x37571b49…cf4e365a35` |
 | 5:16.0-5:17.2 | R4b: /deployments, scroll through the contract list with verified marks | `10 contracts · source-verified` |
-| 5:17.5-5:19.6 | counter grid (designed), numbers roll up in 600 ms, 120 ms stagger | `366 contract tests` · `25 circuit` · `245 frontend unit` · `18 end-to-end` · `SDK 92 · MCP 27 · gateway 36 · Python 25` |
+| 5:17.5-5:19.6 | counter grid (designed), numbers roll up in 600 ms, 120 ms stagger | `366 contract tests` · `25 circuit` · `277 frontend unit` · `18 end-to-end` · `SDK 92 · MCP 27 · gateway 36 · Python 25` |
 
 Footer tag: `Testnet only · not audited · testnet USDG has no value`.
 
@@ -885,7 +885,7 @@ v3 run) and **"What fee would you suggest for CF-SG-VAX-MKT1?"** (`get_pricing`)
 | OpenAPI 3.1, SDK, gateway, Python, EPCIS 2.0 validated against 2.0.1 schema; packages not yet published (S08) | README "Developer platform"; `backend/README.md` "GS1 EPCIS 2.0" |
 | Sponsor statuses (S09) | `docs/sponsors/README.md` status table, checked 3 Oct 2026 |
 | v3 live run, proof and payment transactions; 10 contracts source-verified (S10) | README "A live run on v3" and "Deployed contracts, v3"; `contracts/deployments/robinhood-testnet.json` |
-| 366 contract, 25 circuit, 245 frontend unit, 18 end-to-end; SDK 92, MCP 27, gateway 36, Python 25 (S10) | README "Measured, not claimed" |
+| 366 contract, 25 circuit, 277 frontend unit, 18 end-to-end; SDK 92, MCP 27, gateway 36, Python 25 (S10) | README "Measured, not claimed" |
 
 What the film deliberately does not say: that the readings came from real hardware (simulated, signed), that a
 secure element ran end to end (implemented and tested with test certificates only), that the protocol is audited,

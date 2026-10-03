@@ -24,7 +24,7 @@ export const S10_SHOTS: ShotSpec[] = [
 const COUNTERS = [
   { n: 366, label: "contract tests", big: true },
   { n: 25, label: "circuit" },
-  { n: 245, label: "frontend unit" },
+  { n: 277, label: "frontend unit" },
   { n: 18, label: "end-to-end" },
 ];
 

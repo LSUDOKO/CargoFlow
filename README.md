@@ -15,7 +15,7 @@
   <a href="https://cargoflow.adoranto737.workers.dev"><img alt="Live on Robinhood Chain Testnet" src="https://img.shields.io/badge/live-Robinhood%20Chain%20Testnet-00C46A?style=flat-square&labelColor=0B1B2B"></a>
   <a href="#deployed-contracts-source-verified"><img alt="USDG settlement" src="https://img.shields.io/badge/settlement-USDG-C6F432?style=flat-square&labelColor=0B1B2B"></a>
   <a href="https://explorer.testnet.chain.robinhood.com"><img alt="Chain 46630" src="https://img.shields.io/badge/chain-46630-F7F9F4?style=flat-square&labelColor=0B1B2B"></a>
-  <a href="#measured-not-claimed"><img alt="Tests: 366 contract, 25 circuit, 245 frontend unit, 18 end-to-end" src="https://img.shields.io/badge/tests-366%20%C2%B7%2025%20%C2%B7%20245%20%C2%B7%2018-00C46A?style=flat-square&labelColor=0B1B2B"></a>
+  <a href="#measured-not-claimed"><img alt="Tests: 366 contract, 25 circuit, 277 frontend unit, 18 end-to-end" src="https://img.shields.io/badge/tests-366%20%C2%B7%2025%20%C2%B7%20277%20%C2%B7%2018-00C46A?style=flat-square&labelColor=0B1B2B"></a>
   <a href="#use-cargoflow-in-claude"><img alt="MCP server" src="https://img.shields.io/badge/MCP-remote%20server-C6F432?style=flat-square&labelColor=0B1B2B"></a>
   <a href="https://github.com/LSUDOKO/CargoFlow/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/LSUDOKO/CargoFlow/actions/workflows/ci.yml/badge.svg"></a>
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-F7F9F4?style=flat-square&labelColor=0B1B2B"></a>
@@ -519,7 +519,7 @@ Details, status and limits for each: [`docs/sponsors/README.md`](docs/sponsors/R
 | | |
 |---|---|
 | Contract tests | 366 (unit, fuzz, invariants, real-proof integration, smart-account callers, circuit breaker); Fhenix extension 19, GMX extension 20 including a fork test that places and cancels a real GMX order |
-| Frontend | 245 unit tests; 18 Playwright end-to-end and accessibility tests on the real stack, including one shipment from registration to settlement through wallets and logger CSVs |
+| Frontend | 277 unit tests; 18 Playwright end-to-end and accessibility tests on the real stack, including one shipment from registration to settlement through wallets and logger CSVs |
 | Backend | Every Go package passes (devices, EPCIS validated against the official 2.0.1 schema, webhooks, sponsorship policy, Dune uploader); integration tests run a real anvil chain and Postgres; the end-to-end test drives the full story through the running service |
 | Circuit | 13,494 constraints; proves in about 1 s; 25 tests including tamper and wrong-context cases |
 | ZK resume on-chain | ~0.25 M gas (real Groth16 verification) |
