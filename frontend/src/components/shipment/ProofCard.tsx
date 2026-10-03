@@ -10,7 +10,7 @@ export function ProofCard({ epochs, audit, chainId, paused }: { epochs: EpochSum
     return (
       <p className="text-sm text-text-muted">
         {paused
-          ? "Waiting for recovery evidence: eight in-range readings from the unaffected probe, then a Groth16 proof bound to this pause."
+          ? "Recovery needs eight in-range readings from the unaffected probe and a Groth16 proof bound to this pause. When the proof is ready, the exporter submits it below with one signature."
           : "No recovery has been needed. A proof appears here if a pause is ever lifted with zero-knowledge evidence."}
       </p>
     );

@@ -99,7 +99,7 @@ export function ExplainPanel({ view, fallback, roles, position, vesselName, chil
               ))}
             </ul>
           ) : (
-            <p className="mt-2 text-sm text-text-muted">Nothing unusual.</p>
+            <p className="mt-2 text-sm text-text-muted">{quietWhy(e.status)}</p>
           )}
           {e.forecast && (
             <div className="mt-4">
@@ -229,4 +229,12 @@ function nextMilestone(view: ShipmentView): { value: React.ReactNode; foot?: Rea
   const amount = m ? <span className="num"> · {formatUSDG(m.allocatedUsdg)} <span className="text-sm font-normal text-text-muted">USDG</span></span> : null;
   const foot = f.status === "PAUSED" ? "Blocked until the facility resumes." : `${n} of ${total} released · needs evidence score ${view.shipment.policy.minEvidenceScore}+`;
   return { value: <>Milestone {n + 1}{amount}</>, foot };
+}
+
+/** What "Why" says when the brief lists no causes: a paused or disputed facility is never "nothing unusual". */
+function quietWhy(status: string): string {
+  if (status === "PAUSED") return "The last committed evidence did not meet the policy, so releases stopped. The Evidence tab shows which batch and why.";
+  if (status === "DISPUTED") return "A party opened a dispute, so releases are frozen until an arbiter resolves it.";
+  if (status === "DEFAULTED") return "The facility was declared in default; undrawn capital went back to the financier.";
+  return "Nothing unusual.";
 }
