@@ -1,8 +1,7 @@
 import React from "react";
-import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { OffthreadVideo, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { EpochTray, ProofEnvelope } from "../assets/Mechanisms";
 import { P } from "../assets/palette";
-import { NotificationCard } from "../assets/Story";
 import { BarFlow, TrancheVault } from "../assets/Vault";
 import { Actor, At, IN_OUT_CUBIC, OUT, SHADOW, Stage, StatusPill, clamp, env } from "./kit";
 import { COLOMBO, LedgerMini, MapBand, RefTag, T, pips, vaultDrawer } from "./S05Set";
@@ -78,8 +77,18 @@ export const S05eRecovery: React.FC = () => {
 
       {/* Meera signs from the notification */}
       <Actor who="meera" x={300} y={1080} h={470} crop="waist" pose="hold" prop="phone" expression={frame >= signs + 6 ? "relieved" : "determined"} prevExpression="determined" expressionAt={signs + 6} look={0.6} opacity={meeraK} />
-      <At x={1080} y={430} style={{ opacity: 1 - interpolate(frame, [contract - 8, contract], [0, 1], clamp) }}>
-        {frame >= notification - 8 ? <NotificationCard at={notification - 8} channelsAt={notification + 4} pressedAt={signs} width={440} /> : null}
+      {/* the real alert on a real phone: the Telegram bot's RECOVERY_READY message from the live testnet run */}
+      <At x={1090} y={372} style={{ opacity: env(frame, notification - 10, contract, 8), transform: `translateY(${(1 - env(frame, notification - 10, undefined, 12)) * 40}px)` }}>
+        <div style={{ width: 300, height: 667, borderRadius: 38, padding: 9, background: P.ink, boxShadow: SHADOW }}>
+          <div style={{ width: 282, height: 649, borderRadius: 30, overflow: "hidden", background: P.ink }}>
+            <Sequence from={notification - 10} layout="none">
+              <OffthreadVideo src={staticFile("footage/telegram/TG-telegram-alerts.mp4")} startFrom={315} muted style={{ width: 282, height: 627, display: "block" }} />
+            </Sequence>
+          </div>
+        </div>
+      </At>
+      <At x={1240} y={360} anchor="bc" style={{ opacity: env(frame, notification - 4, contract, 8) }}>
+        <StatusPill text="Telegram · live recording" tone="ink" size={18} />
       </At>
 
       {/* contract checks the proof, releases resume */}
