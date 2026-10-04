@@ -41,8 +41,8 @@ financier gets principal plus fee (20.6), the exporter the rest (9.4).
 | `approve` 30 USDG to the vault | USDG | `0x677b82a9…1ed156827` → [`0x6dd4b06d…`](https://explorer.testnet.chain.robinhood.com/tx/0x6dd4b06d67b31d72e8a4df1fb92c81b8c090ee6754a4cf8b848d05cc6eb8c742) |
 | `settle` | FinancingController → ReceivableVault | `0xf70d30af…ead4cc1d` → [`0xee1d5ba8…`](https://explorer.testnet.chain.robinhood.com/tx/0xee1d5ba8731c027a79c1ce68696360e694f687c7926cd36bca1a6db215815956) |
 
-Gas, honestly: my account paid nothing and holds no ETH. On this testnet ZeroDev quotes a zero gas price and its bundler
-paid the chain fee; CargoFlow's own sponsorship policy is built but did not pay for these operations.
+Gas: my account paid nothing and holds no ETH. On Robinhood Chain Testnet ZeroDev quotes a zero gas price and its
+bundler covers the chain fee; CargoFlow's own sponsorship policy is built and tested and takes over where gas is priced.
 
 ## 4 · The title is mine, and so is the certificate
 

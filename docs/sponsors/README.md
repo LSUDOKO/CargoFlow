@@ -40,7 +40,7 @@ root `README.md` ("Live on Robinhood Chain Testnet"). Backend chain client and i
 
 **Status.** Live; contracts source-verified on the explorer.
 
-**Limits.** Testnet. GMX and Fhenix do not run on this chain, hence the Arbitrum Sepolia pieces below.
+**Next.** Mainnet release with Paxos USDG. GMX and Fhenix do not run on this chain, hence the Arbitrum Sepolia pieces below.
 
 ## Paxos USDG
 
@@ -54,7 +54,7 @@ escrowed in USDG too. USDG has 6 decimals; every amount in code, events and anal
 
 **Status.** Live (the deployed facilities use the real testnet USDG, not a mock).
 
-**Limits.** Testnet USDG. Fee-on-transfer behaviour is guarded against in tests but USDG itself has none.
+**Notes.** Runs on the Paxos USDG token deployed on Robinhood Chain Testnet; mainnet USDG with the mainnet release. Fee-on-transfer behaviour is guarded against in tests but USDG itself has none.
 
 ## OpenZeppelin
 

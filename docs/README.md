@@ -11,7 +11,9 @@ end to end; these pages go deeper.
 |---|---|
 | [README](../README.md) | The problem, the cast, how it works in twelve beats, the live product, Claude, architecture, every contract and live run |
 | [Role guides](guides/README.md) | One per party, told by its character, with the exact contract calls: [exporter](guides/exporter.md) · [financier](guides/financier.md) · [buyer](guides/buyer.md) · [carrier](guides/carrier.md) · [arbiter](guides/arbiter.md) |
-| [Live app](https://cargoflow.adoranto737.workers.dev) | Robinhood Chain Testnet; connect a wallet or sign in with a passkey |
+| [All links](../README.md#all-links) | Every link in one table: website, app, API, contracts, pitch deck, film, MCP, packages, Telegram |
+| [Live app](https://cargoflow.adoranto737.workers.dev) | Production build, live on Robinhood Chain Testnet; connect a wallet or sign in with a passkey |
+| Pitch deck | [PDF](pitch/CargoFlow-pitch.pdf) · [PPTX](pitch/CargoFlow-pitch.pptx) · [HTML, animated](https://cargoflow-pitch.adoranto737.workers.dev) · [Google Drive](GDRIVE_PITCH_URL) |
 | [Use CargoFlow in Claude](../README.md#use-cargoflow-in-claude) | The remote MCP server: `https://cargoflow-mcp.adoranto737.workers.dev/mcp` ([add it](https://claude.ai/new?modal=add-custom-connector)) |
 
 ## How it is built
@@ -35,13 +37,14 @@ end to end; these pages go deeper.
 | [`@cargoflow/gateway`](../packages/gateway/README.md) | The edge agent for data loggers: folder watch, USB, serial, offline queue |
 | [`cargoflow` for Python](../packages/python/README.md) | Data frames, portfolio analytics, Monte Carlo of default and recovery |
 | [Dune queries](../analytics/dune) | Volume, escrow, pause and recovery rates, lender yield |
+| [GitHub Packages](releases/github-packages.md) | The npm packages as `@lsudoko/cargoflow-*` and the `ghcr.io/lsudoko/cargoflow-backend` / `cargoflow-gateway` images: how they are published and pulled |
 
 ## Operations, security, proof
 
 | | |
 |---|---|
 | [Testnet runbook](runbooks/testnet.md) | Keys, funding, deploy, verify, and the hero run on the public testnet |
-| [Sponsor integrations](sponsors/README.md) | What each partner does in CargoFlow, where the code is, its status and limits |
+| [Sponsor integrations](sponsors/README.md) | What each partner does in CargoFlow, where the code is, its status and what comes next |
 | [Benchmarks](benchmarks.md) | Gas, proving time and how every figure is reproduced |
 | [Slither triage](security/slither-triage.md) | Static analysis findings and decisions ([v2](security/slither-v2.md), [v3](security/slither-v3.md)) |
 | [Threat model](project/16-security-threat-model.md) | Assets, adversaries and mitigations; vulnerability reports per [SECURITY.md](../SECURITY.md) |

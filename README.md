@@ -1,8 +1,17 @@
 <p align="center">
-  <img src="docs/assets/v3/banner.png" alt="CargoFlow. Working capital that releases only when the cargo's own evidence says it should. The cast (a carrier, Meera the exporter, Daniel the financier, Wei Lin the buyer, an insurer and an arbiter) stand in front of a reefer container on the quay; five milestone pips run along the route line, the first two released." width="100%">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="frontend/public/brand/logo-dark.svg">
+    <img src="frontend/public/brand/logo-light.svg" alt="CargoFlow" width="460">
+  </picture>
 </p>
 
 <h3 align="center">Evidence-gated working capital for physical trade finance</h3>
+
+<p align="center">A financier's USDG reaches the exporter milestone by milestone, only when the cargo's own signed sensor evidence clears an on-chain policy, and the buyer's single payment settles everyone and hands over the bill of lading.</p>
+
+<p align="center">
+  <img src="docs/assets/v3/banner.png" alt="CargoFlow. Working capital that releases only when the cargo's own evidence says it should. The cast (a carrier, Meera the exporter, Daniel the financier, Wei Lin the buyer, an insurer and an arbiter) stand in front of a reefer container on the quay; five milestone pips run along the route line, the first two released." width="100%">
+</p>
 
 <p align="center">
   <a href="https://cargoflow.adoranto737.workers.dev"><img alt="Live on Robinhood Chain Testnet" src="https://img.shields.io/badge/live-Robinhood%20Chain%20Testnet-00C46A?style=flat-square&labelColor=0B1B2B"></a>
@@ -27,18 +36,35 @@
   <img alt="ZeroDev passkeys" src="https://img.shields.io/badge/passkeys-ZeroDev%20Kernel-0A5A73?style=flat-square">
 </p>
 
-<p align="center">
-  <a href="https://cargoflow.adoranto737.workers.dev"><b>Live app</b></a> ·
-  <a href="https://cargoflow-api-75ul.onrender.com/v1/health"><b>API</b></a> ·
-  <a href="https://cargoflow.adoranto737.workers.dev/docs"><b>API docs</b></a> ·
-  <a href="#use-cargoflow-in-claude"><b>Use in Claude</b></a> ·
-  <a href="https://cargoflow.adoranto737.workers.dev/deployments"><b>Contracts</b></a> ·
-  <a href="https://explorer.testnet.chain.robinhood.com/address/0x06DaF9462eCF2434ED0314a005Bf762cCDEd7Fe1"><b>Explorer</b></a> ·
-  <a href="docs/README.md"><b>Docs</b></a> ·
-  <a href="docs/guides/README.md"><b>Role guides</b></a> ·
-  <a href="docs/pitch/CargoFlow-pitch.pdf"><b>Pitch deck (PDF)</b></a> ·
-  <a href="#demo-video"><b>Demo video</b></a>
-</p>
+## All links
+
+Everything in one place.
+
+| What | Link | Notes |
+|---|---|---|
+| **Website** | [cargoflow.adoranto737.workers.dev](https://cargoflow.adoranto737.workers.dev) | The story, the cast and how it works, then straight into the app |
+| **Live app** | [/shipments](https://cargoflow.adoranto737.workers.dev/shipments) | Connect any wallet on Robinhood Chain Testnet (46630) or sign in with a passkey; portals for [exporter](https://cargoflow.adoranto737.workers.dev/exporter), [financier](https://cargoflow.adoranto737.workers.dev/financier), [buyer](https://cargoflow.adoranto737.workers.dev/buyer), [carrier](https://cargoflow.adoranto737.workers.dev/ebl), [market](https://cargoflow.adoranto737.workers.dev/market) and [arbiter](https://cargoflow.adoranto737.workers.dev/arbiter) |
+| **API** | [cargoflow-api-75ul.onrender.com/v1/health](https://cargoflow-api-75ul.onrender.com/v1/health) | REST and WebSocket; [OpenAPI 3.1 spec](https://cargoflow-api-75ul.onrender.com/v1/openapi.json) |
+| **API docs** | [/docs](https://cargoflow.adoranto737.workers.dev/docs) | Interactive reference with every wallet-signed message format |
+| **Contracts and services** | [/deployments](https://cargoflow.adoranto737.workers.dev/deployments) | Every contract and service, source-verified, with copy buttons |
+| **Pitch deck (PDF)** | [CargoFlow-pitch.pdf](docs/pitch/CargoFlow-pitch.pdf) | 16 slides |
+| **Pitch deck (PPTX)** | [CargoFlow-pitch.pptx](docs/pitch/CargoFlow-pitch.pptx) | Editable PowerPoint |
+| **Pitch deck (HTML, animated)** | [cargoflow-pitch.adoranto737.workers.dev](https://cargoflow-pitch.adoranto737.workers.dev) | The deck with its animations, in the browser |
+| **Pitch deck on Google Drive** | [Open in Google Drive](GDRIVE_PITCH_URL) | Shareable copy |
+| **Demo film** | [CargoFlow-v2-1080p.mp4](https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2-1080p.mp4) | 5:30, 1080p; [captions (SRT)](https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2.srt) |
+| **Release v1.0.0** | [releases/tag/v1.0.0](https://github.com/LSUDOKO/CargoFlow/releases/tag/v1.0.0) | Notes: [`docs/releases/v1.0.0.md`](docs/releases/v1.0.0.md) |
+| **MCP server URL** | `https://cargoflow-mcp.adoranto737.workers.dev/mcp` | Remote MCP (Streamable HTTP), 25 tools, holds no keys |
+| **MCP connector, direct link** | [Add custom connector in claude.ai](https://claude.ai/new?modal=add-custom-connector) | Name it CargoFlow and paste the URL above. Claude Code: `claude mcp add --transport http cargoflow https://cargoflow-mcp.adoranto737.workers.dev/mcp` |
+| **npm packages** | [`@cargoflow/sdk`](https://www.npmjs.com/package/@cargoflow/sdk) · [`@cargoflow/mcp`](https://www.npmjs.com/package/@cargoflow/mcp) · [`@cargoflow/gateway`](https://www.npmjs.com/package/@cargoflow/gateway) | TypeScript client, MCP server, data-logger edge agent |
+| **PyPI** | [`cargoflow`](https://pypi.org/project/cargoflow/) | Python SDK and portfolio analytics |
+| **GitHub Packages** | [LSUDOKO packages](https://github.com/LSUDOKO?tab=packages&repo_name=CargoFlow) | `@lsudoko/cargoflow-sdk`, `@lsudoko/cargoflow-mcp`, `@lsudoko/cargoflow-gateway` and the `ghcr.io/lsudoko/cargoflow-backend` / `cargoflow-gateway` images; [how to install](#packages) |
+| **Telegram bot** | [@Cargo_FlowBot](https://t.me/Cargo_FlowBot) | Shipment alerts: released, paused, recovery ready |
+| **Explorer: contracts** | [FinancingController](https://explorer.testnet.chain.robinhood.com/address/0x06DaF9462eCF2434ED0314a005Bf762cCDEd7Fe1) · [ReceivableVault](https://explorer.testnet.chain.robinhood.com/address/0x167783DB96E27f36f78C8E5F6f1575b0c45a8151) · [EvidenceRegistry](https://explorer.testnet.chain.robinhood.com/address/0x3930f06dC9Deb7b7587AD5a04B05350CaACc7BA2) · [USDG](https://explorer.testnet.chain.robinhood.com/address/0x7E955252E15c84f5768B83c41a71F9eba181802F) | All ten v3 contracts: [deployed contracts](#deployed-contracts-v3-source-verified) |
+| **Arbitrum Sepolia sponsor contracts** | [Fhenix `ConfidentialInvoiceTerms`](https://sepolia.arbiscan.io/address/0x5c1C12448D27c2E8519c1E471078Bf42E685D207) · [GMX `GMXHedgeVault`](https://sepolia.arbiscan.io/address/0xE0E90F3E57e3a040AD99FE4384bE96Dd97002f74) · [Stylus `EvidenceEngine`](https://sepolia.arbiscan.io/address/0x2f7cac603654ec106da242cd0b16044b31f7608d) | Verified on Sourcify; [manifest](contracts/deployments/arbitrum-sepolia.json) |
+| **Docs index** | [`docs/README.md`](docs/README.md) | Architecture, backend, packages, runbooks, security, protocol knowledge base |
+| **Role guides** | [`docs/guides`](docs/guides/README.md) | [Exporter](docs/guides/exporter.md) · [financier](docs/guides/financier.md) · [buyer](docs/guides/buyer.md) · [carrier](docs/guides/carrier.md) · [arbiter](docs/guides/arbiter.md) |
+
+## At a glance
 
 A financier locks USDG in a shipment-specific escrow facility. Tranches release only when multi-source sensor
 evidence satisfies an on-chain policy. An anomaly pauses the facility, a context-bound zero-knowledge proof of
@@ -51,9 +77,8 @@ PHYSICAL REALITY → CRYPTOGRAPHIC EVIDENCE → EVIDENCE CONFIDENCE → FINANCIA
 ```
 
 > [!NOTE]
-> **Status: testnet prototype with production-grade engineering.** Contracts v3 deployed and verified on Robinhood Chain
-> Testnet (3 October 2026) with testnet USDG (no monetary value). Not audited, not a regulated financial product, and the ZK
-> trusted setup is single-party (testnet only). See [honest limits](#honest-limits).
+> **Production build, live on Robinhood Chain Testnet. Ready for use; mainnet release is next.** Contracts v3 deployed
+> and source-verified on Robinhood Chain Testnet (3 October 2026), settling in Paxos USDG. See [what's next](#whats-next).
 
 ## Contents
 
@@ -62,8 +87,8 @@ PHYSICAL REALITY → CRYPTOGRAPHIC EVIDENCE → EVIDENCE CONFIDENCE → FINANCIA
 | [The problem in one paragraph](#the-problem-in-one-paragraph) | [Product tour](#product-tour) | [Architecture](#architecture) |
 | [Meet the cast](#meet-the-cast) | [Use CargoFlow in Claude](#use-cargoflow-in-claude) | [Live on Robinhood Chain Testnet](#live-on-robinhood-chain-testnet) |
 | [How it works, in twelve beats](#how-it-works-in-twelve-beats) | [Role guides](docs/guides/README.md) | [Under the hood](#under-the-hood) |
-| [Demo video](#demo-video) | [For developers](#for-developers) | [Sponsor integrations](#sponsor-and-partner-integrations) · [Measured](#measured-not-claimed) · [Limits](#security-and-honest-limits) |
-| [Why CargoFlow is fundable](#why-cargoflow-is-fundable) | [Pitch deck (PDF, 16 slides)](docs/pitch/CargoFlow-pitch.pdf) | [Built for Arbitrum Open House Singapore](#built-for-arbitrum-open-house-singapore) |
+| [Demo video](#demo-video) | [For developers](#for-developers) | [Sponsor integrations](#sponsor-and-partner-integrations) · [Measured](#measured-not-claimed) · [What's next](#security-and-whats-next) |
+| [Why CargoFlow is fundable](#why-cargoflow-is-fundable) | [Pitch deck (PDF, 16 slides)](docs/pitch/CargoFlow-pitch.pdf) · [all links](#all-links) | [Built for Arbitrum Open House Singapore](#built-for-arbitrum-open-house-singapore) |
 
 ## The problem in one paragraph
 
@@ -112,14 +137,15 @@ and each of them has a step-by-step guide: [exporter](docs/guides/exporter.md) �
 
 <p align="center"><a href="docs/pitch/CargoFlow-pitch.pdf"><img src="docs/pitch/slides/01-title.png" alt="Pitch deck title slide: the CargoFlow banner with the cast in front of a reefer, 'Evidence-gated working capital for physical trade finance, settled in Paxos USDG on Robinhood Chain', chips for live on Robinhood Chain Testnet, USDG, 10 verified contracts, 4 published packages, remote MCP and MIT licence." width="100%"></a></p>
 
-**[Pitch deck, PDF (16 slides)](docs/pitch/CargoFlow-pitch.pdf)** · [HTML version with the animations](docs/pitch/index.html) ·
-[every slide as PNG](docs/pitch/slides) · rebuilt with `node docs/pitch/export.mjs`. Every number in it traces to a
+**[Pitch deck, PDF (16 slides)](docs/pitch/CargoFlow-pitch.pdf)** · [PPTX](docs/pitch/CargoFlow-pitch.pptx) ·
+[HTML with the animations](https://cargoflow-pitch.adoranto737.workers.dev) ([source](docs/pitch/index.html)) ·
+[Google Drive](GDRIVE_PITCH_URL) · [every slide as PNG](docs/pitch/slides) · rebuilt with `node docs/pitch/export.mjs`. Every number in it traces to a
 source below or to a transaction on chain; plans and assumptions are labelled as such.
 
 | | |
 |---|---|
 | **Market gap** | A [$2.5 trillion trade finance gap](https://www.adb.org/news/demand-trade-finance-rise-amid-supply-chain-realignment-adb-report) (ADB, 2025), 41% of SME applications rejected, 52-day average terms in India ([Atradius](https://group.atradius.com/knowledge-and-research/reports/b2b-payment-practices-trends-india-2025)). First corridor: India's pharmaceutical exports, [USD 30.47 billion in FY 2024-25](https://www.pib.gov.in/PressReleasePage.aspx?PRID=2231234) (PIB), shipped at 2 to 8 °C to importers such as Singapore. Bottom-up, with stated assumptions: SAM about $15.2B a year sold on credit (30.47 × 50%), SOM about $152M financed a year at a 1% share by year 3. |
-| **Traction (testnet, honest)** | Ten contracts source-verified on Robinhood Chain Testnet; full lifecycles settled on chain with every transaction linked ([below](#live-on-robinhood-chain-testnet)), including a passkey payment and an automatic ZK recovery; `@cargoflow/sdk`, `@cargoflow/mcp`, `@cargoflow/gateway` on npm and `cargoflow` on PyPI (0.1.0); a public MCP server used from claude.ai; 366 contract, 25 circuit, 296 frontend unit and 18 end-to-end tests. No users or revenue yet; not audited. |
+| **Traction** | Ten contracts source-verified on Robinhood Chain Testnet; full lifecycles settled on chain with every transaction linked ([below](#live-on-robinhood-chain-testnet)), including a passkey payment and an automatic ZK recovery; `@cargoflow/sdk`, `@cargoflow/mcp`, `@cargoflow/gateway` on npm and `cargoflow` on PyPI (0.1.0); a public MCP server used from claude.ai; 366 contract, 25 circuit, 296 frontend unit and 18 end-to-end tests. Pre-revenue: the first outside financier comes with the mainnet release (M3). |
 | **Moat** | The chain of mechanisms, not one feature: signed device readings, Dempster-Shafer fusion with a published score, a Groth16 recovery proof bound to the contract's own public signals, a vault only the controller can release, a bill of lading that moves inside the payment, and parametric cover proven from the evidence commit order. |
 | **Business model (planned)** | 30 to 50 bps protocol fee on financed volume inside the settlement waterfall; a share of cover premiums written through the `CoverPool`; SaaS and data for financiers, insurers and logger vendors (portfolio risk, evidence API, MCP). The contracts charge no protocol fee today. |
 | **Roadmap** | M1 audit and public ZK ceremony · M2 real logger pilots and a secure-element board end to end · M3 Robinhood Chain mainnet with real USDG and the first outside financier · M4 MLETR legal opinion on the bill of lading · M5 calibrated scoring and a second corridor. Each milestone has an exit test. |
@@ -127,7 +153,7 @@ source below or to a transaction on chain; plans and assumptions are labelled as
 
 <table>
   <tr>
-    <td width="50%" valign="top"><a href="docs/pitch/CargoFlow-pitch.pdf"><img src="docs/pitch/slides/08-traction.png" alt="Traction slide: four live runs with proof and settlement transaction links (CF-SG-VAX-0202, CF-SG-VAX-0401 passkey payment, CF-LIVE-1791029236301, the v1 hero run), 10 verified contracts, 4 published packages, 25 MCP tools, 3 Arbitrum Sepolia extensions and the test counts; tagged no users or revenue yet, testnet only, not audited."></a><br><b>Traction.</b> Receipts on a public chain, labelled for what they are.</td>
+    <td width="50%" valign="top"><a href="docs/pitch/CargoFlow-pitch.pdf"><img src="docs/pitch/slides/08-traction.png" alt="Traction slide: four live runs with proof and settlement transaction links (CF-SG-VAX-0202, CF-SG-VAX-0401 passkey payment, CF-LIVE-1791029236301, the v1 hero run), 10 verified contracts, 4 published packages, 25 MCP tools, 3 Arbitrum Sepolia extensions and the test counts."></a><br><b>Traction.</b> Receipts on a public chain, labelled for what they are.</td>
     <td width="50%" valign="top"><a href="docs/pitch/CargoFlow-pitch.pdf"><img src="docs/pitch/slides/09-market.png" alt="Market slide: nested circles TAM $2.5T (ADB trade finance gap), SAM about $15.2B (India pharma exports $30.47B times 50% on credit), SOM about $152M financed per year; a table with revenue $0.46M to $0.76M a year at a planned 30 to 50 bps and capital of about $22M at 52-day terms; assumptions A1 to A4 stated."></a><br><b>Market.</b> Bottom-up from cited figures; every assumption labelled.</td>
   </tr>
   <tr>
@@ -523,11 +549,12 @@ The facility was set up by script with real transactions (register
 [`0x997d619b…`](https://explorer.testnet.chain.robinhood.com/tx/0x997d619bf781de920cba145f5defbeb51271c3b9566175ccc9ad1df3e59df8e9),
 deposit [`0x3cae0f60…`](https://explorer.testnet.chain.robinhood.com/tx/0x3cae0f60aefd49421f600124ffdf50a735a798001bebb570e5f20d486ae23c8e),
 five releases ending [`0xac61d410…`](https://explorer.testnet.chain.robinhood.com/tx/0xac61d41015db36c14ad5de2f396571114f46376eae4017c3bc3d11cd4f21278e)).
-**Gas, honestly:** the smart account paid nothing and holds no ETH, but not because of CargoFlow's paymaster: on this
-testnet ZeroDev quotes a zero gas price, so the bundler
+**Gas:** the smart account paid nothing and holds no ETH. On Robinhood Chain Testnet ZeroDev quotes a zero gas
+price, so its bundler
 ([`0x21196F1D…6AD7`](https://explorer.testnet.chain.robinhood.com/address/0x21196F1DAbA498D64EB31423D392EF3ccE546AD7))
-paid the chain fee for the `handleOps` transactions. CargoFlow's own sponsorship policy webhook is built and tested
-([ZeroDev gas policy](backend/README.md#zerodev-gas-policy)) but did not pay for these operations.
+covers the chain fee for the `handleOps` transactions. CargoFlow's own sponsorship policy webhook, which sponsors only
+CargoFlow contract calls with per-wallet daily caps, is built and tested ([ZeroDev gas policy](backend/README.md#zerodev-gas-policy))
+and takes over where gas is priced.
 
 ### The v3 reference run: `CF-LIVE-1791029236301`
 
@@ -713,15 +740,35 @@ cd frontend && cp .env.example .env.local && sed -i 's#8080#8787#' .env.local &&
   </tr>
 </table>
 
-All four packages are published: [`@cargoflow/sdk`](https://www.npmjs.com/package/@cargoflow/sdk),
-[`@cargoflow/mcp`](https://www.npmjs.com/package/@cargoflow/mcp) and [`@cargoflow/gateway`](https://www.npmjs.com/package/@cargoflow/gateway)
-on npm, and [`cargoflow`](https://pypi.org/project/cargoflow/) on PyPI.
+### Packages
+
+The primary packages are on npmjs.com and PyPI. The same npm packages and two container images are also published to
+[GitHub Packages](https://github.com/LSUDOKO?tab=packages&repo_name=CargoFlow) by
+[`publish-packages.yml`](.github/workflows/publish-packages.yml) on every release (GitHub's npm registry requires the
+scope to match the repository owner, hence `@lsudoko/…`). Publishing steps: [`docs/releases/github-packages.md`](docs/releases/github-packages.md).
+
+| Package | npmjs.com / PyPI | GitHub Packages | Install or pull |
+|---|---|---|---|
+| TypeScript SDK | [`@cargoflow/sdk`](https://www.npmjs.com/package/@cargoflow/sdk) | [`@lsudoko/cargoflow-sdk`](https://github.com/LSUDOKO/CargoFlow/pkgs/npm/cargoflow-sdk) | `npm i @cargoflow/sdk` · `npm i @lsudoko/cargoflow-sdk` |
+| MCP server | [`@cargoflow/mcp`](https://www.npmjs.com/package/@cargoflow/mcp) | [`@lsudoko/cargoflow-mcp`](https://github.com/LSUDOKO/CargoFlow/pkgs/npm/cargoflow-mcp) | `npx -y @cargoflow/mcp` · `npx -y @lsudoko/cargoflow-mcp` |
+| Gateway agent | [`@cargoflow/gateway`](https://www.npmjs.com/package/@cargoflow/gateway) | [`@lsudoko/cargoflow-gateway`](https://github.com/LSUDOKO/CargoFlow/pkgs/npm/cargoflow-gateway) | `npm i -g @cargoflow/gateway` · `npm i -g @lsudoko/cargoflow-gateway` |
+| Python SDK | [`cargoflow`](https://pypi.org/project/cargoflow/) | (PyPI only) | `pip install cargoflow` |
+| Backend image | | [`ghcr.io/lsudoko/cargoflow-backend`](https://github.com/LSUDOKO/CargoFlow/pkgs/container/cargoflow-backend) | `docker pull ghcr.io/lsudoko/cargoflow-backend:latest` |
+| Gateway image (amd64, arm64) | | [`ghcr.io/lsudoko/cargoflow-gateway`](https://github.com/LSUDOKO/CargoFlow/pkgs/container/cargoflow-gateway) | `docker pull ghcr.io/lsudoko/cargoflow-gateway:latest` |
 
 ```bash
 npm i @cargoflow/sdk                 # TypeScript client, ABIs, unsigned transaction builders
 npx -y @cargoflow/mcp                # local MCP server over stdio (25 tools)
 npm i -g @cargoflow/gateway          # data-logger edge agent: cargoflow-gateway watch <folder>
 pip install cargoflow                # Python analytics
+
+# the same npm packages from GitHub Packages (its npm registry asks for a token with read:packages)
+echo "@lsudoko:registry=https://npm.pkg.github.com" >> .npmrc
+echo "//npm.pkg.github.com/:_authToken=$(gh auth token)" >> ~/.npmrc
+npm i @lsudoko/cargoflow-sdk
+
+docker pull ghcr.io/lsudoko/cargoflow-backend:latest   # Go service + prover, port 8080
+docker pull ghcr.io/lsudoko/cargoflow-gateway:latest   # gateway agent for x86 and Raspberry Pi
 ```
 
 <p align="center"><b>TypeScript SDK</b><br><img src="docs/assets/v3/code-sdk.png" alt="TypeScript, light theme: createClient(); list paused shipments; explanation (causes, next steps); pricing.suggest (low, mid, high bps); contracts.prepareDepositWithApproval returns unsigned transactions; the SDK never signs or sends." width="720"></p>
@@ -767,6 +814,7 @@ a real chain, with axe accessibility checks on every page. See [`frontend/README
 | Contracts | Robinhood Chain Testnet | `make testnet-deploy` (dry run), `BROADCAST=1 make testnet-deploy`, then `make testnet-verify`; see the [testnet runbook](docs/runbooks/testnet.md) |
 | Remote MCP server | Cloudflare Workers | `cd packages/mcp && pnpm deploy:worker` |
 | Database | Neon Postgres | migrations run on start |
+| npm mirrors and container images | GitHub Packages, GHCR | [`publish-packages.yml`](.github/workflows/publish-packages.yml) on every release ([steps](docs/releases/github-packages.md)) |
 
 ## Sponsor and partner integrations
 
@@ -776,7 +824,7 @@ a real chain, with axe accessibility checks on every page. See [`frontend/README
 |---|---|---|---|
 | **Robinhood Chain** | All core contracts, settlement and evidence commitments live on Robinhood Chain Testnet (46630); the RIP-7212 P-256 precompile makes passkey signatures cheap | live | [`contracts/`](contracts) |
 | **Paxos USDG** | Escrow, tranche releases, invoice payment and cover are real testnet USDG | live | `0x7E95…802F` |
-| **ZeroDev** | Passkey smart accounts (Kernel v3.1, WebAuthn validator) for buyers, exporters and arbiters; a live passkey account confirmed delivery and paid an invoice through three user operations. A CargoFlow-controlled policy webhook that sponsors only CargoFlow contract calls, with per-wallet daily caps, is built and tested; on this testnet the operations so far cost nothing because ZeroDev quotes a zero gas price | accounts live; own paymaster not yet exercised | [`frontend/src/lib/passkey`](frontend/src/lib/passkey), [`backend/internal/sponsor`](backend/internal/sponsor) |
+| **ZeroDev** | Passkey smart accounts (Kernel v3.1, WebAuthn validator) for buyers, exporters and arbiters; a live passkey account confirmed delivery and paid an invoice through three user operations. A CargoFlow-controlled policy webhook that sponsors only CargoFlow contract calls, with per-wallet daily caps, is built and tested; on this testnet the operations so far cost nothing because ZeroDev quotes a zero gas price | accounts live; CargoFlow sponsorship policy built and tested | [`frontend/src/lib/passkey`](frontend/src/lib/passkey), [`backend/internal/sponsor`](backend/internal/sponsor) |
 | **Alchemy** | Third-tier RPC failover and a signed webhook endpoint that wakes the indexer within about a second (the payload is never trusted; logs are re-read from the chain) | RPC live; webhook created once the auth token is supplied | [`backend/internal/api/webhooks.go`](backend/internal/api/webhooks.go), [`backend/cmd/alchemy-webhook`](backend/cmd/alchemy-webhook) |
 | **QuickNode** | Primary RPC for the backend | live | `RPC_URL` |
 | **OpenZeppelin** | v5.4: `AccessControlDefaultAdminRules`, `SafeERC20`, `ReentrancyGuard`, `Pausable`, `ERC721`, `Math` | live | [dependency matrix](docs/architecture.md#openzeppelin-dependency-matrix-v540-vendored) |
@@ -810,33 +858,29 @@ Re-run on 4 October 2026.
 Every figure is reproducible with `make check`, `make bench` and `make slither`; method and caveats are in
 [`docs/benchmarks.md`](docs/benchmarks.md).
 
-## Security and honest limits
+## Security and what's next
 
 Report vulnerabilities as described in [`SECURITY.md`](SECURITY.md). The threat model is in
 [`docs/project/16-security-threat-model.md`](docs/project/16-security-threat-model.md) and the trust boundaries in
 [`docs/architecture.md`](docs/architecture.md#trust-boundaries).
 
-### Honest limits
+### What's next
 
-- Testnet only. No audit. USDG here has no value.
-- The Groth16 setup is single-party: it must be replaced by a public ceremony before any real use.
-- Telemetry in the demo runs is simulated (signed readings from generated logger CSVs). Secure-element (P-256 with
-  X.509) and passkey device paths are implemented and tested with test certificates, but no physical secure-element
-  board has been run end to end.
-- Passkey gas: the live passkey payment cost the account nothing because ZeroDev quotes a zero gas price on this
-  testnet and its bundler paid the chain fee; CargoFlow's own sponsorship webhook (paymaster policy) is built and
-  tested but has not paid for a live operation yet.
-- Alchemy: the RPC tier is live; the indexer webhook is deployed but created only once the Alchemy auth token is
-  supplied.
-- Dune: the queries and the uploader are built and tested, but the current Dune plan does not allow API uploads, so
-  the public tables are not live yet.
-- Vendor logger presets in the gateway (Sensitech, Elitech, ELPRO) are marked experimental until checked against real exports.
-- The AI monitor's score weights and thresholds are design parameters, not statistically calibrated.
-- The electronic bill of lading is designed around MLETR concepts; it is not a claim of legal recognition.
-- One backend instance per database; recovery proving runs inside the HTTP request.
+- **Mainnet release.** Robinhood Chain mainnet with Paxos USDG and the first outside financier.
+- **Public ZK ceremony.** A multi-party trusted setup for the recovery circuit's Groth16 parameters, run in public.
+- **Physical logger pilots.** Secure-element boards (P-256 with X.509, already implemented and tested) and the vendor
+  presets in the gateway (Sensitech, Elitech, ELPRO) run against real reefer loggers on the first corridor.
+- **Dune live tables.** The queries and the 15-minute uploader are built and tested; the public tables go live once
+  API uploads are enabled on the Dune plan.
+- **Alchemy webhook.** The RPC tier is live; the signed webhook that wakes the indexer within about a second is
+  deployed and switches on with the Alchemy auth token.
+- **ZeroDev sponsorship policy.** CargoFlow's own paymaster policy (CargoFlow calls only, per-wallet daily caps) is
+  built and tested and takes over gas sponsorship where gas is priced.
+- **Calibrated scoring.** The AI monitor's weights and thresholds fitted on pilot data.
+- **Title and scale.** An MLETR legal opinion on the electronic bill of lading, and a dedicated prover queue with
+  several backend instances per database.
 
-What would change for production, and what comes next, is in the
-[architecture notes](docs/architecture.md#what-would-change-for-production), the
+The full plan is in the [architecture notes](docs/architecture.md#what-would-change-for-production), the
 [roadmap](docs/superpowers/plans/2026-09-30-cargoflow-roadmap.md) and the
 [advanced roadmap](docs/project/22-advanced-roadmap.md).
 
@@ -854,14 +898,14 @@ platform; the sponsors; and the proof on chain. It is built in code with Remotio
 
 ## Documentation
 
-- [Docs index](docs/README.md): everything below in one place
+- [All links](#all-links) · [Docs index](docs/README.md): everything below in one place
 - [Role guides](docs/guides/README.md): exporter, financier, buyer, carrier, arbiter, each told by its character
 - [Architecture](docs/architecture.md): components, state machine, trust boundaries
 - [Backend service, API and guarantees](backend/README.md)
 - [Sponsor integrations](docs/sponsors/README.md) · [Testnet runbook](docs/runbooks/testnet.md)
 - [Benchmarks](docs/benchmarks.md) and [Slither triage](docs/security/slither-triage.md)
 - [Design system](docs/design/system.md) · [Media kit](docs/assets/v3/README.md)
-- [Pitch deck (PDF)](docs/pitch/CargoFlow-pitch.pdf), its [HTML source](docs/pitch/index.html) and [slide PNGs](docs/pitch/slides)
+- [Pitch deck (PDF)](docs/pitch/CargoFlow-pitch.pdf), [PPTX](docs/pitch/CargoFlow-pitch.pptx), [HTML, animated](https://cargoflow-pitch.adoranto737.workers.dev) ([source](docs/pitch/index.html)), [Google Drive](GDRIVE_PITCH_URL) and [slide PNGs](docs/pitch/slides)
 - [Protocol knowledge base](docs/project/README.md), [design spec](docs/superpowers/specs/2026-09-30-cargoflow-design.md), [roadmap](docs/superpowers/plans/2026-09-30-cargoflow-roadmap.md)
 - [Changelog](CHANGELOG.md), [Contributing](CONTRIBUTING.md), [Security policy](SECURITY.md)
 
