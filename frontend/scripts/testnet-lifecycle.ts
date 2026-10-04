@@ -8,13 +8,15 @@
 //
 // Partial runs for demo data: STOP=paused ends after the excursion (a live paused facility for the automatic
 // recovery worker), STOP=created ends once the facility exists and waits for the financier's deposit, MODE=request
-// registers a shipment with its policy and opens a market financing request.
+// registers a shipment with its policy and opens a market financing request. TELEGRAM=1 subscribes the exporter to
+// Telegram alerts right after registration, prints the bot link and waits until Start is pressed in Telegram.
 import { readFileSync } from "node:fs";
 import { createPublicClient, createWalletClient, defineChain, http, keccak256, toBytes, type Address, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { controllerAbi, policiesAbi, registryAbi, usdgAbi } from "../src/lib/chain/abis.ts";
 import { buildMilestones, buildPolicy, defaultPolicyForm, routeCommitment, ROUTES } from "../src/lib/exporter.ts";
 import { requestMessage } from "../src/lib/api/market.ts";
+import { alertsMessage } from "../src/lib/api/extras.ts";
 import { newGatewayKey, recoveryAuthorizationMessage, signRequest, sourceAuthorizationMessage, sourceIdFor } from "../src/lib/gateway.ts";
 
 const API = (process.argv[2] ?? "").replace(/\/+$/, "");
@@ -76,6 +78,19 @@ async function main() {
   }
   await api("POST", "/v1/shipments/mirror", { shipmentId: id, externalRef: ref, route, maxGapSec: 1800, minSensors: 2 });
   console.log(`  dashboard id ${id}`);
+  if (process.env.TELEGRAM === "1") {
+    const at = Math.floor(Date.now() / 1000);
+    const tsig = await exporter.account!.signMessage!({ message: alertsMessage(id, "telegram", "", at) });
+    const sub = await api<{ id: string; linkUrl?: string }>("POST", `/v1/shipments/${id}/subscriptions`, { channel: "telegram", target: "", events: ["RELEASED", "PAUSED", "RESUMED", "RECOVERY_READY", "DELIVERED", "SETTLED"], issuedAt: at, signature: tsig });
+    console.log(`  TELEGRAM_LINK ${sub.linkUrl}`);
+    for (let i = 0; i < 120; i++) {
+      const list = await api<{ subscriptions: { id: string; active: boolean }[] }>("GET", `/v1/shipments/${id}/subscriptions?address=${exporter.account!.address.toLowerCase()}`);
+      if (list.subscriptions.some((x) => x.id === sub.id && x.active)) break;
+      if (i === 119) throw new Error("Telegram subscription was not activated (press Start in the bot)");
+      await new Promise((r) => setTimeout(r, 5000));
+    }
+    console.log("  telegram subscription active");
+  }
   if (process.env.STOP === "created") {
     console.log(`  stopped awaiting deposit: ${id}`);
     return;
