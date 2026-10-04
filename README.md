@@ -8,7 +8,7 @@
   <a href="https://cargoflow.adoranto737.workers.dev"><img alt="Live on Robinhood Chain Testnet" src="https://img.shields.io/badge/live-Robinhood%20Chain%20Testnet-00C46A?style=flat-square&labelColor=0B1B2B"></a>
   <a href="#deployed-contracts-v3-source-verified"><img alt="USDG settlement" src="https://img.shields.io/badge/settlement-USDG-C6F432?style=flat-square&labelColor=0B1B2B"></a>
   <a href="https://explorer.testnet.chain.robinhood.com"><img alt="Chain 46630" src="https://img.shields.io/badge/chain-46630-F7F9F4?style=flat-square&labelColor=0B1B2B"></a>
-  <a href="#measured-not-claimed"><img alt="Tests: 366 contract, 25 circuit, 277 frontend unit, 18 end-to-end" src="https://img.shields.io/badge/tests-366%20%C2%B7%2025%20%C2%B7%20277%20%C2%B7%2018-00C46A?style=flat-square&labelColor=0B1B2B"></a>
+  <a href="#measured-not-claimed"><img alt="Tests: 366 contract, 25 circuit, 296 frontend unit, 18 end-to-end" src="https://img.shields.io/badge/tests-366%20%C2%B7%2025%20%C2%B7%20296%20%C2%B7%2018-00C46A?style=flat-square&labelColor=0B1B2B"></a>
   <a href="#measured-not-claimed"><img alt="Package tests: SDK 92, MCP 27, gateway 36, Python 25" src="https://img.shields.io/badge/packages-92%20%C2%B7%2027%20%C2%B7%2036%20%C2%B7%2025-00C46A?style=flat-square&labelColor=0B1B2B"></a>
   <a href="#use-cargoflow-in-claude"><img alt="MCP server" src="https://img.shields.io/badge/MCP-remote%20server-C6F432?style=flat-square&labelColor=0B1B2B"></a>
   <a href="https://github.com/LSUDOKO/CargoFlow/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/LSUDOKO/CargoFlow/actions/workflows/ci.yml/badge.svg"></a>
@@ -36,6 +36,7 @@
   <a href="https://explorer.testnet.chain.robinhood.com/address/0x06DaF9462eCF2434ED0314a005Bf762cCDEd7Fe1"><b>Explorer</b></a> ·
   <a href="docs/README.md"><b>Docs</b></a> ·
   <a href="docs/guides/README.md"><b>Role guides</b></a> ·
+  <a href="docs/pitch/CargoFlow-pitch.pdf"><b>Pitch deck (PDF)</b></a> ·
   <a href="#demo-video"><b>Demo video</b></a> (coming)
 </p>
 
@@ -62,6 +63,7 @@ PHYSICAL REALITY → CRYPTOGRAPHIC EVIDENCE → EVIDENCE CONFIDENCE → FINANCIA
 | [Meet the cast](#meet-the-cast) | [Use CargoFlow in Claude](#use-cargoflow-in-claude) | [Live on Robinhood Chain Testnet](#live-on-robinhood-chain-testnet) |
 | [How it works, in twelve beats](#how-it-works-in-twelve-beats) | [Role guides](docs/guides/README.md) | [Under the hood](#under-the-hood) |
 | [Demo video](#demo-video) | [For developers](#for-developers) | [Sponsor integrations](#sponsor-and-partner-integrations) · [Measured](#measured-not-claimed) · [Limits](#security-and-honest-limits) |
+| [Why CargoFlow is fundable](#why-cargoflow-is-fundable) | [Pitch deck (PDF, 16 slides)](docs/pitch/CargoFlow-pitch.pdf) | [Built for Arbitrum Open House Singapore](#built-for-arbitrum-open-house-singapore) |
 
 ## The problem in one paragraph
 
@@ -79,8 +81,9 @@ risk in transit: biopharma alone loses
 blind or does not lend. CargoFlow lets the cargo's own sensor evidence decide how much capital is available, on-chain,
 milestone by milestone.
 
-<details>
-<summary><b>The sources, as captured on 3 October 2026</b> (the sentences are highlighted on the original pages, nothing retyped)</summary>
+### The sources, as captured on 3 October 2026
+
+The sentences are highlighted on the original pages, nothing retyped.
 
 <table>
   <tr>
@@ -95,8 +98,6 @@ milestone by milestone.
 
 Captures and highlight boxes: [`video/public/sources/`](video/public/sources) ([`highlights.json`](video/public/sources/highlights.json)).
 
-</details>
-
 ## Meet the cast
 
 <p align="center"><img src="docs/assets/v3/cast.png" alt="The cast. Meera, exporter: registers the shipment and policy, opens the facility, resumes with a proof. Daniel, financier: escrows USDG, watches the evidence, gets principal plus fee. Wei Lin, buyer: confirms delivery, pays the invoice, receives the bill of lading. Carrier, ship's officer: issues the electronic bill of lading (ERC-721). Insurer: offers default cover and parametric cover. Arbiter, dispute role: resolves disputes, can never release a tranche." width="100%"></p>
@@ -106,6 +107,51 @@ if he could see it. Wei Lin buys it. The characters are illustrative; everything
 and each of them has a step-by-step guide: [exporter](docs/guides/exporter.md) ·
 [financier](docs/guides/financier.md) · [buyer](docs/guides/buyer.md) · [carrier](docs/guides/carrier.md) ·
 [arbiter](docs/guides/arbiter.md).
+
+## Why CargoFlow is fundable
+
+<p align="center"><a href="docs/pitch/CargoFlow-pitch.pdf"><img src="docs/pitch/slides/01-title.png" alt="Pitch deck title slide: the CargoFlow banner with the cast in front of a reefer, 'Evidence-gated working capital for physical trade finance, settled in Paxos USDG on Robinhood Chain', chips for live on Robinhood Chain Testnet, USDG, 10 verified contracts, 4 published packages, remote MCP and MIT licence." width="100%"></a></p>
+
+**[Pitch deck, PDF (16 slides)](docs/pitch/CargoFlow-pitch.pdf)** · [HTML version with the animations](docs/pitch/index.html) ·
+[every slide as PNG](docs/pitch/slides) · rebuilt with `node docs/pitch/export.mjs`. Every number in it traces to a
+source below or to a transaction on chain; plans and assumptions are labelled as such.
+
+| | |
+|---|---|
+| **Market gap** | A [$2.5 trillion trade finance gap](https://www.adb.org/news/demand-trade-finance-rise-amid-supply-chain-realignment-adb-report) (ADB, 2025), 41% of SME applications rejected, 52-day average terms in India ([Atradius](https://group.atradius.com/knowledge-and-research/reports/b2b-payment-practices-trends-india-2025)). First corridor: India's pharmaceutical exports, [USD 30.47 billion in FY 2024-25](https://www.pib.gov.in/PressReleasePage.aspx?PRID=2231234) (PIB), shipped at 2 to 8 °C to importers such as Singapore. Bottom-up, with stated assumptions: SAM about $15.2B a year sold on credit (30.47 × 50%), SOM about $152M financed a year at a 1% share by year 3. |
+| **Traction (testnet, honest)** | Ten contracts source-verified on Robinhood Chain Testnet; full lifecycles settled on chain with every transaction linked ([below](#live-on-robinhood-chain-testnet)), including a passkey payment and an automatic ZK recovery; `@cargoflow/sdk`, `@cargoflow/mcp`, `@cargoflow/gateway` on npm and `cargoflow` on PyPI (0.1.0); a public MCP server used from claude.ai; 366 contract, 25 circuit, 296 frontend unit and 18 end-to-end tests. No users or revenue yet; not audited. |
+| **Moat** | The chain of mechanisms, not one feature: signed device readings, Dempster-Shafer fusion with a published score, a Groth16 recovery proof bound to the contract's own public signals, a vault only the controller can release, a bill of lading that moves inside the payment, and parametric cover proven from the evidence commit order. |
+| **Business model (planned)** | 30 to 50 bps protocol fee on financed volume inside the settlement waterfall; a share of cover premiums written through the `CoverPool`; SaaS and data for financiers, insurers and logger vendors (portfolio risk, evidence API, MCP). The contracts charge no protocol fee today. |
+| **Roadmap** | M1 audit and public ZK ceremony · M2 real logger pilots and a secure-element board end to end · M3 Robinhood Chain mainnet with real USDG and the first outside financier · M4 MLETR legal opinion on the bill of lading · M5 calibrated scoring and a second corridor. Each milestone has an exit test. |
+| **Use of funds (plan)** | 35% audit and ZK ceremony (M1), 25% pilots and logger hardware (M2), 20% mainnet launch and first facilities (M3), 10% legal (M4), 10% team and infrastructure; released milestone by milestone, the way CargoFlow releases capital. |
+
+<table>
+  <tr>
+    <td width="50%" valign="top"><a href="docs/pitch/CargoFlow-pitch.pdf"><img src="docs/pitch/slides/08-traction.png" alt="Traction slide: four live runs with proof and settlement transaction links (CF-SG-VAX-0202, CF-SG-VAX-0401 passkey payment, CF-LIVE-1791029236301, the v1 hero run), 10 verified contracts, 4 published packages, 25 MCP tools, 3 Arbitrum Sepolia extensions and the test counts; tagged no users or revenue yet, testnet only, not audited."></a><br><b>Traction.</b> Receipts on a public chain, labelled for what they are.</td>
+    <td width="50%" valign="top"><a href="docs/pitch/CargoFlow-pitch.pdf"><img src="docs/pitch/slides/09-market.png" alt="Market slide: nested circles TAM $2.5T (ADB trade finance gap), SAM about $15.2B (India pharma exports $30.47B times 50% on credit), SOM about $152M financed per year; a table with revenue $0.46M to $0.76M a year at a planned 30 to 50 bps and capital of about $22M at 52-day terms; assumptions A1 to A4 stated."></a><br><b>Market.</b> Bottom-up from cited figures; every assumption labelled.</td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top"><a href="docs/pitch/CargoFlow-pitch.pdf"><img src="docs/pitch/slides/13-roadmap.png" alt="Roadmap slide: M0 done, then M1 security, M2 real evidence, M3 mainnet, M4 legal and title, M5 scale, each with tasks, its share of the grant and an exit test."></a><br><b>Roadmap.</b> Milestones with exit tests, mapped to milestone-based grants.</td>
+    <td width="50%" valign="top"><a href="docs/pitch/CargoFlow-pitch.pdf"><img src="docs/pitch/slides/14-ask.png" alt="The ask slide: a bar split 35% audit and ZK ceremony, 25% pilots and logger hardware, 20% mainnet and first facilities, 10% legal, 10% team and infrastructure, with amounts on a 30,000 USDG milestone grant, labelled plan."></a><br><b>The ask.</b> What prize and grant money buys, milestone by milestone (plan).</td>
+  </tr>
+</table>
+
+## Built for Arbitrum Open House Singapore
+
+CargoFlow is an entry to the **Arbitrum Open House Singapore: Online Buildathon** (Arbitrum Foundation, on
+[HackQuest](https://www.hackquest.io/hackathons/Arbitrum-Open-House-Singapore-Online-Buildathon)). Here is each rule
+and judging criterion, with where to check it.
+
+| Rule or criterion | How CargoFlow meets it | Check it |
+|---|---|---|
+| **Deployed on an Arbitrum chain** | All ten core contracts live on Robinhood Chain Testnet (46630); the Stylus engine and the Fhenix and GMX extensions on Arbitrum Sepolia | [Deployed contracts](#deployed-contracts-v3-source-verified) |
+| **Smart contract quality** | 366 contract tests (unit, fuzz, eight invariants, real-proof integration, smart-account callers); immutable core with no proxy; OpenZeppelin 5.4; Slither triaged; an authority matrix that lists what each role *cannot* do; a pause that stops new risk but never blocks an exit | [Measured](#measured-not-claimed) · [architecture](docs/architecture.md#who-may-do-what) |
+| **Product-market fit** | A sourced problem (trade finance gap, SME rejections, 52-day terms); portals for exporter, financier, buyer, carrier and arbiter; a financing market with fee guidance; SDK, MCP server, gateway and Python packages published | [Product tour](#product-tour) · [role guides](docs/guides/README.md) |
+| **Innovation and creativity** | Capital gated by fused sensor evidence; context-bound zero-knowledge recovery; an AI monitor that can only make outcomes stricter; parametric cover proven from commit order; a bill of lading that moves inside the payment; Claude as a keyless co-pilot | [How it works](#how-it-works-in-twelve-beats) · [under the hood](#under-the-hood) |
+| **Real problem solving** | End-to-end runs on the public testnet with every transaction linked: excursion, pause, proof, resume, settlement, passkey payment | [Live runs](#the-films-shipment-end-to-end-cf-sg-vax-0202) |
+| **Extra consideration: Paxos USDG** | USDG is the only money CargoFlow moves: escrow, tranches, invoice payment, the waterfall and cover, on the real Paxos testnet token `0x7E95…802F` | [Paxos USDG](docs/sponsors/README.md#paxos-usdg) |
+| **Prize reserved for Robinhood Chain** | Built on Robinhood Chain first: its RIP-7212 P-256 precompile carries the passkey flow, and USDG is native there | [A passkey payment](#a-passkey-payment-cf-sg-vax-0401) |
+| **Milestone-based grants** | The roadmap above is written as milestones with exit tests, so each grant tranche can be released against evidence | [Pitch deck, slides 13 and 14](docs/pitch/CargoFlow-pitch.pdf) |
 
 ## How it works, in twelve beats
 
@@ -187,8 +233,9 @@ a 3% fee); the live runs further down use the same mechanics at testnet scale (3
   </tr>
 </table>
 
-<details>
-<summary><b>The same story as a sequence diagram</b> (a 40,000 USDG facility against a 100,000 USDG invoice, 5 milestones of 8,000, 3% fee)</summary>
+### The same story as a sequence diagram
+
+A 40,000 USDG facility against a 100,000 USDG invoice, 5 milestones of 8,000, 3% fee.
 
 ```mermaid
 sequenceDiagram
@@ -218,8 +265,6 @@ sequenceDiagram
     C-->>X: 58,800 residual
     C-->>Y: electronic bill of lading
 ```
-
-</details>
 
 What makes it different:
 
@@ -295,8 +340,9 @@ unsigned transactions with a link to sign them in the web app. It holds no keys.
   </tr>
 </table>
 
-<details>
-<summary><b>More of the claude.ai session</b>: the tool calls, the prepared deposit, and the app opening from Claude's link</summary>
+### More of the claude.ai session
+
+The tool calls, the prepared deposit, and the app opening from Claude's link.
 
 <table>
   <tr>
@@ -305,8 +351,6 @@ unsigned transactions with a link to sign them in the web app. It holds no keys.
     <td width="33%" valign="top"><img src="docs/assets/v3/claude-app-opens.jpg" alt="The CargoFlow shipment page for CF-LIVE-1791042318628 opened from Claude's link: created, awaiting the financier's capital, with Connect wallet."><br>The link opens the shipment in CargoFlow, ready for the financier to sign.</td>
   </tr>
 </table>
-
-</details>
 
 <p align="center"><img src="docs/assets/v3/code-mcp.png" alt="Configuration, light theme: claude.ai via Settings, Connectors, Add custom connector; Claude Code via claude mcp add --transport http cargoflow https://cargoflow-mcp.adoranto737.workers.dev/mcp; Cursor or any MCP client via an mcpServers entry with the url." width="620"></p>
 
@@ -343,8 +387,7 @@ API's facility view reads the chain directly, so a lagging indexer can never sho
 Components, the facility state machine, the full authority matrix (including what each role *cannot* do) and every
 trust boundary are in [`docs/architecture.md`](docs/architecture.md).
 
-<details>
-<summary><b>Repository layout</b></summary>
+### Repository layout
 
 | Path | Purpose |
 |---|---|
@@ -364,8 +407,6 @@ trust boundary are in [`docs/architecture.md`](docs/architecture.md).
 | `contracts/hedge` | GMX v2 hedge vault for a financier's own collateral (Arbitrum Sepolia) |
 | `analytics/dune` | Dune SQL for volume, escrow, pause and recovery rates and lender yield |
 | `video/` | The demo film (Remotion): the cast, the illustration library, the scenes, and the README media kit (`video/src/readme`) |
-
-</details>
 
 ## Live on Robinhood Chain Testnet
 
@@ -499,8 +540,9 @@ Its output (hashes shortened, long lines wrapped; full hashes are in the links a
 
 <p align="center"><img src="docs/assets/v3/term-testnet-run.png" alt="Light terminal capture of testnet-lifecycle.ts for shipment CF-LIVE-1790936950736: register shipment, set policy, create facility, financier approves and deposits, transit starts, a gateway is added; leg 1 releases milestones 1 and 2; leg 2, reefer fails, pauses at milestone 3; leg 3 skips while paused; the recovery epoch is committed, the exporter resumes with a proof, milestone 3 is released; leg 4 releases milestones 4 and 5; the buyer confirms delivery, approves and pays; final status SETTLED, drawn 20 USDG." width="680"></p>
 
-<details>
-<summary><b>History: the v1 deployment and its complete facility, transaction by transaction</b> (still on chain)</summary>
+### History: the v1 deployment and its complete facility, transaction by transaction
+
+Still on chain.
 
 | Contract | Address |
 |---|---|
@@ -547,8 +589,6 @@ facility against a 50 USDG invoice) because the faucet supplies 100 USDG. The fu
 
 Result, read back from the chain: the exporter received **49.4 USDG** (20 advanced in tranches + 29.4 residual), the
 financier **20.6 USDG** (20 principal + 0.6 fee), and the vault ended empty.
-
-</details>
 
 ## Under the hood
 
@@ -725,12 +765,12 @@ Details, status and limits for each: [`docs/sponsors/README.md`](docs/sponsors/R
 
 ## Measured, not claimed
 
-<p align="center"><img src="docs/assets/v3/measured.png" alt="Measured, not claimed: 366 contract tests (forge: unit, fuzz, invariants, real proofs), 25 circuit tests, 277 frontend unit tests (vitest, 29 files), 18 end-to-end tests (Playwright and axe on the real stack), all passing; packages SDK 92, MCP 27, gateway 36, Python 25, Fhenix 19, GMX 20; 13,494 circuit constraints, about 1 s to prove, about 0.25 M gas for resumeWithProof." width="100%"></p>
+<p align="center"><img src="docs/assets/v3/measured.png" alt="Measured, not claimed: 366 contract tests (forge: unit, fuzz, invariants, real proofs), 25 circuit tests, 296 frontend unit tests (vitest, 31 files), 18 end-to-end tests (Playwright and axe on the real stack), all passing; packages SDK 92, MCP 27, gateway 36, Python 25, Fhenix 19, GMX 20; 13,494 circuit constraints, about 1 s to prove, about 0.25 M gas for resumeWithProof." width="100%"></p>
 
 | | |
 |---|---|
 | Contract tests | 366 (unit, fuzz, invariants, real-proof integration, smart-account callers, circuit breaker); Fhenix extension 19, GMX extension 20 including a fork test that places and cancels a real GMX order |
-| Frontend | 277 unit tests; 18 Playwright end-to-end and accessibility tests on the real stack, including one shipment from registration to settlement through wallets and logger CSVs |
+| Frontend | 296 unit tests; 18 Playwright end-to-end and accessibility tests on the real stack, including one shipment from registration to settlement through wallets and logger CSVs |
 | Backend | Every Go package passes (devices, EPCIS validated against the official 2.0.1 schema, webhooks, sponsorship policy, Dune uploader); integration tests run a real anvil chain and Postgres; the end-to-end test drives the full story through the running service |
 | Circuit | 13,494 constraints; proves in about 1 s; 25 tests including tamper and wrong-context cases |
 | ZK resume on-chain | ~0.25 M gas (real Groth16 verification) |
@@ -738,12 +778,11 @@ Details, status and limits for each: [`docs/sponsors/README.md`](docs/sponsors/R
 | Packages | SDK 92, MCP 27, gateway 36, Python 25 tests |
 | Static analysis | Slither triaged: [`docs/security/slither-triage.md`](docs/security/slither-triage.md), [v3](docs/security/slither-v3.md) |
 
-<details>
-<summary><b>The JavaScript suites, re-run for this README</b> (4 October 2026)</summary>
+### The JavaScript suites, re-run for this README
 
-<p align="center"><img src="docs/assets/v3/term-tests.png" alt="Light terminal capture of pnpm vitest run summaries: frontend 29 files, 277 tests passed; packages/sdk 9 files, 92 tests; packages/mcp 2 files, 27 tests; packages/gateway 6 files, 36 tests; all passed." width="520"></p>
+Re-run on 4 October 2026.
 
-</details>
+<p align="center"><img src="docs/assets/v3/term-tests.png" alt="Light terminal capture of pnpm vitest run summaries: frontend 31 files, 296 tests passed; packages/sdk 9 files, 92 tests; packages/mcp 2 files, 27 tests; packages/gateway 6 files, 36 tests; all passed." width="520"></p>
 
 Every figure is reproducible with `make check`, `make bench` and `make slither`; method and caveats are in
 [`docs/benchmarks.md`](docs/benchmarks.md).
@@ -795,6 +834,7 @@ README is a frame range of it. The hosted link will be added here.
 - [Sponsor integrations](docs/sponsors/README.md) · [Testnet runbook](docs/runbooks/testnet.md)
 - [Benchmarks](docs/benchmarks.md) and [Slither triage](docs/security/slither-triage.md)
 - [Design system](docs/design/system.md) · [Media kit](docs/assets/v3/README.md)
+- [Pitch deck (PDF)](docs/pitch/CargoFlow-pitch.pdf), its [HTML source](docs/pitch/index.html) and [slide PNGs](docs/pitch/slides)
 - [Protocol knowledge base](docs/project/README.md), [design spec](docs/superpowers/specs/2026-09-30-cargoflow-design.md), [roadmap](docs/superpowers/plans/2026-09-30-cargoflow-roadmap.md)
 - [Changelog](CHANGELOG.md), [Contributing](CONTRIBUTING.md), [Security policy](SECURITY.md)
 
