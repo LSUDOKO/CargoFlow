@@ -47,9 +47,9 @@ Everything in one place.
 | **API** | [cargoflow-api-75ul.onrender.com/v1/health](https://cargoflow-api-75ul.onrender.com/v1/health) | REST and WebSocket; [OpenAPI 3.1 spec](https://cargoflow-api-75ul.onrender.com/v1/openapi.json) |
 | **API docs** | [/docs](https://cargoflow.adoranto737.workers.dev/docs) | Interactive reference with every wallet-signed message format |
 | **Contracts and services** | [/deployments](https://cargoflow.adoranto737.workers.dev/deployments) | Every contract and service, source-verified, with copy buttons |
-| **Pitch deck (PDF)** | [CargoFlow-pitch.pdf](docs/pitch/CargoFlow-pitch.pdf) | 16 slides |
+| **Pitch deck (PDF)** | [CargoFlow-pitch.pdf](docs/pitch/CargoFlow-pitch.pdf) | 21 slides |
 | **Pitch deck (PPTX)** | [CargoFlow-pitch.pptx](docs/pitch/CargoFlow-pitch.pptx) | Editable PowerPoint |
-| **Pitch deck (HTML, animated)** | [cargoflow-pitch.adoranto737.workers.dev](https://cargoflow-pitch.adoranto737.workers.dev) | The deck with its animations, in the browser |
+| **Pitch deck (HTML, animated)** | [cargoflow-pitch.adoranto737.workers.dev](https://lsudoko.github.io/CargoFlow/pitch/) | The deck with its animations, in the browser |
 | **Pitch deck on Google Drive** | [Open in Google Drive](GDRIVE_PITCH_URL) | Shareable copy |
 | **Demo film** | [CargoFlow-v2-1080p.mp4](https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2-1080p.mp4) | 5:30, 1080p; [captions (SRT)](https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2.srt) |
 | **Release v1.0.0** | [releases/tag/v1.0.0](https://github.com/LSUDOKO/CargoFlow/releases/tag/v1.0.0) | Notes: [`docs/releases/v1.0.0.md`](docs/releases/v1.0.0.md) |
@@ -88,7 +88,7 @@ PHYSICAL REALITY → CRYPTOGRAPHIC EVIDENCE → EVIDENCE CONFIDENCE → FINANCIA
 | [Meet the cast](#meet-the-cast) | [Use CargoFlow in Claude](#use-cargoflow-in-claude) | [Live on Robinhood Chain Testnet](#live-on-robinhood-chain-testnet) |
 | [How it works, in twelve beats](#how-it-works-in-twelve-beats) | [Role guides](docs/guides/README.md) | [Under the hood](#under-the-hood) |
 | [Demo video](#demo-video) | [For developers](#for-developers) | [Sponsor integrations](#sponsor-and-partner-integrations) · [Measured](#measured-not-claimed) · [What's next](#security-and-whats-next) |
-| [Why CargoFlow is fundable](#why-cargoflow-is-fundable) | [Pitch deck (PDF, 16 slides)](docs/pitch/CargoFlow-pitch.pdf) · [all links](#all-links) | [Built for Arbitrum Open House Singapore](#built-for-arbitrum-open-house-singapore) |
+| [Why CargoFlow is fundable](#why-cargoflow-is-fundable) | [Pitch deck (PDF, 21 slides)](docs/pitch/CargoFlow-pitch.pdf) · [all links](#all-links) | [Built for Arbitrum Open House Singapore](#built-for-arbitrum-open-house-singapore) |
 
 ## The problem in one paragraph
 
@@ -137,8 +137,8 @@ and each of them has a step-by-step guide: [exporter](docs/guides/exporter.md) �
 
 <p align="center"><a href="docs/pitch/CargoFlow-pitch.pdf"><img src="docs/pitch/slides/01-title.png" alt="Pitch deck title slide: the CargoFlow banner with the cast in front of a reefer, 'Evidence-gated working capital for physical trade finance, settled in Paxos USDG on Robinhood Chain', chips for live on Robinhood Chain Testnet, USDG, 10 verified contracts, 4 published packages, remote MCP and MIT licence." width="100%"></a></p>
 
-**[Pitch deck, PDF (16 slides)](docs/pitch/CargoFlow-pitch.pdf)** · [PPTX](docs/pitch/CargoFlow-pitch.pptx) ·
-[HTML with the animations](https://cargoflow-pitch.adoranto737.workers.dev) ([source](docs/pitch/index.html)) ·
+**[Pitch deck, PDF (21 slides)](docs/pitch/CargoFlow-pitch.pdf)** · [PPTX](docs/pitch/CargoFlow-pitch.pptx) ·
+[HTML with the animations](https://lsudoko.github.io/CargoFlow/pitch/) ([source](docs/pitch/index.html)) ·
 [Google Drive](GDRIVE_PITCH_URL) · [every slide as PNG](docs/pitch/slides) · rebuilt with `node docs/pitch/export.mjs`. Every number in it traces to a
 source below or to a transaction on chain; plans and assumptions are labelled as such.
 
@@ -153,12 +153,12 @@ source below or to a transaction on chain; plans and assumptions are labelled as
 
 <table>
   <tr>
-    <td width="50%" valign="top"><a href="docs/pitch/CargoFlow-pitch.pdf"><img src="docs/pitch/slides/08-traction.png" alt="Traction slide: four live runs with proof and settlement transaction links (CF-SG-VAX-0202, CF-SG-VAX-0401 passkey payment, CF-LIVE-1791029236301, the v1 hero run), 10 verified contracts, 4 published packages, 25 MCP tools, 3 Arbitrum Sepolia extensions and the test counts."></a><br><b>Traction.</b> Receipts on a public chain, labelled for what they are.</td>
-    <td width="50%" valign="top"><a href="docs/pitch/CargoFlow-pitch.pdf"><img src="docs/pitch/slides/09-market.png" alt="Market slide: nested circles TAM $2.5T (ADB trade finance gap), SAM about $15.2B (India pharma exports $30.47B times 50% on credit), SOM about $152M financed per year; a table with revenue $0.46M to $0.76M a year at a planned 30 to 50 bps and capital of about $22M at 52-day terms; assumptions A1 to A4 stated."></a><br><b>Market.</b> Bottom-up from cited figures; every assumption labelled.</td>
+    <td width="50%" valign="top"><a href="docs/pitch/CargoFlow-pitch.pdf"><img src="docs/pitch/slides/12-traction.png" alt="Traction slide: four live runs with proof and settlement transaction links (CF-SG-VAX-0202, CF-SG-VAX-0401 passkey payment, CF-LIVE-1791029236301, the v1 hero run), 10 verified contracts, 4 published packages, 25 MCP tools, 3 Arbitrum Sepolia extensions and the test counts."></a><br><b>Traction.</b> Receipts on a public chain, labelled for what they are.</td>
+    <td width="50%" valign="top"><a href="docs/pitch/CargoFlow-pitch.pdf"><img src="docs/pitch/slides/14-market.png" alt="Market slide: nested circles TAM $2.5T (ADB trade finance gap), SAM about $15.2B (India pharma exports $30.47B times 50% on credit), SOM about $152M financed per year; a table with revenue $0.46M to $0.76M a year at a planned 30 to 50 bps and capital of about $22M at 52-day terms; assumptions A1 to A4 stated."></a><br><b>Market.</b> Bottom-up from cited figures; every assumption labelled.</td>
   </tr>
   <tr>
-    <td width="50%" valign="top"><a href="docs/pitch/CargoFlow-pitch.pdf"><img src="docs/pitch/slides/13-roadmap.png" alt="Roadmap slide: M0 done, then M1 security, M2 real evidence, M3 mainnet, M4 legal and title, M5 scale, each with tasks, its share of the grant and an exit test."></a><br><b>Roadmap.</b> Milestones with exit tests, mapped to milestone-based grants.</td>
-    <td width="50%" valign="top"><a href="docs/pitch/CargoFlow-pitch.pdf"><img src="docs/pitch/slides/14-ask.png" alt="The ask slide: a bar split 35% audit and ZK ceremony, 25% pilots and logger hardware, 20% mainnet and first facilities, 10% legal, 10% team and infrastructure, with amounts on a 30,000 USDG milestone grant, labelled plan."></a><br><b>The ask.</b> What prize and grant money buys, milestone by milestone (plan).</td>
+    <td width="50%" valign="top"><a href="docs/pitch/CargoFlow-pitch.pdf"><img src="docs/pitch/slides/18-roadmap.png" alt="Roadmap slide: M0 done, then M1 security, M2 real evidence, M3 mainnet, M4 legal and title, M5 scale, each with tasks, its share of the grant and an exit test."></a><br><b>Roadmap.</b> Milestones with exit tests, mapped to milestone-based grants.</td>
+    <td width="50%" valign="top"><a href="docs/pitch/CargoFlow-pitch.pdf"><img src="docs/pitch/slides/19-ask.png" alt="The ask slide: a bar split 35% audit and ZK ceremony, 25% pilots and logger hardware, 20% mainnet and first facilities, 10% legal, 10% team and infrastructure, with amounts on a 30,000 USDG milestone grant, labelled plan."></a><br><b>The ask.</b> What prize and grant money buys, milestone by milestone (plan).</td>
   </tr>
 </table>
 
@@ -905,7 +905,7 @@ platform; the sponsors; and the proof on chain. It is built in code with Remotio
 - [Sponsor integrations](docs/sponsors/README.md) · [Testnet runbook](docs/runbooks/testnet.md)
 - [Benchmarks](docs/benchmarks.md) and [Slither triage](docs/security/slither-triage.md)
 - [Design system](docs/design/system.md) · [Media kit](docs/assets/v3/README.md)
-- [Pitch deck (PDF)](docs/pitch/CargoFlow-pitch.pdf), [PPTX](docs/pitch/CargoFlow-pitch.pptx), [HTML, animated](https://cargoflow-pitch.adoranto737.workers.dev) ([source](docs/pitch/index.html)), [Google Drive](GDRIVE_PITCH_URL) and [slide PNGs](docs/pitch/slides)
+- [Pitch deck (PDF)](docs/pitch/CargoFlow-pitch.pdf), [PPTX](docs/pitch/CargoFlow-pitch.pptx), [HTML, animated](https://lsudoko.github.io/CargoFlow/pitch/) ([source](docs/pitch/index.html)), [Google Drive](GDRIVE_PITCH_URL) and [slide PNGs](docs/pitch/slides)
 - [Protocol knowledge base](docs/project/README.md), [design spec](docs/superpowers/specs/2026-09-30-cargoflow-design.md), [roadmap](docs/superpowers/plans/2026-09-30-cargoflow-roadmap.md)
 - [Changelog](CHANGELOG.md), [Contributing](CONTRIBUTING.md), [Security policy](SECURITY.md)
 
