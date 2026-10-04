@@ -48,7 +48,7 @@
     "deploy:worker": "wrangler deploy"
   },
   "dependencies": {
-    "@cargoflow/sdk": "file:../sdk",
+    "@cargoflow/sdk": "^0.1.0",
     "@cfworker/json-schema": "^4.1.1",
     "@modelcontextprotocol/sdk": "^1.32.0",
     "zod": "^4.6.5"
