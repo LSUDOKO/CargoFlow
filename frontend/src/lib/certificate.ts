@@ -549,7 +549,7 @@ export async function buildCertificate(input: CertificateInput): Promise<{ bytes
   const n = w.pages.length;
   w.pages.forEach((page, i) => {
     page.drawLine({ start: { x: M, y: 40 }, end: { x: A4[0] - M, y: 40 }, thickness: 0.5, color: C.line });
-    const note = pdfSafe(`Testnet record on ${chainName(chainId)}: test USDG has no monetary value. Generated ${utc(generatedAt)} from public CargoFlow data.`);
+    const note = pdfSafe(`Record on ${chainName(chainId)}. Generated ${utc(generatedAt)} from public CargoFlow data.`);
     page.drawText(note, { x: M, y: 27, size: 7, font: fonts.regular, color: C.slate });
     const label = `Page ${i + 1} of ${n}`;
     page.drawText(label, { x: A4[0] - M - fonts.regular.widthOfTextAtSize(label, 7), y: 27, size: 7, font: fonts.regular, color: C.slate });

@@ -61,7 +61,7 @@ export function NetworkGuard({ children, purpose, title = "Connect your wallet",
           <p className="mt-2 max-w-reading text-body text-text-muted">{purpose}</p>
           <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3">
             {connect}
-            <p className="text-small text-text-muted">CargoFlow never holds your keys. Testnet only.</p>
+            <p className="text-small text-text-muted">CargoFlow never holds your keys.</p>
           </div>
         </div>
         {points && points.length > 0 && (

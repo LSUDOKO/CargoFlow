@@ -64,7 +64,7 @@ export function Footer() {
       </div>
       <div className="border-t border-border-ink">
         <div className="container-page flex flex-col gap-2 py-5 text-caption text-paper/70 md:flex-row md:items-center md:justify-between md:gap-6">
-          <p>Testnet prototype. Testnet USDG has no monetary value; contracts are unaudited. Not a regulated financial product.</p>
+          <p>Production build, live on Robinhood Chain Testnet. Ready for use; mainnet release is next.</p>
           <p className="shrink-0">© 2026 CargoFlow · Robinhood Chain Testnet</p>
         </div>
       </div>

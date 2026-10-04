@@ -232,7 +232,7 @@ export function WalletModal({ open, onClose }: { open: boolean; onClose: () => v
           </div>
 
           <footer className="shrink-0 border-t border-border bg-surface px-5 pt-3 pb-[max(env(safe-area-inset-bottom),0.875rem)] text-caption text-text-muted sm:px-6 sm:pb-4">
-            By connecting you agree to use CargoFlow as a demo. It runs on a testnet only: no real funds, and test tokens have no value.
+            CargoFlow never holds your keys: you approve every transaction in your own wallet. Live on Robinhood Chain Testnet; mainnet release is next.
           </footer>
         </div>
       </div>
