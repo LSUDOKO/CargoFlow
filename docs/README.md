@@ -13,7 +13,7 @@ end to end; these pages go deeper.
 | [Role guides](guides/README.md) | One per party, told by its character, with the exact contract calls: [exporter](guides/exporter.md) · [financier](guides/financier.md) · [buyer](guides/buyer.md) · [carrier](guides/carrier.md) · [arbiter](guides/arbiter.md) |
 | [All links](../README.md#all-links) | Every link in one table: website, app, API, contracts, pitch deck, film, MCP, packages, Telegram |
 | [Live app](https://cargoflow.adoranto737.workers.dev) | Production build, live on Robinhood Chain Testnet; connect a wallet or sign in with a passkey |
-| Pitch deck | [PDF](pitch/CargoFlow-pitch.pdf) · [PPTX](pitch/CargoFlow-pitch.pptx) · [HTML, animated](https://lsudoko.github.io/CargoFlow/pitch/) · [Google Drive](GDRIVE_PITCH_URL) |
+| Pitch deck | [PDF](pitch/CargoFlow-pitch.pdf) · [PPTX](pitch/CargoFlow-pitch.pptx) · [HTML, animated](https://lsudoko.github.io/CargoFlow/pitch/) · [Google Drive](https://drive.google.com/drive/folders/1sW6rVx2dLyr5migHmV8UKXKU-88mCg8W?usp=sharing) |
 | [Use CargoFlow in Claude](../README.md#use-cargoflow-in-claude) | The remote MCP server: `https://cargoflow-mcp.adoranto737.workers.dev/mcp` ([add it](https://claude.ai/new?modal=add-custom-connector)) |
 
 ## How it is built

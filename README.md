@@ -49,8 +49,8 @@ Everything in one place.
 | **Contracts and services** | [/deployments](https://cargoflow.adoranto737.workers.dev/deployments) | Every contract and service, source-verified, with copy buttons |
 | **Pitch deck (PDF)** | [CargoFlow-pitch.pdf](https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/CargoFlow-pitch.pdf) | 21 slides |
 | **Pitch deck (PPTX)** | [CargoFlow-pitch.pptx](https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/CargoFlow-pitch.pptx) | Editable PowerPoint |
-| **Pitch deck (HTML, animated)** | [cargoflow-pitch.adoranto737.workers.dev](https://lsudoko.github.io/CargoFlow/pitch/) | The deck with its animations, in the browser |
-| **Pitch deck on Google Drive** | [Open in Google Drive](GDRIVE_PITCH_URL) | Shareable copy |
+| **Pitch deck (HTML, animated)** | [lsudoko.github.io/CargoFlow/pitch](https://lsudoko.github.io/CargoFlow/pitch/) | The deck with its animations, in the browser |
+| **Pitch deck on Google Drive** | [Open in Google Drive](https://drive.google.com/drive/folders/1sW6rVx2dLyr5migHmV8UKXKU-88mCg8W?usp=sharing) | Shareable copy |
 | **Demo film** | [Watch on YouTube](https://youtu.be/mBFZ2EihMEc) | 5:30; [MP4, 1080p](https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2-1080p.mp4); [captions (SRT)](https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2.srt) |
 | **Release v1.0.0** | [releases/tag/v1.0.0](https://github.com/LSUDOKO/CargoFlow/releases/tag/v1.0.0) | Notes: [`docs/releases/v1.0.0.md`](docs/releases/v1.0.0.md) |
 | **MCP server URL** | `https://cargoflow-mcp.adoranto737.workers.dev/mcp` | Remote MCP (Streamable HTTP), 25 tools, holds no keys |
@@ -139,7 +139,7 @@ and each of them has a step-by-step guide: [exporter](docs/guides/exporter.md) �
 
 **[Pitch deck, PDF (21 slides)](https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/CargoFlow-pitch.pdf)** · [PPTX](https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/CargoFlow-pitch.pptx) ·
 [HTML with the animations](https://lsudoko.github.io/CargoFlow/pitch/) ([source](docs/pitch/index.html)) ·
-[Google Drive](GDRIVE_PITCH_URL) · [every slide as PNG](docs/pitch/slides) · rebuilt with `node docs/pitch/export.mjs`. Every number in it traces to a
+[Google Drive](https://drive.google.com/drive/folders/1sW6rVx2dLyr5migHmV8UKXKU-88mCg8W?usp=sharing) · [every slide as PNG](docs/pitch/slides) · rebuilt with `node docs/pitch/export.mjs`. Every number in it traces to a
 source below or to a transaction on chain; plans and assumptions are labelled as such.
 
 | | |
@@ -905,7 +905,7 @@ platform; the sponsors; and the proof on chain. It is built in code with Remotio
 - [Sponsor integrations](docs/sponsors/README.md) · [Testnet runbook](docs/runbooks/testnet.md)
 - [Benchmarks](docs/benchmarks.md) and [Slither triage](docs/security/slither-triage.md)
 - [Design system](docs/design/system.md) · [Media kit](docs/assets/v3/README.md)
-- [Pitch deck (PDF)](https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/CargoFlow-pitch.pdf), [PPTX](https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/CargoFlow-pitch.pptx), [HTML, animated](https://lsudoko.github.io/CargoFlow/pitch/) ([source](docs/pitch/index.html)), [Google Drive](GDRIVE_PITCH_URL) and [slide PNGs](docs/pitch/slides)
+- [Pitch deck (PDF)](https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/CargoFlow-pitch.pdf), [PPTX](https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/CargoFlow-pitch.pptx), [HTML, animated](https://lsudoko.github.io/CargoFlow/pitch/) ([source](docs/pitch/index.html)), [Google Drive](https://drive.google.com/drive/folders/1sW6rVx2dLyr5migHmV8UKXKU-88mCg8W?usp=sharing) and [slide PNGs](docs/pitch/slides)
 - [Protocol knowledge base](docs/project/README.md), [design spec](docs/superpowers/specs/2026-09-30-cargoflow-design.md), [roadmap](docs/superpowers/plans/2026-09-30-cargoflow-roadmap.md)
 - [Changelog](CHANGELOG.md), [Contributing](CONTRIBUTING.md), [Security policy](SECURITY.md)
 
