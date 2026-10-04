@@ -66,6 +66,11 @@
     "url": "git+https://github.com/LSUDOKO/CargoFlow.git",
     "directory": "packages/gateway"
   },
+  "homepage": "https://github.com/LSUDOKO/CargoFlow/tree/main/packages/gateway#readme",
+  "bugs": {
+    "url": "https://github.com/LSUDOKO/CargoFlow/issues"
+  },
+  "author": "CargoFlow (https://cargoflow.adoranto737.workers.dev)",
   "publishConfig": {
     "access": "public"
   },
