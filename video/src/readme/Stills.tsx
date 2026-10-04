@@ -185,7 +185,7 @@ export const MEASURED = { w: 1600, h: 540 };
 const BIG: { n: string; label: string; how: string }[] = [
   { n: "366", label: "contract tests", how: "forge test · unit, fuzz, invariants, real proofs" },
   { n: "25", label: "circuit tests", how: "circom · tamper and wrong-context cases" },
-  { n: "277", label: "frontend unit", how: "vitest · 29 files" },
+  { n: "296", label: "frontend unit", how: "vitest · 31 files" },
   { n: "18", label: "end-to-end", how: "Playwright + axe on the real stack" },
 ];
 const SMALL: { n: string; label: string }[] = [
