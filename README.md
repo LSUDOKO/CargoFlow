@@ -37,7 +37,7 @@
   <a href="docs/README.md"><b>Docs</b></a> ·
   <a href="docs/guides/README.md"><b>Role guides</b></a> ·
   <a href="docs/pitch/CargoFlow-pitch.pdf"><b>Pitch deck (PDF)</b></a> ·
-  <a href="#demo-video"><b>Demo video</b></a> (coming)
+  <a href="#demo-video"><b>Demo video</b></a>
 </p>
 
 A financier locks USDG in a shipment-specific escrow facility. Tranches release only when multi-source sensor
@@ -842,11 +842,15 @@ What would change for production, and what comes next, is in the
 
 ## Demo video
 
-**Coming:** a 5.5-minute film that tells this README's story: Meera, Daniel and Wei Lin; the real source pages; the
-twelve mechanisms animated with the same characters; the live website recorded end to end (`CF-SG-VAX-0202`, with the
-passkey payment on `CF-SG-VAX-0401`); CargoFlow inside claude.ai; the developer platform; the sponsors; and the proof
-on chain. It is built in code with Remotion from [`video/`](video) ([script](video/SCRIPT-v2.md)); every GIF in this
-README is a frame range of it. The hosted link will be added here.
+<p align="center"><a href="https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2-1080p.mp4"><img src="docs/assets/v3/banner.png" alt="Watch the CargoFlow film (5:30, 1080p)" width="100%"></a></p>
+
+<p align="center"><b><a href="https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2-1080p.mp4">▶ Watch the film (5:30, 1080p, MP4)</a></b> · <a href="https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2.srt">captions (SRT)</a> · <a href="https://github.com/LSUDOKO/CargoFlow/releases/tag/v1.0.0">release v1.0.0</a></p>
+
+A 5.5-minute film that tells this README's story: Meera, Daniel and Wei Lin; the real source pages; the twelve
+mechanisms animated with the same characters; the live website recorded end to end (`CF-SG-VAX-0202`, with the passkey
+payment on `CF-SG-VAX-0401`); the Telegram alerts recorded on a phone; CargoFlow inside claude.ai; the developer
+platform; the sponsors; and the proof on chain. It is built in code with Remotion from [`video/`](video)
+([script](video/SCRIPT-v2.md)); every GIF in this README is a frame range of it.
 
 ## Documentation
 
