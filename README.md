@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="frontend/public/brand/logo-dark.svg">
-    <img src="frontend/public/brand/logo-light.svg" alt="CargoFlow" width="460">
+    <img src="https://cargoflow.adoranto737.workers.dev/readme/frontend/public/brand/logo-light.svg" alt="CargoFlow" width="460">
   </picture>
 </p>
 
@@ -10,7 +10,7 @@
 <p align="center">A financier's USDG reaches the exporter milestone by milestone, only when the cargo's own signed sensor evidence clears an on-chain policy, and the buyer's single payment settles everyone and hands over the bill of lading.</p>
 
 <p align="center">
-  <img src="docs/assets/v3/banner.png" alt="CargoFlow. Working capital that releases only when the cargo's own evidence says it should. The cast (a carrier, Meera the exporter, Daniel the financier, Wei Lin the buyer, an insurer and an arbiter) stand in front of a reefer container on the quay; five milestone pips run along the route line, the first two released." width="100%">
+  <img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/banner.png" alt="CargoFlow. Working capital that releases only when the cargo's own evidence says it should. The cast (a carrier, Meera the exporter, Daniel the financier, Wei Lin the buyer, an insurer and an arbiter) stand in front of a reefer container on the quay; five milestone pips run along the route line, the first two released." width="100%">
 </p>
 
 <p align="center">
@@ -47,8 +47,8 @@ Everything in one place.
 | **API** | [cargoflow-api-75ul.onrender.com/v1/health](https://cargoflow-api-75ul.onrender.com/v1/health) | REST and WebSocket; [OpenAPI 3.1 spec](https://cargoflow-api-75ul.onrender.com/v1/openapi.json) |
 | **API docs** | [/docs](https://cargoflow.adoranto737.workers.dev/docs) | Interactive reference with every wallet-signed message format |
 | **Contracts and services** | [/deployments](https://cargoflow.adoranto737.workers.dev/deployments) | Every contract and service, source-verified, with copy buttons |
-| **Pitch deck (PDF)** | [CargoFlow-pitch.pdf](docs/pitch/CargoFlow-pitch.pdf) | 21 slides |
-| **Pitch deck (PPTX)** | [CargoFlow-pitch.pptx](docs/pitch/CargoFlow-pitch.pptx) | Editable PowerPoint |
+| **Pitch deck (PDF)** | [CargoFlow-pitch.pdf](https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/CargoFlow-pitch.pdf) | 21 slides |
+| **Pitch deck (PPTX)** | [CargoFlow-pitch.pptx](https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/CargoFlow-pitch.pptx) | Editable PowerPoint |
 | **Pitch deck (HTML, animated)** | [cargoflow-pitch.adoranto737.workers.dev](https://lsudoko.github.io/CargoFlow/pitch/) | The deck with its animations, in the browser |
 | **Pitch deck on Google Drive** | [Open in Google Drive](GDRIVE_PITCH_URL) | Shareable copy |
 | **Demo film** | [CargoFlow-v2-1080p.mp4](https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2-1080p.mp4) | 5:30, 1080p; [captions (SRT)](https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2.srt) |
@@ -88,11 +88,11 @@ PHYSICAL REALITY → CRYPTOGRAPHIC EVIDENCE → EVIDENCE CONFIDENCE → FINANCIA
 | [Meet the cast](#meet-the-cast) | [Use CargoFlow in Claude](#use-cargoflow-in-claude) | [Live on Robinhood Chain Testnet](#live-on-robinhood-chain-testnet) |
 | [How it works, in twelve beats](#how-it-works-in-twelve-beats) | [Role guides](docs/guides/README.md) | [Under the hood](#under-the-hood) |
 | [Demo video](#demo-video) | [For developers](#for-developers) | [Sponsor integrations](#sponsor-and-partner-integrations) · [Measured](#measured-not-claimed) · [What's next](#security-and-whats-next) |
-| [Why CargoFlow is fundable](#why-cargoflow-is-fundable) | [Pitch deck (PDF, 21 slides)](docs/pitch/CargoFlow-pitch.pdf) · [all links](#all-links) | [Built for Arbitrum Open House Singapore](#built-for-arbitrum-open-house-singapore) |
+| [Why CargoFlow is fundable](#why-cargoflow-is-fundable) | [Pitch deck (PDF, 21 slides)](https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/CargoFlow-pitch.pdf) · [all links](#all-links) | [Built for Arbitrum Open House Singapore](#built-for-arbitrum-open-house-singapore) |
 
 ## The problem in one paragraph
 
-<p align="center"><img src="docs/assets/v3/how-problem.gif" alt="Animated: Daniel the financier stands at his desk; through his office window the ship and its reefer are frosted over. An invoice and a bill of lading slide onto the desk, the line 'Paperwork, not the container' appears, and stamps land: BLIND on the window, DECLINED on the application." width="720"></p>
+<p align="center"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/how-problem.gif" alt="Animated: Daniel the financier stands at his desk; through his office window the ship and its reefer are frosted over. An invoice and a bill of lading slide onto the desk, the line 'Paperwork, not the container' appears, and stamps land: BLIND on the window, DECLINED on the application." width="720"></p>
 
 The Asian Development Bank puts the global trade finance gap at
 [$2.5 trillion in 2025, about 10% of global trade, with 41% of SME applications rejected](https://www.adb.org/news/demand-trade-finance-rise-amid-supply-chain-realignment-adb-report)
@@ -112,12 +112,12 @@ The sentences are highlighted on the original pages, nothing retyped.
 
 <table>
   <tr>
-    <td width="50%" valign="top"><a href="https://www.adb.org/news/demand-trade-finance-rise-amid-supply-chain-realignment-adb-report"><img src="docs/assets/v3/source-adb-gap.png" alt="ADB news release, 15 January 2026, highlighted: the global trade finance gap remained at $2.5 trillion in 2025, unchanged from 2023, and represents about 10% of global trade."></a><br><sub>Asian Development Bank, news release, 15 Jan 2026</sub></td>
-    <td width="50%" valign="top"><a href="https://www.adb.org/news/demand-trade-finance-rise-amid-supply-chain-realignment-adb-report"><img src="docs/assets/v3/source-adb-sme.png" alt="Same ADB release, highlighted: SME rejection rates for trade finance (41%) have fallen to nearly the same level as those for large and mid-cap corporates (40%)."></a><br><sub>Same release, citing the ADB Global Trade Finance Gap Survey (Dec 2025)</sub></td>
+    <td width="50%" valign="top"><a href="https://www.adb.org/news/demand-trade-finance-rise-amid-supply-chain-realignment-adb-report"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/source-adb-gap.png" alt="ADB news release, 15 January 2026, highlighted: the global trade finance gap remained at $2.5 trillion in 2025, unchanged from 2023, and represents about 10% of global trade."></a><br><sub>Asian Development Bank, news release, 15 Jan 2026</sub></td>
+    <td width="50%" valign="top"><a href="https://www.adb.org/news/demand-trade-finance-rise-amid-supply-chain-realignment-adb-report"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/source-adb-sme.png" alt="Same ADB release, highlighted: SME rejection rates for trade finance (41%) have fallen to nearly the same level as those for large and mid-cap corporates (40%)."></a><br><sub>Same release, citing the ADB Global Trade Finance Gap Survey (Dec 2025)</sub></td>
   </tr>
   <tr>
-    <td width="50%" valign="top"><a href="https://group.atradius.com/knowledge-and-research/reports/b2b-payment-practices-trends-india-2025"><img src="docs/assets/v3/source-atradius.png" alt="Atradius Payment Practices Barometer India 2025, PDF page 3, highlighted: 50% of all B2B sales are currently made on credit, with average payment terms standing at 52 days."></a><br><sub>Atradius, Payment Practices Barometer, India 2025 (PDF p. 3), 29 Jul 2025</sub></td>
-    <td width="50%" valign="top"><a href="https://www.aircargonews.net/pharma-logistics/2019/07/failures-in-temperature-controlled-logistics-cost-biopharma-industry-billions/"><img src="docs/assets/v3/source-iqvia.png" alt="Air Cargo News, 26 July 2019, highlighted: the biopharma industry loses approximately $35 billion annually as a result of failures in temperature-controlled logistics, according to IQVIA Institute for Human Data Science."></a><br><sub>Air Cargo News, citing the IQVIA Institute, 26 Jul 2019</sub></td>
+    <td width="50%" valign="top"><a href="https://group.atradius.com/knowledge-and-research/reports/b2b-payment-practices-trends-india-2025"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/source-atradius.png" alt="Atradius Payment Practices Barometer India 2025, PDF page 3, highlighted: 50% of all B2B sales are currently made on credit, with average payment terms standing at 52 days."></a><br><sub>Atradius, Payment Practices Barometer, India 2025 (PDF p. 3), 29 Jul 2025</sub></td>
+    <td width="50%" valign="top"><a href="https://www.aircargonews.net/pharma-logistics/2019/07/failures-in-temperature-controlled-logistics-cost-biopharma-industry-billions/"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/source-iqvia.png" alt="Air Cargo News, 26 July 2019, highlighted: the biopharma industry loses approximately $35 billion annually as a result of failures in temperature-controlled logistics, according to IQVIA Institute for Human Data Science."></a><br><sub>Air Cargo News, citing the IQVIA Institute, 26 Jul 2019</sub></td>
   </tr>
 </table>
 
@@ -125,7 +125,7 @@ Captures and highlight boxes: [`video/public/sources/`](video/public/sources) ([
 
 ## Meet the cast
 
-<p align="center"><img src="docs/assets/v3/cast.png" alt="The cast. Meera, exporter: registers the shipment and policy, opens the facility, resumes with a proof. Daniel, financier: escrows USDG, watches the evidence, gets principal plus fee. Wei Lin, buyer: confirms delivery, pays the invoice, receives the bill of lading. Carrier, ship's officer: issues the electronic bill of lading (ERC-721). Insurer: offers default cover and parametric cover. Arbiter, dispute role: resolves disputes, can never release a tranche." width="100%"></p>
+<p align="center"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/cast.png" alt="The cast. Meera, exporter: registers the shipment and policy, opens the facility, resumes with a proof. Daniel, financier: escrows USDG, watches the evidence, gets principal plus fee. Wei Lin, buyer: confirms delivery, pays the invoice, receives the bill of lading. Carrier, ship's officer: issues the electronic bill of lading (ERC-721). Insurer: offers default cover and parametric cover. Arbiter, dispute role: resolves disputes, can never release a tranche." width="100%"></p>
 
 Meera ships vaccines from Pune through Nhava Sheva to Singapore at 2 to 8 °C. Daniel would lend against the shipment
 if he could see it. Wei Lin buys it. The characters are illustrative; everything they do below is a real contract call,
@@ -135,9 +135,9 @@ and each of them has a step-by-step guide: [exporter](docs/guides/exporter.md) �
 
 ## Why CargoFlow is fundable
 
-<p align="center"><a href="docs/pitch/CargoFlow-pitch.pdf"><img src="docs/pitch/slides/01-title.png" alt="Pitch deck title slide: the CargoFlow banner with the cast in front of a reefer, 'Evidence-gated working capital for physical trade finance, settled in Paxos USDG on Robinhood Chain', chips for live on Robinhood Chain Testnet, USDG, 10 verified contracts, 4 published packages, remote MCP and MIT licence." width="100%"></a></p>
+<p align="center"><a href="https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/CargoFlow-pitch.pdf"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/slides/01-title.png" alt="Pitch deck title slide: the CargoFlow banner with the cast in front of a reefer, 'Evidence-gated working capital for physical trade finance, settled in Paxos USDG on Robinhood Chain', chips for live on Robinhood Chain Testnet, USDG, 10 verified contracts, 4 published packages, remote MCP and MIT licence." width="100%"></a></p>
 
-**[Pitch deck, PDF (21 slides)](docs/pitch/CargoFlow-pitch.pdf)** · [PPTX](docs/pitch/CargoFlow-pitch.pptx) ·
+**[Pitch deck, PDF (21 slides)](https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/CargoFlow-pitch.pdf)** · [PPTX](https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/CargoFlow-pitch.pptx) ·
 [HTML with the animations](https://lsudoko.github.io/CargoFlow/pitch/) ([source](docs/pitch/index.html)) ·
 [Google Drive](GDRIVE_PITCH_URL) · [every slide as PNG](docs/pitch/slides) · rebuilt with `node docs/pitch/export.mjs`. Every number in it traces to a
 source below or to a transaction on chain; plans and assumptions are labelled as such.
@@ -153,12 +153,12 @@ source below or to a transaction on chain; plans and assumptions are labelled as
 
 <table>
   <tr>
-    <td width="50%" valign="top"><a href="docs/pitch/CargoFlow-pitch.pdf"><img src="docs/pitch/slides/12-traction.png" alt="Traction slide: four live runs with proof and settlement transaction links (CF-SG-VAX-0202, CF-SG-VAX-0401 passkey payment, CF-LIVE-1791029236301, the v1 hero run), 10 verified contracts, 4 published packages, 25 MCP tools, 3 Arbitrum Sepolia extensions and the test counts."></a><br><b>Traction.</b> Receipts on a public chain, labelled for what they are.</td>
-    <td width="50%" valign="top"><a href="docs/pitch/CargoFlow-pitch.pdf"><img src="docs/pitch/slides/14-market.png" alt="Market slide: nested circles TAM $2.5T (ADB trade finance gap), SAM about $15.2B (India pharma exports $30.47B times 50% on credit), SOM about $152M financed per year; a table with revenue $0.46M to $0.76M a year at a planned 30 to 50 bps and capital of about $22M at 52-day terms; assumptions A1 to A4 stated."></a><br><b>Market.</b> Bottom-up from cited figures; every assumption labelled.</td>
+    <td width="50%" valign="top"><a href="https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/CargoFlow-pitch.pdf"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/slides/12-traction.png" alt="Traction slide: four live runs with proof and settlement transaction links (CF-SG-VAX-0202, CF-SG-VAX-0401 passkey payment, CF-LIVE-1791029236301, the v1 hero run), 10 verified contracts, 4 published packages, 25 MCP tools, 3 Arbitrum Sepolia extensions and the test counts."></a><br><b>Traction.</b> Receipts on a public chain, labelled for what they are.</td>
+    <td width="50%" valign="top"><a href="https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/CargoFlow-pitch.pdf"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/slides/14-market.png" alt="Market slide: nested circles TAM $2.5T (ADB trade finance gap), SAM about $15.2B (India pharma exports $30.47B times 50% on credit), SOM about $152M financed per year; a table with revenue $0.46M to $0.76M a year at a planned 30 to 50 bps and capital of about $22M at 52-day terms; assumptions A1 to A4 stated."></a><br><b>Market.</b> Bottom-up from cited figures; every assumption labelled.</td>
   </tr>
   <tr>
-    <td width="50%" valign="top"><a href="docs/pitch/CargoFlow-pitch.pdf"><img src="docs/pitch/slides/18-roadmap.png" alt="Roadmap slide: M0 done, then M1 security, M2 real evidence, M3 mainnet, M4 legal and title, M5 scale, each with tasks, its share of the grant and an exit test."></a><br><b>Roadmap.</b> Milestones with exit tests, mapped to milestone-based grants.</td>
-    <td width="50%" valign="top"><a href="docs/pitch/CargoFlow-pitch.pdf"><img src="docs/pitch/slides/19-ask.png" alt="The ask slide: a bar split 35% audit and ZK ceremony, 25% pilots and logger hardware, 20% mainnet and first facilities, 10% legal, 10% team and infrastructure, with amounts on a 30,000 USDG milestone grant, labelled plan."></a><br><b>The ask.</b> What prize and grant money buys, milestone by milestone (plan).</td>
+    <td width="50%" valign="top"><a href="https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/CargoFlow-pitch.pdf"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/slides/18-roadmap.png" alt="Roadmap slide: M0 done, then M1 security, M2 real evidence, M3 mainnet, M4 legal and title, M5 scale, each with tasks, its share of the grant and an exit test."></a><br><b>Roadmap.</b> Milestones with exit tests, mapped to milestone-based grants.</td>
+    <td width="50%" valign="top"><a href="https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/CargoFlow-pitch.pdf"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/slides/19-ask.png" alt="The ask slide: a bar split 35% audit and ZK ceremony, 25% pilots and logger hardware, 20% mainnet and first facilities, 10% legal, 10% team and infrastructure, with amounts on a 30,000 USDG milestone grant, labelled plan."></a><br><b>The ask.</b> What prize and grant money buys, milestone by milestone (plan).</td>
   </tr>
 </table>
 
@@ -177,7 +177,7 @@ and judging criterion, with where to check it.
 | **Real problem solving** | End-to-end runs on the public testnet with every transaction linked: excursion, pause, proof, resume, settlement, passkey payment | [Live runs](#the-films-shipment-end-to-end-cf-sg-vax-0202) |
 | **Extra consideration: Paxos USDG** | USDG is the only money CargoFlow moves: escrow, tranches, invoice payment, the waterfall and cover, on the real Paxos testnet token `0x7E95…802F` | [Paxos USDG](docs/sponsors/README.md#paxos-usdg) |
 | **Prize reserved for Robinhood Chain** | Built on Robinhood Chain first: its RIP-7212 P-256 precompile carries the passkey flow, and USDG is native there | [A passkey payment](#a-passkey-payment-cf-sg-vax-0401) |
-| **Milestone-based grants** | The roadmap above is written as milestones with exit tests, so each grant tranche can be released against evidence | [Pitch deck, slides 13 and 14](docs/pitch/CargoFlow-pitch.pdf) |
+| **Milestone-based grants** | The roadmap above is written as milestones with exit tests, so each grant tranche can be released against evidence | [Pitch deck, slides 13 and 14](https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/CargoFlow-pitch.pdf) |
 
 ## How it works, in twelve beats
 
@@ -187,72 +187,72 @@ a 3% fee); the live runs further down use the same mechanics at testnet scale (3
 <table>
   <tr>
     <td width="50%" valign="top">
-      <img src="docs/assets/v3/how-facility.gif" alt="Animated: Meera presents the cold-chain policy card 2.0 to 8.0 °C; Daniel's five USDG bars slide into the five drawers of the ReceivableVault; the carrier hands over a bill of lading; the route draws from Nhava Sheva past Colombo, where milestone 3's 50 km place circle appears.">
+      <img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/how-facility.gif" alt="Animated: Meera presents the cold-chain policy card 2.0 to 8.0 °C; Daniel's five USDG bars slide into the five drawers of the ReceivableVault; the carrier hands over a bill of lading; the route draws from Nhava Sheva past Colombo, where milestone 3's 50 km place circle appears.">
       <p><b>1 · The facility.</b> Meera registers the shipment and reveals a commit-reveal policy (2.0 to 8.0 °C, score ≥ 75, conflict ≤ 30%, humidity ≤ 85%, shock ≤ 3 g). Daniel approves and deposits the whole facility into the <code>ReceivableVault</code>. Milestones can each be tied to a place on the route.</p>
       <sub><code>registerShipment</code> · <code>setPolicy</code> · <code>createFacility</code> · <code>approve</code> + <code>depositCapital</code></sub>
     </td>
     <td width="50%" valign="top">
-      <img src="docs/assets/v3/how-evidence.gif" alt="Animated: two rows of eight reading cards from probe-1 and probe-2; eight fusion columns go green and the conflict gauge rests at 1.7%; the score dial eases to 100 with seven penalty chips at zero; the cards flip face-down into a fingerprint chip that is written into a ledger row commitEpoch while the raw readings go into a Postgres drawer.">
+      <img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/how-evidence.gif" alt="Animated: two rows of eight reading cards from probe-1 and probe-2; eight fusion columns go green and the conflict gauge rests at 1.7%; the score dial eases to 100 with seven penalty chips at zero; the cards flip face-down into a fingerprint chip that is written into a ledger row commitEpoch while the raw readings go into a Postgres drawer.">
       <p><b>2 · Evidence.</b> The reefer's logger signs each reading with its device key. Eight readings per sensor close an epoch; the two probes are fused (Dempster-Shafer), their disagreement measured, and the epoch scored out of 100. Only a salted Poseidon root and the score go on chain.</p>
       <sub><code>commitEpoch</code> on the <code>EvidenceRegistry</code> (backend worker key)</sub>
     </td>
   </tr>
   <tr>
     <td width="50%" valign="top">
-      <img src="docs/assets/v3/how-release.gif" alt="Animated: the ledger row ticks green, vault drawer M1 slides out and its bar travels to Meera, then M2; at Colombo the M3 ring turns amber with '412 km away' and the explanation 'Milestone 3 waits until the cargo is within 50 km of Colombo'; humidity and shock gauges sit inside their limits.">
+      <img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/how-release.gif" alt="Animated: the ledger row ticks green, vault drawer M1 slides out and its bar travels to Meera, then M2; at Colombo the M3 ring turns amber with '412 km away' and the explanation 'Milestone 3 waits until the cargo is within 50 km of Colombo'; humidity and shock gauges sit inside their limits.">
       <p><b>3 · Release.</b> Pass the policy in the right place and a tranche goes to Meera. The controller re-checks the committed epoch against the on-chain policy itself, whatever the backend asked for. Wrong place? It waits: neither a failure nor a pause.</p>
       <sub><code>evaluateAndReleaseMilestone</code> on the <code>FinancingController</code></sub>
     </td>
     <td width="50%" valign="top">
-      <img src="docs/assets/v3/how-excursion.gif" alt="Animated: probe-1 climbs to 11.7 °C while probe-2 holds at 4.6; the fusion columns swing red, the conflict needle passes the 30% notch to 74.8% and the score falls to 48; an amber latch drops across the vault drawers, FACILITY PAUSED; a ratchet labelled stricter clicks one way and blocks a push toward looser.">
+      <img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/how-excursion.gif" alt="Animated: probe-1 climbs to 11.7 °C while probe-2 holds at 4.6; the fusion columns swing red, the conflict needle passes the 30% notch to 74.8% and the score falls to 48; an amber latch drops across the vault drawers, FACILITY PAUSED; a ratchet labelled stricter clicks one way and blocks a push toward looser.">
       <p><b>4 · Excursion.</b> Off Sri Lanka probe-1 reaches 11.7 °C, probe-2 holds at 4.6. The sensors disagree (74.8% conflict), the score falls to 48 and the facility pauses: releases now revert. The AI monitor can only make an outcome stricter, through a key that can do nothing but pause.</p>
       <sub><code>pauseFinancing</code> (reason code + AI audit)</sub>
     </td>
   </tr>
   <tr>
     <td width="50%" valign="top">
-      <img src="docs/assets/v3/how-recovery.gif" alt="Animated: a sealed Groth16 envelope holds eight face-down readings; a 'Proof ready, Review and sign' notification drops beside Meera; the envelope reaches the ledger, a resumeWithProof row ticks green with 'Proof verified on chain', the latch lifts and the vault shows ACTIVE.">
+      <img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/how-recovery.gif" alt="Animated: a sealed Groth16 envelope holds eight face-down readings; a 'Proof ready, Review and sign' notification drops beside Meera; the envelope reaches the ledger, a resumeWithProof row ticks green with 'Proof verified on chain', the latch lifts and the vault shows ACTIVE.">
       <p><b>5 · Zero-knowledge recovery.</b> Once probe-2 has eight fresh in-band readings, the service proves in zero knowledge that they sit inside the band, without revealing any of them. Meera gets a "Proof ready" notification and signs once; the contract verifies the Groth16 proof, bound to this exact pause, and releases resume.</p>
       <sub><code>resumeWithProof</code> → <code>Groth16Verifier</code></sub>
     </td>
     <td width="50%" valign="top">
-      <img src="docs/assets/v3/how-settlement.gif" alt="Animated: Wei Lin's single 100,000 USDG payment splits beneath the vault into 58,800 residual sliding to Meera and 40,000 principal plus 1,200 fee sliding to Daniel, labelled one transaction, settle.">
+      <img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/how-settlement.gif" alt="Animated: Wei Lin's single 100,000 USDG payment splits beneath the vault into 58,800 residual sliding to Meera and 40,000 principal plus 1,200 fee sliding to Daniel, labelled one transaction, settle.">
       <p><b>6 · Settlement.</b> In Singapore Wei Lin confirms delivery and pays. That one payment runs the waterfall: 40,000 principal + 1,200 fee to Daniel, 58,800 to Meera.</p>
       <sub><code>markDelivered</code> · <code>approve</code> (vault) + <code>settle</code> on the <code>FinancingController</code>, paid out by the <code>ReceivableVault</code></sub>
     </td>
   </tr>
   <tr>
     <td width="50%" valign="top">
-      <img src="docs/assets/v3/how-title.gif" alt="Animated: the electronic bill of lading card, with its possession history Issued to Meera, Bound into escrow, Released to Wei Lin, moves to Wei Lin as the payouts land; the headline reads Documents against payment.">
+      <img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/how-title.gif" alt="Animated: the electronic bill of lading card, with its possession history Issued to Meera, Bound into escrow, Released to Wei Lin, moves to Wei Lin as the payouts land; the headline reads Documents against payment.">
       <p><b>7 · Title moves with the money.</b> The carrier's electronic bill of lading (ERC-721) was bound into escrow; it leaves for Wei Lin in the same transaction as her payment: documents against payment, enforced by the contract.</p>
       <sub><code>EBLRegistry</code> · <code>bindTitle</code> · released inside <code>settle</code></sub>
     </td>
     <td width="50%" valign="top">
-      <img src="docs/assets/v3/how-cover.gif" alt="Animated: in a 'what if' set the insurer opens an umbrella over Daniel's drawn principal; three consecutive failed commitEpoch rows are bracketed N = 3 and 'commit order verified'; bars fall from the canopy into Daniel's stack.">
+      <img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/how-cover.gif" alt="Animated: in a 'what if' set the insurer opens an umbrella over Daniel's drawn principal; three consecutive failed commitEpoch rows are bracketed N = 3 and 'commit order verified'; bars fall from the canopy into Daniel's stack.">
       <p><b>8 · Cover.</b> If it goes wrong, an insurer's default cover pays min(cover, drawn principal). Parametric cover pays after N consecutive failed epochs, proven from the <code>EvidenceRegistry</code>'s commit order: principal to the financier plus salvage to the exporter.</p>
       <sub><code>CoverPool</code> · pull-based payouts</sub>
     </td>
   </tr>
   <tr>
     <td width="50%" valign="top">
-      <img src="docs/assets/v3/how-arbiter.gif" alt="Animated: the arbiter stamps a dispute card RESOLVED, reaches toward the vault and a padlock marked no role appears on the drawers; he shows an open palm.">
+      <img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/how-arbiter.gif" alt="Animated: the arbiter stamps a dispute card RESOLVED, reaches toward the vault and a padlock marked no role appears on the drawers; he shows an open palm.">
       <p><b>9 · Disputes.</b> The exporter, financier or arbiter can open a dispute, which freezes releases. Only the dispute role resolves it (resume or default) and it can never release a tranche.</p>
       <sub><code>openDispute</code> · <code>resolveDispute</code> · <code>markDefaulted</code></sub>
     </td>
     <td width="50%" valign="top">
-      <img src="docs/assets/v3/how-passkey.gif" alt="Animated screen recording of the live app: on shipment CF-SG-VAX-0401 Wei Lin signs in with a passkey, then Confirm delivery, Approve and Pay run and the shipment shows Settled.">
+      <img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/how-passkey.gif" alt="Animated screen recording of the live app: on shipment CF-SG-VAX-0401 Wei Lin signs in with a passkey, then Confirm delivery, Approve and Pay run and the shipment shows Settled.">
       <p><b>10 · Passkeys, live.</b> Wei Lin signs in with a passkey (no extension) and pays from a ZeroDev Kernel smart account: three ERC-4337 user operations on the live testnet, <a href="#a-passkey-payment-cf-sg-vax-0401">linked below</a>.</p>
       <sub>Kernel v3.1 · WebAuthn validator · RIP-7212 P-256 precompile</sub>
     </td>
   </tr>
   <tr>
     <td width="50%" valign="top">
-      <img src="docs/assets/v3/how-claude.gif" alt="Animated: claude.ai with the CargoFlow connector: a permission prompt for Fleet risk summary, the expanded tool calls, the fleet overview naming the paused shipments, then a prepared deposit with two unsigned transactions and a link that opens the shipment in CargoFlow; Daniel stands beside the window.">
+      <img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/how-claude.gif" alt="Animated: claude.ai with the CargoFlow connector: a permission prompt for Fleet risk summary, the expanded tool calls, the fleet overview naming the paused shipments, then a prepared deposit with two unsigned transactions and a link that opens the shipment in CargoFlow; Daniel stands beside the window.">
       <p><b>11 · Claude.</b> Add the remote MCP server as a custom connector and ask. Claude reads the fleet, explains a pause and prepares unsigned transactions with a link to sign in the app. <a href="#use-cargoflow-in-claude">Set it up</a>.</p>
       <sub>25 tools · Streamable HTTP · no keys</sub>
     </td>
     <td width="50%" valign="top">
-      <img src="docs/assets/v3/web-track-v3.jpg" alt="The live dashboard for CF-LIVE-1791029236301, status Settled: invoice 30 USDG, financing 20 USDG, 20 USDG released to the exporter over 5 of 5 milestones, evidence score 100, and the journey of five released checkpoints.">
+      <img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/web-track-v3.jpg" alt="The live dashboard for CF-LIVE-1791029236301, status Settled: invoice 30 USDG, financing 20 USDG, 20 USDG released to the exporter over 5 of 5 milestones, evidence score 100, and the journey of five released checkpoints.">
       <p><b>12 · All of it, on chain.</b> Every beat above ran on the v3 contracts. The settled shipment's dashboard shows each milestone with its transaction, the evidence, the proof and the audit trail. <a href="#live-on-robinhood-chain-testnet">Transactions</a>.</p>
       <sub><a href="https://cargoflow.adoranto737.workers.dev/track/0xc57490f8b1f0190b00197db978963899f55314865c0059eddaf8cfecdc8ff9e5">Open the settled shipment</a></sub>
     </td>
@@ -311,37 +311,37 @@ Every frame below is the live app at **https://cargoflow.adoranto737.workers.dev
 the demo video with real testnet transactions (shipment `CF-SG-VAX-0202`, and `CF-SG-VAX-0401` for the passkey
 payment).
 
-<p align="center"><a href="https://cargoflow.adoranto737.workers.dev"><img src="docs/assets/v3/web-landing.jpg" alt="CargoFlow landing page: 'Capital that moves with your cargo', USDG working capital for physical trade released only when the shipment's own sensor evidence clears it, with Start as an exporter and Fund a facility buttons, a track bar and live-on-testnet counters." width="100%"></a></p>
+<p align="center"><a href="https://cargoflow.adoranto737.workers.dev"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/web-landing.jpg" alt="CargoFlow landing page: 'Capital that moves with your cargo', USDG working capital for physical trade released only when the shipment's own sensor evidence clears it, with Start as an exporter and Fund a facility buttons, a track bar and live-on-testnet counters." width="100%"></a></p>
 
 **The cast, on the site.** The landing page introduces the same six people as the film, then tells how it works as a
 scroll story: the route draws, the vault fills, the door probe warms and the payment pauses, the proof unlocks it.
 
 <table>
   <tr>
-    <td width="50%" valign="top"><a href="https://cargoflow.adoranto737.workers.dev/#how-it-works"><img src="docs/assets/v3/web-story-pause.jpg" alt="Landing scroll story, step 4 of 6: off Sri Lanka the door probe reads 9.1 °C, probe-1 out of range, payments paused and the escrow vault latched, with Meera looking on."></a><br><b>Step 4, pause.</b> A warm reading pauses the money; nobody has to notice or call.</td>
-    <td width="50%" valign="top"><a href="https://cargoflow.adoranto737.workers.dev/#how-it-works"><img src="docs/assets/v3/web-story-proof.jpg" alt="Landing scroll story, step 5 of 6: proof ready, eight sealed readings become a shield and the vault latch lifts."></a><br><b>Step 5, prove.</b> Eight sealed readings prove the cargo is fine; the latch lifts.</td>
+    <td width="50%" valign="top"><a href="https://cargoflow.adoranto737.workers.dev/#how-it-works"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/web-story-pause.jpg" alt="Landing scroll story, step 4 of 6: off Sri Lanka the door probe reads 9.1 °C, probe-1 out of range, payments paused and the escrow vault latched, with Meera looking on."></a><br><b>Step 4, pause.</b> A warm reading pauses the money; nobody has to notice or call.</td>
+    <td width="50%" valign="top"><a href="https://cargoflow.adoranto737.workers.dev/#how-it-works"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/web-story-proof.jpg" alt="Landing scroll story, step 5 of 6: proof ready, eight sealed readings become a shield and the vault latch lifts."></a><br><b>Step 5, prove.</b> Eight sealed readings prove the cargo is fine; the latch lifts.</td>
   </tr>
   <tr>
-    <td width="50%" valign="top"><img src="docs/assets/v3/web-cast.jpg" alt="Meet the people section: Meera the exporter, Daniel the financier and Wei Lin the buyer, each with a one-line role."><br><b>Meet the people.</b> Every screen belongs to one of them.</td>
-    <td width="50%" valign="top" align="center"><img src="docs/assets/v3/web-cast-mobile.jpg" alt="Meet the people on a phone: a swipeable carousel of character cards." width="55%"><br><b>On a phone.</b> A swipe carousel; motion turns off with reduced-motion settings.</td>
+    <td width="50%" valign="top"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/web-cast.jpg" alt="Meet the people section: Meera the exporter, Daniel the financier and Wei Lin the buyer, each with a one-line role."><br><b>Meet the people.</b> Every screen belongs to one of them.</td>
+    <td width="50%" valign="top" align="center"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/web-cast-mobile.jpg" alt="Meet the people on a phone: a swipeable carousel of character cards." width="55%"><br><b>On a phone.</b> A swipe carousel; motion turns off with reduced-motion settings.</td>
   </tr>
 </table>
 
 <table>
   <tr>
-    <td width="33%" valign="top"><a href="https://cargoflow.adoranto737.workers.dev/exporter"><img src="docs/assets/v3/web-exporter.jpg" alt="Exporter wizard, cold-chain policy step: cargo type chips with Pharma 2 to 8 °C selected, temperature limits, evidence and conflict thresholds, humidity and shock."></a><br><b>Exporter.</b> Four steps (shipment, cold-chain policy, financing, sign); the Pharma template fills 2 to 8 °C, humidity and shock. <a href="https://cargoflow.adoranto737.workers.dev/exporter">/exporter</a></td>
-    <td width="33%" valign="top"><a href="https://cargoflow.adoranto737.workers.dev/financier"><img src="docs/assets/v3/web-financier.jpg" alt="Financier portal: portfolio numbers and the facilities that name this wallet, each with a settlement preview and Approve then Deposit buttons; a Facility funded toast."></a><br><b>Financier.</b> Facilities that name your wallet, a settlement preview (20.6 back on 20), approve and deposit. <a href="https://cargoflow.adoranto737.workers.dev/financier">/financier</a></td>
-    <td width="33%" valign="top"><a href="https://cargoflow.adoranto737.workers.dev/ebl"><img src="docs/assets/v3/web-ebl.jpg" alt="Shipment page with the title card: bill of lading #2 held by the financing contract, In escrow, documents against payment explained."></a><br><b>Carrier and title.</b> The carrier issues bill #2; Meera binds it and the title card reads <i>In escrow</i>. <a href="https://cargoflow.adoranto737.workers.dev/ebl">/ebl</a></td>
+    <td width="33%" valign="top"><a href="https://cargoflow.adoranto737.workers.dev/exporter"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/web-exporter.jpg" alt="Exporter wizard, cold-chain policy step: cargo type chips with Pharma 2 to 8 °C selected, temperature limits, evidence and conflict thresholds, humidity and shock."></a><br><b>Exporter.</b> Four steps (shipment, cold-chain policy, financing, sign); the Pharma template fills 2 to 8 °C, humidity and shock. <a href="https://cargoflow.adoranto737.workers.dev/exporter">/exporter</a></td>
+    <td width="33%" valign="top"><a href="https://cargoflow.adoranto737.workers.dev/financier"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/web-financier.jpg" alt="Financier portal: portfolio numbers and the facilities that name this wallet, each with a settlement preview and Approve then Deposit buttons; a Facility funded toast."></a><br><b>Financier.</b> Facilities that name your wallet, a settlement preview (20.6 back on 20), approve and deposit. <a href="https://cargoflow.adoranto737.workers.dev/financier">/financier</a></td>
+    <td width="33%" valign="top"><a href="https://cargoflow.adoranto737.workers.dev/ebl"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/web-ebl.jpg" alt="Shipment page with the title card: bill of lading #2 held by the financing contract, In escrow, documents against payment explained."></a><br><b>Carrier and title.</b> The carrier issues bill #2; Meera binds it and the title card reads <i>In escrow</i>. <a href="https://cargoflow.adoranto737.workers.dev/ebl">/ebl</a></td>
   </tr>
   <tr>
-    <td width="33%" valign="top"><img src="docs/assets/v3/web-releases.jpg" alt="Submit readings dialog after uploading the logger CSV: 32 readings accepted, two epochs with score 100, Passed: milestone released, with transaction links."><br><b>Readings in, tranches out.</b> A logger CSV (or the gateway agent) sends signed readings; two epochs pass and two tranches are paid.</td>
-    <td width="33%" valign="top"><img src="docs/assets/v3/web-excursion.jpg" alt="Shipment page after the excursion: 'Financing has been paused because the evidence did not meet policy requirements', why (score 48, conflict 74.8%), what each party does now, and the route map."><br><b>Paused, in plain words.</b> Why it paused (score 48, conflict 74.8%) and what each party does next.</td>
-    <td width="33%" valign="top"><img src="docs/assets/v3/web-recovery.jpg" alt="Zero-knowledge recovery card: Groth16 proof verified on-chain, eight hidden readings from milestone 3 proven inside the agreed band, none revealed; the route map marked Paused, resumed."><br><b>Recovered.</b> "Groth16 proof verified on-chain": eight hidden readings proven in band, none revealed.</td>
+    <td width="33%" valign="top"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/web-releases.jpg" alt="Submit readings dialog after uploading the logger CSV: 32 readings accepted, two epochs with score 100, Passed: milestone released, with transaction links."><br><b>Readings in, tranches out.</b> A logger CSV (or the gateway agent) sends signed readings; two epochs pass and two tranches are paid.</td>
+    <td width="33%" valign="top"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/web-excursion.jpg" alt="Shipment page after the excursion: 'Financing has been paused because the evidence did not meet policy requirements', why (score 48, conflict 74.8%), what each party does now, and the route map."><br><b>Paused, in plain words.</b> Why it paused (score 48, conflict 74.8%) and what each party does next.</td>
+    <td width="33%" valign="top"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/web-recovery.jpg" alt="Zero-knowledge recovery card: Groth16 proof verified on-chain, eight hidden readings from milestone 3 proven inside the agreed band, none revealed; the route map marked Paused, resumed."><br><b>Recovered.</b> "Groth16 proof verified on-chain": eight hidden readings proven in band, none revealed.</td>
   </tr>
   <tr>
-    <td width="33%" valign="top"><img src="docs/assets/v3/web-settled.jpg" alt="Dashboard of CF-SG-VAX-0401, Settled: invoice 30 USDG, financing 20, 20 released to the exporter over 5 of 5 milestones, evidence 100; the wallet chip reads Passkey account."><br><b>Settled with a passkey.</b> <code>CF-SG-VAX-0401</code>, paid by Wei Lin's passkey smart account.</td>
-    <td width="33%" valign="top"><img src="docs/assets/v3/web-certificate.jpg" alt="Settlement certificate PDF for CF-SG-VAX-0202 open in the browser: milestones and evidence, committed evidence epochs, the zero-knowledge proof record and the settlement waterfall."><br><b>Certificate.</b> A settlement certificate (PDF) with every epoch, the proof and the waterfall.</td>
-    <td width="33%" valign="top"><a href="https://cargoflow.adoranto737.workers.dev/market"><img src="docs/assets/v3/web-market.jpg" alt="Market: an offer modal for an open financing request with a suggested fee band and its reasons."></a><br><b>Market.</b> Requests without a financier get offers, with a suggested fee band and its reasons. <a href="https://cargoflow.adoranto737.workers.dev/market">/market</a></td>
+    <td width="33%" valign="top"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/web-settled.jpg" alt="Dashboard of CF-SG-VAX-0401, Settled: invoice 30 USDG, financing 20, 20 released to the exporter over 5 of 5 milestones, evidence 100; the wallet chip reads Passkey account."><br><b>Settled with a passkey.</b> <code>CF-SG-VAX-0401</code>, paid by Wei Lin's passkey smart account.</td>
+    <td width="33%" valign="top"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/web-certificate.jpg" alt="Settlement certificate PDF for CF-SG-VAX-0202 open in the browser: milestones and evidence, committed evidence epochs, the zero-knowledge proof record and the settlement waterfall."><br><b>Certificate.</b> A settlement certificate (PDF) with every epoch, the proof and the waterfall.</td>
+    <td width="33%" valign="top"><a href="https://cargoflow.adoranto737.workers.dev/market"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/web-market.jpg" alt="Market: an offer modal for an open financing request with a suggested fee band and its reasons."></a><br><b>Market.</b> Requests without a financier get offers, with a suggested fee band and its reasons. <a href="https://cargoflow.adoranto737.workers.dev/market">/market</a></td>
   </tr>
 </table>
 
@@ -360,10 +360,10 @@ straight on the recovery card for Meera to sign. Bot: [@Cargo_FlowBot](https://t
 
 <table>
   <tr>
-    <td width="34%" align="center" valign="top"><img src="docs/assets/v3/how-telegram.gif" alt="Phone recording of the CargoFlow Telegram bot: alerts switched on for CF-LIVE-1791103821739, then RELEASED, RELEASED and PAUSED alerts with transaction hashes, then RECOVERY_READY with a link that opens the recovery page." width="300"><br><b>The live recording</b></td>
-    <td width="22%" align="center" valign="top"><img src="docs/assets/v3/telegram-02-released-paused.jpg" alt="Telegram: two RELEASED alerts and a PAUSED alert for CF-LIVE-1791103821739, each with status, transaction hash and shipment id." width="200"><br>Released, released, paused</td>
-    <td width="22%" align="center" valign="top"><img src="docs/assets/v3/telegram-03-recovery-ready.jpg" alt="Telegram: RECOVERY_READY, a zero-knowledge recovery is ready, review and sign to resume financing, with the link to the shipment page." width="200"><br>Recovery ready</td>
-    <td width="22%" align="center" valign="top"><img src="docs/assets/v3/telegram-04-recovery-page.jpg" alt="The link opens CargoFlow on the phone at the zero-knowledge recovery card: connect the exporter's wallet to review the proof and sign." width="200"><br>One tap to sign</td>
+    <td width="34%" align="center" valign="top"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/how-telegram.gif" alt="Phone recording of the CargoFlow Telegram bot: alerts switched on for CF-LIVE-1791103821739, then RELEASED, RELEASED and PAUSED alerts with transaction hashes, then RECOVERY_READY with a link that opens the recovery page." width="300"><br><b>The live recording</b></td>
+    <td width="22%" align="center" valign="top"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/telegram-02-released-paused.jpg" alt="Telegram: two RELEASED alerts and a PAUSED alert for CF-LIVE-1791103821739, each with status, transaction hash and shipment id." width="200"><br>Released, released, paused</td>
+    <td width="22%" align="center" valign="top"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/telegram-03-recovery-ready.jpg" alt="Telegram: RECOVERY_READY, a zero-knowledge recovery is ready, review and sign to resume financing, with the link to the shipment page." width="200"><br>Recovery ready</td>
+    <td width="22%" align="center" valign="top"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/telegram-04-recovery-page.jpg" alt="The link opens CargoFlow on the phone at the zero-knowledge recovery card: connect the exporter's wallet to review the proof and sign." width="200"><br>One tap to sign</td>
   </tr>
 </table>
 
@@ -380,12 +380,12 @@ unsigned transactions with a link to sign them in the web app. It holds no keys.
 
 <table>
   <tr>
-    <td width="50%" valign="top"><img src="docs/assets/v3/claude-connector.jpg" alt="claude.ai Add custom connector dialog with the name CargoFlow and the URL https://cargoflow-mcp.adoranto737.workers.dev/mcp."><br><b>1 · Add the connector.</b> <a href="https://claude.ai/new?modal=add-custom-connector">Open the Add custom connector dialog</a> (or Settings → Connectors → Add custom connector), name it CargoFlow and paste the URL.</td>
-    <td width="50%" valign="top"><img src="docs/assets/v3/claude-tools.jpg" alt="The CargoFlow connector page in claude.ai listing its read-only tools: Explain a shipment, Fleet risk summary, Get the audit trail, Get default cover, Get attested documents and more."><br><b>2 · The tools appear.</b> Read-only tools (fleet risk, explanations, evidence, cover, documents, bills of lading, EPCIS) plus <code>prepare_*</code> tools.</td>
+    <td width="50%" valign="top"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/claude-connector.jpg" alt="claude.ai Add custom connector dialog with the name CargoFlow and the URL https://cargoflow-mcp.adoranto737.workers.dev/mcp."><br><b>1 · Add the connector.</b> <a href="https://claude.ai/new?modal=add-custom-connector">Open the Add custom connector dialog</a> (or Settings → Connectors → Add custom connector), name it CargoFlow and paste the URL.</td>
+    <td width="50%" valign="top"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/claude-tools.jpg" alt="The CargoFlow connector page in claude.ai listing its read-only tools: Explain a shipment, Fleet risk summary, Get the audit trail, Get default cover, Get attested documents and more."><br><b>2 · The tools appear.</b> Read-only tools (fleet risk, explanations, evidence, cover, documents, bills of lading, EPCIS) plus <code>prepare_*</code> tools.</td>
   </tr>
   <tr>
-    <td width="50%" valign="top"><img src="docs/assets/v3/claude-answer.jpg" alt="Claude's answer to 'Using CargoFlow, summarise the fleet risk and explain any paused shipment': a fleet overview of five shipments with two paused, and why: at milestone 3 the score fell to 48 and sensor conflict jumped to about 74.8%, probe-1 read as high as 11.70 °C while probe-2 stayed at 4.6 to 5.3 °C."><br><b>3 · Ask.</b> "Using CargoFlow, summarise the fleet risk and explain any paused shipment." Claude calls <code>fleet_risk_summary</code> and <code>explain_shipment</code> and answers from live testnet data.</td>
-    <td width="50%" valign="top"><img src="docs/assets/v3/claude-unsigned.jpg" alt="The expanded prepare-deposit result: the transactions JSON with to, data, value and chainId 46630, and a signUrl to the shipment page, followed by Claude's explanation that the deposit is prepared but not sent."><br><b>4 · Prepare, never sign.</b> "Prepare the deposit for …" returns two unsigned transactions <code>{to, data, value, chainId}</code> and a link that opens the shipment ready to sign. Nothing is sent.</td>
+    <td width="50%" valign="top"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/claude-answer.jpg" alt="Claude's answer to 'Using CargoFlow, summarise the fleet risk and explain any paused shipment': a fleet overview of five shipments with two paused, and why: at milestone 3 the score fell to 48 and sensor conflict jumped to about 74.8%, probe-1 read as high as 11.70 °C while probe-2 stayed at 4.6 to 5.3 °C."><br><b>3 · Ask.</b> "Using CargoFlow, summarise the fleet risk and explain any paused shipment." Claude calls <code>fleet_risk_summary</code> and <code>explain_shipment</code> and answers from live testnet data.</td>
+    <td width="50%" valign="top"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/claude-unsigned.jpg" alt="The expanded prepare-deposit result: the transactions JSON with to, data, value and chainId 46630, and a signUrl to the shipment page, followed by Claude's explanation that the deposit is prepared but not sent."><br><b>4 · Prepare, never sign.</b> "Prepare the deposit for …" returns two unsigned transactions <code>{to, data, value, chainId}</code> and a link that opens the shipment ready to sign. Nothing is sent.</td>
   </tr>
 </table>
 
@@ -395,13 +395,13 @@ The tool calls, the prepared deposit, and the app opening from Claude's link.
 
 <table>
   <tr>
-    <td width="33%" valign="top"><img src="docs/assets/v3/claude-toolcalls.jpg" alt="Expanded tool calls in claude.ai: Fleet risk summary, Explain a shipment twice, Get evidence epochs twice, above the fleet overview."><br>The tool calls Claude made, expanded.</td>
-    <td width="33%" valign="top"><img src="docs/assets/v3/claude-prepare.jpg" alt="Claude's answer: the deposit for CF-LIVE-1791042318628 is prepared but not sent; what it does, the signer (the financier's wallet), and the two transactions in order, USDG.approve then FinancingController.depositCapital, with links to the shipment page and the financier portal."><br>The prepared deposit: what it does, who signs, two transactions in order.</td>
-    <td width="33%" valign="top"><img src="docs/assets/v3/claude-app-opens.jpg" alt="The CargoFlow shipment page for CF-LIVE-1791042318628 opened from Claude's link: created, awaiting the financier's capital, with Connect wallet."><br>The link opens the shipment in CargoFlow, ready for the financier to sign.</td>
+    <td width="33%" valign="top"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/claude-toolcalls.jpg" alt="Expanded tool calls in claude.ai: Fleet risk summary, Explain a shipment twice, Get evidence epochs twice, above the fleet overview."><br>The tool calls Claude made, expanded.</td>
+    <td width="33%" valign="top"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/claude-prepare.jpg" alt="Claude's answer: the deposit for CF-LIVE-1791042318628 is prepared but not sent; what it does, the signer (the financier's wallet), and the two transactions in order, USDG.approve then FinancingController.depositCapital, with links to the shipment page and the financier portal."><br>The prepared deposit: what it does, who signs, two transactions in order.</td>
+    <td width="33%" valign="top"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/claude-app-opens.jpg" alt="The CargoFlow shipment page for CF-LIVE-1791042318628 opened from Claude's link: created, awaiting the financier's capital, with Connect wallet."><br>The link opens the shipment in CargoFlow, ready for the financier to sign.</td>
   </tr>
 </table>
 
-<p align="center"><img src="docs/assets/v3/code-mcp.png" alt="Configuration, light theme: claude.ai via Settings, Connectors, Add custom connector; Claude Code via claude mcp add --transport http cargoflow https://cargoflow-mcp.adoranto737.workers.dev/mcp; Cursor or any MCP client via an mcpServers entry with the url." width="620"></p>
+<p align="center"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/code-mcp.png" alt="Configuration, light theme: claude.ai via Settings, Connectors, Add custom connector; Claude Code via claude mcp add --transport http cargoflow https://cargoflow-mcp.adoranto737.workers.dev/mcp; Cursor or any MCP client via an mcpServers entry with the url." width="620"></p>
 
 ```bash
 claude mcp add --transport http cargoflow https://cargoflow-mcp.adoranto737.workers.dev/mcp   # Claude Code
@@ -416,7 +416,7 @@ claude.ai sessions on 3 October 2026 ([all of them](video/public/footage/claude)
 
 ## Architecture
 
-<p align="center"><img src="docs/assets/v3/architecture.png" alt="Architecture. Meera (exporter, wallet), Daniel (financier, wallet), Wei Lin (buyer, passkey), and the carrier and arbiter (role wallets) use the web app on Cloudflare Workers (Next.js 16, OpenNext, wagmi and viem, ZeroDev passkey smart accounts); signed transactions go straight from the app to Robinhood Chain Testnet, as wallet transactions or ERC-4337 user operations. The reefer logger sends CSV exports to the gateway agent, which posts signed readings to the Go evidence service on Render: ingestion, evidence engine, Poseidon epochs, policy gate with the advisory AI monitor (Groq, stricter only), prover worker, outbox and reconciler acting through role keys, indexer and REST plus WebSocket API, with Postgres on Neon. Daniel asks Claude, which calls the remote MCP server on Cloudflare Workers. On chain: FinancingController, ReceivableVault, EvidenceRegistry, PolicyEngine, ShipmentRegistry, Groth16Verifier, CoverPool, DeviceRegistry, EBLRegistry, CargoFlowAccess and USDG, marked as holding final authority. Sponsor extensions on Arbitrum Sepolia: Fhenix, GMX, Stylus." width="100%"></p>
+<p align="center"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/architecture.png" alt="Architecture. Meera (exporter, wallet), Daniel (financier, wallet), Wei Lin (buyer, passkey), and the carrier and arbiter (role wallets) use the web app on Cloudflare Workers (Next.js 16, OpenNext, wagmi and viem, ZeroDev passkey smart accounts); signed transactions go straight from the app to Robinhood Chain Testnet, as wallet transactions or ERC-4337 user operations. The reefer logger sends CSV exports to the gateway agent, which posts signed readings to the Go evidence service on Render: ingestion, evidence engine, Poseidon epochs, policy gate with the advisory AI monitor (Groq, stricter only), prover worker, outbox and reconciler acting through role keys, indexer and REST plus WebSocket API, with Postgres on Neon. Daniel asks Claude, which calls the remote MCP server on Cloudflare Workers. On chain: FinancingController, ReceivableVault, EvidenceRegistry, PolicyEngine, ShipmentRegistry, Groth16Verifier, CoverPool, DeviceRegistry, EBLRegistry, CargoFlowAccess and USDG, marked as holding final authority. Sponsor extensions on Arbitrum Sepolia: Fhenix, GMX, Stylus." width="100%"></p>
 
 The chain is the financial source of truth. Each party signs its own money moves from the web app, straight to the
 contracts. The Go service scores evidence and acts on chain only through three role-limited keys: the worker commits
@@ -537,7 +537,7 @@ controlled by a WebAuthn passkey. On 3 October 2026 (18:39 UTC) she signed in on
 existing passkey" and confirmed delivery, approved 30 USDG and paid as three ERC-4337 user operations; the first one
 also deployed the account ([dashboard](https://cargoflow.adoranto737.workers.dev/track/0x195c3fb058809fac41122a6540827510c79c7fe29462c8dea46bc18549c53f51)).
 
-<p align="center"><img src="docs/assets/v3/term-passkey.png" alt="Light terminal capture from video/recorder/txlog.jsonl: shipment CF-SG-VAX-0401, buyer the Kernel smart account 0xBCf2…5E56 signed with a WebAuthn passkey through EntryPoint v0.7. deploy + markDelivered: userOp 0x8d15b67b…a302abf, tx 0x485e2b6e…ed0f121. approve 30 USDG to the vault: userOp 0x677b82a9…1ed156827, tx 0x6dd4b06d…6eb8c742. settle: userOp 0xf70d30af…ead4cc1d, tx 0xee1d5ba8…215815956. Settled; the account paid 0 gas." width="760"></p>
+<p align="center"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/term-passkey.png" alt="Light terminal capture from video/recorder/txlog.jsonl: shipment CF-SG-VAX-0401, buyer the Kernel smart account 0xBCf2…5E56 signed with a WebAuthn passkey through EntryPoint v0.7. deploy + markDelivered: userOp 0x8d15b67b…a302abf, tx 0x485e2b6e…ed0f121. approve 30 USDG to the vault: userOp 0x677b82a9…1ed156827, tx 0x6dd4b06d…6eb8c742. settle: userOp 0xf70d30af…ead4cc1d, tx 0xee1d5ba8…215815956. Settled; the account paid 0 gas." width="760"></p>
 
 | User operation | Bundled in transaction |
 |---|---|
@@ -588,7 +588,7 @@ releases, delivery and payment. Its run on v1 settled `CF-LIVE-1790936950736`
 [invoice paid](https://explorer.testnet.chain.robinhood.com/tx/0x78984fdfcefd2fa792c7170fff94b1f4b482986e96fad29193ff450251605041)).
 Its output (hashes shortened, long lines wrapped; full hashes are in the links above):
 
-<p align="center"><img src="docs/assets/v3/term-testnet-run.png" alt="Light terminal capture of testnet-lifecycle.ts for shipment CF-LIVE-1790936950736: register shipment, set policy, create facility, financier approves and deposits, transit starts, a gateway is added; leg 1 releases milestones 1 and 2; leg 2, reefer fails, pauses at milestone 3; leg 3 skips while paused; the recovery epoch is committed, the exporter resumes with a proof, milestone 3 is released; leg 4 releases milestones 4 and 5; the buyer confirms delivery, approves and pays; final status SETTLED, drawn 20 USDG." width="680"></p>
+<p align="center"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/term-testnet-run.png" alt="Light terminal capture of testnet-lifecycle.ts for shipment CF-LIVE-1790936950736: register shipment, set policy, create facility, financier approves and deposits, transit starts, a gateway is added; leg 1 releases milestones 1 and 2; leg 2, reefer fails, pauses at milestone 3; leg 3 skips while paused; the recovery epoch is committed, the exporter resumes with a proof, milestone 3 is released; leg 4 releases milestones 4 and 5; the buyer confirms delivery, approves and pays; final status SETTLED, drawn 20 USDG." width="680"></p>
 
 ### History: the v1 deployment and its complete facility, transaction by transaction
 
@@ -734,9 +734,9 @@ cd frontend && cp .env.example .env.local && sed -i 's#8080#8787#' .env.local &&
 
 <table>
   <tr>
-    <td width="33%" valign="top"><a href="https://cargoflow.adoranto737.workers.dev/developers"><img src="docs/assets/v3/web-developers.jpg" alt="The developers page: Build on CargoFlow, with the REST API, SDK, MCP, gateway and Python cards and the Use CargoFlow in Claude panel with the MCP URL and a copy button."></a><br><b>/developers</b>: MCP URL with a copy button, starter prompts, every package.</td>
-    <td width="33%" valign="top"><a href="https://cargoflow.adoranto737.workers.dev/docs"><img src="docs/assets/v3/web-docs.jpg" alt="The interactive API reference on the financing request operation, showing the wallet-signed message template and a JavaScript request example."></a><br><b>/docs</b>: the OpenAPI 3.1 reference, with each wallet-signed message format.</td>
-    <td width="33%" valign="top"><a href="https://cargoflow.adoranto737.workers.dev/deployments"><img src="docs/assets/v3/web-deployments.jpg" alt="The deployments page listing every v3 contract with its address, copy buttons and Verified marks, then the live services."></a><br><b>/deployments</b>: every contract and service, verified, with copy buttons.</td>
+    <td width="33%" valign="top"><a href="https://cargoflow.adoranto737.workers.dev/developers"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/web-developers.jpg" alt="The developers page: Build on CargoFlow, with the REST API, SDK, MCP, gateway and Python cards and the Use CargoFlow in Claude panel with the MCP URL and a copy button."></a><br><b>/developers</b>: MCP URL with a copy button, starter prompts, every package.</td>
+    <td width="33%" valign="top"><a href="https://cargoflow.adoranto737.workers.dev/docs"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/web-docs.jpg" alt="The interactive API reference on the financing request operation, showing the wallet-signed message template and a JavaScript request example."></a><br><b>/docs</b>: the OpenAPI 3.1 reference, with each wallet-signed message format.</td>
+    <td width="33%" valign="top"><a href="https://cargoflow.adoranto737.workers.dev/deployments"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/web-deployments.jpg" alt="The deployments page listing every v3 contract with its address, copy buttons and Verified marks, then the live services."></a><br><b>/deployments</b>: every contract and service, verified, with copy buttons.</td>
   </tr>
 </table>
 
@@ -771,13 +771,13 @@ docker pull ghcr.io/lsudoko/cargoflow-backend:latest   # Go service + prover, po
 docker pull ghcr.io/lsudoko/cargoflow-gateway:latest   # gateway agent for x86 and Raspberry Pi
 ```
 
-<p align="center"><b>TypeScript SDK</b><br><img src="docs/assets/v3/code-sdk.png" alt="TypeScript, light theme: createClient(); list paused shipments; explanation (causes, next steps); pricing.suggest (low, mid, high bps); contracts.prepareDepositWithApproval returns unsigned transactions; the SDK never signs or sends." width="720"></p>
+<p align="center"><b>TypeScript SDK</b><br><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/code-sdk.png" alt="TypeScript, light theme: createClient(); list paused shipments; explanation (causes, next steps); pricing.suggest (low, mid, high bps); contracts.prepareDepositWithApproval returns unsigned transactions; the SDK never signs or sends." width="720"></p>
 
-<p align="center"><b>Gateway agent</b><br><img src="docs/assets/v3/code-gateway.png" alt="Shell, light theme: npm install -g @cargoflow/gateway; cargoflow-gateway init --key with the key file the shipment page created; cargoflow-gateway watch ./logger-exports signs and sends every new export with an offline queue in batches of at most 500 readings." width="720"></p>
+<p align="center"><b>Gateway agent</b><br><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/code-gateway.png" alt="Shell, light theme: npm install -g @cargoflow/gateway; cargoflow-gateway init --key with the key file the shipment page created; cargoflow-gateway watch ./logger-exports signs and sends every new export with an offline queue in batches of at most 500 readings." width="720"></p>
 
-<p align="center"><b>Python analytics</b><br><img src="docs/assets/v3/code-python.png" alt="Python, light theme: CargoFlow(); portfolio(); analytics exposure and excursion_stats; simulate_default_recovery with 20,000 simulations and seed 2026; summary gives expected loss, VaR and ES at 95 and 99." width="720"></p>
+<p align="center"><b>Python analytics</b><br><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/code-python.png" alt="Python, light theme: CargoFlow(); portfolio(); analytics exposure and excursion_stats; simulate_default_recovery with 20,000 simulations and seed 2026; summary gives expected loss, VaR and ES at 95 and 99." width="720"></p>
 
-<p align="center"><b>A signed telemetry request</b><br><img src="docs/assets/v3/term-telemetry.png" alt="Light capture: POST to /v1/shipments/{id}/telemetry with Content-Type, X-Source-Id, X-Timestamp within 5 minutes and X-Signature, the base64url Ed25519 signature over CARGOFLOW-V1, POST, path, timestamp and hex sha256 of the body; the body is a list of points with timestamp, sensorId, temperatureX100, humidityX100, latitudeE6, longitudeE6 and shockX100; at most 500 readings per request." width="720"></p>
+<p align="center"><b>A signed telemetry request</b><br><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/term-telemetry.png" alt="Light capture: POST to /v1/shipments/{id}/telemetry with Content-Type, X-Source-Id, X-Timestamp within 5 minutes and X-Signature, the base64url Ed25519 signature over CARGOFLOW-V1, POST, path, timestamp and hex sha256 of the body; the body is a list of points with timestamp, sensorId, temperatureX100, humidityX100, latitudeE6, longitudeE6 and shockX100; at most 500 readings per request." width="720"></p>
 
 A sensor gateway is an Ed25519 device key that the exporter authorizes with a wallet signature (no gas). It can upload a
 data logger's CSV from the shipment page, or post readings itself, each request signed as above (the shipment page
@@ -818,7 +818,7 @@ a real chain, with axe accessibility checks on every page. See [`frontend/README
 
 ## Sponsor and partner integrations
 
-<p align="center"><img src="docs/assets/v3/sponsors.png" alt="Sponsors, honestly, checked 4 October 2026. Robinhood Chain: settlement layer, 10 contracts source-verified, live. Paxos USDG: the only money, live. ZeroDev: passkey smart accounts, user operations paid a live invoice, accounts live and paymaster pending. QuickNode: primary RPC, live. Alchemy: fallback RPC and indexer webhook, RPC live and webhook awaiting token. OpenZeppelin: v5.4 modules, live. Dune: queries and uploader, built, plan blocks uploads. Fhenix and GMX: deployed on Arbitrum Sepolia." width="100%"></p>
+<p align="center"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/sponsors.png" alt="Sponsors, honestly, checked 4 October 2026. Robinhood Chain: settlement layer, 10 contracts source-verified, live. Paxos USDG: the only money, live. ZeroDev: passkey smart accounts, user operations paid a live invoice, accounts live and paymaster pending. QuickNode: primary RPC, live. Alchemy: fallback RPC and indexer webhook, RPC live and webhook awaiting token. OpenZeppelin: v5.4 modules, live. Dune: queries and uploader, built, plan blocks uploads. Fhenix and GMX: deployed on Arbitrum Sepolia." width="100%"></p>
 
 | Partner | How CargoFlow uses it | Status | Where |
 |---|---|---|---|
@@ -836,7 +836,7 @@ Details, status and limits for each: [`docs/sponsors/README.md`](docs/sponsors/R
 
 ## Measured, not claimed
 
-<p align="center"><img src="docs/assets/v3/measured.png" alt="Measured, not claimed: 366 contract tests (forge: unit, fuzz, invariants, real proofs), 25 circuit tests, 296 frontend unit tests (vitest, 31 files), 18 end-to-end tests (Playwright and axe on the real stack), all passing; packages SDK 92, MCP 27, gateway 36, Python 25, Fhenix 19, GMX 20; 13,494 circuit constraints, about 1 s to prove, about 0.25 M gas for resumeWithProof." width="100%"></p>
+<p align="center"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/measured.png" alt="Measured, not claimed: 366 contract tests (forge: unit, fuzz, invariants, real proofs), 25 circuit tests, 296 frontend unit tests (vitest, 31 files), 18 end-to-end tests (Playwright and axe on the real stack), all passing; packages SDK 92, MCP 27, gateway 36, Python 25, Fhenix 19, GMX 20; 13,494 circuit constraints, about 1 s to prove, about 0.25 M gas for resumeWithProof." width="100%"></p>
 
 | | |
 |---|---|
@@ -853,7 +853,7 @@ Details, status and limits for each: [`docs/sponsors/README.md`](docs/sponsors/R
 
 Re-run on 4 October 2026.
 
-<p align="center"><img src="docs/assets/v3/term-tests.png" alt="Light terminal capture of pnpm vitest run summaries: frontend 31 files, 296 tests passed; packages/sdk 9 files, 92 tests; packages/mcp 2 files, 27 tests; packages/gateway 6 files, 36 tests; all passed." width="520"></p>
+<p align="center"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/term-tests.png" alt="Light terminal capture of pnpm vitest run summaries: frontend 31 files, 296 tests passed; packages/sdk 9 files, 92 tests; packages/mcp 2 files, 27 tests; packages/gateway 6 files, 36 tests; all passed." width="520"></p>
 
 Every figure is reproducible with `make check`, `make bench` and `make slither`; method and caveats are in
 [`docs/benchmarks.md`](docs/benchmarks.md).
@@ -886,7 +886,7 @@ The full plan is in the [architecture notes](docs/architecture.md#what-would-cha
 
 ## Demo video
 
-<p align="center"><a href="https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2-1080p.mp4"><img src="docs/assets/v3/banner.png" alt="Watch the CargoFlow film (5:30, 1080p)" width="100%"></a></p>
+<p align="center"><a href="https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2-1080p.mp4"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/banner.png" alt="Watch the CargoFlow film (5:30, 1080p)" width="100%"></a></p>
 
 <p align="center"><b><a href="https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2-1080p.mp4">▶ Watch the film (5:30, 1080p, MP4)</a></b> · <a href="https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2.srt">captions (SRT)</a> · <a href="https://github.com/LSUDOKO/CargoFlow/releases/tag/v1.0.0">release v1.0.0</a></p>
 
@@ -905,7 +905,7 @@ platform; the sponsors; and the proof on chain. It is built in code with Remotio
 - [Sponsor integrations](docs/sponsors/README.md) · [Testnet runbook](docs/runbooks/testnet.md)
 - [Benchmarks](docs/benchmarks.md) and [Slither triage](docs/security/slither-triage.md)
 - [Design system](docs/design/system.md) · [Media kit](docs/assets/v3/README.md)
-- [Pitch deck (PDF)](docs/pitch/CargoFlow-pitch.pdf), [PPTX](docs/pitch/CargoFlow-pitch.pptx), [HTML, animated](https://lsudoko.github.io/CargoFlow/pitch/) ([source](docs/pitch/index.html)), [Google Drive](GDRIVE_PITCH_URL) and [slide PNGs](docs/pitch/slides)
+- [Pitch deck (PDF)](https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/CargoFlow-pitch.pdf), [PPTX](https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/CargoFlow-pitch.pptx), [HTML, animated](https://lsudoko.github.io/CargoFlow/pitch/) ([source](docs/pitch/index.html)), [Google Drive](GDRIVE_PITCH_URL) and [slide PNGs](docs/pitch/slides)
 - [Protocol knowledge base](docs/project/README.md), [design spec](docs/superpowers/specs/2026-09-30-cargoflow-design.md), [roadmap](docs/superpowers/plans/2026-09-30-cargoflow-roadmap.md)
 - [Changelog](CHANGELOG.md), [Contributing](CONTRIBUTING.md), [Security policy](SECURITY.md)
 
