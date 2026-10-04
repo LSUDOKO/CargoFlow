@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@cargoflow/sdk':
-        specifier: file:../sdk
-        version: file:../sdk(typescript@5.9.3)
+        specifier: ^0.1.0
+        version: 0.1.0(typescript@5.9.3)
       '@cfworker/json-schema':
         specifier: ^4.1.1
         version: 4.1.1
@@ -45,8 +45,8 @@ packages:
   '@adraffy/ens-normalize@1.11.1':
     resolution: {integrity: sha512-nhCBV3quEgesuf7c7KYfperqSS14T8bYuvJ8PcLJp6znkZpFc0AuW4qBtr8eKVyPPe/8RSr7sglCWPU5eaxwKQ==}
 
-  '@cargoflow/sdk@file:../sdk':
-    resolution: {directory: ../sdk, type: directory}
+  '@cargoflow/sdk@0.1.0':
+    resolution: {integrity: sha512-8gxeIdw9L+hIKJRVkwh1aDc/VpDelgR6ukETpaUjs2ggOvih3j+yjsMeNaXqUql4vqU2EQsp/+9kPQy/vbWfhw==}
     engines: {node: '>=18'}
 
   '@cfworker/json-schema@4.1.1':
@@ -1794,7 +1794,7 @@ snapshots:
 
   '@adraffy/ens-normalize@1.11.1': {}
 
-  '@cargoflow/sdk@file:../sdk(typescript@5.9.3)':
+  '@cargoflow/sdk@0.1.0(typescript@5.9.3)':
     dependencies:
       '@noble/curves': 1.9.7
       '@noble/hashes': 1.8.0
