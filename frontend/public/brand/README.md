@@ -2,7 +2,8 @@
 
 | File | Source | Licence |
 |---|---|---|
-| `logo-dark.svg` (navy surfaces), `logo-light.svg` (light surfaces), `mark.svg`, `icon.svg`, `../../src/app/icon.svg` | Vectorised with potrace from the official CargoFlow logo supplied by the project owner (hexagonal "C" around container ribs and a forward arrow; "Cargo" + lime "Flow") | Project trademark, used by the project |
+| `mark.svg`, `icon.svg`, `../../src/app/icon.svg` | Vectorised with potrace from the official CargoFlow logo supplied by the project owner (hexagonal "C" around container ribs and a forward arrow) | Project trademark, used by the project |
+| `logo-dark.svg` (navy surfaces: "Cargo" paper `#F7F9F4`, "Flow" and mark signal lime `#C6F432`), `logo-light.svg` (light surfaces: "Cargo" ink `#0B1B2B`, "Flow" and mark deep lime `#8FB300` so they stay legible on white) | The mark from `mark.svg` plus the wordmark set in **Space Grotesk Bold**, the website's display face, outlined to SVG paths with fontTools + HarfBuzz (kerning on, tracking -0.02em). 1440 × 360 viewBox (4:1) as before, so every consumer keeps its sizing. Rebuild with `docs/assets/v3/logo-build.py`; PNG exports in `docs/assets/v3/logo-{light,dark}.png` (1200 px) | Project trademark; Space Grotesk is SIL OFL 1.1 |
 | `illustrations/{sensor,merkle,zk,ai,vault,settle}.svg` | Hand-drawn SVG in the brand palette | MIT |
 | Open Graph image | Rendered at build time by `src/app/opengraph-image.tsx` (`next/og`) | MIT |
 
