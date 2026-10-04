@@ -324,6 +324,29 @@ More pages: [`/shipments`](https://cargoflow.adoranto737.workers.dev/shipments) 
 [`/developers`](https://cargoflow.adoranto737.workers.dev/developers),
 [`/docs`](https://cargoflow.adoranto737.workers.dev/docs), [`/deployments`](https://cargoflow.adoranto737.workers.dev/deployments).
 
+## Alerts on your phone: the Telegram bot
+
+Every party can subscribe a shipment's alerts to Telegram (also email, Slack or a signed webhook) from the shipment
+page. Recorded on a real phone during a live testnet run of `CF-LIVE-1791103821739`: the bot confirms the subscription,
+then two **RELEASED** alerts and a **PAUSED** alert arrive with their transactions within seconds of the chain events,
+and about a minute later **RECOVERY_READY**, the automatic zero-knowledge recovery, with a link that opens the shipment
+straight on the recovery card for Meera to sign. Bot: [@Cargo_FlowBot](https://t.me/Cargo_FlowBot).
+
+<table>
+  <tr>
+    <td width="34%" align="center" valign="top"><img src="docs/assets/v3/how-telegram.gif" alt="Phone recording of the CargoFlow Telegram bot: alerts switched on for CF-LIVE-1791103821739, then RELEASED, RELEASED and PAUSED alerts with transaction hashes, then RECOVERY_READY with a link that opens the recovery page." width="300"><br><b>The live recording</b></td>
+    <td width="22%" align="center" valign="top"><img src="docs/assets/v3/telegram-02-released-paused.jpg" alt="Telegram: two RELEASED alerts and a PAUSED alert for CF-LIVE-1791103821739, each with status, transaction hash and shipment id." width="200"><br>Released, released, paused</td>
+    <td width="22%" align="center" valign="top"><img src="docs/assets/v3/telegram-03-recovery-ready.jpg" alt="Telegram: RECOVERY_READY, a zero-knowledge recovery is ready, review and sign to resume financing, with the link to the shipment page." width="200"><br>Recovery ready</td>
+    <td width="22%" align="center" valign="top"><img src="docs/assets/v3/telegram-04-recovery-page.jpg" alt="The link opens CargoFlow on the phone at the zero-knowledge recovery card: connect the exporter's wallet to review the proof and sign." width="200"><br>One tap to sign</td>
+  </tr>
+</table>
+
+Transactions behind the alerts: deposit [`0xcf71dae6…f5ee1b069`](https://explorer.testnet.chain.robinhood.com/tx/0xcf71dae603aa093071d5a4b7513e4d8260518f6a34c668cee6c8973f5ee1b069),
+transit [`0x476a4aaa…843787fa8c`](https://explorer.testnet.chain.robinhood.com/tx/0x476a4aaaf3b44a61f8a8ab93239ff92851335fb8b771b1d3a6cd42843787fa8c),
+releases [`0xf0f6a44d…d3d6a82`](https://explorer.testnet.chain.robinhood.com/tx/0xf0f6a44d3d4af204df595e32cd97652e7ce281ad757eda252d9d04148e3d6a82)
+and [`0x7d778679…dc72af7`](https://explorer.testnet.chain.robinhood.com/tx/0x7d7786791b94d8b1c61015cba8b3d0cc931f985de715cdaadd2be2f56dc72af7),
+pause [`0x2f1ad742…869e26c9b`](https://explorer.testnet.chain.robinhood.com/tx/0x2f1ad7420c44beaef55a15ec4fea542de25636f207703a4c144ae88869e26c9b).
+
 ## Use CargoFlow in Claude
 
 CargoFlow runs a public remote MCP server, so Claude can read shipments, evidence, cover and the market, and prepare
