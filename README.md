@@ -12,6 +12,9 @@
   <a href="#measured-not-claimed"><img alt="Package tests: SDK 92, MCP 27, gateway 36, Python 25" src="https://img.shields.io/badge/packages-92%20%C2%B7%2027%20%C2%B7%2036%20%C2%B7%2025-00C46A?style=flat-square&labelColor=0B1B2B"></a>
   <a href="#use-cargoflow-in-claude"><img alt="MCP server" src="https://img.shields.io/badge/MCP-remote%20server-C6F432?style=flat-square&labelColor=0B1B2B"></a>
   <a href="https://github.com/LSUDOKO/CargoFlow/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/LSUDOKO/CargoFlow/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://www.npmjs.com/package/@cargoflow/sdk"><img alt="npm @cargoflow/sdk" src="https://img.shields.io/npm/v/@cargoflow/sdk?style=flat-square&label=npm%20%40cargoflow%2Fsdk&labelColor=0B1B2B&color=C6F432"></a>
+  <a href="https://www.npmjs.com/package/@cargoflow/mcp"><img alt="npm @cargoflow/mcp" src="https://img.shields.io/npm/v/@cargoflow/mcp?style=flat-square&label=npm%20%40cargoflow%2Fmcp&labelColor=0B1B2B&color=C6F432"></a>
+  <a href="https://www.npmjs.com/package/@cargoflow/gateway"><img alt="npm @cargoflow/gateway" src="https://img.shields.io/npm/v/@cargoflow/gateway?style=flat-square&label=npm%20%40cargoflow%2Fgateway&labelColor=0B1B2B&color=C6F432"></a>
   <a href="https://pypi.org/project/cargoflow/"><img alt="PyPI: cargoflow" src="https://img.shields.io/pypi/v/cargoflow?style=flat-square&label=pypi%20cargoflow&labelColor=0B1B2B&color=C6F432"></a>
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-F7F9F4?style=flat-square&labelColor=0B1B2B"></a>
 </p>
@@ -634,9 +637,9 @@ cd frontend && cp .env.example .env.local && sed -i 's#8080#8787#' .env.local &&
 | Piece | What it gives you |
 |---|---|
 | [API reference](https://cargoflow.adoranto737.workers.dev/docs) | OpenAPI 3.1 generated from the Go route table (a test fails if a route is undocumented), with every wallet-signed message format |
-| [`@cargoflow/sdk`](packages/sdk) | Typed client for every endpoint, ABIs, `prepare*` transaction builders for any wallet, gateway signing, CSV parsing, Merkle proof checks |
-| [`@cargoflow/mcp`](packages/mcp) | The MCP server above, also runnable locally over stdio |
-| [`@cargoflow/gateway`](packages/gateway) | `cargoflow-gateway watch <folder>`: signs and sends logger exports with an offline queue; USB and serial modes; systemd unit and Docker image |
+| [`@cargoflow/sdk`](https://www.npmjs.com/package/@cargoflow/sdk) · `npm i @cargoflow/sdk` · [source](packages/sdk) | Typed client for every endpoint, ABIs, `prepare*` transaction builders for any wallet, gateway signing, CSV parsing, Merkle proof checks |
+| [`@cargoflow/mcp`](https://www.npmjs.com/package/@cargoflow/mcp) · `npx -y @cargoflow/mcp` · [source](packages/mcp) | The MCP server above, also runnable locally over stdio |
+| [`@cargoflow/gateway`](https://www.npmjs.com/package/@cargoflow/gateway) · `npm i -g @cargoflow/gateway` · [source](packages/gateway) | `cargoflow-gateway watch <folder>`: signs and sends logger exports with an offline queue; USB and serial modes; systemd unit and Docker image |
 | [`cargoflow` (Python)](https://pypi.org/project/cargoflow/) · `pip install cargoflow` · [source](packages/python) | Pandas or polars frames, portfolio exposure, excursion and conflict statistics, a seeded Monte Carlo of default and recovery, example notebooks |
 
 <table>
@@ -647,8 +650,16 @@ cd frontend && cp .env.example .env.local && sed -i 's#8080#8787#' .env.local &&
   </tr>
 </table>
 
-The Python SDK is published on PyPI ([`cargoflow`](https://pypi.org/project/cargoflow/)): `pip install cargoflow`.
-The npm packages build and pass their tests here and are being published under the `@cargoflow` organisation.
+All four packages are published: [`@cargoflow/sdk`](https://www.npmjs.com/package/@cargoflow/sdk),
+[`@cargoflow/mcp`](https://www.npmjs.com/package/@cargoflow/mcp) and [`@cargoflow/gateway`](https://www.npmjs.com/package/@cargoflow/gateway)
+on npm, and [`cargoflow`](https://pypi.org/project/cargoflow/) on PyPI.
+
+```bash
+npm i @cargoflow/sdk                 # TypeScript client, ABIs, unsigned transaction builders
+npx -y @cargoflow/mcp                # local MCP server over stdio (25 tools)
+npm i -g @cargoflow/gateway          # data-logger edge agent: cargoflow-gateway watch <folder>
+pip install cargoflow                # Python analytics
+```
 
 <p align="center"><b>TypeScript SDK</b><br><img src="docs/assets/v3/code-sdk.png" alt="TypeScript, light theme: createClient(); list paused shipments; explanation (causes, next steps); pricing.suggest (low, mid, high bps); contracts.prepareDepositWithApproval returns unsigned transactions; the SDK never signs or sends." width="720"></p>
 
