@@ -1,0 +1,851 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CargoFlow Pitch Deck</title>
+<meta name="description" content="CargoFlow funding deck: evidence-gated USDG working capital for physical trade finance, live on Robinhood Chain Testnet. Built for Arbitrum Open House Singapore.">
+<script>
+  // ?static renders the print/PNG version: GIFs are swapped for representative stills, no screen zoom.
+  if (/[?&]static\b/.test(location.search)) document.documentElement.classList.add("static");
+</script>
+<style>
+@font-face { font-family: "Space Grotesk"; src: url("fonts/SpaceGrotesk.woff2") format("woff2"); font-weight: 300 700; font-display: block; }
+@font-face { font-family: "Inter"; src: url("fonts/Inter.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
+@font-face { font-family: "JetBrains Mono"; src: url("fonts/JetBrainsMono.woff2") format("woff2"); font-weight: 100 800; font-display: block; }
+
+:root {
+  --ink: #0B1B2B; --ink2: #13293D; --ink3: #1D3A55;
+  --paper: #F7F9F4; --white: #FFFFFF; --mist: #EEF2EA; --line: #DCE3DA;
+  --lime: #C6F432; --lime2: #B2E01C; --lime-soft: #EAF8C0;
+  --emerald: #00C46A; --emerald-soft: #D6F5E5;
+  --amber: #FFB020; --amber-soft: #FFF0D1;
+  --danger: #E5484D; --slate: #5B6B7B; --teal: #0A5A73;
+  --display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --body: "Inter", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "DejaVu Sans Mono", monospace;
+  --card-shadow: 0 1px 0 rgba(11,27,43,0.04), 0 18px 40px -20px rgba(11,27,43,0.20);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: #D5DBD2; }
+body { font-family: var(--body); color: var(--ink); -webkit-font-smoothing: antialiased; }
+a { color: inherit; text-decoration: none; }
+img { display: block; }
+
+/* ---------- slide frame ---------- */
+.slide { width: 1920px; height: 1080px; position: relative; overflow: hidden; background: var(--paper); padding: 112px 112px 96px; display: flex; flex-direction: column; }
+.slide.dark { background: var(--ink); color: var(--paper); }
+.top { position: absolute; left: 112px; right: 112px; top: 40px; height: 40px; display: flex; align-items: center; justify-content: space-between; }
+.top img { height: 34px; width: auto; }
+.top .sec { font-family: var(--mono); font-size: 17px; letter-spacing: .14em; text-transform: uppercase; color: var(--slate); }
+.dark .top .sec { color: #9FB0BF; }
+.foot { position: absolute; left: 112px; right: 112px; bottom: 30px; display: flex; align-items: flex-end; justify-content: space-between; gap: 40px; font-size: 14.5px; line-height: 1.4; color: var(--slate); }
+.dark .foot { color: #8FA1B1; }
+.foot .src { max-width: 1520px; }
+.foot .src a { text-decoration: underline; text-decoration-color: rgba(91,107,123,.4); text-underline-offset: 2px; }
+.foot .pg { font-family: var(--mono); font-size: 16px; color: var(--slate); white-space: nowrap; }
+
+/* ---------- type ---------- */
+.kicker { font-family: var(--mono); font-size: 18px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--teal); margin-bottom: 14px; }
+.dark .kicker { color: var(--lime); }
+h1, h2, h3 { font-family: var(--display); font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: 62px; line-height: 1.04; }
+h3 { font-size: 30px; line-height: 1.1; letter-spacing: -0.01em; }
+.mark { background: linear-gradient(transparent 60%, var(--lime) 60%, var(--lime) 94%, transparent 94%); padding: 0 4px; margin: 0 -4px; }
+.dark .mark { color: var(--ink); background: var(--lime); padding: 0 10px; margin: 0; border-radius: 6px; }
+.lead { font-size: 27px; line-height: 1.42; color: var(--ink2); }
+.dark .lead { color: #D3DCE4; }
+.small { font-size: 19px; line-height: 1.45; color: var(--slate); }
+.mono { font-family: var(--mono); }
+.num { font-family: var(--mono); font-weight: 700; letter-spacing: -0.03em; }
+.code { font-family: var(--mono); font-size: .82em; background: var(--mist); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; color: var(--ink2); white-space: nowrap; }
+.dark .code { background: var(--ink2); border-color: var(--ink3); color: #D3DCE4; }
+.tag { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 15px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; border-radius: 999px; padding: 6px 14px; }
+.tag.plan { background: var(--amber-soft); color: #7A4B00; border: 1px solid #F3D08A; }
+.tag.live { background: var(--emerald-soft); color: #00663A; border: 1px solid #9BE3C0; }
+.tag.assume { background: var(--mist); color: var(--ink2); border: 1px solid var(--line); }
+.dark .tag.plan { background: rgba(255,176,32,.14); color: var(--amber); border-color: rgba(255,176,32,.4); }
+
+/* ---------- blocks ---------- */
+.card { background: var(--white); border: 1.5px solid var(--line); border-radius: 22px; box-shadow: var(--card-shadow); }
+.shot { border-radius: 16px; overflow: hidden; border: 1.5px solid var(--line); background: var(--white); box-shadow: var(--card-shadow); position: relative; }
+.shot img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+.shot .cap { position: absolute; left: 12px; bottom: 12px; background: var(--ink); color: var(--paper); font-size: 16px; font-weight: 600; border-radius: 10px; padding: 7px 12px; }
+.shot .cap b { color: var(--lime); font-weight: 600; }
+.row { display: flex; }
+.col { display: flex; flex-direction: column; }
+.grow { flex: 1; min-width: 0; }
+.dot { width: 22px; height: 22px; border-radius: 50%; display: inline-block; border: 2.5px solid var(--ink); vertical-align: middle; }
+.dot.full { background: var(--ink); }
+.dot.half { background: linear-gradient(90deg, var(--ink) 50%, transparent 50%); }
+.dot.none { border-color: #B9C4BC; }
+.dot.lime { background: var(--lime); border-color: var(--ink); }
+
+/* GIFs in the HTML deck, representative stills in the PDF and PNGs */
+.still { display: none !important; }
+.static .anim { display: none !important; }
+.static .still { display: block !important; }
+@media print { .anim { display: none !important; } .still { display: block !important; } }
+
+/* screen viewing: slides stacked and scaled to the window */
+@media screen {
+  html:not(.static) body { padding: 24px 0; }
+  html:not(.static) .slide { zoom: var(--z, 1); margin: 0 auto 24px; box-shadow: 0 20px 60px -20px rgba(11,27,43,.35); }
+}
+@media print {
+  @page { size: 1920px 1080px; margin: 0; }
+  html, body { background: none; }
+  .slide { break-after: page; }
+}
+
+/* ---------- slide specifics ---------- */
+/* 1 title */
+.s-title { padding: 0; }
+.s-title .banner { width: 1920px; height: 672px; }
+.s-title .under { padding: 40px 112px 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 60px; }
+.s-title .under h1 { font-size: 44px; line-height: 1.12; max-width: 1080px; }
+.s-title .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; max-width: 1100px; }
+.chip { font-family: var(--mono); font-size: 16px; white-space: nowrap; border: 1.5px solid var(--line); background: var(--white); border-radius: 999px; padding: 9px 18px; color: var(--ink2); }
+.chip.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.chip.on b { color: var(--lime); font-weight: 600; }
+.s-title .meta { text-align: right; font-size: 20px; line-height: 1.6; color: var(--slate); }
+.s-title .meta .ev { font-family: var(--display); font-weight: 700; font-size: 26px; color: var(--ink); line-height: 1.25; margin-bottom: 10px; }
+.s-title .meta a { font-family: var(--mono); font-size: 18px; color: var(--ink2); display: block; }
+
+/* 2 problem */
+.stat { display: flex; gap: 26px; align-items: center; padding: 16px 22px; }
+.stat .n { width: 330px; flex: none; }
+.stat .n .num { font-size: 58px; line-height: 1; color: var(--ink); display: block; }
+.stat .n .lbl { font-size: 19px; line-height: 1.3; color: var(--ink2); margin-top: 8px; display: block; }
+.stat .n .who { font-family: var(--mono); font-size: 14px; color: var(--teal); letter-spacing: .06em; text-transform: uppercase; margin-top: 8px; display: block; }
+.stat .src-img { flex: 1; height: 158px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.stat .src-img img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+
+/* 3 why now */
+.why { padding: 28px 30px; display: flex; flex-direction: column; gap: 14px; }
+.why .ico { min-width: 56px; padding: 0 12px; align-self: flex-start; height: 56px; border-radius: 16px; background: var(--ink); color: var(--lime); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-weight: 700; font-size: 22px; }
+.why p { font-size: 22px; line-height: 1.45; color: var(--ink2); }
+.why .proof { margin-top: auto; font-family: var(--mono); font-size: 15px; color: var(--slate); border-top: 1px dashed var(--line); padding-top: 12px; line-height: 1.5; }
+
+/* 5 beats */
+.beat { display: flex; flex-direction: column; gap: 14px; }
+.beat .media { width: 100%; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; border: 1.5px solid var(--line); background: var(--paper); }
+.beat .media img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+.beat .stp { display: flex; align-items: center; gap: 12px; }
+.beat .stp .n { width: 46px; height: 46px; border-radius: 13px; background: var(--lime); font-family: var(--mono); font-weight: 700; font-size: 22px; display: flex; align-items: center; justify-content: center; flex: none; }
+.beat .stp h3 { font-size: 27px; }
+.beat p { font-size: 19px; line-height: 1.45; color: var(--ink2); }
+.beat .call { font-family: var(--mono); font-size: 14.5px; color: var(--teal); }
+
+/* 7 moat */
+.tile { padding: 20px 22px; }
+.tile h3 { font-size: 23px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+.tile h3 i { width: 12px; height: 12px; border-radius: 3px; background: var(--lime); display: inline-block; border: 2px solid var(--ink); flex: none; }
+.tile p { font-size: 16.5px; line-height: 1.45; color: var(--ink2); }
+
+/* 8 traction */
+table { border-collapse: collapse; width: 100%; }
+.tx td, .tx th { text-align: left; vertical-align: top; padding: 13px 16px; border-bottom: 1px solid var(--line); font-size: 18px; line-height: 1.4; }
+.tx th { font-family: var(--mono); font-size: 14px; letter-spacing: .1em; text-transform: uppercase; color: var(--slate); font-weight: 500; padding-top: 0; }
+.tx td .mono, .tx td a.h { font-family: var(--mono); font-size: 15.5px; color: var(--teal); text-decoration: underline; text-decoration-color: rgba(10,90,115,.35); text-underline-offset: 3px; }
+.tx tr:last-child td { border-bottom: none; }
+.big { padding: 18px 22px; }
+.big .num { font-size: 52px; line-height: 1; display: block; }
+.big .lbl { font-size: 17px; color: var(--ink2); margin-top: 6px; display: block; line-height: 1.35; }
+
+/* 9 market */
+.mkt { display: flex; align-items: stretch; gap: 0; }
+.ring { position: relative; width: 700px; height: 700px; flex: none; }
+.ring div { position: absolute; border-radius: 50%; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.ring .tam { inset: 0; background: var(--mist); border: 2px solid var(--line); padding-top: 54px; }
+.ring .sam { left: 150px; right: 150px; top: 250px; bottom: 0; background: var(--lime-soft); border: 2px solid var(--lime2); padding-top: 50px; }
+.ring .som { left: 260px; right: 260px; top: 480px; bottom: 0; background: var(--ink); color: var(--paper); padding-top: 40px; }
+.ring .k { font-family: var(--mono); font-size: 16px; letter-spacing: .14em; color: var(--teal); }
+.ring .som .k { color: var(--lime); }
+.ring .v { font-family: var(--mono); font-weight: 700; font-size: 50px; letter-spacing: -0.03em; line-height: 1.1; }
+.ring .som .v { font-size: 36px; }
+.ring .d { font-size: 17px; color: var(--ink2); max-width: 340px; line-height: 1.35; margin-top: 4px; }
+.ring .som .d { color: #C9D4DE; font-size: 15px; max-width: 160px; }
+.calc td { padding: 12px 14px; border-bottom: 1px solid var(--line); font-size: 19px; line-height: 1.4; vertical-align: top; }
+.calc td:first-child { font-family: var(--mono); font-size: 15px; color: var(--teal); letter-spacing: .08em; text-transform: uppercase; width: 120px; padding-top: 15px; }
+.calc td.r { font-family: var(--mono); font-weight: 700; text-align: right; white-space: nowrap; font-size: 22px; }
+.calc tr:last-child td { border-bottom: none; }
+
+/* 11 competition */
+.cmp th, .cmp td { padding: 14px 14px; border-bottom: 1px solid var(--line); text-align: center; vertical-align: middle; font-size: 18px; line-height: 1.35; }
+.cmp th { font-family: var(--mono); font-size: 14px; letter-spacing: .06em; text-transform: uppercase; color: var(--slate); font-weight: 500; vertical-align: bottom; }
+.cmp td:first-child, .cmp th:first-child { text-align: left; }
+.cmp td:last-child, .cmp th:last-child { text-align: left; }
+.cmp td:first-child b { font-family: var(--display); font-size: 22px; display: block; color: var(--ink); }
+.cmp td:first-child span { font-size: 15.5px; color: var(--slate); }
+.cmp td:last-child { font-size: 16.5px; color: var(--ink2); }
+.cmp tr.us td { background: var(--lime-soft); border-bottom: none; }
+.cmp tr.us td:first-child { border-radius: 14px 0 0 14px; }
+.cmp tr.us td:last-child { border-radius: 0 14px 14px 0; }
+
+/* 13 roadmap */
+.ms { padding: 22px 22px; display: flex; flex-direction: column; gap: 10px; position: relative; }
+.ms .id { font-family: var(--mono); font-weight: 700; font-size: 18px; color: var(--ink); background: var(--lime); border-radius: 10px; padding: 4px 10px; align-self: flex-start; }
+.ms h3 { font-size: 25px; }
+.ms ul { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+.ms li { font-size: 17px; line-height: 1.4; color: var(--ink2); padding-left: 18px; position: relative; }
+.ms li::before { content: ""; position: absolute; left: 0; top: 9px; width: 8px; height: 8px; border-radius: 2px; background: var(--ink3); }
+.ms .exit { margin-top: auto; border-top: 1px dashed var(--line); padding-top: 10px; font-size: 16px; line-height: 1.4; color: var(--slate); }
+.ms .exit b { font-family: var(--mono); font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--teal); display: block; margin-bottom: 3px; font-weight: 500; }
+.ms .fund { margin-top: auto; font-family: var(--mono); font-size: 15px; color: var(--ink); background: var(--lime-soft); border-radius: 10px; padding: 8px 12px; }
+.ms .fund + .exit { margin-top: 0; }
+.done { padding: 18px 22px; background: var(--emerald-soft); border: 1.5px solid #9BE3C0; border-radius: 22px; }
+
+/* 14 ask */
+.bar { display: flex; height: 64px; border-radius: 14px; overflow: hidden; }
+.bar div { display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-weight: 700; font-size: 22px; color: var(--ink); }
+.uses td { padding: 14px 12px; border-bottom: 1px solid var(--ink3); font-size: 19px; line-height: 1.4; vertical-align: top; color: #D3DCE4; }
+.uses td b { color: var(--paper); font-family: var(--display); font-size: 23px; font-weight: 700; display: block; margin-bottom: 2px; }
+.uses td.p { font-family: var(--mono); font-weight: 700; font-size: 26px; color: var(--paper); white-space: nowrap; width: 90px; }
+.uses td.a { font-family: var(--mono); font-size: 19px; color: var(--lime); white-space: nowrap; text-align: right; width: 150px; }
+.uses td.m { font-family: var(--mono); font-size: 16px; color: #9FB0BF; white-space: nowrap; width: 70px; }
+.sw { width: 16px; height: 16px; border-radius: 4px; display: inline-block; margin-right: 10px; vertical-align: -1px; }
+
+/* 15 judging */
+.jd td { padding: 15px 16px; border-bottom: 1px solid var(--line); vertical-align: top; font-size: 18px; line-height: 1.42; color: var(--ink2); }
+.jd td:first-child { width: 330px; }
+.jd td:first-child b { font-family: var(--display); font-size: 23px; color: var(--ink); display: block; }
+.jd td:first-child span { font-family: var(--mono); font-size: 13.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--teal); }
+.jd tr:last-child td { border-bottom: none; }
+
+/* 16 team */
+.ph { border: 2.5px dashed #B9C4BC; border-radius: 22px; padding: 26px; display: flex; gap: 22px; align-items: center; background: rgba(255,255,255,.6); }
+.ph .face { width: 120px; height: 120px; border-radius: 50%; background: var(--mist); border: 2px dashed #B9C4BC; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 14px; color: var(--slate); text-align: center; flex: none; }
+.ph b { font-family: var(--display); font-size: 27px; display: block; }
+.ph span { font-size: 18px; color: var(--slate); line-height: 1.45; display: block; }
+.links td { padding: 13px 0; border-bottom: 1px solid var(--line); font-size: 20px; vertical-align: top; }
+.links td:first-child { font-family: var(--mono); font-size: 15px; letter-spacing: .1em; text-transform: uppercase; color: var(--teal); width: 190px; padding-top: 17px; }
+.links td a { font-family: var(--mono); font-size: 19px; color: var(--ink); text-decoration: underline; text-decoration-color: rgba(11,27,43,.3); text-underline-offset: 4px; }
+.links tr:last-child td { border-bottom: none; }
+</style>
+</head>
+<body>
+
+<!-- ============================== 1 · TITLE ============================== -->
+<section class="slide s-title" id="s1">
+  <img class="banner" src="../assets/v3/banner.png" alt="CargoFlow banner: working capital that releases only when the cargo's own evidence says it should; the cast in front of a reefer container.">
+  <div class="under">
+    <div>
+      <h1>Evidence-gated working capital for physical trade finance, settled in Paxos USDG on Robinhood Chain.</h1>
+      <div class="chips">
+        <span class="chip on"><b>live</b> · Robinhood Chain Testnet 46630</span>
+        <span class="chip on"><b>USDG</b> · the only money it moves</span>
+        <span class="chip">10 contracts source-verified</span>
+        <span class="chip">4 packages on npm and PyPI</span>
+        <span class="chip">remote MCP for Claude</span>
+        <span class="chip">MIT, open source</span>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="ev">Arbitrum Open House Singapore<br>Online Buildathon · funding deck</div>
+      October 2026
+      <a href="https://cargoflow.adoranto737.workers.dev">cargoflow.adoranto737.workers.dev</a>
+      <a href="https://github.com/LSUDOKO/CargoFlow">github.com/LSUDOKO/CargoFlow</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 2 · PROBLEM ============================== -->
+<section class="slide" id="s2">
+  <div class="top"><img src="media/logo-ink.svg" alt="CargoFlow"><span class="sec">02 · The problem</span></div>
+  <div class="row" style="gap:56px; flex:1; min-height:0;">
+    <div class="col" style="width:560px; flex:none;">
+      <div class="kicker">Trade finance today</div>
+      <h2>A lender sees <span class="mark">paperwork</span>, not the container.</h2>
+      <p class="lead" style="margin-top:24px; font-size:24px;">So it lends blind, or it does not lend. The exporter waits about two months for cash it has already earned, while the cargo itself is at risk in transit.</p>
+      <div class="shot" style="margin-top:auto; height:300px;">
+        <img class="anim" src="../assets/v3/how-problem.gif" alt="Daniel at his desk; the window onto the ship is frosted over and stamped BLIND.">
+        <img class="still" src="media/still-problem.jpg" alt="Daniel at his desk; the window onto the ship is frosted over and stamped BLIND.">
+        <span class="cap">Daniel, the financier: <b>blind</b> to the cargo</span>
+      </div>
+    </div>
+    <div class="col grow" style="gap:16px;">
+      <div class="card stat">
+        <div class="n"><span class="num">$2.5T</span><span class="lbl">global trade finance gap in 2025, about 10% of global trade</span><span class="who">Asian Development Bank</span></div>
+        <div class="src-img"><img src="../assets/v3/source-adb-gap.png" alt="ADB news release, highlighted: the global trade finance gap remained at $2.5 trillion in 2025 and represents about 10% of global trade."></div>
+      </div>
+      <div class="card stat">
+        <div class="n"><span class="num">41%</span><span class="lbl">of SME trade finance applications rejected</span><span class="who">ADB survey, Dec 2025</span></div>
+        <div class="src-img"><img src="../assets/v3/source-adb-sme.png" alt="ADB release, highlighted: SME rejection rates for trade finance (41%)."></div>
+      </div>
+      <div class="card stat">
+        <div class="n"><span class="num">52 days</span><span class="lbl">average B2B payment terms in India; 50% of B2B sales on credit</span><span class="who">Atradius, 2025</span></div>
+        <div class="src-img"><img src="../assets/v3/source-atradius.png" alt="Atradius Payment Practices Barometer India 2025, highlighted: 50% of B2B sales on credit, average payment terms 52 days."></div>
+      </div>
+      <div class="card stat">
+        <div class="n"><span class="num">~$35B</span><span class="lbl">lost by biopharma each year to temperature-controlled logistics failures</span><span class="who">IQVIA, via Air Cargo News</span></div>
+        <div class="src-img"><img src="../assets/v3/source-iqvia.png" alt="Air Cargo News, highlighted: biopharma loses approximately $35 billion annually from failures in temperature-controlled logistics, according to IQVIA."></div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div class="src">Sources, highlighted on the original pages (captured 3 Oct 2026): <a href="https://www.adb.org/news/demand-trade-finance-rise-amid-supply-chain-realignment-adb-report">ADB news release, 15 Jan 2026</a> citing the <a href="https://www.adb.org/publications/adb-global-trade-finance-gap-survey">ADB Global Trade Finance Gap Survey (Dec 2025)</a> · <a href="https://group.atradius.com/knowledge-and-research/reports/b2b-payment-practices-trends-india-2025">Atradius Payment Practices Barometer India 2025, p. 3</a> · <a href="https://www.aircargonews.net/pharma-logistics/2019/07/failures-in-temperature-controlled-logistics-cost-biopharma-industry-billions/">Air Cargo News, 26 Jul 2019, citing the IQVIA Institute</a></div>
+    <div class="pg">02 / 16</div>
+  </div>
+</section>
+
+<!-- ============================== 3 · WHY NOW ============================== -->
+<section class="slide" id="s3">
+  <div class="top"><img src="media/logo-ink.svg" alt="CargoFlow"><span class="sec">03 · Why now</span></div>
+  <div class="kicker">Why now · why Robinhood Chain + USDG</div>
+  <h2 style="max-width:1500px;">Money became programmable. CargoFlow makes it answer to <span class="mark">physical evidence</span>.</h2>
+  <div class="row" style="gap:22px; margin-top:44px; flex:1; min-height:0;">
+    <div class="card why grow">
+      <div class="ico">$</div>
+      <h3>Paxos USDG</h3>
+      <p>A US-dollar stablecoin issued by Paxos Digital Singapore for payments, settlement and treasury. In CargoFlow it is the only asset: escrow, tranches, the invoice payment, the waterfall and cover.</p>
+      <div class="proof">USDG 0x7E95…802F on chain 46630 · real Paxos testnet token, not a mock</div>
+    </div>
+    <div class="card why grow">
+      <div class="ico">RH</div>
+      <h3>Robinhood Chain</h3>
+      <p>An Arbitrum chain built for tokenised real-world assets, with USDG already deployed. Every CargoFlow contract runs there; a facility, its evidence and its settlement share one ledger.</p>
+      <div class="proof">10 contracts source-verified · mainnet reference: chain 4663, USDG listed</div>
+    </div>
+    <div class="card why grow">
+      <div class="ico">P-256</div>
+      <h3>Passkeys at chain level</h3>
+      <p>The RIP-7212 P-256 precompile is live on Robinhood Chain, so a buyer can confirm delivery and pay with Face ID through a ZeroDev Kernel smart account: no extension, no seed phrase.</p>
+      <div class="proof">3 ERC-4337 user operations paid a live invoice (CF-SG-VAX-0401)</div>
+    </div>
+    <div class="card why grow">
+      <div class="ico">Rs</div>
+      <h3>The Arbitrum stack</h3>
+      <p>Stylus runs the evidence-fusion maths in Rust: measured 19x cheaper than the Solidity reference at 128 readings. Fhenix (encrypted invoice terms) and GMX (financier hedge) extensions run on Arbitrum Sepolia.</p>
+      <div class="proof">611,945 vs 31,511 gas · one chain, one run, method in stylus/README.md</div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:22px; padding:20px 28px; display:flex; align-items:center; gap:22px; background:var(--ink); border-color:var(--ink); color:var(--paper);">
+    <span class="tag" style="background:var(--lime); color:var(--ink);">The gap</span>
+    <span style="font-size:23px; line-height:1.4;">Reefer data loggers already record temperature on every leg. Those readings sit in CSV exports and dashboards; they do not move money. CargoFlow turns them into signed evidence that a contract can act on.</span>
+  </div>
+  <div class="foot">
+    <div class="src">USDG issuer and purpose: Paxos documentation, as summarised in <span class="mono">docs/project/12-usdg-and-robinhood.md</span> · contract addresses: <span class="mono">contracts/deployments/robinhood-testnet.json</span> · Stylus benchmark: <span class="mono">stylus/README.md</span>, <span class="mono">docs/benchmarks.md</span> · sponsor status: <span class="mono">docs/sponsors/README.md</span></div>
+    <div class="pg">03 / 16</div>
+  </div>
+</section>
+
+<!-- ============================== 4 · SOLUTION ============================== -->
+<section class="slide" id="s4">
+  <div class="top"><img src="media/logo-ink.svg" alt="CargoFlow"><span class="sec">04 · The solution</span></div>
+  <div class="kicker">CargoFlow in one sentence</div>
+  <h2 style="font-size:48px; line-height:1.14; max-width:1696px;">A financier escrows USDG per shipment; tranches reach the exporter only when the cargo's <span class="mark">signed sensor evidence</span> satisfies an on-chain policy; the buyer's one payment repays the financier, pays the exporter and hands over the bill of lading.</h2>
+  <div class="mono" style="margin-top:24px; font-size:19px; letter-spacing:.04em; color:var(--teal);">PHYSICAL REALITY → CRYPTOGRAPHIC EVIDENCE → EVIDENCE CONFIDENCE → FINANCIAL RISK → AVAILABLE CAPITAL → USDG SETTLEMENT</div>
+  <img src="../assets/v3/cast.png" alt="The cast: Meera the exporter, Daniel the financier, Wei Lin the buyer, the carrier, the insurer and the arbiter, each with their role." style="height:540px; width:auto; margin:auto auto 0; border-radius:20px;">
+  <div class="foot">
+    <div class="src">The characters are illustrative; everything they do is a real contract call on Robinhood Chain Testnet, with a role guide each (<span class="mono">docs/guides/</span>).</div>
+    <div class="pg">04 / 16</div>
+  </div>
+</section>
+
+<!-- ============================== 5 · HOW IT WORKS ============================== -->
+<section class="slide" id="s5">
+  <div class="top"><img src="media/logo-ink.svg" alt="CargoFlow"><span class="sec">05 · How it works</span></div>
+  <div class="kicker">Five beats · reference numbers</div>
+  <h2>From escrow to settlement, <span class="mark">every step on chain</span>.</h2>
+  <div class="row" style="gap:22px; margin-top:40px;">
+    <div class="beat grow">
+      <div class="media"><img class="anim" src="../assets/v3/how-facility.gif" alt="Meera presents the policy; Daniel's five USDG bars slide into the vault."><img class="still" src="media/still-facility.jpg" alt="Meera presents the policy; Daniel's five USDG bars fill the vault."></div>
+      <div class="stp"><span class="n">1</span><h3>Escrow</h3></div>
+      <p>Meera registers the shipment and a commit-reveal cold-chain policy (2 to 8 °C, humidity, shock). Daniel deposits the whole 40,000 USDG facility into the vault.</p>
+      <div class="call">createFacility · depositCapital</div>
+    </div>
+    <div class="beat grow">
+      <div class="media"><img class="anim" src="../assets/v3/how-evidence.gif" alt="Two probes' readings fuse into a score of 100 with 1.7% conflict."><img class="still" src="media/still-evidence.jpg" alt="Two probes' readings fuse into a score of 100 with 1.7% conflict."></div>
+      <div class="stp"><span class="n">2</span><h3>Evidence</h3></div>
+      <p>The logger signs each reading. Eight per sensor close an epoch: probes fused (Dempster-Shafer), conflict measured, scored 0 to 100. Only a salted Poseidon root and the score go on chain.</p>
+      <div class="call">commitEpoch</div>
+    </div>
+    <div class="beat grow">
+      <div class="media"><img class="anim" src="../assets/v3/how-release.gif" alt="A milestone releases 8,000 USDG to Meera; milestone 3 waits until the cargo is near Colombo."><img class="still" src="media/still-release.jpg" alt="Milestone 1 released, 8,000 USDG, on the route past Kochi."></div>
+      <div class="stp"><span class="n">3</span><h3>Release</h3></div>
+      <p>Evidence passes the policy in the right place: 8,000 USDG goes to Meera. The contract re-checks the committed epoch itself, whatever the backend asked for.</p>
+      <div class="call">evaluateAndReleaseMilestone</div>
+    </div>
+    <div class="beat grow">
+      <div class="media"><img class="anim" src="../assets/v3/how-excursion.gif" alt="Probe-1 overheats; conflict 74.8%, score 48, the facility pauses."><img class="still" src="media/still-excursion.jpg" alt="Score 48, the facility is paused."></div>
+      <div class="stp"><span class="n">4</span><h3>Pause, then prove</h3></div>
+      <p>Probe-1 hits 11.7 °C, conflict 74.8%, score 48: releases stop. A Groth16 proof that eight hidden readings of the other probe are in band, bound to this pause, resumes it.</p>
+      <div class="call">pauseFinancing · resumeWithProof</div>
+    </div>
+    <div class="beat grow">
+      <div class="media"><img class="anim" src="../assets/v3/how-settlement.gif" alt="Wei Lin's 100,000 USDG payment splits: 58,800 to Meera, 41,200 to Daniel."><img class="still" src="media/still-settlement.jpg" alt="58,800 USDG to Meera and 41,200 USDG to Daniel, one transaction."></div>
+      <div class="stp"><span class="n">5</span><h3>Settle</h3></div>
+      <p>Wei Lin pays 100,000 USDG once: 40,000 principal + 1,200 fee to Daniel, 58,800 to Meera, and the electronic bill of lading to her, in the same transaction.</p>
+      <div class="call">markDelivered · settle</div>
+    </div>
+  </div>
+  <div class="row" style="gap:22px; margin-top:28px;">
+    <div class="card grow" style="padding:14px; display:flex; gap:18px; align-items:center;">
+      <div class="media" style="width:240px; height:135px; flex:none; border-radius:12px; overflow:hidden; border:1px solid var(--line);"><img class="anim" src="../assets/v3/how-title.gif" alt="The bill of lading card moves to Wei Lin as the payouts land." style="width:100%; height:100%; object-fit:cover; object-position:top;"><img class="still" src="media/still-title.jpg" alt="Documents against payment: the bill of lading released to Wei Lin." style="width:100%; height:100%; object-fit:cover;"></div>
+      <div><h3 style="font-size:23px;">Title moves with the money</h3><p class="small" style="font-size:17px; color:var(--ink2); margin-top:4px;">The carrier's ERC-721 bill of lading leaves escrow in the buyer's payment transaction.</p></div>
+    </div>
+    <div class="card grow" style="padding:14px; display:flex; gap:18px; align-items:center;">
+      <div class="media" style="width:240px; height:135px; flex:none; border-radius:12px; overflow:hidden; border:1px solid var(--line);"><img class="anim" src="../assets/v3/how-cover.gif" alt="The insurer's umbrella over Daniel's drawn principal; three failed epochs bracketed N = 3." style="width:100%; height:100%; object-fit:cover; object-position:top;"><img class="still" src="media/still-cover.jpg" alt="Parametric cover: three failed epochs in a row, commit order verified." style="width:100%; height:100%; object-fit:cover;"></div>
+      <div><h3 style="font-size:23px;">Default and parametric cover</h3><p class="small" style="font-size:17px; color:var(--ink2); margin-top:4px;">Pays after N failed epochs in a row, proven from the registry's commit order.</p></div>
+    </div>
+    <div class="card grow" style="padding:14px; display:flex; gap:18px; align-items:center;">
+      <div class="media" style="width:240px; height:135px; flex:none; border-radius:12px; overflow:hidden; border:1px solid var(--line);"><img class="anim" src="../assets/v3/how-recovery.gif" alt="A sealed Groth16 envelope; Proof verified on chain; the vault shows ACTIVE." style="width:100%; height:100%; object-fit:cover; object-position:top;"><img class="still" src="media/still-recovery.jpg" alt="resumeWithProof: proof verified on chain." style="width:100%; height:100%; object-fit:cover;"></div>
+      <div><h3 style="font-size:23px;">Recovery is automatic</h3><p class="small" style="font-size:17px; color:var(--ink2); margin-top:4px;">The proof is prepared once a probe has eight fresh in-band readings; the exporter signs once.</p></div>
+    </div>
+  </div>
+  <div class="row" style="gap:16px; margin-top:auto; align-items:center;">
+    <span class="tag assume" style="white-space:nowrap;">Reference numbers</span>
+    <span class="small" style="color:var(--ink2);">100,000 USDG invoice · 40,000 USDG facility in 5 milestones of 8,000 · 3% fee. The live testnet runs use the same mechanics at 30 / 20 USDG. Disputes go to an arbiter role that can never release money.</span>
+  </div>
+  <div class="foot">
+    <div class="src">Contract calls as deployed (v3, 3 Oct 2026) · README "How it works, in twelve beats" · <span class="mono">docs/architecture.md</span></div>
+    <div class="pg">05 / 16</div>
+  </div>
+</section>
+
+<!-- ============================== 6 · PRODUCT ============================== -->
+<section class="slide" id="s6">
+  <div class="top"><img src="media/logo-ink.svg" alt="CargoFlow"><span class="sec">06 · The product</span></div>
+  <div class="row" style="align-items:flex-end; justify-content:space-between;">
+    <div>
+      <div class="kicker">Live at cargoflow.adoranto737.workers.dev</div>
+      <h2>A product each party can use <span class="mark">today</span>.</h2>
+    </div>
+    <span class="tag live">● recorded on the live site, 3 Oct 2026</span>
+  </div>
+  <div class="row" style="gap:22px; margin-top:34px;">
+    <div class="shot" style="width:837px; height:372px;"><img src="../assets/v3/web-track-v3.jpg" alt="Live dashboard of a settled shipment: invoice 30 USDG, financing 20, 5 of 5 milestones released, evidence score 100."><span class="cap">Shipment dashboard · <b>settled</b>, 5 of 5 milestones</span></div>
+    <div class="shot" style="width:837px; height:372px;"><img src="../assets/v3/web-exporter.jpg" alt="Exporter wizard on the cold-chain policy step with the Pharma 2 to 8 °C template."><span class="cap">Exporter wizard · Pharma <b>2 to 8 °C</b> template</span></div>
+  </div>
+  <div class="row" style="gap:22px; margin-top:22px;">
+    <div class="shot" style="width:551px; height:330px;"><img src="../assets/v3/web-market.jpg" alt="Market: an offer on an open financing request with a suggested fee band and its reasons."><span class="cap">Market · offers with a <b>fee band</b></span></div>
+    <div class="shot" style="width:551px; height:330px;"><img class="anim" src="../assets/v3/how-passkey.gif" alt="Screen recording: Wei Lin signs in with a passkey, confirms delivery, approves and pays."><img class="still" src="../assets/v3/web-settled.jpg" alt="Shipment CF-SG-VAX-0401 settled, the wallet chip reads Passkey account."><span class="cap">Buyer pays with a <b>passkey</b></span></div>
+    <div class="shot" style="width:550px; height:330px;"><img src="../assets/v3/claude-answer.jpg" alt="claude.ai answering from the CargoFlow connector: fleet risk and why a shipment paused (score 48, conflict 74.8%)."><span class="cap">claude.ai via <b>remote MCP</b> · no keys</span></div>
+  </div>
+  <div class="foot">
+    <div class="src">Pages: /track, /exporter, /financier, /buyer, /market, /ebl, /arbiter, /shipments, /developers, /docs, /deployments · Claude reads 25 tools and prepares unsigned transactions; every write is signed by the party in its own wallet or passkey.</div>
+    <div class="pg">06 / 16</div>
+  </div>
+</section>
+
+<!-- ============================== 7 · TECHNOLOGY & MOAT ============================== -->
+<section class="slide" id="s7">
+  <div class="top"><img src="media/logo-ink.svg" alt="CargoFlow"><span class="sec">07 · Technology and moat</span></div>
+  <div class="kicker">Technology and moat</div>
+  <h2>Evidence, proof, money and title <span class="mark">enforce each other</span>.</h2>
+  <div class="row" style="gap:28px; margin-top:34px; min-height:0;">
+    <div class="shot" style="width:800px; height:520px; flex:none; padding:10px; background:var(--white);"><img src="../assets/v3/architecture.png" alt="Architecture: the cast use the web app on Cloudflare Workers; signed transactions go straight to Robinhood Chain Testnet; the Go evidence service scores readings and acts only through role-limited keys; Claude uses the remote MCP server." style="object-fit:contain; object-position:center;"></div>
+    <div class="grow" style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+      <div class="card tile"><h3><i></i>Evidence engine</h3><p>Dempster-Shafer fusion across sensors, conflict taken at the worst step (an excursion cannot be averaged away), seven capped penalties, a published 0 to 100 formula. Same input, same score.</p></div>
+      <div class="card tile"><h3><i></i>Zero-knowledge recovery</h3><p>Groth16, 13,494 constraints, about 1 s to prove, about 0.25 M gas to verify. Bound to chain, controller, shipment, epoch, policy, submitter and pause count: no replay.</p></div>
+      <div class="card tile"><h3><i></i>Contracts hold authority</h3><p>Immutable core (no proxy); eight invariants fuzz-tested; the pause brake stops new risk only, never exits. The AI monitor can only make an outcome stricter, through a pause-only key.</p></div>
+      <div class="card tile"><h3><i></i>Device trust</h3><p>Ed25519, P-256 secure elements (X.509 chain to manufacturer roots) or passkeys. Device class weights reliability; every epoch records its source devices on chain.</p></div>
+      <div class="card tile"><h3><i></i>Electronic bill of lading</h3><p>ERC-721 title per bill, held in escrow and released in the buyer's payment transaction: documents against payment. Designed around MLETR concepts, not a legal claim.</p></div>
+      <div class="card tile"><h3><i></i>Parametric cover</h3><p>Pays after N consecutive failed epochs, proven from the EvidenceRegistry's commit order: principal to the financier, salvage to the exporter. Pull-based payouts.</p></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:22px; padding:18px 26px; display:flex; gap:22px; align-items:center;">
+    <span class="tag" style="background:var(--ink); color:var(--lime); flex:none;">Hard to copy</span>
+    <span style="font-size:20px; line-height:1.45; color:var(--ink2);">Not one feature but the chain of them: signed device readings, a fusion score, a circuit bound to the contract's own public signals, a vault that only the controller can release, and a title registry that moves with the payment. A copy needs all five, tested together (366 contract tests, 25 circuit tests).</span>
+  </div>
+  <div class="foot">
+    <div class="src">README "Under the hood" · <span class="mono">docs/architecture.md</span> (authority matrix, trust boundaries) · <span class="mono">docs/benchmarks.md</span> · <span class="mono">backend/README.md</span></div>
+    <div class="pg">07 / 16</div>
+  </div>
+</section>
+
+<!-- ============================== 8 · TRACTION ============================== -->
+<section class="slide" id="s8">
+  <div class="top"><img src="media/logo-ink.svg" alt="CargoFlow"><span class="sec">08 · Traction</span></div>
+  <div class="row" style="align-items:flex-end; justify-content:space-between;">
+    <div>
+      <div class="kicker">Honest testnet traction</div>
+      <h2>Working on a public chain, <span class="mark">with receipts</span>.</h2>
+    </div>
+    <span class="tag plan" style="white-space:nowrap;">No users or revenue yet · testnet only · not audited</span>
+  </div>
+  <div class="row" style="gap:28px; margin-top:34px; min-height:0;">
+    <div class="card grow" style="padding:24px 18px 10px;">
+      <table class="tx">
+        <tr><th>Live run</th><th>What happened</th><th>On chain</th></tr>
+        <tr><td><b>CF-SG-VAX-0202</b><br><span class="small" style="font-size:15px;">the film's shipment</span></td><td>Through the website, each party in its own session: carrier's bill of lading, logger CSVs, an excursion, automatic ZK recovery (proof ready 45 s after the recovery readings), settlement.</td><td><a class="h" href="https://explorer.testnet.chain.robinhood.com/tx/0x79c68fc0a35fc23f08678215e858a1d16af38ce61b13307524e67802af8a232f">proof 0x79c68fc0…</a><br><a class="h" href="https://explorer.testnet.chain.robinhood.com/tx/0xabba66b6f602ed9e04bbabcd1a56e118cf188ae8bd9934b3f7e405e341f6e562">settle 0xabba66b6…</a></td></tr>
+        <tr><td><b>CF-SG-VAX-0401</b><br><span class="small" style="font-size:15px;">passkey payment</span></td><td>Wei Lin's ZeroDev Kernel account, controlled by a WebAuthn passkey, confirmed delivery, approved and paid: three ERC-4337 user operations.</td><td><a class="h" href="https://explorer.testnet.chain.robinhood.com/address/0xBCf284379b7Ce7144d4154BCc73043A750125E56">account 0xBCf28437…</a><br><a class="h" href="https://explorer.testnet.chain.robinhood.com/tx/0xee1d5ba8731c027a79c1ce68696360e694f687c7926cd36bca1a6db215815956">settle 0xee1d5ba8…</a></td></tr>
+        <tr><td><b>CF-LIVE-1791029236301</b><br><span class="small" style="font-size:15px;">v3 reference run</span></td><td>Registration to settlement through the hosted API, each step signed by the party's own key; every epoch records its source device.</td><td><a class="h" href="https://explorer.testnet.chain.robinhood.com/tx/0xadfe3b2fa8c89d30f847232b35009373b3d4163dc75b321d6490631f503a9f52">proof 0xadfe3b2f…</a><br><a class="h" href="https://explorer.testnet.chain.robinhood.com/tx/0x37571b49186b43f2f02df4d2034cd495ac7095766d113c20060cdecf4e365a35">paid 0x37571b49…</a></td></tr>
+        <tr><td><b>v1 hero run</b><br><span class="small" style="font-size:15px;">CLI story runner</span></td><td>22 transactions in 116 seconds: funding, two releases, an excursion, a Groth16 proof verified on chain, three more releases, settlement. Exporter 49.4 USDG, financier 20.6 USDG, vault empty.</td><td><a class="h" href="https://explorer.testnet.chain.robinhood.com/tx/0x3910c2a5c191be43985e0a683e4fdc52a02af8d2f9b4d49749afbf79a131a3e1">proof 0x3910c2a5…</a><br><a class="h" href="https://explorer.testnet.chain.robinhood.com/tx/0xcb11761ca1c1b6b302c15ee27de0090b5c379034c28e621cf3cf9563b2b5bd6c">settle 0xcb11761c…</a></td></tr>
+      </table>
+    </div>
+    <div class="col" style="width:640px; flex:none; gap:14px;">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+        <div class="card big"><span class="num">10</span><span class="lbl">contracts source-verified on Robinhood Chain Testnet (v3, 3 Oct 2026)</span></div>
+        <div class="card big"><span class="num">4</span><span class="lbl">packages published 0.1.0: <span class="mono" style="font-size:14px;">@cargoflow/sdk · /mcp · /gateway</span> on npm, <span class="mono" style="font-size:14px;">cargoflow</span> on PyPI</span></div>
+        <div class="card big"><span class="num">25</span><span class="lbl">MCP tools on a public remote server, used from claude.ai</span></div>
+        <div class="card big"><span class="num">3</span><span class="lbl">extensions on Arbitrum Sepolia: Fhenix and GMX (Sourcify-verified), Stylus engine</span></div>
+      </div>
+      <div class="card" style="padding:18px 22px;">
+        <div class="mono" style="font-size:14px; letter-spacing:.1em; text-transform:uppercase; color:var(--slate); margin-bottom:10px;">Tests, all passing</div>
+        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px 8px;">
+          <div><span class="num" style="font-size:34px;">366</span><div class="small" style="font-size:15px;">contract</div></div>
+          <div><span class="num" style="font-size:34px;">25</span><div class="small" style="font-size:15px;">circuit</div></div>
+          <div><span class="num" style="font-size:34px;">296</span><div class="small" style="font-size:15px;">frontend unit</div></div>
+          <div><span class="num" style="font-size:34px;">18</span><div class="small" style="font-size:15px;">end-to-end</div></div>
+          <div><span class="num" style="font-size:34px;">92</span><div class="small" style="font-size:15px;">SDK</div></div>
+          <div><span class="num" style="font-size:34px;">27</span><div class="small" style="font-size:15px;">MCP</div></div>
+          <div><span class="num" style="font-size:34px;">36</span><div class="small" style="font-size:15px;">gateway</div></div>
+          <div><span class="num" style="font-size:34px;">25</span><div class="small" style="font-size:15px;">Python</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div class="src">Every hash links to explorer.testnet.chain.robinhood.com · full transaction tables in the README ("Live on Robinhood Chain Testnet") · addresses: <a href="https://cargoflow.adoranto737.workers.dev/deployments">/deployments</a> · tests: <span class="mono">make check</span>, vitest summaries re-run 4 Oct 2026</div>
+    <div class="pg">08 / 16</div>
+  </div>
+</section>
+
+<!-- ============================== 9 · MARKET ============================== -->
+<section class="slide" id="s9">
+  <div class="top"><img src="media/logo-ink.svg" alt="CargoFlow"><span class="sec">09 · Market</span></div>
+  <div class="kicker">Market size · bottom-up</div>
+  <h2>Start with one corridor, inside a <span class="mark">$2.5T gap</span>.</h2>
+  <div class="mkt" style="margin-top:30px; gap:56px;">
+    <div class="ring">
+      <div class="tam"><span class="k">TAM</span><span class="v">$2.5T</span><span class="d">unmet trade finance demand, 2025 (ADB): the gap CargoFlow lends into</span></div>
+      <div class="sam"><span class="k">SAM</span><span class="v">~$15.2B</span><span class="d">India's pharma exports sold on credit, per year</span></div>
+      <div class="som"><span class="k">SOM</span><span class="v">~$152M</span><span class="d">financed per year by year 3</span></div>
+    </div>
+    <div class="col grow" style="gap:18px;">
+      <div class="card" style="padding:10px 18px;">
+        <table class="calc">
+          <tr><td>TAM</td><td>Global trade finance gap in 2025, about 10% of global trade (Asian Development Bank, 15 Jan 2026)</td><td class="r">$2.5T</td></tr>
+          <tr><td>SAM</td><td>India's pharmaceutical exports, FY 2024-25: <b>$30.47B</b> (Government of India, PIB) × <b>50%</b> of B2B sales made on credit (Atradius India 2025) <span class="tag assume" style="font-size:12px; padding:3px 9px;">A1</span></td><td class="r">~$15.2B</td></tr>
+          <tr><td>SOM</td><td><b>1%</b> of SAM financed through CargoFlow by year 3 <span class="tag assume" style="font-size:12px; padding:3px 9px;">A2</span></td><td class="r">~$152M</td></tr>
+          <tr><td>Revenue</td><td>Planned protocol fee of <b>30 to 50 bps</b> on financed volume <span class="tag assume" style="font-size:12px; padding:3px 9px;">A3</span>, before cover and SaaS revenue</td><td class="r">$0.46M to $0.76M / yr</td></tr>
+          <tr><td>Capital</td><td>At 52-day average terms (Atradius) a facility turns about 7 times a year, so $152M of volume needs about $22M of financier capital outstanding <span class="tag assume" style="font-size:12px; padding:3px 9px;">A4</span></td><td class="r">~$22M</td></tr>
+        </table>
+      </div>
+      <div class="card" style="padding:18px 24px; background:var(--mist);">
+        <div class="mono" style="font-size:14px; letter-spacing:.1em; text-transform:uppercase; color:var(--teal); margin-bottom:8px;">Assumptions, stated</div>
+        <p style="font-size:17px; line-height:1.5; color:var(--ink2);"><b>A1</b> Atradius' India-wide B2B credit share applies to pharma exports. <b>A2</b> 1% share is a target, not a forecast. <b>A3</b> fee level is planned; today's contracts charge no protocol fee. <b>A4</b> 365 / 52 ≈ 7 turns, full utilisation. Expansion beyond pharma (frozen food, chemicals, other lanes) is not counted. Cold-chain losses of ~$35B a year in biopharma alone (IQVIA) are the demand for cover.</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div class="src"><a href="https://www.adb.org/news/demand-trade-finance-rise-amid-supply-chain-realignment-adb-report">ADB, 15 Jan 2026</a> · <a href="https://www.pib.gov.in/PressReleasePage.aspx?PRID=2231234">PIB, Government of India: pharmaceutical exports USD 30.47 billion in FY 2024-25</a> · <a href="https://group.atradius.com/knowledge-and-research/reports/b2b-payment-practices-trends-india-2025">Atradius India 2025</a> · <a href="https://www.aircargonews.net/pharma-logistics/2019/07/failures-in-temperature-controlled-logistics-cost-biopharma-industry-billions/">IQVIA via Air Cargo News</a></div>
+    <div class="pg">09 / 16</div>
+  </div>
+</section>
+
+<!-- ============================== 10 · BUSINESS MODEL ============================== -->
+<section class="slide" id="s10">
+  <div class="top"><img src="media/logo-ink.svg" alt="CargoFlow"><span class="sec">10 · Business model</span></div>
+  <div class="row" style="align-items:flex-end; justify-content:space-between;">
+    <div>
+      <div class="kicker">Business model</div>
+      <h2>Paid when <span class="mark">capital moves</span>, not before.</h2>
+    </div>
+    <span class="tag plan">Planned · not yet in the contracts</span>
+  </div>
+  <div class="row" style="gap:22px; margin-top:38px;">
+    <div class="card grow" style="padding:30px 30px; display:flex; flex-direction:column; gap:14px;">
+      <div class="mono" style="font-size:15px; color:var(--teal); letter-spacing:.1em;">01 · PRIMARY</div>
+      <h3 style="font-size:34px;">Protocol fee on financed volume</h3>
+      <p class="lead" style="font-size:21px;">30 to 50 bps of each facility's drawn amount, taken inside the settlement waterfall the contract already runs. No fee if nothing is drawn.</p>
+      <div style="margin-top:auto; background:var(--mist); border-radius:14px; padding:16px 18px; font-size:17px; line-height:1.55; color:var(--ink2);">Reference facility: 40,000 USDG drawn × 40 bps = <b class="mono">160 USDG</b> to the protocol; the financier's own fee (3% here, <b class="mono">1,200 USDG</b>) is set per facility.</div>
+    </div>
+    <div class="card grow" style="padding:30px 30px; display:flex; flex-direction:column; gap:14px;">
+      <div class="mono" style="font-size:15px; color:var(--teal); letter-spacing:.1em;">02 · RISK</div>
+      <h3 style="font-size:34px;">Share of cover premiums</h3>
+      <p class="lead" style="font-size:21px;">Insurers write default and parametric cover through the CoverPool; CargoFlow takes a share of the premium. The insurer keeps the risk; the evidence trail prices it.</p>
+      <div style="margin-top:auto; background:var(--mist); border-radius:14px; padding:16px 18px; font-size:17px; line-height:1.55; color:var(--ink2);">Built today: default cover pays min(cover, drawn principal); parametric cover pays after N failed epochs, proven on chain.</div>
+    </div>
+    <div class="card grow" style="padding:30px 30px; display:flex; flex-direction:column; gap:14px;">
+      <div class="mono" style="font-size:15px; color:var(--teal); letter-spacing:.1em;">03 · SOFTWARE</div>
+      <h3 style="font-size:34px;">SaaS for financiers and data</h3>
+      <p class="lead" style="font-size:21px;">Portfolio risk, exposure and Monte Carlo of default and recovery, evidence API and MCP access for credit funds, insurers and logger vendors; seat or volume pricing.</p>
+      <div style="margin-top:auto; background:var(--mist); border-radius:14px; padding:16px 18px; font-size:17px; line-height:1.55; color:var(--ink2);">Built today: Python SDK (portfolio, VaR / ES), TypeScript SDK, remote MCP, OpenAPI 3.1 reference, Dune queries.</div>
+    </div>
+  </div>
+  <div class="row" style="gap:22px; margin-top:22px;">
+    <div class="card grow" style="padding:20px 26px; background:var(--ink); color:var(--paper); border-color:var(--ink); font-size:20px; line-height:1.5;"><b style="color:var(--lime);">Non-custodial by design.</b> The ReceivableVault is the sole USDG custodian and pays out only on the controller's rules. CargoFlow software never holds client funds; financiers lend, insurers insure.</div>
+    <div class="card grow" style="padding:20px 26px; font-size:20px; line-height:1.5; color:var(--ink2);"><b style="color:var(--ink);">Honest today.</b> The contracts charge no protocol fee yet. Adding it is a waterfall change that ships with the audited mainnet release (milestone M3), alongside work with licensed financiers.</div>
+  </div>
+  <div class="card" style="margin-top:22px; padding:14px 22px 14px 14px; display:flex; gap:26px; align-items:center;">
+    <div style="width:300px; height:169px; flex:none; border-radius:12px; overflow:hidden; border:1px solid var(--line);"><img class="anim" src="../assets/v3/how-settlement.gif" alt="Wei Lin's single payment splits beneath the vault into the payouts to Meera and Daniel." style="width:100%; height:100%; object-fit:cover; object-position:top;"><img class="still" src="media/still-settlement.jpg" alt="58,800 USDG to Meera and 41,200 USDG to Daniel in one transaction." style="width:100%; height:100%; object-fit:cover;"></div>
+    <div class="grow">
+      <div class="mono" style="font-size:14px; letter-spacing:.1em; text-transform:uppercase; color:var(--teal); margin-bottom:10px;">The waterfall already runs on chain · reference facility</div>
+      <div class="bar" style="height:54px;">
+        <div style="width:58.8%; background:var(--lime-soft); font-size:18px;">58,800 exporter residual</div>
+        <div style="width:40%; background:var(--lime); font-size:18px;">40,000 principal</div>
+        <div style="width:1.2%; min-width:56px; background:var(--emerald); font-size:15px;">1,200</div>
+      </div>
+      <p class="small" style="margin-top:10px; font-size:17px;">One 100,000 USDG invoice payment: principal and the 3% fee to the financier, the rest to the exporter, the bill of lading to the buyer. The planned protocol fee is one more line in this split.</p>
+    </div>
+  </div>
+  <div class="foot">
+    <div class="src">Fee levels and revenue lines are plans and assumptions, not results · existing mechanics: <span class="mono">contracts/src/ReceivableVault.sol</span>, <span class="mono">CoverPool.sol</span>, <span class="mono">packages/python</span>, <span class="mono">backend/internal/pricing</span></div>
+    <div class="pg">10 / 16</div>
+  </div>
+</section>
+
+<!-- ============================== 11 · COMPETITION ============================== -->
+<section class="slide" id="s11">
+  <div class="top"><img src="media/logo-ink.svg" alt="CargoFlow"><span class="sec">11 · Competition</span></div>
+  <div class="kicker">Landscape, by category</div>
+  <h2>Each category solves one piece. <span class="mark">None ties money to the cargo.</span></h2>
+  <div class="card" style="margin-top:34px; padding:18px 22px;">
+    <table class="cmp">
+      <tr>
+        <th style="width:330px;">Category</th>
+        <th style="width:150px;">Sees cargo condition</th>
+        <th style="width:150px;">Releases per milestone on evidence</th>
+        <th style="width:150px;">Payment and title together</th>
+        <th style="width:150px;">Telemetry stays private</th>
+        <th style="width:150px;">Stablecoin settlement</th>
+        <th>Where they win</th>
+      </tr>
+      <tr>
+        <td><b>Bank trade finance</b><span>letters of credit, documentary collections</span></td>
+        <td><span class="dot none"></span></td><td><span class="dot half"></span></td><td><span class="dot half"></span></td><td><span class="dot none"></span></td><td><span class="dot none"></span></td>
+        <td>Lowest cost of capital, regulated, trusted by every counterparty. Paper-based, slow, and 41% of SME applications rejected.</td>
+      </tr>
+      <tr>
+        <td><b>Factoring and invoice-finance fintechs</b><span>receivables advanced against the buyer's credit</span></td>
+        <td><span class="dot none"></span></td><td><span class="dot none"></span></td><td><span class="dot none"></span></td><td><span class="dot none"></span></td><td><span class="dot none"></span></td>
+        <td>Fast onboarding and simple products. Underwrite the invoice and buyer, not the goods in transit; money moves up front.</td>
+      </tr>
+      <tr>
+        <td><b>Cold-chain monitoring vendors</b><span>data loggers and visibility platforms</span></td>
+        <td><span class="dot full"></span></td><td><span class="dot none"></span></td><td><span class="dot none"></span></td><td><span class="dot none"></span></td><td><span class="dot none"></span></td>
+        <td>Hardware in the container and real-time alerts. Their data informs people; it does not move money. Partners, not rivals.</td>
+      </tr>
+      <tr>
+        <td><b>On-chain RWA credit protocols</b><span>pooled private credit with stablecoins</span></td>
+        <td><span class="dot none"></span></td><td><span class="dot none"></span></td><td><span class="dot none"></span></td><td><span class="dot none"></span></td><td><span class="dot full"></span></td>
+        <td>On-chain liquidity and transparent pools. Underwriting happens off chain at pool level, on borrower attestations.</td>
+      </tr>
+      <tr class="us">
+        <td><b>CargoFlow</b><span>evidence-gated facility per shipment</span></td>
+        <td><span class="dot lime"></span></td><td><span class="dot lime"></span></td><td><span class="dot lime"></span></td><td><span class="dot lime"></span></td><td><span class="dot lime"></span></td>
+        <td><b>The combination.</b> Weaknesses we own: testnet only, not audited, no physical secure-element board run yet, needs financiers.</td>
+      </tr>
+    </table>
+  </div>
+  <div class="row" style="gap:28px; margin-top:20px; align-items:center;" >
+    <span class="small"><span class="dot full" style="width:16px;height:16px;"></span>&nbsp; yes &nbsp;&nbsp; <span class="dot half" style="width:16px;height:16px;"></span>&nbsp; partly (on documents, not sensor evidence) &nbsp;&nbsp; <span class="dot none" style="width:16px;height:16px;"></span>&nbsp; not a design goal of the category</span>
+  </div>
+  <div class="foot">
+    <div class="src">Categories described by their typical design, not by any one company. Ratings are CargoFlow's assessment; individual providers may differ.</div>
+    <div class="pg">11 / 16</div>
+  </div>
+</section>
+
+<!-- ============================== 12 · GO-TO-MARKET ============================== -->
+<section class="slide" id="s12">
+  <div class="top"><img src="media/logo-ink.svg" alt="CargoFlow"><span class="sec">12 · Go-to-market</span></div>
+  <div class="row" style="align-items:flex-end; justify-content:space-between;">
+    <div>
+      <div class="kicker">Go-to-market</div>
+      <h2>One corridor first: <span class="mark">India pharma → Singapore</span>.</h2>
+    </div>
+    <span class="tag plan">Plan</span>
+  </div>
+  <div class="row" style="gap:28px; margin-top:34px; flex:1; min-height:0;">
+    <div class="col" style="width:720px; flex:none; gap:16px;">
+      <div class="shot" style="height:405px;"><img class="anim" src="../assets/v3/how-release.gif" alt="The route from Nhava Sheva past Colombo toward Singapore, milestones on the map."><img class="still" src="media/still-release.jpg" alt="The route from Nhava Sheva past Kochi and Colombo toward Singapore."><span class="cap">Nhava Sheva → Colombo → <b>Singapore</b>, 2 to 8 °C</span></div>
+      <div class="card" style="padding:20px 24px; font-size:19px; line-height:1.5; color:var(--ink2);">
+        <b style="color:var(--ink);">Why this lane.</b> India exported $30.47B of pharmaceuticals in FY 2024-25 (PIB) and sells half of B2B volume on 52-day credit (Atradius). Singapore is the importer and hub, home of USDG's issuer (Paxos Digital Singapore) and of the buildathon's Founder House.
+      </div>
+    </div>
+    <div class="col grow" style="gap:14px;">
+      <div class="card" style="padding:22px 26px;">
+        <div class="mono" style="font-size:14px; color:var(--teal); letter-spacing:.1em;">DOOR 1 · LOGGER VENDORS</div>
+        <h3 style="font-size:26px; margin:6px 0 6px;">Make existing loggers finance-ready</h3>
+        <p style="font-size:18px; line-height:1.45; color:var(--ink2);"><span class="code">@cargoflow/gateway</span> already signs and sends logger exports (folder watch, USB, serial, offline queue). Vendor presets for Sensitech, Elitech and ELPRO exist and are marked experimental until checked against real exports.</p>
+      </div>
+      <div class="card" style="padding:22px 26px;">
+        <div class="mono" style="font-size:14px; color:var(--teal); letter-spacing:.1em;">DOOR 2 · CREDIT FUNDS AND FINANCIERS</div>
+        <h3 style="font-size:26px; margin:6px 0 6px;">Short-tenor USDG yield with evidence attached</h3>
+        <p style="font-size:18px; line-height:1.45; color:var(--ink2);">The market lists open requests with a suggested fee band; the Python SDK, MCP server and settlement certificates give underwriters the evidence trail per facility.</p>
+      </div>
+      <div class="card" style="padding:22px 26px;">
+        <div class="mono" style="font-size:14px; color:var(--teal); letter-spacing:.1em;">DOOR 3 · EXPORTERS VIA FORWARDERS AND INSURERS</div>
+        <h3 style="font-size:26px; margin:6px 0 6px;">Onboard through who they already use</h3>
+        <p style="font-size:18px; line-height:1.45; color:var(--ink2);">Freight forwarders bring shipments; insurers bring parametric cover. The exporter wizard's Pharma template fills 2 to 8 °C, humidity and shock in one click.</p>
+      </div>
+      <div class="row" style="gap:12px; margin-top:auto; align-items:center;">
+        <span class="tag assume">Pilot target</span><span class="small" style="color:var(--ink2);">3 exporters, 1 financier, 1 logger vendor on this lane; then more lanes and cold-chain categories.</span>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div class="src"><a href="https://www.pib.gov.in/PressReleasePage.aspx?PRID=2231234">PIB, FY 2024-25 pharma exports</a> · <a href="https://group.atradius.com/knowledge-and-research/reports/b2b-payment-practices-trends-india-2025">Atradius India 2025</a> · gateway presets and limits: <span class="mono">packages/gateway</span>, README "Honest limits" · pilot numbers are targets</div>
+    <div class="pg">12 / 16</div>
+  </div>
+</section>
+
+<!-- ============================== 13 · ROADMAP ============================== -->
+<section class="slide" id="s13">
+  <div class="top"><img src="media/logo-ink.svg" alt="CargoFlow"><span class="sec">13 · Roadmap</span></div>
+  <div class="row" style="align-items:flex-end; justify-content:space-between;">
+    <div>
+      <div class="kicker">Roadmap · each milestone has an exit test</div>
+      <h2>From testnet to the <span class="mark">first real facility</span>.</h2>
+    </div>
+    <span class="tag plan">Plan · maps to milestone-based grants</span>
+  </div>
+  <div class="done" style="margin-top:28px; display:flex; gap:20px; align-items:center;">
+    <span class="tag live" style="flex:none;">● M0 done</span>
+    <span style="font-size:19px; line-height:1.45; color:var(--ink2);">Contracts v3 deployed and verified on Robinhood Chain Testnet; live web app, API and MCP; passkey payments; ZK recovery on chain; four packages published; 366 / 25 / 296 / 18 tests.</span>
+  </div>
+  <div class="row" style="gap:16px; margin-top:18px; flex:1; min-height:0;">
+    <div class="card ms grow">
+      <span class="id">M1</span><h3>Security</h3>
+      <ul><li>Independent audit of the v3 core contracts</li><li>Public Groth16 ceremony to replace the single-party setup</li><li>Admin and verifier role governance</li></ul>
+      <div class="fund">35% of grant · audit and ceremony</div>
+      <div class="exit"><b>Exit test</b>Audit report published, every finding fixed or accepted in writing</div>
+    </div>
+    <div class="card ms grow">
+      <span class="id">M2</span><h3>Real evidence</h3>
+      <ul><li>Logger pilots on real shipments</li><li>Vendor presets verified against real exports</li><li>First secure-element board (P-256, X.509) run end to end</li></ul>
+      <div class="fund">25% of grant · pilots and hardware</div>
+      <div class="exit"><b>Exit test</b>3 real shipments evidenced on chain from physical loggers (target)</div>
+    </div>
+    <div class="card ms grow">
+      <span class="id">M3</span><h3>Mainnet</h3>
+      <ul><li>Deploy on Robinhood Chain mainnet with real USDG, per-facility caps</li><li>Protocol fee in the waterfall</li><li>Multi-instance backend, proof queue</li></ul>
+      <div class="fund">20% of grant · mainnet and first facilities</div>
+      <div class="exit"><b>Exit test</b>First facility funded by an outside financier and settled in real USDG</div>
+    </div>
+    <div class="card ms grow">
+      <span class="id">M4</span><h3>Legal and title</h3>
+      <ul><li>Legal opinion on the eBL under MLETR-based law (Singapore first)</li><li>Structure with a licensed financier</li><li>Carrier or forwarder eBL pilot</li></ul>
+      <div class="fund">10% of grant · legal</div>
+      <div class="exit"><b>Exit test</b>Written opinion; one bill of lading issued by a real carrier</div>
+    </div>
+    <div class="card ms grow">
+      <span class="id">M5</span><h3>Scale</h3>
+      <ul><li>Scoring calibrated on pilot data</li><li>Pooled financier vault (ERC-4626)</li><li>Second lane and cargo category</li></ul>
+      <div class="fund">after the grant · revenue or next round</div>
+      <div class="exit"><b>Exit test</b>Calibration report public; second corridor live</div>
+    </div>
+  </div>
+  <div class="foot">
+    <div class="src">Production gaps as listed in <span class="mono">docs/architecture.md</span> ("What would change for production") and README "Honest limits" · later phases: <span class="mono">docs/project/22-advanced-roadmap.md</span></div>
+    <div class="pg">13 / 16</div>
+  </div>
+</section>
+
+<!-- ============================== 14 · ASK ============================== -->
+<section class="slide dark" id="s14">
+  <div class="top"><img src="media/logo-paper.svg" alt="CargoFlow"><span class="sec">14 · The ask</span></div>
+  <div class="row" style="align-items:flex-end; justify-content:space-between;">
+    <div>
+      <div class="kicker">The ask and use of funds</div>
+      <h2 style="max-width:1300px;">Prize and milestone grant fund <span class="mark">M1 to M4</span>: audit, real evidence, mainnet, legal.</h2>
+    </div>
+    <span class="tag plan">Plan</span>
+  </div>
+  <div class="bar" style="margin-top:40px;">
+    <div style="width:35%; background:var(--lime);">35%</div>
+    <div style="width:25%; background:#8FE3B5;">25%</div>
+    <div style="width:20%; background:var(--amber);">20%</div>
+    <div style="width:10%; background:#9FC6D6;">10%</div>
+    <div style="width:10%; background:#D3DCE4;">10%</div>
+  </div>
+  <div class="row" style="gap:44px; margin-top:26px; flex:1; min-height:0;">
+    <table class="uses grow">
+      <tr><td class="p"><span class="sw" style="background:var(--lime);"></span>35%</td><td><b>Security audit and public ZK ceremony</b>Core contracts (controller, vault, evidence, policy, cover, title, devices) and the circuit.</td><td class="m">M1</td><td class="a">10,500 USDG</td></tr>
+      <tr><td class="p"><span class="sw" style="background:#8FE3B5;"></span>25%</td><td><b>Pilots and logger hardware</b>Loggers and secure-element boards for real shipments on the India to Singapore lane.</td><td class="m">M2</td><td class="a">7,500 USDG</td></tr>
+      <tr><td class="p"><span class="sw" style="background:var(--amber);"></span>20%</td><td><b>Mainnet launch and first facilities</b>Deployment, a capped first-loss / cover seed so the first financier is not alone.</td><td class="m">M3</td><td class="a">6,000 USDG</td></tr>
+      <tr><td class="p"><span class="sw" style="background:#9FC6D6;"></span>10%</td><td><b>Legal</b>MLETR opinion on the bill of lading and structuring with a licensed financier.</td><td class="m">M4</td><td class="a">3,000 USDG</td></tr>
+      <tr><td class="p"><span class="sw" style="background:#D3DCE4;"></span>10%</td><td><b>Team and infrastructure</b>Hosting, RPC, prover capacity for six months.</td><td class="m">all</td><td class="a">3,000 USDG</td></tr>
+    </table>
+    <div class="col" style="width:560px; flex:none; gap:16px;">
+      <div style="background:var(--ink2); border:1.5px solid var(--ink3); border-radius:22px; padding:24px 26px;">
+        <div class="mono" style="font-size:14px; letter-spacing:.1em; color:var(--lime); margin-bottom:10px;">HOW THE NUMBERS READ</div>
+        <p style="font-size:19px; line-height:1.5; color:#D3DCE4;">Amounts show the split applied to the buildathon's milestone grant of up to <b style="color:var(--paper);">30,000 USDG</b>. Any prize is applied to the same plan in the same proportions; a larger amount deepens the audit first.</p>
+      </div>
+      <div style="background:var(--ink2); border:1.5px solid var(--ink3); border-radius:22px; padding:24px 26px;">
+        <div class="mono" style="font-size:14px; letter-spacing:.1em; color:var(--lime); margin-bottom:10px;">RELEASED LIKE A CARGOFLOW FACILITY</div>
+        <p style="font-size:19px; line-height:1.5; color:#D3DCE4;">Each tranche is tied to a milestone's exit test (slide 13), so funders see evidence before the next release: the same rule CargoFlow applies to cargo.</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div class="src">Prize structure: Arbitrum Open House Singapore Online Buildathon (HackQuest): 115,000 USDG in total, including up to 30,000 USDG in milestone-based grants · the split is a plan, not a quote</div>
+    <div class="pg" style="color:#8FA1B1;">14 / 16</div>
+  </div>
+</section>
+
+<!-- ============================== 15 · WHY WE WIN ============================== -->
+<section class="slide" id="s15">
+  <div class="top"><img src="media/logo-ink.svg" alt="CargoFlow"><span class="sec">15 · Built for this buildathon</span></div>
+  <div class="kicker">Arbitrum Open House Singapore · judging criteria</div>
+  <h2>Every criterion, with <span class="mark">something to click</span>.</h2>
+  <div class="card" style="margin-top:30px; padding:10px 22px;">
+    <table class="jd">
+      <tr><td><span>Requirement</span><b>Deployed on an Arbitrum chain</b></td><td>All ten core contracts live and source-verified on Robinhood Chain Testnet (46630); Stylus, Fhenix and GMX pieces on Arbitrum Sepolia.</td></tr>
+      <tr><td><span>Criterion</span><b>Smart contract quality</b></td><td>366 contract tests (unit, fuzz, eight invariants, real-proof integration, smart-account callers); immutable core, no proxy; OpenZeppelin 5.4; Slither triaged; an authority matrix that lists what each role cannot do; a pause that can never block an exit.</td></tr>
+      <tr><td><span>Criterion</span><b>Product-market fit</b></td><td>A sourced problem ($2.5T gap, 41% SME rejections, 52-day terms); portals for exporter, financier, buyer, carrier and arbiter; a market with fee guidance; SDK, MCP, gateway and Python packages published.</td></tr>
+      <tr><td><span>Criterion</span><b>Innovation and creativity</b></td><td>Capital gated by fused sensor evidence; context-bound ZK recovery; an AI monitor that can only tighten; parametric cover proven from commit order; a bill of lading that moves inside the payment; Claude as a keyless co-pilot.</td></tr>
+      <tr><td><span>Criterion</span><b>Real problem solving</b></td><td>End-to-end runs on the public testnet with every transaction linked: excursion, pause, proof, resume, settlement, passkey payment.</td></tr>
+      <tr><td><span>Extra consideration</span><b>Paxos USDG</b></td><td>USDG is the only money: escrow, tranches, invoice payment, waterfall and cover, on the real Paxos testnet token <span class="code">0x7E95…802F</span>.</td></tr>
+      <tr><td><span>Reserved prize</span><b>Robinhood Chain</b></td><td>Built on Robinhood Chain first, not ported: its RIP-7212 precompile carries the passkey flow, and at least one of the three overall prizes is reserved for a Robinhood Chain project.</td></tr>
+    </table>
+  </div>
+  <div class="foot">
+    <div class="src">Judging criteria and prize rules: HackQuest listing (<span class="mono">docs/project/21-hackathon-alignment.md</span>, <a href="https://www.hackquest.io/hackathons/Arbitrum-Open-House-Singapore-Online-Buildathon">hackquest.io</a>) · evidence: README sections "Live on Robinhood Chain Testnet", "Measured, not claimed", "Sponsor and partner integrations"</div>
+    <div class="pg">15 / 16</div>
+  </div>
+</section>
+
+<!-- ============================== 16 · TEAM & CONTACT ============================== -->
+<section class="slide" id="s16">
+  <div class="top"><img src="media/logo-ink.svg" alt="CargoFlow"><span class="sec">16 · Team and contact</span></div>
+  <div class="row" style="gap:64px; flex:1; min-height:0;">
+    <div class="col" style="width:760px; flex:none;">
+      <div class="kicker">Team</div>
+      <h2>The people building it.</h2>
+      <div class="col" style="gap:16px; margin-top:34px;">
+        <div class="ph"><div class="face">[photo]</div><div><b>[Founder name]</b><span>[Role] · [one line: background in trade finance, logistics or cryptography]</span><span class="mono" style="font-size:15px; margin-top:6px;">[GitHub / LinkedIn / X]</span></div></div>
+        <div class="ph"><div class="face">[photo]</div><div><b>[Co-founder name]</b><span>[Role] · [one line]</span><span class="mono" style="font-size:15px; margin-top:6px;">[GitHub / LinkedIn / X]</span></div></div>
+        <div class="ph"><div class="face">[photo]</div><div><b>[Advisor or next hire]</b><span>[Trade finance or insurance background]</span></div></div>
+      </div>
+      <p class="small" style="margin-top:18px;">Placeholders: the founders add names, photos and backgrounds before sharing. No person on this slide is invented.</p>
+    </div>
+    <div class="col grow">
+      <div class="kicker">Try it, read it, use it</div>
+      <h2>Everything is <span class="mark">live and open</span>.</h2>
+      <div class="card" style="margin-top:34px; padding:8px 28px;">
+        <table class="links">
+          <tr><td>Web app</td><td><a href="https://cargoflow.adoranto737.workers.dev">cargoflow.adoranto737.workers.dev</a></td></tr>
+          <tr><td>Source</td><td><a href="https://github.com/LSUDOKO/CargoFlow">github.com/LSUDOKO/CargoFlow</a> <span class="small">(MIT)</span></td></tr>
+          <tr><td>API</td><td><a href="https://cargoflow-api-75ul.onrender.com/v1/health">cargoflow-api-75ul.onrender.com</a></td></tr>
+          <tr><td>MCP for Claude</td><td><a href="https://cargoflow-mcp.adoranto737.workers.dev/mcp">cargoflow-mcp.adoranto737.workers.dev/mcp</a></td></tr>
+          <tr><td>Contracts</td><td><a href="https://cargoflow.adoranto737.workers.dev/deployments">/deployments</a> · <a href="https://explorer.testnet.chain.robinhood.com/address/0x06DaF9462eCF2434ED0314a005Bf762cCDEd7Fe1">FinancingController 0x06DaF946…</a></td></tr>
+          <tr><td>npm</td><td><a href="https://www.npmjs.com/package/@cargoflow/sdk">@cargoflow/sdk</a> · <a href="https://www.npmjs.com/package/@cargoflow/mcp">@cargoflow/mcp</a> · <a href="https://www.npmjs.com/package/@cargoflow/gateway">@cargoflow/gateway</a></td></tr>
+          <tr><td>PyPI</td><td><a href="https://pypi.org/project/cargoflow/">cargoflow</a></td></tr>
+          <tr><td>Contact</td><td><span class="mono" style="font-size:19px; color:var(--slate);">[founder email]</span></td></tr>
+        </table>
+      </div>
+      <div class="row" style="gap:12px; margin-top:22px; flex-wrap:wrap;">
+        <span class="chip on"><b>live</b> · Robinhood Chain Testnet</span>
+        <span class="chip on"><b>USDG</b> settlement</span>
+        <span class="chip">testnet prototype · not audited</span>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div class="src">The free API instance sleeps when idle; the first request can take up to a minute. Testnet USDG has no monetary value; CargoFlow is not a regulated financial product.</div>
+    <div class="pg">16 / 16</div>
+  </div>
+</section>
+
+<script>
+  // fit each 1920 x 1080 slide to the window width when viewed in a browser
+  function fit() { document.documentElement.style.setProperty("--z", Math.min(1, (window.innerWidth - 48) / 1920)); }
+  if (!document.documentElement.classList.contains("static")) { fit(); window.addEventListener("resize", fit); }
+</script>
+</body>
+</html>
