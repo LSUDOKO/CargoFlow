@@ -51,7 +51,7 @@ Everything in one place.
 | **Pitch deck (PPTX)** | [CargoFlow-pitch.pptx](https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/CargoFlow-pitch.pptx) | Editable PowerPoint |
 | **Pitch deck (HTML, animated)** | [cargoflow-pitch.adoranto737.workers.dev](https://lsudoko.github.io/CargoFlow/pitch/) | The deck with its animations, in the browser |
 | **Pitch deck on Google Drive** | [Open in Google Drive](GDRIVE_PITCH_URL) | Shareable copy |
-| **Demo film** | [CargoFlow-v2-1080p.mp4](https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2-1080p.mp4) | 5:30, 1080p; [captions (SRT)](https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2.srt) |
+| **Demo film** | [Watch on YouTube](https://youtu.be/mBFZ2EihMEc) | 5:30; [MP4, 1080p](https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2-1080p.mp4); [captions (SRT)](https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2.srt) |
 | **Release v1.0.0** | [releases/tag/v1.0.0](https://github.com/LSUDOKO/CargoFlow/releases/tag/v1.0.0) | Notes: [`docs/releases/v1.0.0.md`](docs/releases/v1.0.0.md) |
 | **MCP server URL** | `https://cargoflow-mcp.adoranto737.workers.dev/mcp` | Remote MCP (Streamable HTTP), 25 tools, holds no keys |
 | **MCP connector, direct link** | [Add custom connector in claude.ai](https://claude.ai/new?modal=add-custom-connector) | Name it CargoFlow and paste the URL above. Claude Code: `claude mcp add --transport http cargoflow https://cargoflow-mcp.adoranto737.workers.dev/mcp` |
@@ -886,9 +886,9 @@ The full plan is in the [architecture notes](docs/architecture.md#what-would-cha
 
 ## Demo video
 
-<p align="center"><a href="https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2-1080p.mp4"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/banner.png" alt="Watch the CargoFlow film (5:30, 1080p)" width="100%"></a></p>
+<p align="center"><a href="https://youtu.be/mBFZ2EihMEc"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/banner.png" alt="Watch the CargoFlow film on YouTube (5:30)" width="100%"></a></p>
 
-<p align="center"><b><a href="https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2-1080p.mp4">▶ Watch the film (5:30, 1080p, MP4)</a></b> · <a href="https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2.srt">captions (SRT)</a> · <a href="https://github.com/LSUDOKO/CargoFlow/releases/tag/v1.0.0">release v1.0.0</a></p>
+<p align="center"><b><a href="https://youtu.be/mBFZ2EihMEc">▶ Watch the film on YouTube (5:30)</a></b> · <a href="https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2-1080p.mp4">MP4, 1080p</a> · <a href="https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2.srt">captions (SRT)</a> · <a href="https://github.com/LSUDOKO/CargoFlow/releases/tag/v1.0.0">release v1.0.0</a></p>
 
 A 5.5-minute film that tells this README's story: Meera, Daniel and Wei Lin; the real source pages; the twelve
 mechanisms animated with the same characters; the live website recorded end to end (`CF-SG-VAX-0202`, with the passkey
