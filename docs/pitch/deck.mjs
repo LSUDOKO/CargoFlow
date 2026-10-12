@@ -72,7 +72,7 @@ export const slides = [
       R(X, 770, 860, 104, { fill: C.emeraldSoft, line: "9BE3C0", r: 24, anim: "up" }),
       O(X + 30, 812, 20, { fill: C.emerald, line: null, anim: "pop" }),
       T(X + 72, 770, 770, 104, "Production build live on Robinhood Chain Testnet.\nMainnet release next.", "cap", { s: 28, c: C.emeraldInk, va: "middle", b: true, lh: 1.3 }),
-      T(X, 912, 1200, 40, "Arbitrum Open House Singapore · Online Buildathon · October 2026", "cap"),
+      T(X, 912, 1200, 40, "Colosseum Crypto World's Fair · Robinhood Chain track · October 2026", "cap"),
       T(X, 956, 1200, 40, `[cargoflow.adoranto737.workers.dev](${SITE})   ·   [github.com/LSUDOKO/CargoFlow](https://github.com/LSUDOKO/CargoFlow)`, "cap", { f: "mono", s: 28, c: C.ink2 }),
       I(1010, 250, 860, 370, "media/hero-cast.jpg", { frame: false, fit: "contain", pos: "center", anim: "zoom", parallax: true, alt: "The cast: a carrier, Meera the exporter, Daniel the financier, Wei Lin the buyer, an insurer and an arbiter in front of a reefer container." }),
     ],
@@ -463,11 +463,11 @@ export const slides = [
   // 18 -----------------------------------------------------------------------------------------------------
   (() => {
     const ms = [
-      ["M1", "Security", "Independent audit and a public ZK ceremony", "35% of grant"],
-      ["M2", "Real evidence", "Logger pilots and a secure-element board", "25% of grant"],
-      ["M3", "Mainnet", "Real USDG on Robinhood Chain, protocol fee", "20% of grant"],
-      ["M4", "Legal and title", "MLETR opinion on the bill of lading", "10% of grant"],
-      ["M5", "Scale", "Calibrated scoring, a second corridor", "after the grant"],
+      ["M1", "Security", "Independent audit and a public ZK ceremony", "35% of funding"],
+      ["M2", "Real evidence", "Logger pilots and a secure-element board", "25% of funding"],
+      ["M3", "Mainnet", "Real USDG on Robinhood Chain, protocol fee", "20% of funding"],
+      ["M4", "Legal and title", "MLETR opinion on the bill of lading", "10% of funding"],
+      ["M5", "Scale", "Calibrated scoring, a second corridor", "after this round"],
     ];
     const els = [...header("18 · Roadmap"), ...headline("Roadmap, each milestone with an exit test", "From production build to the ==first real facility==.", { h: 170 })];
     els.push(R(X, 390, CW, 84, { fill: C.emeraldSoft, line: "9BE3C0", r: 20, anim: "up" }));
@@ -489,13 +489,13 @@ export const slides = [
   // 19 -----------------------------------------------------------------------------------------------------
   (() => {
     const uses = [
-      [35, C.lime, "Security audit and public ZK ceremony", "M1", "10,500"],
-      [25, C.mint, "Pilots and logger hardware", "M2", "7,500"],
-      [20, C.amber, "Mainnet launch and first facilities", "M3", "6,000"],
-      [10, C.sky, "Legal: MLETR opinion and structuring", "M4", "3,000"],
-      [10, C.fog, "Team and infrastructure, six months", "all", "3,000"],
+      [35, C.lime, "Security audit and public ZK ceremony", "M1", "35% of funds"],
+      [25, C.mint, "Pilots and logger hardware", "M2", "25% of funds"],
+      [20, C.amber, "Mainnet launch and first facilities", "M3", "20% of funds"],
+      [10, C.sky, "Legal: MLETR opinion and structuring", "M4", "10% of funds"],
+      [10, C.fog, "Team and infrastructure, six months", "all", "10% of funds"],
     ];
-    const els = [...header("19 · The ask"), ...headline("The ask: the milestone-based grant", "A 30,000 USDG grant funds ==M1\u00a0to\u00a0M4==.")];
+    const els = [...header("19 · The ask"), ...headline("The ask: milestone-released funding", "Prize and seed money fund ==M1\u00a0to\u00a0M4==.")];
     let bx = X;
     uses.forEach(([p, col], i) => {
       const w = CW * p / 100;
@@ -508,39 +508,39 @@ export const slides = [
       els.push(R(X, y + 12, 32, 32, { fill: col, line: C.ink, lw: 1.5, r: 8, anim: "pop" }));
       els.push(T(X + 60, y, 1000, 56, what, "p", { s: 30, c: C.ink, va: "middle" }));
       els.push(T(1180, y, 200, 56, m, "label", { s: 28, va: "middle", c: C.ink2 }));
-      els.push(T(1400, y, 400, 56, `${amt} USDG`, "num", { s: 32, a: "right", va: "middle" }));
+      els.push(T(1400, y, 400, 56, amt, "num", { s: 32, a: "right", va: "middle" }));
       if (i < 4) els.push(L(X, y + 66, X + CW, y + 66, { color: C.line, width: 2, anim: "fade" }));
     });
     els.push(T(X, 860, CW, 50, "Released like a CargoFlow facility: each tranche follows a milestone's exit test.", "lead", { s: 30, c: C.ink, b: true }));
-    els.push(...footer("Arbitrum Open House Singapore Online Buildathon (HackQuest): 115,000 USDG in prizes, including up to 30,000 USDG in milestone-based grants · any prize follows the same split"));
+    els.push(...footer("A plan, not a commitment: shares of whatever the round provides, whether prize, accelerator or seed money · figures are percentages on purpose"));
     return {
       id: "ask", section: "19 · The ask", els,
-      notes: "Our ask is the buildathon's milestone grant of up to 30,000 USDG, split across M1 to M4. Thirty-five percent goes to the security audit and ZK ceremony, 25 to pilots and logger hardware, 20 to the mainnet launch and first facilities, and 10 each to legal and to infrastructure. We propose releasing it the way CargoFlow releases capital: each tranche against a milestone's exit test.",
+      notes: "Our ask is funding released milestone by milestone, whether it comes as prize money, an accelerator or seed capital. We show shares, not amounts, because the size of the round is not ours to set. Thirty-five percent goes to the security audit and the public ZK ceremony, 25 to pilots and logger hardware, 20 to the mainnet launch and first facilities, and 10 each to legal and to infrastructure. We propose releasing it the way CargoFlow releases capital: each tranche follows a milestone's exit test.",
     };
   })(),
   // 20 -----------------------------------------------------------------------------------------------------
   (() => {
     const crit = [
-      ["Deployed on an Arbitrum chain", "10 contracts verified on Robinhood Chain Testnet (46630)."],
-      ["Smart contract quality", "366 tests, eight invariants, an immutable core with no proxy."],
-      ["Product-market fit", "A sourced problem, five role portals, four published packages."],
-      ["Innovation", "Evidence-gated capital, bound ZK recovery, a keyless Claude co-pilot."],
-      ["Real problem solving", "End-to-end runs with every transaction linked."],
+      ["Robinhood Chain", "10 contracts verified on Robinhood Chain Testnet (46630)."],
+      ["Chain features", "Its RIP-7212 precompile carries the passkey flow."],
       ["Paxos USDG", "The only money CargoFlow moves."],
-      ["Robinhood Chain", "Its RIP-7212 precompile carries the passkey flow."],
+      ["Arbitrum", "Stylus, Fhenix and GMX on Arbitrum Sepolia."],
+      ["Working product", "Five portals, an API, an MCP server, four packages."],
+      ["Contract quality", "366 tests, eight invariants, an immutable core with no proxy."],
+      ["Real runs", "End-to-end runs with every transaction linked."],
     ];
-    const els = [...header("20 · Buildathon fit"), ...headline("Arbitrum Open House Singapore", "Every criterion, with ==something to click==.")];
+    const els = [...header("20 · Track fit"), ...headline("The Robinhood Chain track", "What is live, with ==something to click==.")];
     crit.forEach(([t, body], i) => {
       const x = X + (i % 2) * 860, y = 330 + Math.floor(i / 2) * 150;
       els.push(R(x, y + 8, 12, 108, { fill: C.lime, line: null, r: 6, anim: "grow" }));
       els.push(T(x + 36, y, 780, 44, t, "card", { s: 32 }));
       els.push(T(x + 36, y + 50, 780, 80, body, "p", { s: 28 }));
     });
-    els.push(T(X + 860 + 36, 330 + 3 * 150, 780, 44, `[Read the HackQuest listing](https://www.hackquest.io/hackathons/Arbitrum-Open-House-Singapore-Online-Buildathon)`, "p", { s: 28, c: C.teal, b: true }));
-    els.push(...footer(`Evidence: README "Built for Arbitrum Open House Singapore", "Live on Robinhood Chain Testnet", "Measured, not claimed" · docs/project/21-hackathon-alignment.md`));
+    els.push(T(X + 860 + 36, 330 + 3 * 150, 780, 44, `[Read the Crypto World's Fair announcement](https://blog.colosseum.com/expanding-the-arena/)`, "p", { s: 28, c: C.teal, b: true }));
+    els.push(...footer(`Evidence: README "Built on Robinhood Chain", "Live on Robinhood Chain Testnet", "Measured, not claimed" · docs/project/21-hackathon-alignment.md`));
     return {
-      id: "buildathon", section: "20 · Buildathon fit", els,
-      notes: "Against the buildathon's criteria: every core contract is deployed and verified on Robinhood Chain Testnet, the contract suite has 366 tests including eight invariants, and the product has portals for every party plus four published packages. USDG is the only money CargoFlow moves, and Robinhood Chain's P-256 precompile carries the passkey flow. Each line links to evidence in the README.",
+      id: "track", section: "20 · Track fit", els,
+      notes: "Here is what is live on the Robinhood Chain track: every core contract is deployed and verified on Robinhood Chain Testnet, USDG is the only money CargoFlow moves, and the chain's P-256 precompile carries the passkey flow. On Arbitrum Sepolia there are the Stylus, Fhenix and GMX extensions. The contract suite has 366 tests including eight invariants, and the product has portals for every party plus four published packages. Every claim links to something you can click.",
     };
   })(),
   // 21 -----------------------------------------------------------------------------------------------------
