@@ -96,7 +96,7 @@ Current Paxos documentation describes USDG as a single-currency US-dollar stable
 
 ## 7. Robinhood Chain role
 
-Robinhood Chain is the best place in this architecture for the user-visible financial contracts because it lets the buildathon entry visibly use a target Arbitrum ecosystem chain and directly integrate USDG.
+Robinhood Chain is the best place in this architecture for the user-visible financial contracts because it lets the project visibly use Robinhood Chain, an Arbitrum chain, and directly integrate USDG.
 
 ## 8. Stylus boundary
 

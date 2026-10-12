@@ -201,7 +201,7 @@ same unlatch SFX as S2 on each "milestone released".
 | 2:55.2-2:58.5 | `~0.14 s average block interval` | Measured on the testnet RPC, 2 Oct 2026 |
 | 2:58.5-3:02.2 | `~0.000002 ETH per transaction` | Measured: CargoFlow testnet receipts |
 | 3:02.4-3:04.8 | `7 contracts · source-verified` | README, explorer |
-| 2:45.3-3:04.8 (footer strip) | `Built for Arbitrum Open House Singapore · extra consideration for USDG` | HackQuest listing |
+| 2:45.3-3:04.8 (footer strip) | `Built on Robinhood Chain · settled in Paxos USDG` | `contracts/deployments/robinhood-testnet.json` |
 
 **Visual and motion.** Clean navy stage. A USDG coin travels the whole lifecycle along one track: financier → vault
 → five tranches to Meera → buyer → split. Then the explorer: a real page for the settle transaction scrolls by with
@@ -330,9 +330,8 @@ Each figure was checked on the source page on 2 October 2026.
 9. **USDG is issued by Paxos Digital Singapore Pte. Ltd., a Major Payments Institution supervised by the Monetary
    Authority of Singapore; built for payments, settlements and treasury; redeemable 1:1.** Paxos documentation.
    https://docs.paxos.com/guides/stablecoin/usdg
-10. **Hackathon fit: "Extra consideration is given to projects integrating Paxos' USDG stablecoin"; at least 1 of 3
-    prizes reserved for a project building on Robinhood Chain.** HackQuest, "Arbitrum Open House Singapore: Online
-    Buildathon". https://www.hackquest.io/hackathons/Arbitrum-Open-House-Singapore-Online-Buildathon
+10. **CargoFlow settles only in Paxos USDG, on Robinhood Chain Testnet (chain 46630).** Deployment manifest:
+    `contracts/deployments/robinhood-testnet.json`.
 11. **Robinhood Chain is an Arbitrum Layer-2 on Ethereum with ETH as the gas token.** Robinhood Chain docs.
     https://docs.robinhood.com/chain/connecting/
 12. **Block interval and transaction fees** were measured directly on `https://rpc.testnet.chain.robinhood.com` on

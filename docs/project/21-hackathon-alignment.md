@@ -2,20 +2,24 @@
 
 ## Current public rules
 
-The current HackQuest listing for the Arbitrum Open House Singapore Online Buildathon states that a qualifying project must be deployed on an Arbitrum chain and is judged on smart-contract quality, product-market fit, innovation/creativity, and real problem solving. It also says extra consideration is given to projects integrating Paxos USDG, and identifies Robinhood Chain and Arbitrum prize-reservation constraints.
+Colosseum's Crypto World's Fair runs online from 14 September to 12 October 2026. Prize tracks are organised around a
+select group of blockchain ecosystems, each with an ecosystem partner, and every submission is also eligible for a
+general prize pool (<https://blog.colosseum.com/expanding-the-arena/>). The detailed judging criteria and per-track
+prizes are on <https://www.colosseum.com/worldsfair>; check them there before submitting, because they are not repeated
+here.
 
-## Requirement-by-requirement mapping
+CargoFlow targets the **Robinhood Chain** track and also touches the **Arbitrum** track through its Arbitrum Sepolia
+extensions.
 
-| Requirement | CargoFlow implementation |
+## What CargoFlow has on each track
+
+| Track | CargoFlow implementation |
 |---|---|
-| Deploy on Arbitrum chain | Primary deployment on Robinhood Chain Testnet; optional Arbitrum Sepolia module. |
-| Smart contract quality | Modular Solidity contracts, strict roles, invariants, events, SafeERC20, fuzz/integration tests. |
-| Product-market fit | SME/exporter working-capital use case with financier/buyer/carrier roles. |
-| Innovation / creativity | Evidence-gated financing, physical-state proof, recovery through selective ZK evidence. |
-| Real problem solving | Converts shipment progress into programmable financing state. |
-| Extra USDG consideration | USDG is the facility, escrow, advance, and settlement asset. |
-| Robinhood relevance | Robinhood Chain is the primary financial deployment target. |
-| Solidity / Rust stack | Solidity core + Go backend + optional Stylus Rust evidence engine. |
+| Robinhood Chain | Ten core contracts live and source-verified on Robinhood Chain Testnet (46630), settling in Paxos USDG. |
+| Robinhood Chain features | The RIP-7212 P-256 precompile carries the passkey flow; a passkey smart account paid a live invoice. |
+| Arbitrum | Stylus (Rust) evidence engine, Fhenix confidential invoice terms and a GMX hedge vault on Arbitrum Sepolia. |
+| General pool | A working product (five portals, API, MCP server, four packages), 366 contract tests, live end-to-end runs. |
+| Funding path | Milestone roadmap M1 to M5 with exit tests, in the funding deck. |
 
 ## How to make the alignment visible
 

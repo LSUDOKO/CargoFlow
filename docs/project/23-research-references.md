@@ -4,11 +4,13 @@ This file distinguishes **authoritative technical references** from **research/c
 
 ## A. Hackathon
 
-### Arbitrum Open House Singapore — HackQuest
+### Colosseum Crypto World's Fair
 
-https://www.hackquest.io/hackathons/Arbitrum-Open-House-Singapore-Online-Buildathon
+- Announcement: https://blog.colosseum.com/expanding-the-arena/ (prize tracks are organised around a select group of
+  blockchain ecosystems, each with an ecosystem partner; every submission is also eligible for a general prize pool)
+- Registration and rules: https://www.colosseum.com/worldsfair
 
-Use for current rules, judging criteria, deadlines, prizes, and required ecosystem resources.
+Use for current rules, judging criteria, deadlines, prizes, and the list of ecosystem tracks.
 
 ## B. Arbitrum
 

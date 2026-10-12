@@ -88,7 +88,7 @@ PHYSICAL REALITY → CRYPTOGRAPHIC EVIDENCE → EVIDENCE CONFIDENCE → FINANCIA
 | [Meet the cast](#meet-the-cast) | [Use CargoFlow in Claude](#use-cargoflow-in-claude) | [Live on Robinhood Chain Testnet](#live-on-robinhood-chain-testnet) |
 | [How it works, in twelve beats](#how-it-works-in-twelve-beats) | [Role guides](docs/guides/README.md) | [Under the hood](#under-the-hood) |
 | [Demo video](#demo-video) | [For developers](#for-developers) | [Sponsor integrations](#sponsor-and-partner-integrations) · [Measured](#measured-not-claimed) · [What's next](#security-and-whats-next) |
-| [Why CargoFlow is fundable](#why-cargoflow-is-fundable) | [Pitch deck (PDF, 21 slides)](https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/CargoFlow-pitch.pdf) · [all links](#all-links) | [Built for Arbitrum Open House Singapore](#built-for-arbitrum-open-house-singapore) |
+| [Why CargoFlow is fundable](#why-cargoflow-is-fundable) | [Pitch deck (PDF, 21 slides)](https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/CargoFlow-pitch.pdf) · [all links](#all-links) | [Built on Robinhood Chain](#built-on-robinhood-chain) |
 
 ## The problem in one paragraph
 
@@ -162,22 +162,23 @@ source below or to a transaction on chain; plans and assumptions are labelled as
   </tr>
 </table>
 
-## Built for Arbitrum Open House Singapore
+## Built on Robinhood Chain
 
-CargoFlow is an entry to the **Arbitrum Open House Singapore: Online Buildathon** (Arbitrum Foundation, on
-[HackQuest](https://www.hackquest.io/hackathons/Arbitrum-Open-House-Singapore-Online-Buildathon)). Here is each rule
-and judging criterion, with where to check it.
+CargoFlow is made for the **Robinhood Chain** track of Colosseum's
+[Crypto World's Fair](https://www.colosseum.com/worldsfair) hackathon (14 September to 12 October 2026), and it also
+belongs to the **Arbitrum** ecosystem: Robinhood Chain is an Arbitrum chain, and the Stylus, Fhenix and GMX extensions
+run on Arbitrum Sepolia. This is what is live today and where to check it.
 
-| Rule or criterion | How CargoFlow meets it | Check it |
+| Track | What CargoFlow has | Check it |
 |---|---|---|
-| **Deployed on an Arbitrum chain** | All ten core contracts live on Robinhood Chain Testnet (46630); the Stylus engine and the Fhenix and GMX extensions on Arbitrum Sepolia | [Deployed contracts](#deployed-contracts-v3-source-verified) |
-| **Smart contract quality** | 366 contract tests (unit, fuzz, eight invariants, real-proof integration, smart-account callers); immutable core with no proxy; OpenZeppelin 5.4; Slither triaged; an authority matrix that lists what each role *cannot* do; a pause that stops new risk but never blocks an exit | [Measured](#measured-not-claimed) · [architecture](docs/architecture.md#who-may-do-what) |
-| **Product-market fit** | A sourced problem (trade finance gap, SME rejections, 52-day terms); portals for exporter, financier, buyer, carrier and arbiter; a financing market with fee guidance; SDK, MCP server, gateway and Python packages published | [Product tour](#product-tour) · [role guides](docs/guides/README.md) |
-| **Innovation and creativity** | Capital gated by fused sensor evidence; context-bound zero-knowledge recovery; an AI monitor that can only make outcomes stricter; parametric cover proven from commit order; a bill of lading that moves inside the payment; Claude as a keyless co-pilot | [How it works](#how-it-works-in-twelve-beats) · [under the hood](#under-the-hood) |
-| **Real problem solving** | End-to-end runs on the public testnet with every transaction linked: excursion, pause, proof, resume, settlement, passkey payment | [Live runs](#the-films-shipment-end-to-end-cf-sg-vax-0202) |
-| **Extra consideration: Paxos USDG** | USDG is the only money CargoFlow moves: escrow, tranches, invoice payment, the waterfall and cover, on the real Paxos testnet token `0x7E95…802F` | [Paxos USDG](docs/sponsors/README.md#paxos-usdg) |
-| **Prize reserved for Robinhood Chain** | Built on Robinhood Chain first: its RIP-7212 P-256 precompile carries the passkey flow, and USDG is native there | [A passkey payment](#a-passkey-payment-cf-sg-vax-0401) |
-| **Milestone-based grants** | The roadmap above is written as milestones with exit tests, so each grant tranche can be released against evidence | [Pitch deck, slides 13 and 14](https://cargoflow.adoranto737.workers.dev/readme/docs/pitch/CargoFlow-pitch.pdf) |
+| **Robinhood Chain** | All ten core contracts live and source-verified on Robinhood Chain Testnet (46630); every escrow, tranche, payment and cover payout is Paxos USDG, the chain's native stablecoin | [Deployed contracts](#deployed-contracts-v3-source-verified) |
+| **Robinhood Chain features in use** | The chain's RIP-7212 P-256 precompile carries the passkey flow: a buyer paid a real invoice from a ZeroDev smart account with a passkey, paying no gas | [A passkey payment](#a-passkey-payment-cf-sg-vax-0401) |
+| **Arbitrum** | A Rust (Stylus) evidence engine measured 19x cheaper than its Solidity reference, a Fhenix extension that keeps invoice terms encrypted, and a GMX hedge vault, all on Arbitrum Sepolia | [Sponsor and partner integrations](#sponsor-and-partner-integrations) |
+| **A working product** | Portals for the exporter, financier, buyer, carrier and arbiter; a financing market with fee guidance; a REST and WebSocket API; a remote MCP server for Claude; four published packages | [Product tour](#product-tour) · [role guides](docs/guides/README.md) |
+| **Real runs, not mock-ups** | Full lifecycles on the public testnet with every transaction linked: excursion, pause, zero-knowledge recovery, settlement, bill of lading, passkey payment, Telegram alerts | [Live runs](#the-films-shipment-end-to-end-cf-sg-vax-0202) |
+| **Contract quality** | 366 contract tests (unit, fuzz, eight invariants, real-proof integration); immutable core with no proxy; OpenZeppelin 5.4; Slither triaged; an authority matrix that lists what each role *cannot* do | [Measured](#measured-not-claimed) · [architecture](docs/architecture.md#who-may-do-what) |
+| **Built in the window** | The repository started on 30 September 2026, inside the hackathon's dates, and has 280 commits since | [Commit history](https://github.com/LSUDOKO/CargoFlow/commits/main) |
+| **Path to funding** | A milestone roadmap (M1 audit and public ZK ceremony, M2 logger pilots, M3 mainnet with the first outside financier, M4 legal opinion, M5 scale), each milestone with an exit test | [Why CargoFlow is fundable](#why-cargoflow-is-fundable) |
 
 ## How it works, in twelve beats
 
