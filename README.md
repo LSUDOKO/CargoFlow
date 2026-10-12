@@ -54,8 +54,8 @@ Everything in one place.
 | **Pitch deck (PPTX)** | [CargoFlow-pitch.pptx](https://lsudoko.github.io/CargoFlow/pitch/CargoFlow-pitch.pptx) | Editable PowerPoint |
 | **Pitch deck (HTML, animated)** | [lsudoko.github.io/CargoFlow/pitch](https://lsudoko.github.io/CargoFlow/pitch/) | The deck with its animations, in the browser |
 | **Pitch deck on Google Drive** | [Open in Google Drive](https://drive.google.com/drive/folders/1sW6rVx2dLyr5migHmV8UKXKU-88mCg8W?usp=sharing) | Shareable copy |
-| **Colosseum demo film** | [Current edition and render instructions](video/README.md#current-colosseum-edition) | 5:29.67, 1080p; Colosseum Crypto World's Fair · Robinhood Chain track |
-| **Original demo upload** | [Watch on YouTube](https://youtu.be/mBFZ2EihMEc) | 5:30; [MP4, 1080p](https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2-1080p.mp4); [captions (SRT)](https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2.srt) |
+| **Colosseum demo film** | [Watch on YouTube](https://youtu.be/8DUKKXkncws) | 5:30, 1080p; Colosseum Crypto World's Fair · Robinhood Chain track; [source and render instructions](video/README.md#current-colosseum-edition) |
+| **Original release downloads** | [MP4, 1080p](https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2-1080p.mp4) | Original edition; [captions (SRT)](https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2.srt) |
 | **Release v1.0.0** | [releases/tag/v1.0.0](https://github.com/LSUDOKO/CargoFlow/releases/tag/v1.0.0) | Notes: [`docs/releases/v1.0.0.md`](docs/releases/v1.0.0.md) |
 | **MCP server URL** | `https://cargoflow-mcp.adoranto737.workers.dev/mcp` | Remote MCP (Streamable HTTP), 25 tools, holds no keys |
 | **MCP connector, direct link** | [Add custom connector in claude.ai](https://claude.ai/new?modal=add-custom-connector) | Name it CargoFlow and paste the URL above. Claude Code: `claude mcp add --transport http cargoflow https://cargoflow-mcp.adoranto737.workers.dev/mcp` |
@@ -892,12 +892,12 @@ The full plan is in the [architecture notes](docs/architecture.md#what-would-cha
 
 The **Colosseum Crypto World's Fair · Robinhood Chain track** edition adds the submission branding to the closing
 card. [Video source and render instructions](video/README.md#current-colosseum-edition) produce
-`video/out/CargoFlow-Colosseum-1080p.mp4` (5:29.67, 1080p). The YouTube and release links below are the original
-upload; they have not yet been replaced with the Colosseum render.
+`video/out/CargoFlow-Colosseum-1080p.mp4` (5:29.67, 1080p). Watch the current edition on YouTube below.
+The `v1.0.0` MP4 download remains the original edition.
 
-<p align="center"><a href="video/README.md#current-colosseum-edition"><img src="docs/assets/v3/colosseum-video.png" alt="CargoFlow · Colosseum Crypto World's Fair · Robinhood Chain track" width="100%"></a></p>
+<p align="center"><a href="https://youtu.be/8DUKKXkncws"><img src="docs/assets/v3/colosseum-video.png" alt="CargoFlow · Colosseum Crypto World's Fair · Robinhood Chain track" width="100%"></a></p>
 
-<p align="center"><b><a href="https://youtu.be/mBFZ2EihMEc">▶ Original upload on YouTube (5:30)</a></b> · <a href="https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2-1080p.mp4">MP4, 1080p</a> · <a href="https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2.srt">captions (SRT)</a> · <a href="https://github.com/LSUDOKO/CargoFlow/releases/tag/v1.0.0">release v1.0.0</a></p>
+<p align="center"><b><a href="https://youtu.be/8DUKKXkncws">▶ Watch the Colosseum demo on YouTube (5:30)</a></b> · <a href="https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2-1080p.mp4">Original MP4, 1080p</a> · <a href="https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2.srt">captions (SRT)</a> · <a href="https://github.com/LSUDOKO/CargoFlow/releases/tag/v1.0.0">release v1.0.0</a></p>
 
 A 5.5-minute film that tells this README's story: Meera, Daniel and Wei Lin; the real source pages; the twelve
 mechanisms animated with the same characters; the live website recorded end to end (`CF-SG-VAX-0202`, with the passkey

@@ -2,6 +2,8 @@
 
 ## Current Colosseum edition
 
+[Watch the Colosseum demo on YouTube](https://youtu.be/8DUKKXkncws).
+
 The current film is `FullV2`: 9,890 frames at 30 fps (5:29.67), 1920×1080.
 Its closing card reads **Colosseum Crypto World's Fair · Robinhood Chain track**.
 Preview the [Colosseum closing card](../docs/assets/v3/colosseum-video.png).
@@ -15,7 +17,7 @@ npx remotion render FullV2 out/CargoFlow-Colosseum-1080p.mp4 --codec=h264 --crf=
 
 The existing `out/CargoFlow-v2.srt` captions also apply: narration and timing are unchanged.
 
-The previous YouTube upload and `v1.0.0` release remain the original edition until the new render is uploaded.
+The `v1.0.0` release MP4 remains the original edition; the YouTube link above is the current Colosseum upload.
 
 ## Original v1 workflow
 
