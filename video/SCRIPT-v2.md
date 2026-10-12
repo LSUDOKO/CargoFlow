@@ -1,6 +1,6 @@
 # CargoFlow: product video v2, script and direction
 
-**Format.** 1920 x 1080, 30 fps, **5:28.0 (9,840 frames)**. One founder voice-over, about 145 words per minute while
+**Format.** 1920 x 1080, 30 fps, **5:29.67 (9,890 frames)**. One founder voice-over, about 145 words per minute while
 speaking (2.42 words per second, the rate `captions-v2.json` is timed at), 678 words in total, short sentences, a
 breath at every full stop. Every scene's speech ends at least 0.3 s before its cut.
 
@@ -53,8 +53,8 @@ Words counted by script (`[A-Za-z0-9'-]` tokens), speaking time = words / 2.42.
 | S08 | Developer platform | 4:46.0 | 4:57.0 | 8580-8909 (330) | 24 | 9.9 s | **recording R3** + code cards |
 | S09 | Sponsors, honestly | 4:57.0 | 5:10.0 | 8910-9299 (390) | 28 | 11.6 s | designed board |
 | S10 | Proof | 5:10.0 | 5:20.0 | 9300-9599 (300) | 20 | 8.3 s | **recording R4** (explorer, /deployments) |
-| S11 | Outro | 5:20.0 | 5:28.0 | 9600-9839 (240) | 14 | 5.8 s | illustration |
-| **Total** | | | **5:28.0** | **9,840** | **678** | **280.6 s** | |
+| S11 | Outro | 5:20.0 | 5:29.67 | 9600-9889 (290) | 14 | 5.8 s | illustration |
+| **Total** | | | **5:29.67** | **9,890** | **678** | **280.6 s** | |
 
 The exact spoken lines, split into 98 caption cues, are in `video/captions-v2.json` (generated and checked by script;
 re-time cues there if a line changes, then update this file).
@@ -745,7 +745,7 @@ Footer tag: `Testnet only · not audited · testnet USDG has no value`.
 
 ---
 
-## S11 · Outro · 5:20.0-5:28.0 (frames 9600-9839)
+## S11 · Outro · 5:20.0-5:29.67 (frames 9600-9889)
 
 **Voice-over** (14 words)
 
@@ -756,14 +756,15 @@ Footer tag: `Testnet only · not audited · testnet USDG has no value`.
 
 | In-out | Text |
 |---|---|
-| 5:20.6-5:28.0 | CargoFlow logo (light on navy gradient) |
-| 5:21.8-5:28.0 | tagline, typed on word by word with the VO; the through-line draws under it as an underline |
-| 5:25.0-5:28.0 | `cargoflow.adoranto737.workers.dev` · `github.com/LSUDOKO/CargoFlow` · `MCP: cargoflow-mcp.adoranto737.workers.dev/mcp` |
+| 5:20.6-5:29.67 | CargoFlow logo (light on navy gradient) |
+| 5:21.8-5:29.67 | tagline, typed on word by word with the VO; the through-line draws under it as an underline |
+| 5:21.0-5:29.67 | `Colosseum Crypto World's Fair · Robinhood Chain track` (lime, below the tagline) |
+| 5:25.0-5:29.67 | `cargoflow.adoranto737.workers.dev` · `github.com/LSUDOKO/CargoFlow` · `MCP: cargoflow-mcp.adoranto737.workers.dev/mcp` |
 
 **Composition.** Start on the S00 framing, now in daylight: the reefer on the quay in Singapore, LCD `4.6 °C`, lamp
 emerald; Meera, Daniel and Wei Lin stand in a loose row in front of it (Meera centre, `present` toward the reefer;
 Daniel `crossed`, half smile; Wei Lin `hold` with the eBL card). 30 f, then the navy gradient wipes in from the right
-along the through-line, and the logo resolves. Last frame is clean (logo, tagline, URLs) for the thumbnail.
+along the through-line, and the logo resolves. Last frame is clean (logo, tagline, Colosseum / Robinhood Chain branding, URLs) for the thumbnail.
 
 **Music and SFX.** The cue resolves on "should."; the logger's single tick once, softly, as the last sound.
 

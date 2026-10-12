@@ -1,5 +1,25 @@
 # CargoFlow demo video (Remotion)
 
+## Current Colosseum edition
+
+The current film is `FullV2`: 9,890 frames at 30 fps (5:29.67), 1920×1080.
+Its closing card reads **Colosseum Crypto World's Fair · Robinhood Chain track**.
+Preview the [Colosseum closing card](../docs/assets/v3/colosseum-video.png).
+See [SCRIPT-v2.md](SCRIPT-v2.md) and `src/scenes-v2/S11Outro.tsx`.
+Singapore in the story is the shipment destination; Arbitrum Sepolia labels identify deployed technical extensions.
+
+```bash
+cd video
+npx remotion render FullV2 out/CargoFlow-Colosseum-1080p.mp4 --codec=h264 --crf=18
+```
+
+The existing `out/CargoFlow-v2.srt` captions also apply: narration and timing are unchanged.
+
+The previous YouTube upload and `v1.0.0` release remain the original edition until the new render is uploaded.
+
+## Original v1 workflow
+
+
 A 3:25 (6150 frames, 1920×1080, 30 fps) hackathon demo video built with [Remotion](https://www.remotion.dev),
 styled to match the live product (navy ink, paper, lime signal; Space Grotesk, Inter, JetBrains Mono).
 

@@ -61,6 +61,11 @@ export const S11Outro: React.FC = () => {
             {underline > 0.005 ? <line x1={260} y1={14} x2={260 + 1120 * underline} y2={14} stroke={P.white} strokeWidth={5} strokeLinecap="round" /> : null}
           </svg>
         </At>
+        <At x={960} y={680} w={1640} anchor="tc" style={{ opacity: logoK }}>
+          <div style={{ fontFamily: F.display, fontWeight: 600, fontSize: 32, color: P.signal, textAlign: "center" }}>
+            Colosseum Crypto World's Fair · Robinhood Chain track
+          </div>
+        </At>
         <At x={960} y={760} anchor="tc" style={{ opacity: urls }}>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, fontFamily: F.mono, fontSize: 24, color: "rgba(255,255,255,0.82)" }}>
             <span>cargoflow.adoranto737.workers.dev</span>

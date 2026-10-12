@@ -7,6 +7,8 @@
 
 <h3 align="center">Evidence-gated working capital for physical trade finance</h3>
 
+<p align="center"><b><a href="https://www.colosseum.com/worldsfair">Colosseum Crypto World's Fair</a> · Robinhood Chain track</b></p>
+
 <p align="center">A financier's USDG reaches the exporter milestone by milestone, only when the cargo's own signed sensor evidence clears an on-chain policy, and the buyer's single payment settles everyone and hands over the bill of lading.</p>
 
 <p align="center">
@@ -42,7 +44,7 @@ Everything in one place.
 
 | What | Link | Notes |
 |---|---|---|
-| **Hackathon** | [Colosseum Crypto World's Fair](https://www.colosseum.com/worldsfair) | Robinhood Chain track (also relevant to the Arbitrum track); [what is live, per track](#built-on-robinhood-chain) |
+| **Hackathon** | [Colosseum Crypto World's Fair](https://www.colosseum.com/worldsfair) | Robinhood Chain track; [live implementation and evidence](#built-on-robinhood-chain) |
 | **Website** | [cargoflow.adoranto737.workers.dev](https://cargoflow.adoranto737.workers.dev) | The story, the cast and how it works, then straight into the app |
 | **Live app** | [/shipments](https://cargoflow.adoranto737.workers.dev/shipments) | Connect any wallet on Robinhood Chain Testnet (46630) or sign in with a passkey; portals for [exporter](https://cargoflow.adoranto737.workers.dev/exporter), [financier](https://cargoflow.adoranto737.workers.dev/financier), [buyer](https://cargoflow.adoranto737.workers.dev/buyer), [carrier](https://cargoflow.adoranto737.workers.dev/ebl), [market](https://cargoflow.adoranto737.workers.dev/market) and [arbiter](https://cargoflow.adoranto737.workers.dev/arbiter) |
 | **API** | [cargoflow-api-75ul.onrender.com/v1/health](https://cargoflow-api-75ul.onrender.com/v1/health) | REST and WebSocket; [OpenAPI 3.1 spec](https://cargoflow-api-75ul.onrender.com/v1/openapi.json) |
@@ -52,7 +54,8 @@ Everything in one place.
 | **Pitch deck (PPTX)** | [CargoFlow-pitch.pptx](https://lsudoko.github.io/CargoFlow/pitch/CargoFlow-pitch.pptx) | Editable PowerPoint |
 | **Pitch deck (HTML, animated)** | [lsudoko.github.io/CargoFlow/pitch](https://lsudoko.github.io/CargoFlow/pitch/) | The deck with its animations, in the browser |
 | **Pitch deck on Google Drive** | [Open in Google Drive](https://drive.google.com/drive/folders/1sW6rVx2dLyr5migHmV8UKXKU-88mCg8W?usp=sharing) | Shareable copy |
-| **Demo film** | [Watch on YouTube](https://youtu.be/mBFZ2EihMEc) | 5:30; [MP4, 1080p](https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2-1080p.mp4); [captions (SRT)](https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2.srt) |
+| **Colosseum demo film** | [Current edition and render instructions](video/README.md#current-colosseum-edition) | 5:29.67, 1080p; Colosseum Crypto World's Fair · Robinhood Chain track |
+| **Original demo upload** | [Watch on YouTube](https://youtu.be/mBFZ2EihMEc) | 5:30; [MP4, 1080p](https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2-1080p.mp4); [captions (SRT)](https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2.srt) |
 | **Release v1.0.0** | [releases/tag/v1.0.0](https://github.com/LSUDOKO/CargoFlow/releases/tag/v1.0.0) | Notes: [`docs/releases/v1.0.0.md`](docs/releases/v1.0.0.md) |
 | **MCP server URL** | `https://cargoflow-mcp.adoranto737.workers.dev/mcp` | Remote MCP (Streamable HTTP), 25 tools, holds no keys |
 | **MCP connector, direct link** | [Add custom connector in claude.ai](https://claude.ai/new?modal=add-custom-connector) | Name it CargoFlow and paste the URL above. Claude Code: `claude mcp add --transport http cargoflow https://cargoflow-mcp.adoranto737.workers.dev/mcp` |
@@ -166,15 +169,14 @@ source below or to a transaction on chain; plans and assumptions are labelled as
 ## Built on Robinhood Chain
 
 CargoFlow is made for the **Robinhood Chain** track of Colosseum's
-[Crypto World's Fair](https://www.colosseum.com/worldsfair) hackathon (14 September to 12 October 2026), and it also
-belongs to the **Arbitrum** ecosystem: Robinhood Chain is an Arbitrum chain, and the Stylus, Fhenix and GMX extensions
-run on Arbitrum Sepolia. This is what is live today and where to check it.
+[Crypto World's Fair](https://www.colosseum.com/worldsfair) hackathon. The submission focuses on evidence-gated USDG financing, passkey payments and settlement on
+Robinhood Chain Testnet. This is what is live today and where to check it.
 
-| Track | What CargoFlow has | Check it |
+| Submission evidence | What CargoFlow has | Check it |
 |---|---|---|
 | **Robinhood Chain** | All ten core contracts live and source-verified on Robinhood Chain Testnet (46630); every escrow, tranche, payment and cover payout is Paxos USDG, the chain's native stablecoin | [Deployed contracts](#deployed-contracts-v3-source-verified) |
 | **Robinhood Chain features in use** | The chain's RIP-7212 P-256 precompile carries the passkey flow: a buyer paid a real invoice from a ZeroDev smart account with a passkey, paying no gas | [A passkey payment](#a-passkey-payment-cf-sg-vax-0401) |
-| **Arbitrum** | A Rust (Stylus) evidence engine measured 19x cheaper than its Solidity reference, a Fhenix extension that keeps invoice terms encrypted, and a GMX hedge vault, all on Arbitrum Sepolia | [Sponsor and partner integrations](#sponsor-and-partner-integrations) |
+| **Optional technical extensions** | A Rust (Stylus) evidence engine measured 19x cheaper than its Solidity reference, a Fhenix extension that keeps invoice terms encrypted, and a GMX hedge vault, all on Arbitrum Sepolia | [Sponsor and partner integrations](#sponsor-and-partner-integrations) |
 | **A working product** | Portals for the exporter, financier, buyer, carrier and arbiter; a financing market with fee guidance; a REST and WebSocket API; a remote MCP server for Claude; four published packages | [Product tour](#product-tour) · [role guides](docs/guides/README.md) |
 | **Real runs, not mock-ups** | Full lifecycles on the public testnet with every transaction linked: excursion, pause, zero-knowledge recovery, settlement, bill of lading, passkey payment, Telegram alerts | [Live runs](#the-films-shipment-end-to-end-cf-sg-vax-0202) |
 | **Contract quality** | 366 contract tests (unit, fuzz, eight invariants, real-proof integration); immutable core with no proxy; OpenZeppelin 5.4; Slither triaged; an authority matrix that lists what each role *cannot* do | [Measured](#measured-not-claimed) · [architecture](docs/architecture.md#who-may-do-what) |
@@ -888,9 +890,14 @@ The full plan is in the [architecture notes](docs/architecture.md#what-would-cha
 
 ## Demo video
 
-<p align="center"><a href="https://youtu.be/mBFZ2EihMEc"><img src="https://cargoflow.adoranto737.workers.dev/readme/docs/assets/v3/banner.png" alt="Watch the CargoFlow film on YouTube (5:30)" width="100%"></a></p>
+The **Colosseum Crypto World's Fair · Robinhood Chain track** edition adds the submission branding to the closing
+card. [Video source and render instructions](video/README.md#current-colosseum-edition) produce
+`video/out/CargoFlow-Colosseum-1080p.mp4` (5:29.67, 1080p). The YouTube and release links below are the original
+upload; they have not yet been replaced with the Colosseum render.
 
-<p align="center"><b><a href="https://youtu.be/mBFZ2EihMEc">▶ Watch the film on YouTube (5:30)</a></b> · <a href="https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2-1080p.mp4">MP4, 1080p</a> · <a href="https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2.srt">captions (SRT)</a> · <a href="https://github.com/LSUDOKO/CargoFlow/releases/tag/v1.0.0">release v1.0.0</a></p>
+<p align="center"><a href="video/README.md#current-colosseum-edition"><img src="docs/assets/v3/colosseum-video.png" alt="CargoFlow · Colosseum Crypto World's Fair · Robinhood Chain track" width="100%"></a></p>
+
+<p align="center"><b><a href="https://youtu.be/mBFZ2EihMEc">▶ Original upload on YouTube (5:30)</a></b> · <a href="https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2-1080p.mp4">MP4, 1080p</a> · <a href="https://github.com/LSUDOKO/CargoFlow/releases/download/v1.0.0/CargoFlow-v2.srt">captions (SRT)</a> · <a href="https://github.com/LSUDOKO/CargoFlow/releases/tag/v1.0.0">release v1.0.0</a></p>
 
 A 5.5-minute film that tells this README's story: Meera, Daniel and Wei Lin; the real source pages; the twelve
 mechanisms animated with the same characters; the live website recorded end to end (`CF-SG-VAX-0202`, with the passkey
